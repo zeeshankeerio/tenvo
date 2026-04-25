@@ -12,6 +12,7 @@ import { useBusiness } from '@/lib/context/BusinessContext';
 import { formatCurrency } from '@/lib/currency';
 import { createJournalAction, getGLAccountsAction } from '@/lib/actions/basic/accounting';
 import toast from 'react-hot-toast';
+import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 import { journalEntrySchema, validateWithSchema } from '@/lib/validation/schemas';
 
 // ─── Quick templates for common journal entries ──────────────────────────────
@@ -192,13 +193,24 @@ export function JournalEntryForm({ onClose, onSave }) {
                 description: formData.description,
                 referenceId: formData.reference,
                 entries: formData.entries.map(e => ({
-                    accountId: e.account_id,
+                    account_id: e.account_id,
                     debit: e.type === 'debit' ? parseFloat(e.amount) || 0 : 0,
                     credit: e.type === 'credit' ? parseFloat(e.amount) || 0 : 0,
                 }))
             });
 
-            if (!result.success) throw new Error(result.error);
+            if (!result.success) {
+                // Handle validation errors separately
+                if (isValidationError(result)) {
+                    const fieldErrors = formatValidationErrors(result);
+                    toast.error('Please fix validation errors');
+                    return;
+                }
+                
+                // Show user-friendly error message
+                showActionError(result);
+                return;
+            }
 
             toast.success('Journal entry posted successfully');
             onSave?.();

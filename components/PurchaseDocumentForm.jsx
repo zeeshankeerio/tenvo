@@ -17,6 +17,7 @@ import {
     isBatchTrackingEnabled,
 } from '@/lib/utils/domainHelpers';
 import toast from 'react-hot-toast';
+import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import { translations } from '@/lib/translations';
 import { purchaseSchema, validateWithSchema } from '@/lib/validation/schemas';
@@ -226,7 +227,16 @@ export function PurchaseDocumentForm({
                 onSave?.();
                 onClose?.();
             } else {
-                throw new Error(result.error);
+                // Handle validation errors separately
+                if (isValidationError(result)) {
+                    const fieldErrors = formatValidationErrors(result);
+                    // You can set field errors here if you have a state for them
+                    toast.error('Please fix validation errors');
+                    return;
+                }
+                
+                // Show user-friendly error message
+                showActionError(result);
             }
         } catch (error) {
             console.error(`Error saving ${type}:`, error);

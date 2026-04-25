@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo, useState, useRef } from 'react';
 import { Scan, Check, X, AlertCircle, Package, Shield, Calendar, Plus, Search } from 'lucide-react';
@@ -121,7 +121,7 @@ export function SerialTrackingManager({ businessId, productId, warehouseId, prod
                 serial_number: serial,
                 warranty_period_months: bulkWarrantyMonths,
                 warehouse_id: warehouseId || null,
-            }));
+            })));
             toast.success(`${serialNumbers.length} serial numbers registered`);
             setBulkSerials('');
             setShowBulkDialog(false);

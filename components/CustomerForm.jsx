@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FormError } from '@/components/ui/form-error';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { isEntitlementError, getEntitlementErrorMessage, isEntitlementErrorHandled } from '@/lib/utils/subscriptionErrors';
+import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 
 const COUNTRY_CODES = [
     { code: '+92', label: 'PK (+92)' },
@@ -181,7 +182,24 @@ export function CustomerForm({
                 srn: formData.srn || null,
                 domain_data: formData.domain_data || {}
             };
-            await onSave(payload);
+            
+            const result = await onSave(payload);
+            
+            // Check if result indicates failure
+            if (result && !result.success) {
+                // Handle validation errors separately
+                if (isValidationError(result)) {
+                    const fieldErrors = formatValidationErrors(result);
+                    setErrors(fieldErrors);
+                    toast.error('Please fix highlighted errors');
+                    return;
+                }
+                
+                // Show user-friendly error message
+                showActionError(result);
+                return;
+            }
+            
             toast.success(`Customer ${initialData ? 'updated' : 'created'} successfully`);
         } catch (error) {
             console.error('Customer save error:', error);

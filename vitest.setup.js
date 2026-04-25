@@ -55,6 +55,9 @@ vi.mock('next/headers', () => ({
     }),
 }));
 
+// ─── Mock server-only ───────────────────────────────────────────────────────
+vi.mock('server-only', () => ({}));
+
 // ─── Global Test Utilities ──────────────────────────────────────────────────
 // Available in all test files via globalThis
 

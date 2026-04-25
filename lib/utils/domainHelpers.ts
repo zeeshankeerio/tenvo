@@ -636,7 +636,7 @@ export function isHighPrecisionDomain(category: string): boolean {
 /**
  * Sanitize domain data to ensure no overlap with core keys or blocklisted keys
  */
-export function sanitizeDomainData(data: Record<string, any>, category?: string): Record<string, any> {
+export function sanitizeDomainData(data: Record<string, any>): Record<string, any> {
   const sanitized = { ...data };
   
   // 1. Remove core product keys (they belong at the top level)

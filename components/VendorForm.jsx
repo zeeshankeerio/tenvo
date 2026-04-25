@@ -17,6 +17,7 @@ import { getDomainVendorFields, normalizeKey } from '@/lib/utils/domainHelpers';
 import { getDomainColors } from '@/lib/domainColors';
 import toast from 'react-hot-toast';
 import { isEntitlementError, getEntitlementErrorMessage, isEntitlementErrorHandled } from '@/lib/utils/subscriptionErrors';
+import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 
 export function VendorForm({ initialData = null, onSave, onClose, onEntitlementError, category = 'retail-shop', business = null }) {
     const colors = getDomainColors(category);
@@ -31,7 +32,7 @@ export function VendorForm({ initialData = null, onSave, onClose, onEntitlementE
         address: '',
         city: business?.city || '',
         market_location: '',
-        contactPerson: '',
+        contact_person: '',
         srn: '',
         payment_terms: '',
         filer_status: 'none',
@@ -51,7 +52,7 @@ export function VendorForm({ initialData = null, onSave, onClose, onEntitlementE
                 ntn: initialData.ntn || '',
                 address: initialData.address || '',
                 city: initialData.city || '',
-                contactPerson: initialData.domain_data?.contact_person || initialData.contact_person || '',
+                contact_person: initialData.domain_data?.contact_person || initialData.contact_person || '',
                 srn: initialData.srn || '',
                 payment_terms: initialData.payment_terms || '',
                 filer_status: initialData.filer_status || 'none',
@@ -80,7 +81,22 @@ export function VendorForm({ initialData = null, onSave, onClose, onEntitlementE
         setIsLoading(true);
         try {
             if (onSave) {
-                await onSave(formData);
+                const result = await onSave(formData);
+                
+                // Check if result indicates failure
+                if (result && !result.success) {
+                    // Handle validation errors separately
+                    if (isValidationError(result)) {
+                        const fieldErrors = formatValidationErrors(result);
+                        setErrors(fieldErrors);
+                        toast.error('Please fix highlighted errors');
+                        return;
+                    }
+                    
+                    // Show user-friendly error message
+                    showActionError(result);
+                    return;
+                }
             }
             onClose?.();
         } catch (error) {
@@ -189,8 +205,8 @@ export function VendorForm({ initialData = null, onSave, onClose, onEntitlementE
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Principal Contact</Label>
                                 <Input
-                                    value={formData.contactPerson || ''}
-                                    onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+                                    value={formData.contact_person || ''}
+                                    onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
                                     placeholder="Manager Name"
                                     className="h-11 rounded-xl"
                                 />

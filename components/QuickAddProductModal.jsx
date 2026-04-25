@@ -22,6 +22,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getDomainKnowledge, getDomainDefaults } from '@/lib/domainKnowledge';
+import { getDomainProductFields, getDomainFormLabels } from '@/lib/utils/domainHelpers';
 import { formatCurrency } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';

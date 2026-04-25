@@ -40,6 +40,7 @@ import { TaxCategorySelector } from '@/components/domain/TaxCategorySelector';
 import { formatCurrency } from '@/lib/utils/formatting';
 import { productSchema, validateForm } from '@/lib/validation';
 import toast from 'react-hot-toast';
+import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { StockHistory } from '@/components/StockHistory';
@@ -473,7 +474,22 @@ export function ProductForm({
             if (typeof onSave === 'function') {
                 // Determine if we should clear the form (Add Another)
                 // We await the onSave to ensure the parent operation succeeds before clearing
-                await onSave(payload);
+                const result = await onSave(payload);
+                
+                // Check if result indicates failure
+                if (result && !result.success) {
+                    // Handle validation errors separately
+                    if (isValidationError(result)) {
+                        const fieldErrors = formatValidationErrors(result);
+                        setErrors(prev => ({ ...prev, ...fieldErrors }));
+                        toast.error('Please fix highlighted errors');
+                        return;
+                    }
+                    
+                    // Show user-friendly error message
+                    showActionError(result);
+                    return;
+                }
 
                 // Form clearing logic is now handled by the parent or state reset
                 if (addAnother && !product) {

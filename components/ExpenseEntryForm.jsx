@@ -10,6 +10,7 @@ import { formatCurrency } from '@/lib/currency';
 import { createExpenseAction } from '@/lib/actions/basic/expense';
 import { getGLAccountsAction } from '@/lib/actions/basic/accounting';
 import toast from 'react-hot-toast';
+import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import { translations } from '@/lib/translations';
 import { expenseSchema, validateWithSchema } from '@/lib/validation/schemas';
@@ -94,7 +95,15 @@ export function ExpenseEntryForm({
                 onSave?.();
                 onClose?.();
             } else {
-                throw new Error(result.error);
+                // Handle validation errors separately
+                if (isValidationError(result)) {
+                    const fieldErrors = formatValidationErrors(result);
+                    toast.error('Please fix validation errors');
+                    return;
+                }
+                
+                // Show user-friendly error message
+                showActionError(result);
             }
         } catch (error) {
             console.error('Error saving expense:', error);

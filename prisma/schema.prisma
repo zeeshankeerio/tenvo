@@ -325,6 +325,9 @@ model gl_entries {
   journal_entries  journal_entries? @relation(fields: [journal_id], references: [id], onUpdate: NoAction)
 
   @@index([journal_id])
+  @@index([business_id, account_id, transaction_date(sort: Desc)], name: "idx_gl_entries_business_account_date")
+  @@index([business_id, reference_type, reference_id], name: "idx_gl_entries_business_ref_type_id")
+  @@index([business_id, journal_id], name: "idx_gl_entries_business_journal")
 }
 
 model invoices {
@@ -361,6 +364,9 @@ model invoices {
   @@index([business_id, date])
   @@index([business_id, status])
   @@index([is_deleted])
+  @@index([business_id, status, date(sort: Desc)], name: "idx_invoices_business_status_date")
+  @@index([business_id, customer_id, payment_status], name: "idx_invoices_business_customer_payment")
+  @@index([business_id, is_deleted, date(sort: Desc)], name: "idx_invoices_business_deleted_date")
 }
 
 model product_serials {
@@ -528,6 +534,7 @@ model products {
   @@index([business_id, category])
   @@index([business_id, brand])
   @@index([is_deleted])
+  @@index([business_id, category, is_active], name: "idx_products_business_category_active")
 }
 
 model purchases {
@@ -559,6 +566,8 @@ model purchases {
 
   @@unique([business_id, purchase_number])
   @@index([domain_data], map: "idx_purchases_domain_data", type: Gin)
+  @@index([business_id, vendor_id, payment_status], name: "idx_purchases_business_vendor_payment")
+  @@index([business_id, status, date(sort: Desc)], name: "idx_purchases_business_status_date")
 }
 
 model stock_movements {
@@ -583,6 +592,9 @@ model stock_movements {
 
   @@index([domain_data], map: "idx_stock_movements_domain_data_gin", type: Gin)
   @@index([business_id, created_at(sort: Desc)])
+  @@index([business_id, product_id, created_at(sort: Desc)], name: "idx_stock_movements_business_product_date")
+  @@index([business_id, warehouse_id, transaction_type], name: "idx_stock_movements_business_warehouse_type")
+  @@index([business_id, reference_type, reference_id], name: "idx_stock_movements_business_ref_type_id")
 }
 
 model tax_configurations {
@@ -1059,6 +1071,9 @@ model audit_logs {
   @@index([business_id])
   @@index([entity_type, entity_id])
   @@index([created_at(sort: Desc)])
+  @@index([business_id, entity_type, entity_id], name: "idx_audit_logs_business_entity_type_id")
+  @@index([business_id, user_id, created_at(sort: Desc)], name: "idx_audit_logs_business_user_date")
+  @@index([business_id, action, created_at(sort: Desc)], name: "idx_audit_logs_business_action_date")
 }
 
 model promotions {

@@ -20,6 +20,7 @@ import {
 } from '@/lib/utils/domainHelpers';
 import { BatchSelector, SerialSelector } from '@/components/domain/SalesDomainSelectors';
 import toast from 'react-hot-toast';
+import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import { translations } from '@/lib/translations';
 
@@ -222,7 +223,16 @@ export function SalesDocumentForm({
                 onSave?.();
                 onClose?.();
             } else {
-                throw new Error(result.error);
+                // Handle validation errors separately
+                if (isValidationError(result)) {
+                    const fieldErrors = formatValidationErrors(result);
+                    // You can set field errors here if you have a state for them
+                    toast.error('Please fix validation errors');
+                    return;
+                }
+                
+                // Show user-friendly error message
+                showActionError(result);
             }
         } catch (error) {
             console.error(`Error saving ${type}:`, error);
