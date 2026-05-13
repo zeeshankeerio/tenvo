@@ -19,6 +19,9 @@ import { getExchangeRatesAction } from '@/lib/actions/basic/exchangeRate';
 import { ExpenseManager } from '@/components/finance/ExpenseManager';
 import { PaymentReceiptForm } from '@/components/PaymentReceiptForm';
 import { JournalEntryForm } from '@/components/JournalEntryForm';
+import { JournalEntryList } from '@/components/finance/JournalEntryList';
+import { FiscalPeriodManager } from '@/components/finance/FiscalPeriodManager';
+import { BankReconciliation } from '@/components/finance/BankReconciliation';
 import { getCustomersAction } from '@/lib/actions/basic/customer';
 import { getVendorsAction } from '@/lib/actions/basic/vendor';
 import { getInvoicesAction } from '@/lib/actions/basic/invoice';
@@ -28,9 +31,10 @@ import { getInvoicesAction } from '@/lib/actions/basic/invoice';
 const FINANCE_TABS = [
     { key: 'overview', label: 'Overview', icon: BarChart3, permission: 'finance.view_reports', feature: null },
     { key: 'accounts', label: 'Chart of Accounts', icon: BookOpen, permission: 'finance.view_gl', feature: 'basic_accounting' },
+    { key: 'journal', label: 'Journal Entries', icon: Landmark, permission: 'finance.view_gl', feature: 'basic_accounting' },
+    { key: 'reconciliation', label: 'Reconciliation', icon: BarChart3, permission: 'finance.view_gl', feature: 'basic_accounting' },
     { key: 'expenses', label: 'Expenses', icon: Receipt, permission: 'finance.manage_expenses', feature: 'expense_tracking' },
     { key: 'vouchers', label: 'Vouchers', icon: CreditCard, permission: 'finance.manage_payments', feature: 'basic_accounting' },
-    { key: 'journal', label: 'Journal Entry', icon: Landmark, permission: 'finance.view_gl', feature: 'basic_accounting' },
     { key: 'credit-notes', label: 'Credit Notes', icon: RefreshCcw, permission: 'finance.credit_notes', feature: 'credit_notes' },
     { key: 'fiscal', label: 'Fiscal Periods', icon: Calendar, permission: 'finance.close_period', feature: 'fiscal_periods' },
     { key: 'exchange', label: 'Exchange Rates', icon: Globe, permission: 'finance.exchange_rates', feature: 'exchange_rates' },
@@ -638,24 +642,33 @@ export default function FinanceHub({ businessId, initialTab }) {
             case 'journal':
                 return (
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-lg font-black text-gray-900">Journal Entries</h3>
-                                <p className="text-xs text-gray-400">Manual double-entry GL posting</p>
-                            </div>
-                            <Button
-                                onClick={() => setShowJournalForm(true)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs px-6 shadow-lg shadow-emerald-500/20"
-                            >
-                                <BookOpen className="w-4 h-4 mr-2" /> New Journal Entry
-                            </Button>
-                        </div>
+                        <JournalEntryList
+                            businessId={effectiveBusinessId}
+                            currency={effectiveCurrency}
+                            accounts={accounts}
+                            onNewEntry={() => setShowJournalForm(true)}
+                        />
                     </div>
+                );
+            case 'reconciliation':
+                return (
+                    <BankReconciliation
+                        businessId={effectiveBusinessId}
+                        currency={effectiveCurrency}
+                        accounts={accounts}
+                    />
                 );
             case 'credit-notes':
                 return <CreditNotesPanel businessId={effectiveBusinessId} creditNotes={creditNotes} currency={effectiveCurrency} onRefresh={loadData} />;
             case 'fiscal':
-                return <FiscalPeriodsPanel businessId={effectiveBusinessId} periods={periods} currency={effectiveCurrency} />;
+                return (
+                    <FiscalPeriodManager
+                        businessId={effectiveBusinessId}
+                        currency={effectiveCurrency}
+                        periods={periods}
+                        onRefresh={loadData}
+                    />
+                );
             case 'exchange':
                 return <ExchangeRatesPanel businessId={effectiveBusinessId} rates={rates} currency={effectiveCurrency} />;
             default:
