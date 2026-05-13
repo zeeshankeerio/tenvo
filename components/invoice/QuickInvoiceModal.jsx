@@ -114,6 +114,8 @@ export function QuickInvoiceModal({
         return lastTx && lastTx.items ? lastTx : null;
     }, [customerName, recentTransactions]);
 
+    const hasLoadableLastOrder = Boolean(lastCustomerInvoice?.items?.length);
+
     const resolveProductFromSearch = () => {
         const search = productSearch.trim().toLowerCase();
         if (!search) return null;
@@ -182,6 +184,11 @@ export function QuickInvoiceModal({
         setCartItems(cartItems.filter(item => item.productId !== productId));
     };
 
+    const handleClearCart = () => {
+        setCartItems([]);
+        toast.success('Cart cleared');
+    };
+
     const getLinePrice = (item, matchedProduct) => {
         const direct = Number(item.unit_price || item.price || 0);
         if (direct > 0) return direct;
@@ -197,6 +204,11 @@ export function QuickInvoiceModal({
     const handleLoadLastInvoice = () => {
         if (!lastCustomerInvoice?.items || lastCustomerInvoice.items.length === 0) {
             toast.error('No previous items found');
+            return;
+        }
+
+        if (cartItems.length > 0) {
+            toast.error('Clear cart before loading last order');
             return;
         }
 
@@ -230,13 +242,28 @@ export function QuickInvoiceModal({
             })
             .filter(Boolean);
 
-        if (loadedItems.length === 0) {
+        const mergedItems = Array.from(
+            loadedItems.reduce((map, item) => {
+                if (!map.has(item.productId)) {
+                    map.set(item.productId, { ...item });
+                } else {
+                    const existing = map.get(item.productId);
+                    map.set(item.productId, {
+                        ...existing,
+                        quantity: existing.quantity + item.quantity,
+                    });
+                }
+                return map;
+            }, new Map()).values()
+        );
+
+        if (mergedItems.length === 0) {
             toast.error('No valid items found to load from last order');
             return;
         }
 
-        setCartItems(loadedItems);
-        toast.success(`Loaded ${loadedItems.length} items from last order`);
+        setCartItems(mergedItems);
+        toast.success(`Loaded ${mergedItems.length} items from last order`);
         productSearchRef.current?.focus();
     };
 
@@ -342,8 +369,7 @@ export function QuickInvoiceModal({
             // C: Clear cart
             if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
                 e.preventDefault();
-                setCartItems([]);
-                toast.success('Cart cleared');
+                handleClearCart();
                 return;
             }
 
@@ -481,7 +507,7 @@ export function QuickInvoiceModal({
                         )}
 
                         {/* Quick Load Last Order */}
-                        {lastCustomerInvoice && (
+                        {hasLoadableLastOrder && (
                             <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between">
                                 <div className="text-xs text-emerald-700 font-medium">
                                     <span className="font-bold">{lastCustomerInvoice.items?.length || 0}</span> items from last order
@@ -656,6 +682,30 @@ export function QuickInvoiceModal({
                         </div>
                     </div>
                 </CardContent>
+
+                {/* Mobile Sticky Quick Actions */}
+                {cartItems.length > 0 && (
+                    <div className="sm:hidden sticky bottom-0 z-10 border-t bg-white/95 backdrop-blur px-3 py-2">
+                        <div className="flex items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleClearCart}
+                                className="h-9 px-3"
+                            >
+                                Clear
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleCompleteSale}
+                                disabled={isSubmitting}
+                                className="ml-auto h-9 bg-wine hover:bg-wine/90 text-white"
+                            >
+                                {isSubmitting ? 'Processing...' : `Pay ${formatCurrency(totals.total, currency)}`}
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Footer Actions */}
                 <div className="border-t bg-gray-50 p-4 flex gap-2 sm:flex-row flex-col-reverse">
