@@ -13,9 +13,9 @@ import { getTablesAction, createRestaurantOrderAction, updateTableStatusAction }
 import { createPosTransactionAction } from '@/lib/actions/standard/pos';
 import toast from 'react-hot-toast';
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // ORDER TYPE SELECTOR
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 const ORDER_TYPES = [
     { key: 'dine-in', label: 'Dine In', icon: UtensilsCrossed, color: 'bg-indigo-500' },
@@ -49,9 +49,9 @@ function OrderTypeSelector({ selected, onSelect }) {
     );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // MENU CATEGORY BAR
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 function CategoryBar({ categories, active, onSelect }) {
     return (
@@ -81,9 +81,9 @@ function CategoryBar({ categories, active, onSelect }) {
     );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // MENU ITEM CARD
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 function MenuItemCard({ product, onAdd, currency }) {
     const isLow = (product.stock || 0) <= 5;
@@ -112,9 +112,9 @@ function MenuItemCard({ product, onAdd, currency }) {
     );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // ORDER ITEM ROW
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 function OrderItemRow({ item, onQty, onRemove, currency }) {
     return (
@@ -148,9 +148,9 @@ function OrderItemRow({ item, onQty, onRemove, currency }) {
     );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // MAIN RESTAURANT POS
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 export function RestaurantPOS({ businessId, products = [], onCompleteSale, currency = 'Rs.', taxConfig }) {
     const { business } = useBusiness();
@@ -171,7 +171,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
     const [isFullscreen, setIsFullscreen] = useState(false);
     const containerRef = React.useRef(null);
 
-    // ─── Fullscreen Logic ────────────────────────────────────────────────────
+    // --- Fullscreen Logic ----------------------------------------------------
 
     const toggleFullscreen = useCallback(() => {
         if (!containerRef.current) return;
@@ -318,7 +318,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
             });
 
             if (result.success) {
-                toast.success('Payment processed!', { icon: '✅' });
+                toast.success('Payment processed!', { icon: '[OK]' });
                 onCompleteSale?.(result);
                 // Reset
                 setOrderItems([]);
@@ -347,7 +347,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
                 isFullscreen ? "h-screen w-screen rounded-0 border-0" : "h-[calc(100vh-120px)] rounded-2xl"
             )}
         >
-            {/* ─── Left Panel: Table & Menu ─────────────────────────────── */}
+            {/* --- Left Panel: Table & Menu ------------------------------- */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Order Type + Table Selection */}
                 <div className="p-4 bg-white border-b border-gray-100 space-y-3">
@@ -431,7 +431,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
                 </div>
             </div>
 
-            {/* ─── Right Panel: Order Cart ──────────────────────────────── */}
+            {/* --- Right Panel: Order Cart -------------------------------- */}
             <div className="w-[360px] bg-white border-l border-gray-200 flex flex-col">
                 {/* Order Header */}
                 <div className="p-4 border-b border-gray-100">
@@ -439,7 +439,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
                         <div>
                             <h3 className="text-sm font-black text-gray-900">Current Order</h3>
                             <p className="text-[10px] text-gray-400 mt-0.5">
-                                {orderType === 'dine-in' && selectedTable ? `Table ${selectedTable.table_number || selectedTable.name} • ${covers} covers` :
+                                {orderType === 'dine-in' && selectedTable ? `Table ${selectedTable.table_number || selectedTable.name} * ${covers} covers` :
                                     orderType === 'takeaway' ? 'Takeaway Order' : 'Delivery Order'}
                             </p>
                         </div>

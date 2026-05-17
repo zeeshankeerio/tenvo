@@ -220,7 +220,7 @@ export function CycleCountManager({
                                     <div className="flex-1">
                                         <div className="font-semibold">{count.name}</div>
                                         <div className="text-xs text-gray-500 mt-1">
-                                            Created {new Date(count.created_at).toLocaleDateString()} • 
+                                            Created {new Date(count.created_at).toLocaleDateString()} * 
                                             {count.item_count || 0} items
                                         </div>
                                     </div>

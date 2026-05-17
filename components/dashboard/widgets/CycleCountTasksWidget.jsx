@@ -23,7 +23,7 @@ import { translations } from '@/lib/translations';
  * - Display pending cycle count tasks
  * - Show task priority and due date
  * - List assigned tasks for current user
- * - Add quick action: "Start Cycle Count" → opens CycleCountTask
+ * - Add quick action: "Start Cycle Count" -> opens CycleCountTask
  * - Integrate with existing cycle counting system from Phase 2
  * 
  * Requirements: 6.6, 8.1, 8.2

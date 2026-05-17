@@ -10,9 +10,9 @@ import { cn } from '@/lib/utils';
 import { getKitchenQueueAction, updateKitchenOrderAction } from '@/lib/actions/standard/restaurant';
 import toast from 'react-hot-toast';
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // TIMER UTILITY
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 function useElapsedTime(startTime) {
     const [elapsed, setElapsed] = useState(0);
@@ -44,9 +44,9 @@ function getTimerBg(minutes) {
     return 'bg-red-50 border-red-200 animate-pulse';
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // STATION FILTER
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 const STATIONS = [
     { key: null, label: 'All Stations', icon: ChefHat },
@@ -57,9 +57,9 @@ const STATIONS = [
     { key: 'beverages', label: 'Beverages', icon: ChefHat },
 ];
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // KITCHEN TICKET CARD
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 function KitchenTicket({ order, onStatusUpdate, onBump }) {
     const { minutes, formatted } = useElapsedTime(order.created_at || order.sent_at);
@@ -110,9 +110,9 @@ function KitchenTicket({ order, onStatusUpdate, onBump }) {
             {/* Order Metadata */}
             <div className="px-4 py-1.5 flex items-center gap-3 text-[10px] font-bold text-gray-500 border-b border-inherit">
                 {order.table_number && <span>🪑 Table {order.table_number}</span>}
-                {order.order_type && <span>• {order.order_type}</span>}
-                {order.waiter_name && <span>• 👤 {order.waiter_name}</span>}
-                {order.covers && <span>• {order.covers} covers</span>}
+                {order.order_type && <span>* {order.order_type}</span>}
+                {order.waiter_name && <span>* 👤 {order.waiter_name}</span>}
+                {order.covers && <span>* {order.covers} covers</span>}
             </div>
 
             {/* Items */}
@@ -156,9 +156,9 @@ function KitchenTicket({ order, onStatusUpdate, onBump }) {
     );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // MAIN KDS COMPONENT
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 export function KitchenDisplaySystem({ businessId }) {
     const [queue, setQueue] = useState([]);
@@ -197,7 +197,7 @@ export function KitchenDisplaySystem({ businessId }) {
             });
 
             if (result.success) {
-                toast.success(`Order moved to ${newStatus}`, { icon: newStatus === 'ready' ? '✅' : '🏁' });
+                toast.success(`Order moved to ${newStatus}`, { icon: newStatus === 'ready' ? '[OK]' : '🏁' });
                 loadQueue();
             } else {
                 toast.error(result.error || 'Failed to update');
@@ -222,7 +222,7 @@ export function KitchenDisplaySystem({ businessId }) {
                     </div>
                     <div>
                         <h2 className="text-lg font-black text-gray-900">Kitchen Display</h2>
-                        <p className="text-xs text-gray-400">{queue.length} active orders • Auto-refresh {autoRefresh ? 'ON' : 'OFF'}</p>
+                        <p className="text-xs text-gray-400">{queue.length} active orders * Auto-refresh {autoRefresh ? 'ON' : 'OFF'}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">

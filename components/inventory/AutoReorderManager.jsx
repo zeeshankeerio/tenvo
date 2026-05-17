@@ -239,16 +239,16 @@ export function AutoReorderManager({
                         <div className="font-medium">{suggestion.productName}</div>
                         <div className="text-sm text-gray-500">
                           SKU: {suggestion.sku}
-                          {' • '}
+                          {' * '}
                           Current: {suggestion.currentStock}
-                          {' • '}
+                          {' * '}
                           Reorder Point: {suggestion.reorderPoint}
-                          {' • '}
+                          {' * '}
                           Suggested: {suggestion.suggestedQuantity}
                         </div>
                         {vendor && (
                           <div className="text-xs text-gray-400 mt-1">
-                            Vendor: {vendor.name} • Lead Time: {suggestion.leadTime} days
+                            Vendor: {vendor.name} * Lead Time: {suggestion.leadTime} days
                           </div>
                         )}
                       </div>

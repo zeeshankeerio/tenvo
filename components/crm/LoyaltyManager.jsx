@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,9 +11,7 @@ import { useBusiness } from '@/lib/context/BusinessContext';
 import { getLoyaltyProgramsAction, createLoyaltyProgramAction } from '@/lib/actions/standard/loyalty';
 import toast from 'react-hot-toast';
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // LOYALTY KPI CARDS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function LoyaltyKPI({ label, value, icon: Icon, color }) {
     const colors = {
@@ -31,9 +29,9 @@ function LoyaltyKPI({ label, value, icon: Icon, color }) {
     );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ===============================================================
 // PROGRAM CARD
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ===============================================================
 
 function ProgramCard({ program, currency, onSelect }) {
     const typeIcons = {
@@ -84,9 +82,9 @@ function ProgramCard({ program, currency, onSelect }) {
     );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ===============================================================
 // CREATE PROGRAM FORM
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ===============================================================
 
 function CreateProgramForm({ businessId, onCreated, onCancel }) {
     const [form, setForm] = useState({
@@ -111,7 +109,7 @@ function CreateProgramForm({ businessId, onCreated, onCancel }) {
                 expiryDays: parseInt(form.expiry_days),
             });
             if (result.success) {
-                toast.success('Loyalty program created!', { icon: 'ðŸŽ‰' });
+                toast.success('Loyalty program created!', { icon: '[CELEBRATION]' });
                 onCreated?.();
             } else {
                 toast.error(result.error || 'Failed to create program');
@@ -216,9 +214,9 @@ function CreateProgramForm({ businessId, onCreated, onCancel }) {
     );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ===============================================================
 // MAIN LOYALTY MANAGER
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ===============================================================
 
 export function LoyaltyManager({ businessId }) {
     const { business, currencySymbol } = useBusiness();
@@ -256,7 +254,7 @@ export function LoyaltyManager({ businessId }) {
                     </div>
                     <div>
                         <h2 className="text-lg font-black text-gray-900 tracking-tight">Loyalty & Rewards</h2>
-                        <p className="text-xs text-gray-400 font-medium">Programs Â· Points Â· Customer Retention</p>
+                        <p className="text-xs text-gray-400 font-medium">Programs &middot; Points &middot; Customer Retention</p>
                     </div>
                 </div>
                 {!showCreate && (
@@ -275,7 +273,7 @@ export function LoyaltyManager({ businessId }) {
                 <LoyaltyKPI label="Active Programs" value={activePrograms} icon={Star} color="gold" />
                 <LoyaltyKPI label="Total Members" value={totalMembers} icon={Users} color="purple" />
                 <LoyaltyKPI label="Programs" value={programs.length} icon={Gift} color="emerald" />
-                <LoyaltyKPI label="Avg Retention" value="â€”" icon={TrendingUp} color="blue" />
+                <LoyaltyKPI label="Avg Retention" value="--" icon={TrendingUp} color="blue" />
             </div>
 
             {/* Create Form */}

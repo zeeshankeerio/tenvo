@@ -92,7 +92,7 @@ export const GET = withApiAuth(async (request, { businessId, routeParams }) => {
 /**
  * PUT /api/v1/purchases/[id]
  * 
- * Update purchase status (draft → received, or cancel)
+ * Update purchase status (draft -> received, or cancel)
  * 
  * Request Body:
  * {

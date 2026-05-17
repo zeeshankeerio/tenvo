@@ -343,7 +343,7 @@ export function DashboardTabs({
                                     setShowProductForm(true);
                                 }}
                                 onUpdate={async (product) => {
-                                    // ✅ CRITICAL FIX: Preserve batch/serial data during inline edits
+                                    // [OK] CRITICAL FIX: Preserve batch/serial data during inline edits
                                     // BusyGrid sends partial product data, we must fetch full data to preserve batches
                                     const fullProduct = products.find(p => p.id === product.id);
 
@@ -710,7 +710,7 @@ export function DashboardTabs({
                     )}
                 </TabsContent>
 
-                {/* ─── Phase 3+5+6: New Module Tabs ──────────────────────────── */}
+                {/* --- Phase 3+5+6: New Module Tabs ---------------------------- */}
 
                 <TabsContent value="pos" className="space-y-6 outline-none">
                     {wrapTab(
@@ -982,7 +982,7 @@ export function DashboardTabs({
                     )}
                 </TabsContent>
 
-                {/* ─── Finance Sub-Tabs (promoted to top-level navigation) ─── */}
+                {/* --- Finance Sub-Tabs (promoted to top-level navigation) --- */}
                 <TabsContent value="credit-notes" className="space-y-6 outline-none">
                     {wrapTab(
                         <TabGuard tabKey="credit-notes" role={role} planTier={planTier} featureName="Credit Notes" onUpgrade={() => handleTabChange('settings')}>

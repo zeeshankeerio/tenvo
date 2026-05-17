@@ -406,7 +406,7 @@ export function ProductForm({
 
         // Warning handling (from logic check)
         if (logicCheck.warnings?.length > 0) {
-            logicCheck.warnings.forEach(warn => toast(warn, { icon: '⚠️' }));
+            logicCheck.warnings.forEach(warn => toast(warn, { icon: '[WARNING]' }));
         }
 
         try {
@@ -745,7 +745,7 @@ export function ProductForm({
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white text-[10px] font-black uppercase">
-                                                        🎉 {currentSeason.name.en}
+                                                        [CELEBRATION] {currentSeason.name.en}
                                                     </Badge>
                                                     <span className="text-xs font-bold text-orange-600">
                                                         {seasonalDiscount}% Seasonal Discount Active
@@ -875,7 +875,7 @@ export function ProductForm({
                                     />
                                 </div>
 
-                                {/* Size-Color Matrix — for garments, boutique-fashion, leather-footwear */}
+                                {/* Size-Color Matrix -- for garments, boutique-fashion, leather-footwear */}
                                 {isSizeColorMatrixEnabled(category) && (
                                     <div className="mb-6 p-5 bg-white/70 rounded-2xl border border-dashed border-gray-300">
                                         <div className="flex items-center gap-2 mb-4">

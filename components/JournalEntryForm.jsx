@@ -15,7 +15,7 @@ import toast from 'react-hot-toast';
 import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 import { journalEntrySchema, validateWithSchema } from '@/lib/validation/schemas';
 
-// ─── Quick templates for common journal entries ──────────────────────────────
+// --- Quick templates for common journal entries ------------------------------
 const JOURNAL_TEMPLATES = [
     {
         label: 'Depreciation', description: 'Monthly depreciation expense', entries: [
@@ -238,7 +238,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                         <div>
                             <CardTitle className="text-2xl font-black uppercase tracking-tighter">Journal Entry</CardTitle>
                             <p className="text-xs font-bold text-emerald-300/70 uppercase tracking-widest mt-1">
-                                {business?.name} • Double-Entry Posting
+                                {business?.name} * Double-Entry Posting
                             </p>
                         </div>
                     </div>
@@ -297,7 +297,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                         </div>
                     </div>
 
-                    {/* Journal Lines — Split Debit / Credit */}
+                    {/* Journal Lines -- Split Debit / Credit */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* DEBIT Column */}
                         <div className="space-y-3">
@@ -320,7 +320,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                                             <Combobox
                                                 options={glAccounts.map(acc => ({
                                                     value: String(acc.id),
-                                                    label: `${acc.account_code ? `${acc.account_code} — ` : ''}${acc.account_name || acc.name}`,
+                                                    label: `${acc.account_code ? `${acc.account_code} -- ` : ''}${acc.account_name || acc.name}`,
                                                     description: acc.account_type || 'Other'
                                                 }))}
                                                 value={String(entry.account_id || '')}
@@ -373,7 +373,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                                             <Combobox
                                                 options={glAccounts.map(acc => ({
                                                     value: String(acc.id),
-                                                    label: `${acc.account_code ? `${acc.account_code} — ` : ''}${acc.account_name || acc.name}`,
+                                                    label: `${acc.account_code ? `${acc.account_code} -- ` : ''}${acc.account_name || acc.name}`,
                                                     description: acc.account_type || 'Other'
                                                 }))}
                                                 value={String(entry.account_id || '')}
@@ -417,7 +417,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Balance Check</p>
                                     <p className={`text-lg font-black ${totals.isBalanced ? 'text-emerald-700' : 'text-red-700'}`}>
-                                        {totals.isBalanced ? 'Entry is balanced — ready to post' : `Difference: ${formatCurrency(totals.difference, currency)}`}
+                                        {totals.isBalanced ? 'Entry is balanced -- ready to post' : `Difference: ${formatCurrency(totals.difference, currency)}`}
                                     </p>
                                 </div>
                             </div>

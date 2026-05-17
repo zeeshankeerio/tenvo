@@ -474,7 +474,7 @@ export function ManufacturingModule({
                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                           <Clock className="w-3 h-3" />
                           <span>Started {startDate.toLocaleDateString()}</span>
-                          <span>•</span>
+                          <span>*</span>
                           <span>Due {dueDate.toLocaleDateString()}</span>
                         </div>
                       </div>

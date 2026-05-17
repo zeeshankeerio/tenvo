@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 /**
- * ResourceLimitBanner — Shows a warning when a resource is near or at its plan limit.
+ * ResourceLimitBanner -- Shows a warning when a resource is near or at its plan limit.
  *
  * Props:
- *   message     – from useResourceLimits().getLimitMessage()
- *   isAtLimit   – true = hard block (red), false = warning (amber)
- *   onUpgrade   – callback to show upgrade flow
- *   className   – additional classes
+ *   message     - from useResourceLimits().getLimitMessage()
+ *   isAtLimit   - true = hard block (red), false = warning (amber)
+ *   onUpgrade   - callback to show upgrade flow
+ *   className   - additional classes
  */
 export function ResourceLimitBanner({ message, isAtLimit, onUpgrade, className }) {
     if (!message) return null;

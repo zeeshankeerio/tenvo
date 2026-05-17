@@ -34,7 +34,7 @@ export function TrustBadges({ variant = 'horizontal', className = '' }) {
     {
       id: 'gdpr',
       name: 'GDPR Ready',
-      icon: '🛡️',
+      icon: '[SHIELD]',
       description: 'GDPR compliant data protection and privacy controls',
       color: 'bg-gray-50 text-gray-700 border-gray-200'
     }

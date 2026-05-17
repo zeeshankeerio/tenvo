@@ -81,7 +81,7 @@ export function PayrollDashboard({
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Last Run Net</p>
                                 <p className="text-2xl font-black text-brand-primary mt-1">
-                                    {lastRun ? `${currency}${parseFloat(lastRun.total_net || 0).toLocaleString()}` : 'â€”'}
+                                    {lastRun ? `${currency}${parseFloat(lastRun.total_net || 0).toLocaleString()}` : '--'}
                                 </p>
                             </div>
                             <div className="p-2.5 bg-brand-50 rounded-lg">
@@ -133,7 +133,7 @@ export function PayrollDashboard({
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-gray-900 truncate">{emp.full_name}</p>
-                                        <p className="text-[10px] text-gray-400">{emp.department || 'â€”'} â€¢ {emp.designation || 'â€”'}</p>
+                                        <p className="text-[10px] text-gray-400">{emp.department || '--'} * {emp.designation || '--'}</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-bold text-gray-900">{currency}{parseFloat(emp.base_salary).toLocaleString()}</p>
@@ -172,7 +172,7 @@ export function PayrollDashboard({
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-bold text-gray-900">{run.run_number}</p>
-                                        <p className="text-[10px] text-gray-400">{run.period_month}/{run.period_year} â€¢ {run.employee_count} staff</p>
+                                        <p className="text-[10px] text-gray-400">{run.period_month}/{run.period_year} * {run.employee_count} staff</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xs font-black text-gray-900">{currency}{parseFloat(run.total_net || 0).toLocaleString()}</p>

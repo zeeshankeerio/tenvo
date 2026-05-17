@@ -201,7 +201,7 @@ export function PaymentReceiptForm({
                                 {isCustomer ? 'Customer Receipt' : 'Vendor Payment'}
                             </CardTitle>
                             <p className="text-xs font-bold text-emerald-100 uppercase tracking-widest mt-1">
-                                {business?.name} • Multi-Allocation Vouchers
+                                {business?.name} * Multi-Allocation Vouchers
                             </p>
                         </div>
                     </div>

@@ -11,11 +11,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const STATUS_TYPES = {
-    present: { label: 'Present', icon: 'âœ…', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    absent: { label: 'Absent', icon: 'âŒ', color: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-500' },
-    halfday: { label: 'Half Day', icon: 'ðŸ”¶', color: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    leave: { label: 'On Leave', icon: 'ðŸ–ï¸', color: 'bg-brand-50 text-brand-primary border-brand-100', dot: 'bg-brand-primary' },
-    holiday: { label: 'Holiday', icon: 'ðŸŽ‰', color: 'bg-wine-100 text-wine-700 border-wine-200', dot: 'bg-wine-500' },
+    present: { label: 'Present', icon: '[OK]', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
+    absent: { label: 'Absent', icon: '[X]', color: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-500' },
+    halfday: { label: 'Half Day', icon: '[PARTIAL]', color: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
+    leave: { label: 'On Leave', icon: '[LEAVE]', color: 'bg-brand-50 text-brand-primary border-brand-100', dot: 'bg-brand-primary' },
+    holiday: { label: 'Holiday', icon: '[CELEBRATION]', color: 'bg-wine-100 text-wine-700 border-wine-200', dot: 'bg-wine-500' },
 };
 
 const DEMO_EMPLOYEES = [
@@ -208,7 +208,7 @@ export function AttendanceTracker({ businessId, employees: propEmployees = [] })
                                                         'w-7 h-7 rounded-md flex items-center justify-center text-[10px] transition-all hover:ring-2 hover:ring-brand-100',
                                                         cfg.color, 'border'
                                                     )}
-                                                    title={`${cfg.label} â€” Click to change`}
+                                                    title={`${cfg.label} -- Click to change`}
                                                 >
                                                     {cfg.icon}
                                                 </button>

@@ -67,7 +67,7 @@ export function FileUpload({ onFileSelect, accept = '*', maxSize = 5, multiple =
           {isDragging ? 'Drop files here' : 'Click or drag files to upload'}
         </p>
         <p className="text-xs text-gray-400">
-          Max size: {maxSize}MB {accept !== '*' && `• Accepted: ${accept}`}
+          Max size: {maxSize}MB {accept !== '*' && `* Accepted: ${accept}`}
         </p>
         <input
           ref={fileInputRef}

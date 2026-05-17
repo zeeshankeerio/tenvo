@@ -129,7 +129,7 @@ export function ExpenseEntryForm({
                         <div>
                             <CardTitle className="text-2xl font-black uppercase tracking-tighter">Record Expense</CardTitle>
                             <p className="text-xs font-bold text-red-200 uppercase tracking-widest mt-1">
-                                {business?.name} • Financial Transactions
+                                {business?.name} * Financial Transactions
                             </p>
                         </div>
                     </div>
@@ -248,7 +248,7 @@ export function ExpenseEntryForm({
                                 value={String(formData.vendorId || '')}
                                 onChange={(val) => setFormData(prev => ({ ...prev, vendorId: val }))}
                                 placeholder="Search vendors..."
-                                emptyText="No vendors — internal expense"
+                                emptyText="No vendors -- internal expense"
                                 className="h-12"
                             />
                         </div>

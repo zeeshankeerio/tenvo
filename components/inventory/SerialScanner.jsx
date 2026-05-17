@@ -100,7 +100,7 @@ export function SerialScanner({
                 onSerialScanned?.(serial);
                 toast.success('Serial number verified');
             } else {
-                // ðŸ›¡ï¸ DEFENSIVE CHECK
+                // [SHIELD] DEFENSIVE CHECK
                 if (!product || !product.id) {
                     toast.error('Product context missing. Please close and try again.');
                     return;
@@ -166,7 +166,7 @@ export function SerialScanner({
         try {
             setLoading(true);
 
-            // ðŸ›¡ï¸ DEFENSIVE CHECK
+            // [SHIELD] DEFENSIVE CHECK
             if (!product || !product.id) {
                 toast.error('Product context missing');
                 return;

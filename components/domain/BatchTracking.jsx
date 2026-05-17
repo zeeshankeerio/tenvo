@@ -177,7 +177,7 @@ export function BatchNumberInput({
   }, [batches, onChange]);
 
   /*
-   * 📊 Stats & Analytics 
+   * [CHART] Stats & Analytics 
    */
   const totalStock = useMemo(() => batches.reduce((sum, b) => sum + (parseFloat(b.quantity) || 0), 0), [batches]);
 

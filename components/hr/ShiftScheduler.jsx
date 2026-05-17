@@ -37,7 +37,7 @@ function getWeekRange(baseDate) {
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
     const fmt = (d) => new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(d);
-    return { start, end, label: `${fmt(start)} â€” ${fmt(end)}, ${start.getFullYear()}` };
+    return { start, end, label: `${fmt(start)} -- ${fmt(end)}, ${start.getFullYear()}` };
 }
 
 function generateDemoSchedule(employees) {
@@ -103,7 +103,7 @@ export function ShiftScheduler({ businessId, employees: propEmployees = [] }) {
                     const prevShift = empSchedule[DAYS[idx - 1]];
                     const currShift = empSchedule[day];
                     if (prevShift === 'night' && currShift === 'morning') {
-                        conflicts.push({ empId: emp.id, day, msg: `${emp.name}: Night â†’ Morning on ${SHORT_DAYS[idx]}` });
+                        conflicts.push({ empId: emp.id, day, msg: `${emp.name}: Night -> Morning on ${SHORT_DAYS[idx]}` });
                     }
                 }
             });

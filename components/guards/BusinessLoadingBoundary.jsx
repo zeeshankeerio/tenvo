@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 
 /**
- * BusinessLoadingBoundary — Shows a polished skeleton/spinner overlay
+ * BusinessLoadingBoundary -- Shows a polished skeleton/spinner overlay
  * while business data is being loaded (initial mount or business switch).
  *
  * Wraps the main content area and renders children only when isLoading=false.

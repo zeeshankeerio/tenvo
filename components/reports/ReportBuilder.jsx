@@ -96,7 +96,7 @@ function WidgetPreview({ widget, onRemove }) {
 
             {widget.type === 'kpi' && (
                 <div className="text-center py-4">
-                    <p className="text-3xl font-black text-gray-900">{widget.value || 'â€”'}</p>
+                    <p className="text-3xl font-black text-gray-900">{widget.value || '--'}</p>
                     {widget.trend && (
                         <span className={cn(
                             'text-sm font-bold mt-1 inline-block',
@@ -185,9 +185,9 @@ export function ReportBuilder({ businessId, currency = 'Rs.' }) {
             id: `w-${idCounterRef.current++}`,
             type: type.id,
             source: selectedSource,
-            title: `${type.label} â€” ${DATA_SOURCES.find(s => s.id === selectedSource)?.label || 'Data'}`,
+            title: `${type.label} -- ${DATA_SOURCES.find(s => s.id === selectedSource)?.label || 'Data'}`,
             col: type.id === 'kpi' ? 4 : type.id === 'table' || type.id === 'summary' ? 12 : 6,
-            value: type.id === 'kpi' ? 'â€”' : undefined,
+            value: type.id === 'kpi' ? '--' : undefined,
         };
         setWidgets(prev => [...prev, newWidget]);
         setShowAddWidget(false);
@@ -202,9 +202,9 @@ export function ReportBuilder({ businessId, currency = 'Rs.' }) {
             id: `tpl-${template.id}-${idx}-${idCounterRef.current++}`,
             type: wType,
             source: template.source,
-            title: `${WIDGET_TYPES.find(t => t.id === wType)?.label || wType} â€” ${template.name}`,
+            title: `${WIDGET_TYPES.find(t => t.id === wType)?.label || wType} -- ${template.name}`,
             col: wType === 'kpi' ? 4 : wType === 'table' || wType === 'summary' ? 12 : 6,
-            value: wType === 'kpi' ? 'â€”' : undefined,
+            value: wType === 'kpi' ? '--' : undefined,
         }));
         setWidgets(generated);
         setReportName(template.name);

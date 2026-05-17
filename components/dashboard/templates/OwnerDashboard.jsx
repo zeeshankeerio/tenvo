@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo } from 'react';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
@@ -268,7 +268,7 @@ export function OwnerDashboard({
               onClick={() => onQuickAction?.('view-team-details')}
               className="w-full text-xs font-bold text-wine hover:text-wine/80 transition-colors py-2"
             >
-              {t.view_detailed_report || 'View Detailed Report'} â†’
+              {t.view_detailed_report || 'View Detailed Report'} →
             </button>
           </CardContent>
         </Card>

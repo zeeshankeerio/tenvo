@@ -500,7 +500,7 @@ export default function ApprovalQueue({ businessId, userId, userRole }) {
                       </Badge>
                     </CardTitle>
                     <CardDescription className="mt-1">
-                      SKU: {adjustment.product?.sku || 'N/A'} • Requested by{' '}
+                      SKU: {adjustment.product?.sku || 'N/A'} * Requested by{' '}
                       {adjustment.requester?.raw_user_meta_data?.full_name ||
                         adjustment.requester?.email ||
                         'Unknown'}

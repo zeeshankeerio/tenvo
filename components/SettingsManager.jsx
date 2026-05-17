@@ -432,11 +432,11 @@ export function SettingsManager({ category }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                   <div className="space-y-2">
                     <Label className="text-gray-400">New Password</Label>
-                    <Input id="new-password" type="password" placeholder="••••••••" className="rounded-xl h-11 bg-gray-700 border-gray-600 text-white" />
+                    <Input id="new-password" type="password" placeholder="********" className="rounded-xl h-11 bg-gray-700 border-gray-600 text-white" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-gray-400">Confirm Password</Label>
-                    <Input id="confirm-password" type="password" placeholder="••••••••" className="rounded-xl h-11 bg-gray-700 border-gray-600 text-white" />
+                    <Input id="confirm-password" type="password" placeholder="********" className="rounded-xl h-11 bg-gray-700 border-gray-600 text-white" />
                   </div>
                 </div>
                 <Button

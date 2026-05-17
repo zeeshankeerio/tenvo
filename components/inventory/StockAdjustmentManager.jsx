@@ -69,13 +69,13 @@ export function StockAdjustmentManager({
     const adjustmentReasons = [
         { value: 'counting_error', label: 'Counting Error', icon: '🔢' },
         { value: 'damage', label: 'Damage / Spoilage', icon: '💔' },
-        { value: 'theft', label: 'Theft / Loss', icon: '🚨' },
+        { value: 'theft', label: 'Theft / Loss', icon: '[ALERT]' },
         { value: 'expiry', label: 'Expired Stock', icon: '⏰' },
-        { value: 'sample', label: 'Sample / Testing', icon: '🧪' },
+        { value: 'sample', label: 'Sample / Testing', icon: '[TEST]' },
         { value: 'write_off', label: 'Write-Off', icon: '📝' },
-        { value: 'found', label: 'Found Stock', icon: '🔍' },
-        { value: 'opening', label: 'Opening Balance', icon: '📊' },
-        { value: 'other', label: 'Other', icon: '📋' }
+        { value: 'found', label: 'Found Stock', icon: '[SEARCH]' },
+        { value: 'opening', label: 'Opening Balance', icon: '[CHART]' },
+        { value: 'other', label: 'Other', icon: '[CLIPBOARD]' }
     ];
 
     const handleCreateAdjustment = async () => {
@@ -281,13 +281,13 @@ export function StockAdjustmentManager({
                                         <div className="font-medium">{adjustment.product_name}</div>
                                         <div className="text-sm text-gray-500">
                                             {adjustment.quantity_change > 0 ? '+' : ''}{adjustment.quantity_change} units
-                                            {' • '}
+                                            {' * '}
                                             Reason: {adjustment.reason_code}
-                                            {adjustment.warehouse_name && ` • ${adjustment.warehouse_name}`}
+                                            {adjustment.warehouse_name && ` * ${adjustment.warehouse_name}`}
                                         </div>
                                         <div className="text-xs text-gray-400 mt-1">
                                             {new Date(adjustment.created_at).toLocaleString()}
-                                            {adjustment.created_by && ` • by ${adjustment.created_by}`}
+                                            {adjustment.created_by && ` * by ${adjustment.created_by}`}
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-2">

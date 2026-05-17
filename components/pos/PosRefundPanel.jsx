@@ -12,22 +12,22 @@ import { useBusiness } from '@/lib/context/BusinessContext';
 import { refundPosTransactionAction, getPosRefundsAction, getPosTransactionLookupAction } from '@/lib/actions/standard/posRefund';
 import toast from 'react-hot-toast';
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // REASON CODES
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 const REFUND_REASONS = [
     { key: 'defective', label: 'Defective / Damaged', icon: '🔧' },
     { key: 'wrong_item', label: 'Wrong Item', icon: '🔄' },
     { key: 'customer_dissatisfied', label: 'Customer Dissatisfied', icon: '😞' },
     { key: 'price_error', label: 'Price Error', icon: '💲' },
-    { key: 'duplicate_charge', label: 'Duplicate Charge', icon: '📋' },
+    { key: 'duplicate_charge', label: 'Duplicate Charge', icon: '[CLIPBOARD]' },
     { key: 'other', label: 'Other', icon: '📝' },
 ];
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // REFUND HISTORY CARD
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 function RefundHistoryCard({ refund, currency }) {
     return (
@@ -54,16 +54,16 @@ function RefundHistoryCard({ refund, currency }) {
             </div>
             <div className="flex items-center gap-3 text-[10px] text-gray-400">
                 {refund.reason && <span>💬 {refund.reason}</span>}
-                <span>• {refund.refund_method}</span>
-                <span>• {new Date(refund.created_at).toLocaleDateString()}</span>
+                <span>* {refund.refund_method}</span>
+                <span>* {new Date(refund.created_at).toLocaleDateString()}</span>
             </div>
         </div>
     );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // MAIN REFUND PANEL
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 export function PosRefundPanel({ businessId }) {
     const { business, currencySymbol } = useBusiness();
@@ -177,7 +177,7 @@ export function PosRefundPanel({ businessId }) {
             });
 
             if (result.success) {
-                toast.success(`Refund ${result.refund.refund_number} processed!`, { icon: '✅' });
+                toast.success(`Refund ${result.refund.refund_number} processed!`, { icon: '[OK]' });
                 setView('history');
                 setSelectedTx(null);
                 setRefundItems([]);
@@ -250,7 +250,7 @@ export function PosRefundPanel({ businessId }) {
             </div>
 
             <AnimatePresence mode="wait">
-                {/* ─── LOOKUP VIEW ───────────────────────────── */}
+                {/* --- LOOKUP VIEW ----------------------------- */}
                 {view === 'lookup' && (
                     <motion.div key="lookup" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                         className="bg-white rounded-xl border border-gray-200 p-6 space-y-4"
@@ -285,7 +285,7 @@ export function PosRefundPanel({ businessId }) {
                     </motion.div>
                 )}
 
-                {/* ─── PROCESS VIEW ──────────────────────────── */}
+                {/* --- PROCESS VIEW ---------------------------- */}
                 {view === 'process' && selectedTx && (
                     <motion.div key="process" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                         className="space-y-4"
@@ -414,7 +414,7 @@ export function PosRefundPanel({ businessId }) {
                             <div className="flex items-center justify-between mb-3">
                                 <div>
                                     <p className="text-xs font-bold text-red-600 uppercase">Refund Summary</p>
-                                    <p className="text-[10px] text-red-400">{refundItems.length} item(s) selected • {refundItems.filter(ri => ri.restock).length} to restock</p>
+                                    <p className="text-[10px] text-red-400">{refundItems.length} item(s) selected * {refundItems.filter(ri => ri.restock).length} to restock</p>
                                 </div>
                                 <p className="text-xl font-black text-red-700">{currency} {refundTotal.toLocaleString()}</p>
                             </div>
@@ -428,7 +428,7 @@ export function PosRefundPanel({ businessId }) {
                                 ) : (
                                     <>
                                         <ShieldCheck className="w-4 h-4" />
-                                        Process Refund — {currency} {refundTotal.toLocaleString()}
+                                        Process Refund -- {currency} {refundTotal.toLocaleString()}
                                     </>
                                 )}
                             </button>
@@ -436,7 +436,7 @@ export function PosRefundPanel({ businessId }) {
                     </motion.div>
                 )}
 
-                {/* ─── HISTORY VIEW ──────────────────────────── */}
+                {/* --- HISTORY VIEW ---------------------------- */}
                 {view === 'history' && (
                     <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
                         {refunds.length === 0 ? (

@@ -138,11 +138,10 @@ export function CostingMethodSelector({ businessId, currentMethod = 'FIFO', onUp
                             <button
                                 key={method.value}
                                 onClick={() => setSelectedMethod(method.value)}
-                                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                                    isSelected
-                                        ? 'border-wine bg-wine/5 shadow-md'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                }`}
+                                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${isSelected
+                                    ? 'border-wine bg-wine/5 shadow-md'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                    }`}
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-center gap-3">
@@ -174,7 +173,7 @@ export function CostingMethodSelector({ businessId, currentMethod = 'FIFO', onUp
                                         <ul className="text-xs text-gray-600 space-y-1">
                                             {method.pros.map((pro, idx) => (
                                                 <li key={idx} className="flex items-start gap-1">
-                                                    <span className="text-green-500 mt-0.5">âœ“</span>
+                                                    <span className="text-green-500 mt-0.5">“</span>
                                                     <span>{pro}</span>
                                                 </li>
                                             ))}
@@ -204,10 +203,10 @@ export function CostingMethodSelector({ businessId, currentMethod = 'FIFO', onUp
                         <div className="text-sm text-blue-900">
                             <p className="font-semibold mb-1">Important:</p>
                             <ul className="space-y-1 text-blue-800">
-                                <li>â€¢ Changing costing method affects future transactions only</li>
-                                <li>â€¢ Consult with your accountant before changing methods</li>
-                                <li>â€¢ FIFO is recommended for most Pakistani businesses</li>
-                                <li>â€¢ Method change may require FBR notification</li>
+                                <li>Changing costing method affects future transactions only</li>
+                                <li>Consult with your accountant before changing methods</li>
+                                <li>FIFO is recommended for most Pakistani businesses</li>
+                                <li>Method change may require FBR notification</li>
                             </ul>
                         </div>
                     </div>

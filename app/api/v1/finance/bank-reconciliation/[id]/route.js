@@ -3,7 +3,7 @@ import pool from '@/lib/db';
 
 /**
  * PATCH /api/v1/finance/bank-reconciliation/[id]
- * Update a reconciliation session — match/unmatch lines, or mark as completed.
+ * Update a reconciliation session -- match/unmatch lines, or mark as completed.
  * Body: { matched_lines?: [{line_id, gl_entry_id, matched}], status?: 'completed'|'in_progress' }
  */
 export async function PATCH(request, { params }) {

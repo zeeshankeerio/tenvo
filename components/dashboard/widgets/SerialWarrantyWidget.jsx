@@ -204,7 +204,7 @@ export function SerialWarrantyWidget({ businessId, onViewDetails }) {
                                         {serial.product_name}
                                     </div>
                                     <div className="text-[10px] text-gray-500">
-                                        {serial.serial_number} • {serial.customer_name}
+                                        {serial.serial_number} * {serial.customer_name}
                                     </div>
                                 </div>
                                 <Badge 

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo } from 'react';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
@@ -505,7 +505,7 @@ export function InventoryDashboard({
               onClick={() => onQuickAction?.('view-all-reorder-alerts')}
               className="w-full text-xs font-bold text-red-600 hover:text-red-700 transition-colors py-2"
             >
-              {t.view_all_alerts || 'View All Alerts'} ({reorderAlerts.criticalCount + reorderAlerts.urgentCount + reorderAlerts.warningCount}) â†’
+              {t.view_all_alerts || 'View All Alerts'} ({reorderAlerts.criticalCount + reorderAlerts.urgentCount + reorderAlerts.warningCount}) →
             </button>
           </CardContent>
         </Card>
@@ -609,7 +609,7 @@ export function InventoryDashboard({
               onClick={() => onQuickAction?.('view-all-cycle-counts')}
               className="w-full text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors py-2"
             >
-              {t.view_all_tasks || 'View All Tasks'} â†’
+              {t.view_all_tasks || 'View All Tasks'} →
             </button>
           </CardContent>
         </Card>
@@ -723,7 +723,7 @@ export function InventoryDashboard({
               onClick={() => onQuickAction?.('view-all-receipts')}
               className="flex-1 text-xs font-bold text-green-600 hover:text-green-700 transition-colors py-2"
             >
-              {t.view_all_receipts || 'View All Receipts'} â†’
+              {t.view_all_receipts || 'View All Receipts'} →
             </button>
             <Button
               onClick={() => onQuickAction?.('quick-receive')}

@@ -44,7 +44,7 @@ function BusinessDashboardContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Auth & Business context — must come before any hook that references `business`
+  // Auth & Business context -- must come before any hook that references `business`
   const {
     business,
     role,
@@ -156,7 +156,7 @@ function BusinessDashboardContent() {
       case 'excel-mode':
       case 'fast-entry':
         handleTabChange('inventory');
-        toast.success("Excel Mode active in Inventory", { icon: '📊' });
+        toast.success("Excel Mode active in Inventory", { icon: '[CHART]' });
         break;
       default:
         if (VALID_DASHBOARD_TABS.has(normalizeDashboardTab(actionId))) {
@@ -838,7 +838,7 @@ function BusinessDashboardContent() {
     }
   };
 
-  // ─── POS Handlers ──────────────────────────────────────────────────────────
+  // --- POS Handlers ----------------------------------------------------------
 
   const handleStartPosSession = async () => {
     if (!business?.id) {
@@ -1000,7 +1000,7 @@ function BusinessDashboardContent() {
     }
   };
 
-  // ─── Restaurant Handlers ────────────────────────────────────────────────────
+  // --- Restaurant Handlers ----------------------------------------------------
 
   const handleTableAction = (action, tableId, data) => {
     if (action === 'bulk_update') {
@@ -1038,7 +1038,7 @@ function BusinessDashboardContent() {
     if (newStatus === 'ready') toast.success('Order ready for serving', { icon: '🍽️' });
   };
 
-  // ─── Payroll Handlers ──────────────────────────────────────────────────────
+  // --- Payroll Handlers ------------------------------------------------------
 
   const handleProcessPayroll = async (data) => {
     try {
@@ -1083,7 +1083,7 @@ function BusinessDashboardContent() {
     }
   };
 
-  // ─── Approval Handlers ─────────────────────────────────────────────────────
+  // --- Approval Handlers -----------------------------------------------------
 
   const handleApproveRequest = async (requestId) => {
     try {

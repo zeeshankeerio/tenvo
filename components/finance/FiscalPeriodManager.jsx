@@ -42,7 +42,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
         locked: { bg: 'bg-red-100 text-red-600', label: 'LOCKED', icon: Lock },
     };
 
-    // ── Create Period ──────────────────────────────────────────────────────────
+    // -- Create Period ----------------------------------------------------------
 
     const handleCreate = async () => {
         if (!newPeriod.name.trim()) { toast.error('Period name is required'); return; }
@@ -68,7 +68,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
         }
     };
 
-    // ── Close Period ───────────────────────────────────────────────────────────
+    // -- Close Period -----------------------------------------------------------
 
     const handleClose = async (periodId) => {
         setWorking(true);
@@ -85,7 +85,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
         }
     };
 
-    // ── Reopen Period ──────────────────────────────────────────────────────────
+    // -- Reopen Period ----------------------------------------------------------
 
     const handleReopen = async (periodId) => {
         setWorking(true);
@@ -213,7 +213,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
                                             </span>
                                         </div>
                                         <p className="text-xs text-gray-400 mt-0.5">
-                                            {format(new Date(period.start_date), 'dd MMM yyyy')} — {format(new Date(period.end_date), 'dd MMM yyyy')}
+                                            {format(new Date(period.start_date), 'dd MMM yyyy')} -- {format(new Date(period.end_date), 'dd MMM yyyy')}
                                             {period.entry_count != null && (
                                                 <span className="ml-2">· {period.entry_count} entries</span>
                                             )}
@@ -273,7 +273,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
                                     <div className="border-t border-amber-100 bg-amber-50/60 px-5 py-4 space-y-3">
                                         <h5 className="text-xs font-black text-amber-800 flex items-center gap-1.5">
                                             <AlertTriangle className="w-4 h-4" />
-                                            Pre-Close Checklist — {period.name}
+                                            Pre-Close Checklist -- {period.name}
                                         </h5>
                                         <div className="space-y-2">
                                             {[

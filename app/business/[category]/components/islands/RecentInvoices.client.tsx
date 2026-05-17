@@ -74,7 +74,7 @@ export function RecentInvoices({ invoices, currency, onViewInvoice }: RecentInvo
                                         </p>
                                         <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium mt-0.5">
                                             <span className="uppercase tracking-wider">{invoice.invoice_number}</span>
-                                            <span className="text-gray-300">•</span>
+                                            <span className="text-gray-300">*</span>
                                             <span>{new Date(invoice.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                                         </div>
                                     </div>

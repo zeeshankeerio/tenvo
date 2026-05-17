@@ -213,7 +213,7 @@ export function BatchExpiryWidget({ businessId, currency = 'PKR', onViewDetails 
                                         {batch.product_name}
                                     </div>
                                     <div className="text-[10px] text-gray-500">
-                                        {batch.batch_number} • {batch.warehouse_name}
+                                        {batch.batch_number} * {batch.warehouse_name}
                                     </div>
                                 </div>
                                 <Badge 

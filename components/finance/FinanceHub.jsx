@@ -26,7 +26,7 @@ import { getCustomersAction } from '@/lib/actions/basic/customer';
 import { getVendorsAction } from '@/lib/actions/basic/vendor';
 import { getInvoicesAction } from '@/lib/actions/basic/invoice';
 
-// ─── Sub-Tab Definitions ─────────────────────────────────────────────────────
+// --- Sub-Tab Definitions -----------------------------------------------------
 
 const FINANCE_TABS = [
     { key: 'overview', label: 'Overview', icon: BarChart3, permission: 'finance.view_reports', feature: null },
@@ -40,7 +40,7 @@ const FINANCE_TABS = [
     { key: 'exchange', label: 'Exchange Rates', icon: Globe, permission: 'finance.exchange_rates', feature: 'exchange_rates' },
 ];
 
-// ─── KPI Card ────────────────────────────────────────────────────────────────
+// --- KPI Card ----------------------------------------------------------------
 
 function KPICard({ label, value, icon: Icon, trend, color = 'indigo', loading }) {
     const colors = {
@@ -72,11 +72,11 @@ function KPICard({ label, value, icon: Icon, trend, color = 'indigo', loading })
     );
 }
 
-// ─── Chart of Accounts Panel ─────────────────────────────────────────────────
+// --- Chart of Accounts Panel -------------------------------------------------
 
 function ChartOfAccountsPanel({ businessId, accounts, currency }) {
     const ACCOUNT_TYPE_ICONS = {
-        asset: '🏦', liability: '📋', equity: '🏛️', income: '💰', expense: '💸',
+        asset: '🏦', liability: '[CLIPBOARD]', equity: '🏛️', income: '💰', expense: '💸',
     };
 
     const grouped = useMemo(() => {
@@ -143,7 +143,7 @@ function ChartOfAccountsPanel({ businessId, accounts, currency }) {
     );
 }
 
-// ─── Credit Notes Panel ──────────────────────────────────────────────────────
+// --- Credit Notes Panel ------------------------------------------------------
 
 function CreditNotesPanel({ businessId, creditNotes, currency, onRefresh }) {
     const [showForm, setShowForm] = useState(false);
@@ -377,7 +377,7 @@ function CreditNotesPanel({ businessId, creditNotes, currency, onRefresh }) {
     );
 }
 
-// ─── Fiscal Periods Panel ────────────────────────────────────────────────────
+// --- Fiscal Periods Panel ----------------------------------------------------
 
 function FiscalPeriodsPanel({ businessId, periods, currency }) {
     const STATUS_STYLES = {
@@ -407,7 +407,7 @@ function FiscalPeriodsPanel({ businessId, periods, currency }) {
                             <div className="flex-1 min-w-0">
                                 <span className="text-sm font-bold text-gray-800">{p.name}</span>
                                 <p className="text-xs text-gray-400 mt-0.5">
-                                    {new Date(p.start_date).toLocaleDateString()} — {new Date(p.end_date).toLocaleDateString()}
+                                    {new Date(p.start_date).toLocaleDateString()} -- {new Date(p.end_date).toLocaleDateString()}
                                 </p>
                             </div>
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${STATUS_STYLES[p.status] || STATUS_STYLES.open}`}>
@@ -424,7 +424,7 @@ function FiscalPeriodsPanel({ businessId, periods, currency }) {
     );
 }
 
-// ─── Exchange Rates Panel ────────────────────────────────────────────────────
+// --- Exchange Rates Panel ----------------------------------------------------
 
 function ExchangeRatesPanel({ businessId, rates, currency }) {
     return (
@@ -472,7 +472,7 @@ function ExchangeRatesPanel({ businessId, rates, currency }) {
     );
 }
 
-// ─── Finance Overview Panel ──────────────────────────────────────────────────
+// --- Finance Overview Panel --------------------------------------------------
 
 function FinanceOverview({ accounts, expenses, creditNotes, currency, loading }) {
     const totalExpenses = useMemo(() =>
@@ -531,9 +531,9 @@ function FinanceOverview({ accounts, expenses, creditNotes, currency, loading })
     );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // MAIN FINANCE HUB
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 
 export default function FinanceHub({ businessId, initialTab }) {
     const { business, currency, currencySymbol } = useBusiness();

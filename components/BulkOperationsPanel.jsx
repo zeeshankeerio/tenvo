@@ -423,7 +423,7 @@ export function BulkOperationsPanel({
                                 </p>
                                 <ul className="text-xs text-red-600 space-y-1 max-h-32 overflow-y-auto">
                                     {importErrors.map((error, i) => (
-                                        <li key={i}>• {error}</li>
+                                        <li key={i}>* {error}</li>
                                     ))}
                                 </ul>
                             </div>

@@ -167,7 +167,7 @@ export function ReservationManager({ businessId, tables = [], onSave }) {
         setSelectedDate(d);
     };
 
-    // Day View — Time Slots × Tables Grid
+    // Day View -- Time Slots × Tables Grid
     const renderDayView = () => {
         const dayRes = reservations.filter(r => r.date === dateStr && r.status !== 'cancelled' && r.status !== 'noshow');
 
@@ -231,7 +231,7 @@ export function ReservationManager({ businessId, tables = [], onSave }) {
         );
     };
 
-    // Week View — 7-day density bar
+    // Week View -- 7-day density bar
     const renderWeekView = () => {
         const weekDays = getWeekDays(selectedDate);
         const today = new Date().toISOString().split('T')[0];
@@ -393,7 +393,7 @@ export function ReservationManager({ businessId, tables = [], onSave }) {
             {viewMode === 'day' && filteredReservations.length > 0 && (
                 <div className="space-y-2">
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">
-                        {formatDate(selectedDate)} — {filteredReservations.length} Booking{filteredReservations.length !== 1 ? 's' : ''}
+                        {formatDate(selectedDate)} -- {filteredReservations.length} Booking{filteredReservations.length !== 1 ? 's' : ''}
                     </h4>
                     {filteredReservations.map(res => {
                         const cfg = STATUS_CONFIG[res.status];

@@ -261,7 +261,7 @@ export default function EnhancedPOBuilder({ businessId, onSuccess, onCancel, cat
                         </button>
                     </div>
                     <p className="text-[9px] text-gray-400 italic px-1">
-                        {header.status === 'received' ? '✓ Stock will be added immediately upon save' : '• Pending approval, no stock change'}
+                        {header.status === 'received' ? '✓ Stock will be added immediately upon save' : '* Pending approval, no stock change'}
                     </p>
                 </div>
             </div>

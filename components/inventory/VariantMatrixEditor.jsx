@@ -81,7 +81,7 @@ export function VariantMatrixEditor({
     try {
       setLoading(true);
 
-      // 🛡️ DEFENSIVE CHECK
+      // [SHIELD] DEFENSIVE CHECK
       if (!product || !product.id) {
         toast.error('Product context missing');
         return;

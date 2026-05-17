@@ -48,7 +48,7 @@ export async function GET(request) {
         );
         const total = countRes.rows[0]?.total || 0;
 
-        // Main query — fetch journals with aggregated debit/credit totals
+        // Main query -- fetch journals with aggregated debit/credit totals
         const journalsRes = await client.query(
             `SELECT 
                 je.id,

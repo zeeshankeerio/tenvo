@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -202,7 +202,7 @@ export function TaxCalculationsWidget({
           onClick={() => onViewDetails?.('view-tax-details')}
           className="w-full text-xs font-bold text-wine-600 hover:text-wine-700 transition-colors py-2"
         >
-          {t.view_detailed_calculations || 'View Detailed Calculations'} â†’
+          {t.view_detailed_calculations || 'View Detailed Calculations'} →
         </button>
 
         {/* Last Updated */}

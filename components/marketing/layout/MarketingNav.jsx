@@ -13,10 +13,10 @@ import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
  * Sticky navigation with mega menus for marketing pages
  * Following 2026 best practices for accessibility and performance
  */
-export default function MarketingNav({ 
-  transparent = false, 
-  currentPage = '', 
-  showAuthButtons = true 
+export default function MarketingNav({
+  transparent = false,
+  currentPage = '',
+  showAuthButtons = true
 }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -29,7 +29,7 @@ export default function MarketingNav({
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -43,7 +43,7 @@ export default function MarketingNav({
   const toggleMenu = (menu) => {
     const newMenu = expandedMenu === menu ? null : menu;
     setExpandedMenu(newMenu);
-    
+
     if (newMenu) {
       trackNavMenuOpen(menu);
     }
@@ -54,11 +54,10 @@ export default function MarketingNav({
     router.push(href);
   };
 
-  const navClasses = `sticky top-0 z-50 transition-all duration-300 ${
-    transparent && !scrolled 
-      ? 'bg-transparent' 
+  const navClasses = `sticky top-0 z-50 transition-all duration-300 ${transparent && !scrolled
+      ? 'bg-transparent'
       : 'bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 shadow-[0_18px_48px_-32px_rgba(15,23,42,0.45)]'
-  }`;
+    }`;
 
   return (
     <nav className={navClasses}>
@@ -84,63 +83,63 @@ export default function MarketingNav({
                 <div className="w-[640px] p-8 grid grid-cols-2 gap-8">
                   <div>
                     <h4 className="text-[10px] font-black text-gray-400 mb-6 uppercase tracking-widest">Enterprise Core</h4>
-                    <DropdownLink 
-                      href="/register" 
-                      icon={<Package className="w-5 h-5" />} 
-                      title="Inventory Engine" 
-                      desc="Precision stock control with batch & serial tracking." 
+                    <DropdownLink
+                      href="/register"
+                      icon={<Package className="w-5 h-5" />}
+                      title="Inventory Engine"
+                      desc="Precision stock control with batch & serial tracking."
                     />
-                    <DropdownLink 
-                      href="/register" 
-                      icon={<Receipt className="w-5 h-5" />} 
-                      title="Tax Compliance" 
-                      desc="FBR & Local tax localized automation." 
+                    <DropdownLink
+                      href="/register"
+                      icon={<Receipt className="w-5 h-5" />}
+                      title="Tax Compliance"
+                      desc="FBR & Local tax localized automation."
                     />
-                    <DropdownLink 
-                      href="/register" 
-                      icon={<Briefcase className="w-5 h-5" />} 
-                      title="General Ledger" 
-                      desc="Double-entry accounting for professionals." 
+                    <DropdownLink
+                      href="/register"
+                      icon={<Briefcase className="w-5 h-5" />}
+                      title="General Ledger"
+                      desc="Double-entry accounting for professionals."
                     />
                   </div>
                   <div>
                     <h4 className="text-[10px] font-black text-gray-400 mb-6 uppercase tracking-widest">Verticals</h4>
-                    <DropdownLink 
-                      href="/register?domain=retail-shop" 
-                      icon={<Store className="w-5 h-5" />} 
-                      title="POS Terminal" 
-                      desc="High-speed retail checkout workflows." 
+                    <DropdownLink
+                      href="/register?domain=retail-shop"
+                      icon={<Store className="w-5 h-5" />}
+                      title="POS Terminal"
+                      desc="High-speed retail checkout workflows."
                     />
-                    <DropdownLink 
-                      href="/register?domain=industrial-manufacturing" 
-                      icon={<Factory className="w-5 h-5" />} 
-                      title="Manufacturing" 
-                      desc="BOM, Work Orders, and shop floor control." 
+                    <DropdownLink
+                      href="/register?domain=industrial-manufacturing"
+                      icon={<Factory className="w-5 h-5" />}
+                      title="Manufacturing"
+                      desc="BOM, Work Orders, and shop floor control."
                     />
-                    <DropdownLink 
-                      href="/register?domain=wholesale-distribution" 
-                      icon={<Globe className="w-5 h-5" />} 
-                      title="B2B Supply Chain" 
-                      desc="Wholesale and distribution management." 
+                    <DropdownLink
+                      href="/register?domain=wholesale-distribution"
+                      icon={<Globe className="w-5 h-5" />}
+                      title="B2B Supply Chain"
+                      desc="Wholesale and distribution management."
                     />
                   </div>
                 </div>
               </NavDropdown>
 
-              <button 
-                className="text-sm font-bold text-gray-600 hover:text-brand-primary-dark transition-colors" 
+              <button
+                className="text-sm font-bold text-gray-600 hover:text-brand-primary-dark transition-colors"
                 onClick={() => router.push('/features')}
               >
                 Features
               </button>
-              <button 
-                className="text-sm font-bold text-gray-600 hover:text-brand-primary-dark transition-colors" 
+              <button
+                className="text-sm font-bold text-gray-600 hover:text-brand-primary-dark transition-colors"
                 onClick={() => router.push('/pricing')}
               >
                 Pricing
               </button>
-              <button 
-                className="text-sm font-bold text-gray-600 hover:text-brand-primary-dark transition-colors" 
+              <button
+                className="text-sm font-bold text-gray-600 hover:text-brand-primary-dark transition-colors"
                 onClick={() => router.push('/industries')}
               >
                 Industries
@@ -153,23 +152,23 @@ export default function MarketingNav({
             {showAuthButtons && (
               <div className="flex items-center gap-4">
                 {user ? (
-                  <Button 
-                    onClick={() => handleCTAClick('nav', 'Enter Dashboard', '/multi-business')} 
+                  <Button
+                    onClick={() => handleCTAClick('nav', 'Enter Dashboard', '/multi-business')}
                     className="bg-brand-primary hover:bg-brand-primary-dark text-white font-black rounded-2xl px-8 shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)] transition-all active:scale-[0.98]"
                   >
                     Enter Dashboard
                   </Button>
                 ) : (
                   <>
-                    <Button 
-                      variant="ghost" 
-                      className="font-bold text-gray-900 hover:bg-gray-50 rounded-xl px-6" 
+                    <Button
+                      variant="ghost"
+                      className="font-bold text-gray-900 hover:bg-gray-50 rounded-xl px-6"
                       onClick={() => handleCTAClick('nav', 'Log In', '/login')}
                     >
                       Log In
                     </Button>
-                    <Button 
-                      onClick={() => handleCTAClick('nav', 'Start Your Journey', '/register')} 
+                    <Button
+                      onClick={() => handleCTAClick('nav', 'Start Your Journey', '/register')}
                       className="bg-brand-primary hover:bg-brand-primary-dark text-white font-black rounded-2xl px-8 shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)] transition-all active:scale-[0.98]"
                     >
                       Start Your Journey
@@ -196,46 +195,46 @@ export default function MarketingNav({
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-gray-100 bg-white p-6 space-y-6 animate-in slide-in-from-top-4 duration-300">
           <div className="space-y-4">
-            <button 
+            <button
               className="w-full text-left font-bold text-gray-700 px-2 py-2 hover:text-brand-primary-dark transition-colors"
               onClick={() => router.push('/features')}
             >
               Features
             </button>
-            <button 
+            <button
               className="w-full text-left font-bold text-gray-700 px-2 py-2 hover:text-brand-primary-dark transition-colors"
               onClick={() => router.push('/pricing')}
             >
               Pricing
             </button>
-            <button 
+            <button
               className="w-full text-left font-bold text-gray-700 px-2 py-2 hover:text-brand-primary-dark transition-colors"
               onClick={() => router.push('/industries')}
             >
               Industries
             </button>
           </div>
-          
+
           {showAuthButtons && (
             <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
               {user ? (
-                <Button 
-                  className="w-full h-12 bg-brand-primary font-black text-white rounded-2xl shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)]" 
+                <Button
+                  className="w-full h-12 bg-brand-primary font-black text-white rounded-2xl shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)]"
                   onClick={() => handleCTAClick('mobile-nav', 'Enter Dashboard', '/multi-business')}
                 >
                   Enter Dashboard
                 </Button>
               ) : (
                 <>
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-12 font-bold rounded-xl" 
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 font-bold rounded-xl"
                     onClick={() => handleCTAClick('mobile-nav', 'Log In', '/login')}
                   >
                     Log In
                   </Button>
-                  <Button 
-                    className="w-full h-12 bg-brand-primary font-black text-white rounded-2xl shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)]" 
+                  <Button
+                    className="w-full h-12 bg-brand-primary font-black text-white rounded-2xl shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)]"
                     onClick={() => handleCTAClick('mobile-nav', 'Join Enterprise', '/register')}
                   >
                     Join Enterprise
@@ -255,9 +254,8 @@ function NavDropdown({ label, isOpen, onToggle, children }) {
   return (
     <div className="relative">
       <button
-        className={`flex items-center gap-1.5 text-sm font-bold transition-all hover:text-brand-primary-dark ${
-          isOpen ? 'text-brand-primary-dark' : 'text-gray-600'
-        }`}
+        className={`flex items-center gap-1.5 text-sm font-bold transition-all hover:text-brand-primary-dark ${isOpen ? 'text-brand-primary-dark' : 'text-gray-600'
+          }`}
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -276,7 +274,7 @@ function NavDropdown({ label, isOpen, onToggle, children }) {
 
 function DropdownLink({ icon, title, desc, href = "#" }) {
   const router = useRouter();
-  
+
   return (
     <button
       onClick={() => router.push(href)}

@@ -129,7 +129,7 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
             ];
             const operatingTotal = operatingItems.reduce((s, i) => s + i.amount, 0);
 
-            // Investing Activities (simplified â€” fixed assets changes)
+            // Investing Activities (simplified” fixed assets changes)
             const faEnd = findBalance(bsEnd.assets, 'fixed') + findBalance(bsEnd.assets, 'equipment') + findBalance(bsEnd.assets, 'property');
             const faStart = findBalance(bsStart.assets, 'fixed') + findBalance(bsStart.assets, 'equipment') + findBalance(bsStart.assets, 'property');
             const investingItems = [

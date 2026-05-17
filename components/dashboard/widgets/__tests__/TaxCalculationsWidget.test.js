@@ -123,7 +123,7 @@ describe('TaxCalculationsWidget', () => {
     );
     
     // Click the view details button
-    const viewDetailsButton = screen.getByText('View Detailed Calculations â†’');
+    const viewDetailsButton = screen.getByText('View Detailed Calculations ->');
     fireEvent.click(viewDetailsButton);
     
     // Check if callback was called with correct action

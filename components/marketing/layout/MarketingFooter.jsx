@@ -47,7 +47,7 @@ export default function MarketingFooter({ variant = 'default' }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-              © 2026 TENVO Enterprise. Built for Pakistan.
+              (C) 2026 TENVO Enterprise. Built for Pakistan.
             </div>
             <div className="flex gap-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">
               <a href="/privacy" className="hover:text-blue-700 transition-colors">Privacy</a>
@@ -76,7 +76,7 @@ export default function MarketingFooter({ variant = 'default' }) {
             <p className="text-sm text-gray-500 font-medium leading-relaxed">
               The backbone for modern Pakistani enterprises looking for scalability, precision, and compliance.
             </p>
-            
+
             {/* Trust Badges */}
             <div className="flex items-center gap-3 pt-4">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-xl border border-emerald-200">
@@ -135,7 +135,7 @@ export default function MarketingFooter({ variant = 'default' }) {
             <p className="text-sm text-gray-500 font-medium mb-6">
               Get the latest updates on features, compliance changes, and industry insights.
             </p>
-            
+
             {subscribed ? (
               <div className="flex items-center gap-2 text-green-600 font-bold text-sm">
                 <CheckCircle2 className="w-5 h-5" />
@@ -152,8 +152,8 @@ export default function MarketingFooter({ variant = 'default' }) {
                   className="flex-1"
                   disabled={loading}
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl"
                   disabled={loading}
                 >
@@ -167,7 +167,7 @@ export default function MarketingFooter({ variant = 'default' }) {
         {/* Bottom Bar */}
         <div className="border-t border-slate-200 pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-            © 2026 TENVO Enterprise. Built for Pakistan.
+            (C) 2026 TENVO Enterprise. Built for Pakistan.
           </div>
           <div className="flex gap-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">
             <a href="#" className="hover:text-blue-700 transition-colors">Pakistan</a>

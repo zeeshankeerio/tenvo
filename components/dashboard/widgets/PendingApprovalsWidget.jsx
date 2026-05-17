@@ -28,7 +28,7 @@ import { getPendingApprovalsForUser } from '@/lib/services/multiLevelApproval';
  * - Display pending approval count by type
  * - Show high-priority approvals first
  * - List recent approval requests with details
- * - Add quick action: "View Approval Queue" → opens ApprovalQueue
+ * - Add quick action: "View Approval Queue" -> opens ApprovalQueue
  * - Integrate with existing multiLevelApproval service from Phase 2
  * 
  * Requirements: 6.4, 5.3, 5.4
@@ -251,7 +251,7 @@ export function PendingApprovalsWidget({
                           {adjustment.quantity_change > 0 ? '+' : ''}
                           {adjustment.quantity_change || 0}
                         </span>
-                        <span>•</span>
+                        <span>*</span>
                         <span className="font-bold text-wine">
                           {formatCurrency(value, currency)}
                         </span>

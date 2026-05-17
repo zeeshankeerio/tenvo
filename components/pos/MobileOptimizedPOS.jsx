@@ -100,7 +100,11 @@ export function MobileOptimizedPOS({
 
     // Calculations
     const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-    const taxAmount = (subtotal * defaultTax) / 100;
+    const totalTax = cartItems.reduce((sum, item) => {
+        const itemTax = (item.price * item.quantity) * ((item.tax_percent || 0) / 100);
+        return sum + itemTax;
+    }, 0);
+    const taxAmount = Math.round(totalTax * 100) / 100;
     const total = subtotal + taxAmount;
 
     // Add item
@@ -118,6 +122,7 @@ export function MobileOptimizedPOS({
                 name: product.name,
                 price: product.selling_price || 0,
                 quantity,
+                tax_percent: parseFloat(product.tax_percent ?? product.taxPercent ?? 17),
                 sku: product.sku,
             }]);
         }
@@ -222,7 +227,7 @@ export function MobileOptimizedPOS({
                     <div className="bg-white rounded-xl p-3 border-2 border-blue-100 sticky top-0 z-10 shadow-sm">
                         <Input
                             type="text"
-                            placeholder="🔍 Search item or tap to scan..."
+                            placeholder="[SEARCH] Search item or tap to scan..."
                             value={productSearch}
                             onChange={(e) => setProductSearch(e.target.value)}
                             onFocus={() => barcodeInputRef.current?.focus()}
@@ -365,7 +370,7 @@ export function MobileOptimizedPOS({
                                 <span className="font-semibold">{formatCurrency(subtotal, currency)}</span>
                             </div>
                             <div className="flex justify-between text-sm text-gray-600">
-                                <span>Tax ({defaultTax}%):</span>
+                                <span>Tax:</span>
                                 <span className="font-semibold">{formatCurrency(taxAmount, currency)}</span>
                             </div>
                             <div className="flex justify-between border-t pt-2 text-xl font-black text-wine">

@@ -160,7 +160,7 @@ export function getDomainTheme(category: string) {
 }
 
 /**
- * Tailwind JIT safelist — all dynamically composed domain theme classes.
+ * Tailwind JIT safelist -- all dynamically composed domain theme classes.
  * These must appear as literal strings so Tailwind's scanner includes them in
  * the generated CSS. Do NOT delete or tree-shake this constant.
  */
@@ -794,6 +794,7 @@ export function getDomainTableColumns(category: string, currencySymbol: string =
     { accessorKey: 'category', header: 'Category', width: 100 },
     { accessorKey: 'stock', header: 'Stock', width: 80 },
     { accessorKey: 'price', header: 'Price', width: 100 },
+    { accessorKey: 'tax_percent', header: 'Tax %', width: 80 },
   ];
 
   // Add domain-specific dynamic columns

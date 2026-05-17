@@ -6,7 +6,7 @@ import * as LucideIcons from 'lucide-react';
 /**
  * OperationsFlow Component
  * 
- * Displays the 3-step operational flow: Capture → Operate → Control
+ * Displays the 3-step operational flow: Capture -> Operate -> Control
  * Shows how the system works in a clear, visual manner.
  * 
  * @param {Object} props

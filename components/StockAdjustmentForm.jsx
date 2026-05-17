@@ -14,17 +14,17 @@ import { adjustStockAction } from '@/lib/actions/standard/inventory/stock';
 import { getWarehouseLocationsAction } from '@/lib/actions/standard/inventory/warehouse';
 import toast from 'react-hot-toast';
 
-// â”€â”€â”€ Reason codes for stock adjustments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Reason codes for stock adjustments --------------------------------------
 const ADJUSTMENT_REASONS = [
-    { value: 'counting_error', label: 'Counting Error', icon: 'ðŸ”¢', color: 'bg-blue-100 text-blue-700' },
-    { value: 'damage', label: 'Damage / Spoilage', icon: 'ðŸ’”', color: 'bg-red-100 text-red-700' },
-    { value: 'theft', label: 'Theft / Loss', icon: 'ðŸš¨', color: 'bg-red-100 text-red-700' },
-    { value: 'expiry', label: 'Expired Stock', icon: 'â°', color: 'bg-amber-100 text-amber-700' },
-    { value: 'sample', label: 'Sample / Testing', icon: 'ðŸ§ª', color: 'bg-wine-100 text-wine-700' },
-    { value: 'write_off', label: 'Write-Off', icon: 'ðŸ“', color: 'bg-gray-100 text-gray-700' },
-    { value: 'found', label: 'Found Stock', icon: 'ðŸ”', color: 'bg-emerald-100 text-emerald-700' },
-    { value: 'opening', label: 'Opening Balance', icon: 'ðŸ“Š', color: 'bg-indigo-100 text-indigo-700' },
-    { value: 'other', label: 'Other', icon: 'ðŸ“‹', color: 'bg-gray-100 text-gray-700' },
+    { value: 'counting_error', label: 'Counting Error', icon: '🔢', color: 'bg-blue-100 text-blue-700' },
+    { value: 'damage', label: 'Damage / Spoilage', icon: '💔', color: 'bg-red-100 text-red-700' },
+    { value: 'theft', label: 'Theft / Loss', icon: '[ALERT]', color: 'bg-red-100 text-red-700' },
+    { value: 'expiry', label: 'Expired Stock', icon: '⏳', color: 'bg-amber-100 text-amber-700' },
+    { value: 'sample', label: 'Sample / Testing', icon: '[TEST]', color: 'bg-wine-100 text-wine-700' },
+    { value: 'write_off', label: 'Write-Off', icon: '[DECREASE]', color: 'bg-gray-100 text-gray-700' },
+    { value: 'found', label: 'Found Stock', icon: '[SEARCH]', color: 'bg-emerald-100 text-emerald-700' },
+    { value: 'opening', label: 'Opening Balance', icon: '[CHART]', color: 'bg-indigo-100 text-indigo-700' },
+    { value: 'other', label: 'Other', icon: '[CLIPBOARD]', color: 'bg-gray-100 text-gray-700' },
 ];
 
 const ADJUSTMENT_TYPES = [
@@ -139,7 +139,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                         <div>
                             <CardTitle className="text-2xl font-black uppercase tracking-tighter">Stock Adjustment</CardTitle>
                             <p className="text-xs font-bold text-amber-300/70 uppercase tracking-widest mt-1">
-                                {business?.name} â€¢ Inventory Correction
+                                {business?.name} * Inventory Correction
                             </p>
                         </div>
                     </div>
@@ -160,7 +160,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                                 <div className="flex-1">
                                     <p className="font-black text-gray-900">{selectedProduct.name}</p>
                                     <p className="text-xs text-gray-400 font-bold">
-                                        SKU: {selectedProduct.sku || 'â€”'} â€¢ Current Stock: <span className="text-amber-600 font-black">{selectedProduct.current_stock || selectedProduct.stock || 0}</span>
+                                        SKU: {selectedProduct.sku || '--'} * Current Stock: <span className="text-amber-600 font-black">{selectedProduct.current_stock || selectedProduct.stock || 0}</span>
                                     </p>
                                 </div>
                                 <Button variant="ghost" size="sm" onClick={() => { setSelectedProduct(null); setFormData(prev => ({ ...prev, product_id: '' })); }} className="text-gray-400 hover:text-red-500">
@@ -187,7 +187,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                                                 <Package className="w-4 h-4 text-gray-400" />
                                                 <div>
                                                     <p className="font-bold text-gray-900 text-sm">{p.name}</p>
-                                                    <p className="text-[10px] text-gray-400">SKU: {p.sku || 'â€”'} â€¢ Stock: {p.current_stock || p.stock || 0}</p>
+                                                    <p className="text-[10px] text-gray-400">SKU: {p.sku || '--'} * Stock: {p.current_stock || p.stock || 0}</p>
                                                 </div>
                                             </button>
                                         ))}

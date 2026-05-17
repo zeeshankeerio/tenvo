@@ -574,7 +574,7 @@ export function QuickInvoiceModal({
                                         className="w-full text-left p-2 hover:bg-white rounded border border-blue-100 transition-colors text-sm"
                                     >
                                         <div className="font-semibold">{p.name}</div>
-                                        <div className="text-xs text-gray-500">{p.sku} • {formatCurrency(p.selling_price || p.markup_price || 0, currency)}</div>
+                                        <div className="text-xs text-gray-500">{p.sku} * {formatCurrency(p.selling_price || p.markup_price || 0, currency)}</div>
                                     </button>
                                 ))}
                             </div>

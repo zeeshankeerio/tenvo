@@ -664,3 +664,994 @@ try {
 - Jobs setup: 1 hour
 - Dashboard: 2-3 hours
 - Testing: 2-3 hours
+
+---
+
+## 9. Error Handling Framework
+
+### BusinessError Hierarchy
+
+Create `lib/errors/BusinessError.js`:
+
+```javascript
+export class BusinessError extends Error {
+  constructor(code, message, details = {}) {
+    super(message);
+    this.code = code;
+    this.details = details;
+    this.name = 'BusinessError';
+    this.timestamp = new Date().toISOString();
+  }
+  
+  toJSON() {
+    return {
+      code: this.code,
+      message: this.message,
+      details: this.details,
+      timestamp: this.timestamp
+    };
+  }
+}
+
+// Specific error types
+export class InsufficientStockError extends BusinessError {
+  constructor(productId, needed, available) {
+    super(
+      'INSUFFICIENT_STOCK',
+      `Insufficient stock for product ${productId}`,
+      { productId, needed, available }
+    );
+  }
+}
+
+export class BatchExpiredError extends BusinessError {
+  constructor(batchId, expiryDate) {
+    super(
+      'BATCH_EXPIRED',
+      `Batch expired on ${expiryDate}`,
+      { batchId, expiryDate }
+    );
+  }
+}
+
+export class SerialAlreadySoldError extends BusinessError {
+  constructor(serialNumber) {
+    super(
+      'SERIAL_ALREADY_SOLD',
+      `Serial ${serialNumber} already sold`,
+      { serialNumber }
+    );
+  }
+}
+
+export class ReservationExpiredError extends BusinessError {
+  constructor(reservationId) {
+    super(
+      'RESERVATION_EXPIRED',
+      `Reservation expired`,
+      { reservationId }
+    );
+  }
+}
+
+export class MultiTenantViolationError extends BusinessError {
+  constructor(resourceId, requestedBusinessId, ownerBusinessId) {
+    super(
+      'MULTI_TENANT_VIOLATION',
+      `Unauthorized access to resource`,
+      { resourceId, requestedBusinessId, ownerBusinessId }
+    );
+  }
+}
+
+export class WarrantyExpiredError extends BusinessError {
+  constructor(serialNumber, expiryDate) {
+    super(
+      'WARRANTY_EXPIRED',
+      `Warranty expired on ${expiryDate}`,
+      { serialNumber, expiryDate }
+    );
+  }
+}
+```
+
+### Service Error Handling Pattern
+
+```javascript
+// In batchAllocation.js - FIXED to use BusinessError
+export async function selectBatchesForSale(productId, quantity, businessId, options = {}) {
+  try {
+    const product = await db.products.findUnique({
+      where: { id: productId, business_id: businessId }
+    });
+    
+    if (!product) {
+      throw new BusinessError(
+        'PRODUCT_NOT_FOUND',
+        `Product not found`,
+        { productId }
+      );
+    }
+    
+    const batches = await db.product_batches.findMany({
+      where: {
+        product_id: productId,
+        quantity: { gt: 0 },
+        expiry_date: { gt: new Date() }
+      },
+      orderBy: { manufacturing_date: 'asc' } // FIFO
+    });
+    
+    if (batches.length === 0) {
+      throw new InsufficientStockError(productId, quantity, 0);
+    }
+    
+    let remaining = quantity;
+    const selected = [];
+    
+    for (const batch of batches) {
+      if (remaining <= 0) break;
+      
+      const take = Math.min(remaining, batch.quantity);
+      selected.push({ batch_id: batch.id, quantity: take });
+      remaining -= take;
+    }
+    
+    if (remaining > 0) {
+      const totalAvailable = batches.reduce((sum, b) => sum + b.quantity, 0);
+      throw new InsufficientStockError(productId, quantity, totalAvailable);
+    }
+    
+    return selected;
+  } catch (error) {
+    if (error instanceof BusinessError) throw error;
+    throw new BusinessError(
+      'BATCH_SELECTION_ERROR',
+      `Error selecting batches: ${error.message}`
+    );
+  }
+}
+```
+
+---
+
+## 10. API Response Standardization
+
+### Success Response Format
+
+```javascript
+// Standard success response structure
+{
+  success: true,
+  data: {
+    // actual data
+  },
+  timestamp: "2026-05-14T10:30:00Z"
+}
+
+// With pagination
+{
+  success: true,
+  data: {
+    items: [...],
+    pagination: {
+      page: 1,
+      pageSize: 20,
+      total: 100,
+      totalPages: 5
+    }
+  },
+  timestamp: "2026-05-14T10:30:00Z"
+}
+```
+
+### Error Response Format
+
+```javascript
+// Standard error response structure
+{
+  success: false,
+  error: {
+    code: 'INSUFFICIENT_STOCK',
+    message: 'Not enough stock available',
+    details: {
+      productId: 'prod-123',
+      needed: 100,
+      available: 50
+    }
+  },
+  timestamp: "2026-05-14T10:30:00Z"
+}
+```
+
+### Response Wrapper Helper
+
+Create `lib/utils/responseFormatter.js`:
+
+```javascript
+export function successResponse(data, options = {}) {
+  return {
+    success: true,
+    data,
+    timestamp: new Date().toISOString(),
+    ...options
+  };
+}
+
+export function errorResponse(error, options = {}) {
+  if (error instanceof BusinessError) {
+    return {
+      success: false,
+      error: error.toJSON(),
+      timestamp: new Date().toISOString(),
+      ...options
+    };
+  }
+  
+  return {
+    success: false,
+    error: {
+      code: 'INTERNAL_SERVER_ERROR',
+      message: error.message || 'Unknown error',
+      details: {}
+    },
+    timestamp: new Date().toISOString(),
+    ...options
+  };
+}
+
+export function paginatedResponse(items, page, pageSize, total) {
+  return {
+    success: true,
+    data: {
+      items,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize)
+      }
+    },
+    timestamp: new Date().toISOString()
+  };
+}
+```
+
+---
+
+## 11. Cross-System Dependencies
+
+### A. Subscription Plan Integration
+
+**Problem**: Services don't check plan limits
+
+**Solution**: Add plan checks to all quota-affecting operations
+
+```javascript
+// In reservationManagement.js - ADD THIS
+import { checkPlanLimit } from '@/lib/actions/subscription/checkPlanLimit';
+
+export async function reserveStock(productId, quantity, businessId, options = {}) {
+  // Check reservation quota
+  const activeReservations = await db.inventory_reservations.count({
+    where: { business_id: businessId, status: 'active' }
+  });
+  
+  await checkPlanLimit(
+    businessId,
+    'max_reservations_per_month',
+    activeReservations + 1
+  );
+  
+  // ... rest of function
+}
+```
+
+### B. Multi-Tenant Consistency
+
+All services must verify `business_id` matches:
+
+```javascript
+// Pattern in all services
+export async function getStockHealthReport(businessId) {
+  // ALWAYS verify business_id parameter
+  const business = await db.businesses.findUnique({
+    where: { id: businessId }
+  });
+  
+  if (!business) {
+    throw new BusinessError('BUSINESS_NOT_FOUND', 'Business not found');
+  }
+  
+  // Then proceed with data access
+  const products = await db.products.findMany({
+    where: { business_id: businessId }
+  });
+}
+```
+
+### C. Audit Trail Integration
+
+All operations must log to audit_logs:
+
+```javascript
+// Pattern in all services
+import { auditLog } from '@/lib/actions/audit/auditLog';
+
+export async function completeReservation(reservationId, businessId, options) {
+  const reservation = await db.inventory_reservations.findUnique({
+    where: { id: reservationId }
+  });
+  
+  // Verify business_id
+  if (reservation.business_id !== businessId) {
+    throw new MultiTenantViolationError(reservationId, businessId, reservation.business_id);
+  }
+  
+  // Update
+  const updated = await db.inventory_reservations.update({
+    where: { id: reservationId },
+    data: { status: 'completed', completed_at: new Date() }
+  });
+  
+  // Log to audit trail
+  await auditLog({
+    businessId,
+    action: 'reservation_completed',
+    resourceType: 'inventory_reservation',
+    resourceId: reservationId,
+    details: { options }
+  });
+  
+  return updated;
+}
+```
+
+---
+
+## 12. Inventory Export/Import Enhancements
+
+### A. Enhanced Export (Fix Batch/Serial Data Loss)
+
+Modify `lib/actions/premium/inventory/exportProducts.js`:
+
+```javascript
+export async function exportProducts(businessId, options = {}) {
+  const products = await db.products.findMany({
+    where: { business_id: businessId, is_deleted: false },
+    include: {
+      product_batches: true,
+      product_serials: true,
+      product_stock_locations: true,
+      product_category: true
+    }
+  });
+  
+  // Main sheet
+  const basicData = products.map(p => ({
+    'Name': p.name,
+    'SKU': p.sku,
+    'Barcode': p.barcode,
+    'Category': p.product_category?.name,
+    'Price': p.selling_price,
+    'Cost Price': p.cost_price,
+    'Stock': p.stock,
+    'Min Stock': p.min_stock,
+    'Max Stock': p.max_stock,
+    'Reorder Point': p.reorder_point,
+    'Unit': p.unit_of_measure,
+    'Description': p.description,
+    'Is Batch Tracked': p.is_batch_tracked,
+    'Is Serial Tracked': p.is_serial_tracked
+  }));
+  
+  // Batch sheet (if any batches)
+  const batchData = [];
+  for (const product of products) {
+    if (product.product_batches.length > 0) {
+      for (const batch of product.product_batches) {
+        batchData.push({
+          'Product SKU': product.sku,
+          'Batch Number': batch.batch_number,
+          'Quantity': batch.quantity,
+          'Cost Per Unit': batch.cost_per_unit,
+          'Manufacturing Date': batch.manufacturing_date,
+          'Expiry Date': batch.expiry_date,
+          'Status': batch.status
+        });
+      }
+    }
+  }
+  
+  // Serial sheet (if any serials)
+  const serialData = [];
+  for (const product of products) {
+    if (product.product_serials.length > 0) {
+      for (const serial of product.product_serials) {
+        serialData.push({
+          'Product SKU': product.sku,
+          'Serial Number': serial.serial_number,
+          'Warranty Expiry': serial.warranty_expiry_date,
+          'Status': serial.status,
+          'Customer ID': serial.customer_id
+        });
+      }
+    }
+  }
+  
+  // Location sheet
+  const locationData = [];
+  for (const product of products) {
+    for (const location of product.product_stock_locations) {
+      locationData.push({
+        'Product SKU': product.sku,
+        'Warehouse': location.warehouse_name,
+        'Quantity': location.quantity
+      });
+    }
+  }
+  
+  // Create workbook with multiple sheets
+  const workbook = new ExcelJS.Workbook();
+  
+  const basicSheet = workbook.addWorksheet('Products');
+  basicSheet.columns = Object.keys(basicData[0]).map(k => ({ header: k }));
+  basicSheet.addRows(basicData);
+  
+  if (batchData.length > 0) {
+    const batchSheet = workbook.addWorksheet('Batches');
+    batchSheet.columns = Object.keys(batchData[0]).map(k => ({ header: k }));
+    batchSheet.addRows(batchData);
+  }
+  
+  if (serialData.length > 0) {
+    const serialSheet = workbook.addWorksheet('Serials');
+    serialSheet.columns = Object.keys(serialData[0]).map(k => ({ header: k }));
+    serialSheet.addRows(serialData);
+  }
+  
+  if (locationData.length > 0) {
+    const locationSheet = workbook.addWorksheet('Locations');
+    locationSheet.columns = Object.keys(locationData[0]).map(k => ({ header: k }));
+    locationSheet.addRows(locationData);
+  }
+  
+  return workbook;
+}
+```
+
+### B. New Excel Import Handler
+
+Create `lib/actions/standard/inventory/importProductsExcel.js`:
+
+```javascript
+import ExcelJS from 'exceljs';
+import { validateImportRow } from '@/lib/utils/inventory/importValidation';
+import { checkPlanLimit } from '@/lib/actions/subscription/checkPlanLimit';
+
+export async function importProductsExcel(file, businessId) {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(file.arrayBuffer());
+  
+  const productsSheet = workbook.getWorksheet('Products');
+  const batchesSheet = workbook.getWorksheet('Batches');
+  const serialsSheet = workbook.getWorksheet('Serials');
+  const locationsSheet = workbook.getWorksheet('Locations');
+  
+  const rows = [];
+  productsSheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return; // Skip header
+    rows.push(row.values);
+  });
+  
+  // Validate total new products against plan
+  const existingSKUs = await db.products.findMany({
+    where: { business_id: businessId },
+    select: { sku: true }
+  });
+  const existingSKUSet = new Set(existingSKUs.map(p => p.sku));
+  
+  const newSKUs = rows.filter(row => {
+    const sku = row[2]; // SKU column
+    return !existingSKUSet.has(sku);
+  });
+  
+  const currentCount = existingSKUs.length;
+  await checkPlanLimit(businessId, 'max_products', currentCount + newSKUs.length);
+  
+  // Import products
+  const imported = [];
+  for (const row of rows) {
+    const validation = validateImportRow(row);
+    if (!validation.valid) {
+      throw new BusinessError('IMPORT_VALIDATION_ERROR', validation.error);
+    }
+    
+    const product = await db.products.upsert({
+      where: { sku_business_id: { sku: row[2], business_id: businessId } },
+      update: {
+        name: row[1],
+        selling_price: row[4],
+        cost_price: row[5],
+        stock: row[6],
+        min_stock: row[7],
+        max_stock: row[8]
+      },
+      create: {
+        name: row[1],
+        sku: row[2],
+        barcode: row[3],
+        selling_price: row[4],
+        cost_price: row[5],
+        stock: row[6],
+        business_id: businessId,
+        is_batch_tracked: row[12] === 'yes',
+        is_serial_tracked: row[13] === 'yes'
+      }
+    });
+    
+    imported.push(product);
+  }
+  
+  // Import batches if sheet exists
+  if (batchesSheet) {
+    const batchRows = [];
+    batchesSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      batchRows.push(row.values);
+    });
+    
+    for (const batchRow of batchRows) {
+      const product = imported.find(p => p.sku === batchRow[1]);
+      if (product) {
+        await db.product_batches.create({
+          product_id: product.id,
+          batch_number: batchRow[2],
+          quantity: batchRow[3],
+          cost_per_unit: batchRow[4],
+          manufacturing_date: new Date(batchRow[5]),
+          expiry_date: new Date(batchRow[6])
+        });
+      }
+    }
+  }
+  
+  // Import serials if sheet exists
+  if (serialsSheet) {
+    const serialRows = [];
+    serialsSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      serialRows.push(row.values);
+    });
+    
+    for (const serialRow of serialRows) {
+      const product = imported.find(p => p.sku === serialRow[1]);
+      if (product) {
+        await db.product_serials.create({
+          product_id: product.id,
+          serial_number: serialRow[2],
+          warranty_expiry_date: new Date(serialRow[3]),
+          status: 'in_stock'
+        });
+      }
+    }
+  }
+  
+  return {
+    imported: imported.length,
+    batches: batchesSheet ? batchRows.length : 0,
+    serials: serialsSheet ? serialRows.length : 0
+  };
+}
+```
+
+---
+
+## 13. Multi-Tenant Safety for Bulk Operations
+
+### Fix: lib/actions/premium/automation/bulk.js
+
+```javascript
+// CRITICAL FIX: Add business_id verification
+export async function deleteBulkProducts(productIds, businessId) {
+  // Step 1: VERIFY all products belong to this business
+  const productsToDelete = await db.products.findMany({
+    where: { id: { in: productIds } },
+    select: { id: business_id }
+  });
+  
+  const owningBusinessIds = new Set(productsToDelete.map(p => p.business_id));
+  
+  if (owningBusinessIds.size > 1 || !owningBusinessIds.has(businessId)) {
+    throw new MultiTenantViolationError(
+      productIds,
+      businessId,
+      Array.from(owningBusinessIds)[0]
+    );
+  }
+  
+  // Step 2: Only proceed if ALL verified
+  if (productsToDelete.length !== productIds.length) {
+    throw new BusinessError(
+      'PRODUCTS_NOT_FOUND',
+      `${productIds.length - productsToDelete.length} products not found`
+    );
+  }
+  
+  // Step 3: Soft delete
+  const result = await db.products.updateMany({
+    where: { id: { in: productIds }, business_id: businessId },
+    data: {
+      is_deleted: true,
+      deleted_at: new Date()
+    }
+  });
+  
+  // Step 4: Audit
+  await auditLog({
+    businessId,
+    action: 'bulk_delete_products',
+    resourceType: 'product',
+    resourceIds: productIds,
+    count: result.count
+  });
+  
+  return result;
+}
+
+// Similar pattern for bulk invoice delete, bulk customer delete, etc.
+export async function deleteBulkInvoices(invoiceIds, businessId) {
+  // ALWAYS verify business_id first
+  const invoicesToDelete = await db.invoices.findMany({
+    where: { id: { in: invoiceIds } },
+    select: { id, business_id }
+  });
+  
+  if (!invoicesToDelete.every(i => i.business_id === businessId)) {
+    throw new MultiTenantViolationError('invoices', businessId);
+  }
+  
+  // ... rest of implementation
+}
+```
+
+---
+
+## 14. Payment Allocation XOR Constraint Fix
+
+### Schema Addition
+
+Add this to `prisma/schema.prisma`:
+
+```prisma
+model payment_allocations {
+  // existing fields
+  invoice_id     String?
+  purchase_id    String?
+  
+  // Ensure EXACTLY ONE of invoice_id or purchase_id is populated
+  // This check constraint goes in migration
+  
+  invoice        invoices?       @relation(fields: [invoice_id], references: [id])
+  purchase       purchase_orders? @relation(fields: [purchase_id], references: [id])
+  
+  @@check("(invoice_id IS NOT NULL AND purchase_id IS NULL) OR (invoice_id IS NULL AND purchase_id IS NOT NULL)")
+}
+```
+
+### Migration
+
+Create `prisma/migrations/add_payment_allocation_xor.sql`:
+
+```sql
+-- Add check constraint for XOR logic
+ALTER TABLE payment_allocations
+ADD CONSTRAINT payment_allocation_xor_check 
+CHECK (
+  (invoice_id IS NOT NULL AND purchase_id IS NULL) 
+  OR 
+  (invoice_id IS NULL AND purchase_id IS NOT NULL)
+);
+
+-- Validate existing data (fail if any violate constraint)
+SELECT COUNT(*) as violations FROM payment_allocations
+WHERE NOT (
+  (invoice_id IS NOT NULL AND purchase_id IS NULL) 
+  OR 
+  (invoice_id IS NULL AND purchase_id IS NOT NULL)
+);
+```
+
+---
+
+## 15. Domain Data JSON Schema Validation
+
+### Framework
+
+Create `lib/utils/validation/domainDataValidator.js`:
+
+```javascript
+import { z } from 'zod';
+
+// Define schemas per domain
+const batchTrackingSchema = z.object({
+  batch_number: z.string(),
+  batch_quantity: z.number().positive(),
+  expiry_date: z.string().datetime(),
+  manufacturing_date: z.string().datetime().optional(),
+  cost_per_unit: z.number().positive(),
+  batch_status: z.enum(['active', 'expired', 'damaged'])
+});
+
+const serialTrackingSchema = z.object({
+  serial_number: z.string(),
+  warranty_months: z.number().positive(),
+  warranty_expiry_date: z.string().datetime(),
+  status: z.enum(['in_stock', 'sold', 'returned'])
+});
+
+const pharmacySchema = z.object({
+  batch_tracking: batchTrackingSchema.optional(),
+  schedule_type: z.enum(['OTC', 'Rx', 'Schedule H', 'Schedule X']).optional()
+});
+
+const retailSchema = z.object({
+  serial_tracking: serialTrackingSchema.optional(),
+  color: z.string().optional(),
+  size: z.string().optional()
+});
+
+// Validator factory
+export function validateDomainData(domain, data) {
+  const schemas = {
+    'pharmacy': pharmacySchema,
+    'retail': retailSchema,
+    // Add more domains
+  };
+  
+  const schema = schemas[domain];
+  if (!schema) {
+    throw new BusinessError('UNKNOWN_DOMAIN', `Unknown domain: ${domain}`);
+  }
+  
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    throw new BusinessError(
+      'INVALID_DOMAIN_DATA',
+      'Invalid domain data',
+      { errors: result.error.errors }
+    );
+  }
+  
+  return result.data;
+}
+```
+
+### Usage in services
+
+```javascript
+export async function createProductBatch(data, businessId) {
+  // Validate domain data before saving
+  const validatedData = validateDomainData(
+    data.domain,
+    data.domain_data
+  );
+  
+  const batch = await db.product_batches.create({
+    data: {
+      ...data,
+      domain_data: validatedData
+    }
+  });
+  
+  return batch;
+}
+```
+
+---
+
+## 16. Comprehensive Testing Strategy
+
+### Unit Tests
+
+Create `lib/services/__tests__/batchAllocation.test.js`:
+
+```javascript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { selectBatchesForSale, getExpiringBatches } from '../batchAllocation';
+import { InsufficientStockError, BatchExpiredError } from '@/lib/errors/BusinessError';
+
+describe('batchAllocation', () => {
+  let testBusinessId, testProductId;
+  
+  beforeEach(async () => {
+    // Setup test data
+    testBusinessId = 'test-business-1';
+    testProductId = 'test-product-1';
+  });
+  
+  describe('selectBatchesForSale', () => {
+    it('should select oldest batch first (FIFO)', async () => {
+      // Arrange: Create product with 3 batches
+      const batch1 = { batch_id: '1', quantity: 50, manufacturing_date: new Date('2026-01-01') };
+      const batch2 = { batch_id: '2', quantity: 50, manufacturing_date: new Date('2026-02-01') };
+      
+      // Act
+      const selected = await selectBatchesForSale(testProductId, 60, testBusinessId);
+      
+      // Assert
+      expect(selected[0].batch_id).toBe(batch1.batch_id);
+      expect(selected[0].quantity).toBe(50);
+      expect(selected[1].batch_id).toBe(batch2.batch_id);
+      expect(selected[1].quantity).toBe(10);
+    });
+    
+    it('should throw InsufficientStockError when not enough stock', async () => {
+      // Arrange
+      // Act & Assert
+      expect(async () => {
+        await selectBatchesForSale(testProductId, 1000, testBusinessId);
+      }).rejects.toThrow(InsufficientStockError);
+    });
+    
+    it('should skip expired batches', async () => {
+      // Arrange: Create expired batch and unexpired batch
+      // Act
+      const selected = await selectBatchesForSale(testProductId, 50, testBusinessId);
+      
+      // Assert: Should only get unexpired batch
+    });
+  });
+});
+```
+
+### Integration Tests
+
+Create `lib/services/__tests__/invoice-workflow.test.js`:
+
+```javascript
+describe('Invoice Workflow Integration', () => {
+  it('should complete end-to-end invoice with batch and serial', async () => {
+    // 1. Create quotation with items
+    const quotation = await createQuotation({
+      customerId: 'customer-1',
+      items: [{ productId: 'product-1', quantity: 5 }]
+    }, businessId);
+    
+    // 2. Verify reservation created
+    const reservation = await db.inventory_reservations.findFirst({
+      where: { reference_id: quotation.id }
+    });
+    expect(reservation).toBeDefined();
+    expect(reservation.status).toBe('active');
+    
+    // 3. Create invoice from quotation
+    const invoice = await createInvoice({
+      quotationId: quotation.id,
+      items: [{ productId: 'product-1', quantity: 5, batchId: 'batch-1' }]
+    }, businessId);
+    
+    // 4. Verify batch linkage
+    const movements = await db.stock_movements.findMany({
+      where: { reference_id: invoice.id }
+    });
+    expect(movements[0].batch_id).toBe('batch-1');
+    
+    // 5. Verify reservation completed
+    const completedReservation = await db.inventory_reservations.findUnique({
+      where: { id: reservation.id }
+    });
+    expect(completedReservation.status).toBe('completed');
+    
+    // 6. Verify stock decremented
+    const product = await db.products.findUnique({
+      where: { id: 'product-1' }
+    });
+    expect(product.stock).toBe(previousStock - 5);
+  });
+});
+```
+
+---
+
+## 17. Rollout Plan
+
+### Phase 1: Deploy (Week 1)
+- [ ] Merge services to main
+- [ ] Run schema migrations (batch_id, serial_id columns)
+- [ ] Deploy error handling framework
+- [ ] Deploy API response standardization
+- [ ] Monitor error rates
+
+### Phase 2: Integration (Week 2)
+- [ ] Deploy invoice integration
+- [ ] Deploy quotation integration
+- [ ] Deploy batch/serial UI
+- [ ] Run integration tests
+- [ ] Canary deploy to 10% customers
+
+### Phase 3: Features (Week 3)
+- [ ] Deploy daily cron jobs
+- [ ] Deploy dashboard enhancements
+- [ ] Deploy Excel import/export
+- [ ] Run full test suite
+- [ ] Rollout to 100% customers
+
+### Phase 4: Hardening (Week 4)
+- [ ] Deploy multi-tenant safety fixes
+- [ ] Deploy payment allocation XOR
+- [ ] Deploy domain_data validation
+- [ ] Performance testing
+- [ ] Production monitoring
+
+### Rollback Plan
+
+Each phase has automated rollback:
+1. Invoice failures → Revert to simple stock movement (no batch/serial)
+2. Quota failures → Revert to old limits
+3. Export failures → Fallback to CSV only
+4. Daily jobs → Skip if errors, retry next day
+
+---
+
+## 18. Risk Assessment & Mitigation
+
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|-----------|
+| Batch/serial not linked on sale | 🔴 Critical | Medium | Comprehensive tests + manual QA |
+| Stock calculation discrepancy | 🔴 Critical | Low | Daily reconciliation + warnings |
+| Reservation expiry errors | 🟡 High | Medium | Auto-cleanup job + monitoring |
+| Excel import data loss | 🟡 High | Medium | Round-trip validation tests |
+| Multi-tenant leak in bulk ops | 🔴 Critical | Low | ID verification before delete |
+| Plan limit bypass | 🔴 Critical | Very Low | Server-side checks + audits |
+| Warranty claim fraud | 🟡 High | Medium | Serial tracking + history |
+
+---
+
+## 19. Files Modified Checklist
+
+### New Files
+- [ ] `lib/services/batchAllocation.js` ✅
+- [ ] `lib/services/serialIntegration.js` ✅
+- [ ] `lib/services/stockReconciliation.js` ✅
+- [ ] `lib/services/inventoryValuation.js` ✅
+- [ ] `lib/services/warrantyValidation.js` ✅
+- [ ] `lib/services/reservationManagement.js` ✅
+- [ ] `lib/errors/BusinessError.js` (NEW)
+- [ ] `lib/utils/responseFormatter.js` (NEW)
+- [ ] `lib/actions/standard/inventory/importProductsExcel.js` (NEW)
+- [ ] `prisma/migrations/add_batch_serial_linkage.sql` (NEW)
+- [ ] `prisma/migrations/add_payment_allocation_xor.sql` (NEW)
+
+### Modified Files
+- [ ] `lib/actions/standard/invoice/create.js` (Add batch/serial integration)
+- [ ] `lib/actions/standard/quotation/create.js` (Add reservation)
+- [ ] `lib/actions/premium/inventory/exportProducts.js` (Add batch/serial sheets)
+- [ ] `lib/actions/premium/automation/bulk.js` (Add multi-tenant checks)
+- [ ] `components/invoice/EnhancedInvoiceBuilder.jsx` (Add batch/serial UI)
+- [ ] `prisma/schema.prisma` (Add check constraint)
+
+---
+
+## 20. Success Metrics
+
+### Quantitative
+- ✅ All 6 services deploy without errors
+- ✅ Invoice creation time < 1.5s (currently ~1s)
+- ✅ Stock reconciliation finds <0.1% drift
+- ✅ 99.9% of reservations expire on schedule
+- ✅ 100% of serials linked to customer on sale
+- ✅ Excel export/import round-trip preserves 100% of data
+- ✅ 0 multi-tenant violations in audit logs
+
+### Qualitative
+- ✅ Users can easily select batch/serial on invoice
+- ✅ Dashboard shows clear health report
+- ✅ Error messages are actionable
+- ✅ Warranty tracking works end-to-end
+- ✅ Financial reporting accurate to batch level
+
+**Phase 2a Target Completion**: 2-3 weeks
+**Total Development Hours**: 20-25 hours
+**Deployment Windows**: Weekends only
+**Monitoring**: 24/7 for first 2 weeks

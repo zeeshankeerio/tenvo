@@ -117,7 +117,7 @@ const COLOR_CLASSES = {
 };
 
 /**
- * EmptyState — Polished empty state illustration for any module.
+ * EmptyState -- Polished empty state illustration for any module.
  *
  * Props:
  *   module       - key from MODULE_CONFIG (e.g., 'products', 'invoices')

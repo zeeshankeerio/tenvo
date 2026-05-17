@@ -127,7 +127,7 @@ export function ActionModals({
                 category={category}
             />
 
-            {/* Product Form Modal — Wizard for new, Full form for edit */}
+            {/* Product Form Modal -- Wizard for new, Full form for edit */}
             <Dialog open={showProductForm} onOpenChange={setShowProductForm}>
                 <DialogContent className={editingProduct ? "max-w-4xl max-h-[90vh] overflow-y-auto" : "max-w-3xl p-0 border-none bg-transparent shadow-none"}>
                     <DialogHeader className="sr-only">

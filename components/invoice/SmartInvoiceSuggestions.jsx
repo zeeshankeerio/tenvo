@@ -83,7 +83,7 @@ export function SmartInvoiceSuggestions({
                     <CardTitle className="text-sm font-bold">Repeat Orders</CardTitle>
                 </div>
                 <CardDescription className="text-xs">
-                    Quick-repeat for regular customers (1 click) — {suggestions.length} patterns found
+                    Quick-repeat for regular customers (1 click) -- {suggestions.length} patterns found
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -104,7 +104,7 @@ export function SmartInvoiceSuggestions({
                         <div className="text-xs text-gray-600 space-y-1 mb-2">
                             <div className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                {suggestion.daysSinceLast}d ago • Avg: {formatCurrency(suggestion.averageAmount, currency)}
+                                {suggestion.daysSinceLast}d ago * Avg: {formatCurrency(suggestion.averageAmount, currency)}
                             </div>
                             {suggestion.items.length > 0 && (
                                 <div className="text-gray-500">

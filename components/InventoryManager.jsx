@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -347,9 +347,9 @@ export function InventoryManager({
 
       // Show summary
       if (failureCount === 0) {
-        toast.success(`✅ Imported ${successCount} products successfully!`);
+        toast.success(`[OK] Imported ${successCount} products successfully!`);
       } else {
-        toast.error(`⚠️ Imported ${successCount} products, ${failureCount} failed`);
+        toast.error(`[WARNING] Imported ${successCount} products, ${failureCount} failed`);
         if (errors.length > 0) {
           console.error('Import errors:', errors);
         }
@@ -669,7 +669,7 @@ export function InventoryManager({
   useEffect(() => {
     const handleToggleFilters = () => {
       // Focus the advanced search or toggle its visibility if we add a toggle state later
-      toast.success("Filters focused", { icon: 'ðŸ”' });
+      toast.success("Filters focused", { icon: '[SEARCH]' });
       // Heuristic: Scroll to search or just show toast for now
     };
 
@@ -909,6 +909,14 @@ export function InventoryManager({
         size: 110,
         minSize: 100,
         cell: ({ row }) => <div className="text-right font-semibold text-sm text-gray-900 tabular-nums pr-2">{formatCurrency(row.original.price || 0, standards.currency)}</div>
+      },
+      {
+        id: 'tax_percent',
+        accessorKey: 'tax_percent',
+        header: () => <div className="text-right font-semibold">TAX %</div>,
+        size: 80,
+        minSize: 70,
+        cell: ({ row }) => <div className="text-right text-xs font-medium text-gray-500 pr-2">{row.original.tax_percent ?? row.original.taxPercent ?? 17}%</div>
       },
       {
         id: 'value',
@@ -1394,7 +1402,7 @@ export function InventoryManager({
                   onDeleteRow={(product) => setProductToDelete(product)}
                   onAdvancedSettings={(product) => { setSelectedProduct(product); setShowAdvancedFeatures(true); }}
                   onCellEdit={async (product, field, value) => {
-                    // âœ… ENHANCED: Preserve batches, add error handling, optimistic updates
+                    // [OK] ENHANCED: Preserve batches, add error handling, optimistic updates
                     let processedValue = value;
                     const numericFields = [
                       'stock', 'price', 'cost_price', 'costPrice',
@@ -1431,7 +1439,7 @@ export function InventoryManager({
                       }
                     }
 
-                    // âœ… CRITICAL: Ensure batches/serials are preserved
+                    // [OK] CRITICAL: Ensure batches/serials are preserved
                     const originalProduct = products.find(p => p.id === product.id);
                     if (!updatedProduct.batches && originalProduct?.batches) {
                       updatedProduct.batches = originalProduct.batches;
@@ -1440,7 +1448,7 @@ export function InventoryManager({
                       updatedProduct.serial_numbers = originalProduct?.serial_numbers || originalProduct?.serialNumbers || [];
                     }
 
-                    // âœ… Optimistic Update with Rollback
+                    // [OK] Optimistic Update with Rollback
                     const oldProducts = [...products];
                     setProducts(prev => prev.map(p => p.id === product.id ? updatedProduct : p));
 
@@ -1455,7 +1463,7 @@ export function InventoryManager({
                       }
                       toast.success(`Updated ${field}`, { id: `save-${field}`, position: 'bottom-right', duration: 2000 });
                     } catch (error) {
-                      // âŒ ROLLBACK on failure
+                      // [X] ROLLBACK on failure
                       setProducts(oldProducts);
                       toast.error(`Failed to update ${field}: ${error.message || 'Unknown error'}`, {
                         id: `error-${field}`,
@@ -1638,7 +1646,7 @@ export function InventoryManager({
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="font-bold text-sm text-gray-900 truncate group-hover:text-blue-700">{p.name}</p>
-                          <p className="text-[11px] text-gray-400 font-mono mt-0.5">{p.sku || '—'}</p>
+                          <p className="text-[11px] text-gray-400 font-mono mt-0.5">{p.sku || '--'}</p>
                         </div>
                         <Badge variant="outline" className="text-[10px] shrink-0 bg-white">
                           {(p.variants || []).length} vars
@@ -1744,7 +1752,7 @@ export function InventoryManager({
           </TabsContent>
         )}
 
-        {/* Orders Tab — Quotations / Sales Orders / Challans + Stock Reservations */}
+        {/* Orders Tab -- Quotations / Sales Orders / Challans + Stock Reservations */}
         <TabsContent value="orders" className="space-y-6">
           <QuotationOrderChallanManager
             quotations={quotations}
@@ -1973,7 +1981,7 @@ export function InventoryManager({
             </Card>
           )}
 
-          {/* AI Demand / Restock Engine — inside Reports */}
+          {/* AI Demand / Restock Engine -- inside Reports */}
           <Card className="rounded-[32px] border-gray-100 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500">
             <CardHeader className="bg-slate-50/50 pb-6 border-b border-gray-50">
               <CardTitle className="text-xl font-black text-gray-900 tracking-tight italic">Auto-Reorder Engine</CardTitle>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { Package, Ruler, Weight, Grid3x3 } from 'lucide-react';
@@ -242,7 +242,7 @@ export function RollBaleInventoryWidget({ businessId, onViewDetails }) {
                                                 {fabric.name}
                                             </div>
                                             <div className="text-[10px] text-gray-500">
-                                                {fabric.rolls.toLocaleString()} {t.rolls || 'rolls'} â€¢ {fabric.length.toLocaleString(undefined, { maximumFractionDigits: 0 })} {t.yards || 'yards'}
+                                                {fabric.rolls.toLocaleString()} {t.rolls || 'rolls'} * {fabric.length.toLocaleString(undefined, { maximumFractionDigits: 0 })} {t.yards || 'yards'}
                                             </div>
                                         </div>
                                         <div className="text-xs font-bold text-indigo-600 ml-2">
@@ -262,7 +262,7 @@ export function RollBaleInventoryWidget({ businessId, onViewDetails }) {
                 {/* Quick Action */}
                 <div className="pt-2 border-t border-gray-100">
                     <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors w-full text-center">
-                        {t.view_roll_details || 'View Roll Details'} â†’
+                        {t.view_roll_details || 'View Roll Details'} →
                     </button>
                 </div>
             </CardContent>

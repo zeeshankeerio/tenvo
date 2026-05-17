@@ -983,7 +983,7 @@ export function EnhancedInvoiceBuilder({
               </Badge>
               {currentSeason && (
                 <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white border-0 text-[10px] font-black uppercase animate-pulse">
-                  🎉 {currentSeason.name.en} - {currentSeason.discountPercent}% OFF
+                  [CELEBRATION] {currentSeason.name.en} - {currentSeason.discountPercent}% OFF
                 </Badge>
               )}
             </div>
@@ -1492,7 +1492,7 @@ export function EnhancedInvoiceBuilder({
                 {totals.seasonalDiscount > 0 && currentSeason && (
                   <div className="flex justify-between items-center bg-gradient-to-r from-orange-50 to-pink-50 p-3 rounded-2xl border border-orange-200">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-black uppercase text-orange-600">🎉 {currentSeason.name.en} Discount:</span>
+                      <span className="text-xs font-black uppercase text-orange-600">[CELEBRATION] {currentSeason.name.en} Discount:</span>
                       <Badge className="bg-orange-500 text-white text-[9px] font-black">
                         {currentSeason.discountPercent}% OFF
                       </Badge>

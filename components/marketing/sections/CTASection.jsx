@@ -58,13 +58,13 @@ export default function CTASection({
       <section className="py-16 lg:py-24 bg-gradient-to-br from-wine-600 to-wine-700 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-        
+
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`max-w-4xl mx-auto ${mounted ? 'animate-fade-in-up' : 'opacity-0'}`}>
             <div className={`flex flex-col gap-6 ${alignmentClasses[alignment]}`}>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold">{title}</h2>
               {subtitle && <p className="text-lg sm:text-xl text-wine-100 leading-relaxed max-w-2xl">{subtitle}</p>}
-              
+
               <div className={`flex flex-col sm:flex-row gap-4 ${buttonAlignment[alignment]}`}>
                 {primaryCTA && (
                   <Button asChild size="lg" className="bg-white hover:bg-neutral-100 text-wine-600 px-8 py-6 text-lg font-semibold rounded-xl" onClick={() => handleCTAClick('primary', primaryCTA.href)}>
@@ -91,7 +91,7 @@ export default function CTASection({
           <div className={`flex flex-col gap-6 ${alignmentClasses[alignment]}`}>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900">{title}</h2>
             {subtitle && <p className="text-lg sm:text-xl text-neutral-600 leading-relaxed max-w-2xl">{subtitle}</p>}
-            
+
             <div className={`flex flex-col sm:flex-row gap-4 ${buttonAlignment[alignment]}`}>
               {primaryCTA && (
                 <Button asChild size="lg" className="bg-wine-600 hover:bg-wine-700 text-white px-8 py-6 text-lg font-semibold rounded-xl" onClick={() => handleCTAClick('primary', primaryCTA.href)}>

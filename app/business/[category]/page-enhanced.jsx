@@ -29,14 +29,14 @@ const businessCategories = {
   'auto-parts': { name: 'Auto Parts', icon: '🚗', color: 'blue' },
   'retail-shop': { name: 'Retail Shop', icon: '🏪', color: 'green' },
   'pharmacy': { name: 'Pharmacy', icon: '💊', color: 'red' },
-  'chemical': { name: 'Chemical', icon: '🧪', color: 'purple' },
+  'chemical': { name: 'Chemical', icon: '[TEST]', color: 'purple' },
   'food-beverages': { name: 'Food & Beverages', icon: '🍔', color: 'orange' },
   'ecommerce': { name: 'E-commerce', icon: '🛒', color: 'indigo' },
   'computer-hardware': { name: 'Computer Hardware', icon: '💻', color: 'blue' },
   'furniture': { name: 'Furniture', icon: '🪑', color: 'brown' },
   'book-publishing': { name: 'Book Publishing', icon: '📚', color: 'teal' },
   'travel': { name: 'Travel', icon: '✈️', color: 'cyan' },
-  'fmcg': { name: 'FMCG', icon: '📦', color: 'wine' },
+  'fmcg': { name: 'FMCG', icon: '[BOX]', color: 'wine' },
   'electrical': { name: 'Electrical', icon: '⚡', color: 'wine' },
   'paper-mill': { name: 'Paper Mill', icon: '📄', color: 'gray' },
   'paint': { name: 'Paint', icon: '🎨', color: 'pink' },
@@ -45,7 +45,7 @@ const businessCategories = {
   'agriculture': { name: 'Agriculture', icon: '🌾', color: 'green' },
   'gems-jewellery': { name: 'Gems & Jewellery', icon: '💎', color: 'teal' },
   'electronics-goods': { name: 'Electronics Goods', icon: '📺', color: 'blue' },
-  'real-estate': { name: 'Real Estate', icon: '🏠', color: 'brown' },
+  'real-estate': { name: 'Real Estate', icon: '[HOUSE]', color: 'brown' },
   'grocery': { name: 'Grocery', icon: '🛒', color: 'green' }
 };
 

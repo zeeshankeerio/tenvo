@@ -52,7 +52,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
         ['asset', 'bank', 'cash'].includes((a.type || '').toLowerCase())
     );
 
-    // ── Load sessions ──────────────────────────────────────────────────────────
+    // -- Load sessions ----------------------------------------------------------
 
     const loadSessions = useCallback(async () => {
         if (!businessId) return;
@@ -75,7 +75,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
 
     useEffect(() => { loadSessions(); }, [loadSessions]);
 
-    // ── Load session detail ────────────────────────────────────────────────────
+    // -- Load session detail ----------------------------------------------------
 
     const openSession = useCallback(async (sessionId) => {
         if (!businessId) return;
@@ -93,7 +93,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
         }
     }, [businessId]);
 
-    // ── Create new session ─────────────────────────────────────────────────────
+    // -- Create new session -----------------------------------------------------
 
     const handleCreateSession = async () => {
         if (!newSession.account_id) { toast.error('Select a bank account'); return; }
@@ -141,7 +141,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
         }
     };
 
-    // ── Match a statement line to a GL entry ───────────────────────────────────
+    // -- Match a statement line to a GL entry -----------------------------------
 
     const handleMatch = async (lineId, glEntryId) => {
         if (!activeSession) return;
@@ -186,7 +186,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
         }
     };
 
-    // ── Complete session ───────────────────────────────────────────────────────
+    // -- Complete session -------------------------------------------------------
 
     const handleComplete = async () => {
         if (!activeSession) return;
@@ -209,7 +209,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
         }
     };
 
-    // ── Computed values ────────────────────────────────────────────────────────
+    // -- Computed values --------------------------------------------------------
 
     const stats = sessionDetail ? (() => {
         const lines = sessionDetail.lines || [];
@@ -221,13 +221,13 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
         return { matched, unmatched, total: lines.length, stmtTotal, closing, difference };
     })() : null;
 
-    // ── Render session detail ──────────────────────────────────────────────────
+    // -- Render session detail --------------------------------------------------
 
     const renderSessionDetail = () => {
         if (loadingDetail) {
             return (
                 <div className="flex items-center justify-center py-16 text-gray-400">
-                    <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading session…
+                    <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading session...
                 </div>
             );
         }
@@ -420,7 +420,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
         );
     };
 
-    // ── Render sessions list ───────────────────────────────────────────────────
+    // -- Render sessions list ---------------------------------------------------
 
     return (
         <div className="space-y-4">
@@ -455,7 +455,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                                         onChange={e => setNewSession(s => ({ ...s, account_id: e.target.value }))}
                                         className="w-full h-9 px-2 text-xs border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500/20"
                                     >
-                                        <option value="">Select account…</option>
+                                        <option value="">Select account...</option>
                                         {bankAccounts.map(a => (
                                             <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
                                         ))}
@@ -558,7 +558,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                     {/* Sessions List */}
                     {loadingSessions ? (
                         <div className="flex items-center justify-center py-12 text-gray-400">
-                            <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading…
+                            <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading...
                         </div>
                     ) : sessions.length === 0 ? (
                         <div className="text-center py-16 text-gray-400 bg-white rounded-2xl border border-gray-100">

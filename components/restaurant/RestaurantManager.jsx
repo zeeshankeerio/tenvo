@@ -31,7 +31,7 @@ function formatElapsed(seconds) {
     return `${m}m ${s.toString().padStart(2, '0')}s`;
 }
 
-// ─── Table Card ──────────────────────────────────────────────────────────────
+// --- Table Card --------------------------------------------------------------
 
 function TableCard({ table, onAction }) {
     const status = STATUS_CONFIG[table.status] || STATUS_CONFIG.available;
@@ -68,7 +68,7 @@ function TableCard({ table, onAction }) {
     );
 }
 
-// ─── Kitchen Order Ticket ────────────────────────────────────────────────────
+// --- Kitchen Order Ticket ----------------------------------------------------
 
 function KitchenTicket({ order, onStatusUpdate }) {
     const elapsed = order.seconds_elapsed || 0;
@@ -103,7 +103,7 @@ function KitchenTicket({ order, onStatusUpdate }) {
                     ) : (
                         <span>Takeaway</span>
                     )}
-                    <span>•</span>
+                    <span>*</span>
                     <span>{order.order_type}</span>
                 </div>
 
@@ -168,7 +168,7 @@ function KitchenTicket({ order, onStatusUpdate }) {
     );
 }
 
-// ─── Main Restaurant Manager ─────────────────────────────────────────────────
+// --- Main Restaurant Manager -------------------------------------------------
 
 export function RestaurantManager({
     businessId,
@@ -184,7 +184,7 @@ export function RestaurantManager({
     const [isFullscreen, setIsFullscreen] = useState(false);
     const containerRef = React.useRef(null);
 
-    // ─── Fullscreen Logic ────────────────────────────────────────────────────
+    // --- Fullscreen Logic ----------------------------------------------------
 
     const toggleFullscreen = useCallback(() => {
         if (!containerRef.current) return;
@@ -345,7 +345,7 @@ export function RestaurantManager({
                     {filteredQueue.length === 0 && (
                         <div className="py-16 text-center text-gray-400">
                             <CheckCircle2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                            <p className="text-sm">All caught up! 🎉</p>
+                            <p className="text-sm">All caught up! [CELEBRATION]</p>
                         </div>
                     )}
                 </div>

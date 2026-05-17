@@ -180,9 +180,9 @@ export function TaxComplianceManager({ invoices = [], purchaseOrders = [], busin
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4 text-sm text-blue-800 font-medium">
-                                <p>• Ensure all purchase bills from active tax payers are uploaded to claim Input Tax Credit.</p>
-                                <p>• Verify NTN numbers of B2B customers to correctly handle Withholding Tax requirements.</p>
-                                <p>• Digital payments through JazzCash/Easypaisa can provide tax incentives for specialized sectors.</p>
+                                <p>* Ensure all purchase bills from active tax payers are uploaded to claim Input Tax Credit.</p>
+                                <p>* Verify NTN numbers of B2B customers to correctly handle Withholding Tax requirements.</p>
+                                <p>* Digital payments through JazzCash/Easypaisa can provide tax incentives for specialized sectors.</p>
                                 <Button variant="outline" className="w-full mt-4 border-blue-200 bg-white text-blue-700 hover:bg-blue-50 font-black">
                                     Detailed Tax Analysis
                                 </Button>

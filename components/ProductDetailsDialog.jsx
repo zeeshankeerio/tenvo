@@ -244,7 +244,7 @@ export function ProductDetailsDialog({
                                                                         {v.sku}
                                                                     </div>
                                                                     <div className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">
-                                                                        {v.size || 'N/A'} • {v.color || 'N/A'}
+                                                                        {v.size || 'N/A'} * {v.color || 'N/A'}
                                                                     </div>
                                                                 </div>
                                                                 <Badge className="bg-white border-gray-100 text-gray-600 font-black text-[9px] px-2 py-0.5">

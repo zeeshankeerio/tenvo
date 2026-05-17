@@ -108,7 +108,7 @@ export function JournalEntryList({ businessId, currency, accounts = [], onNewEnt
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                        placeholder="Search journal number or description…"
+                        placeholder="Search journal number or description..."
                         className="pl-8 h-9 text-xs rounded-xl border-gray-200"
                     />
                 </div>
@@ -118,7 +118,7 @@ export function JournalEntryList({ businessId, currency, accounts = [], onNewEnt
                         onChange={e => setStartDate(e.target.value)}
                         className="h-9 px-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
                     />
-                    <span className="text-gray-300 text-xs">–</span>
+                    <span className="text-gray-300 text-xs">-</span>
                     <input
                         type="date" value={endDate}
                         onChange={e => setEndDate(e.target.value)}
@@ -168,7 +168,7 @@ export function JournalEntryList({ businessId, currency, accounts = [], onNewEnt
 
                 {loading && journals.length === 0 && (
                     <div className="flex items-center justify-center py-16 text-gray-400">
-                        <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading…
+                        <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading...
                     </div>
                 )}
 
@@ -198,7 +198,7 @@ export function JournalEntryList({ businessId, currency, accounts = [], onNewEnt
                                         : <ChevronRight className="w-3.5 h-3.5" />}
                                 </span>
                                 <span className="text-xs font-mono font-bold text-gray-800 truncate">
-                                    {je.journal_number || '—'}
+                                    {je.journal_number || '--'}
                                 </span>
                                 <span className="text-xs text-gray-600 truncate">
                                     {je.description}
@@ -207,7 +207,7 @@ export function JournalEntryList({ businessId, currency, accounts = [], onNewEnt
                                 <span className="text-xs text-gray-500">
                                     {je.transaction_date
                                         ? format(new Date(je.transaction_date), 'dd MMM yyyy')
-                                        : '—'}
+                                        : '--'}
                                 </span>
                                 <span className="text-xs font-mono font-bold text-gray-800 text-right">
                                     {formatCurrency(Number(je.total_debit), currency)}
@@ -242,12 +242,12 @@ export function JournalEntryList({ businessId, currency, accounts = [], onNewEnt
                                                     <td className="py-1.5 text-right font-mono text-gray-800">
                                                         {Number(line.debit) > 0
                                                             ? formatCurrency(Number(line.debit), currency)
-                                                            : <span className="text-gray-300">—</span>}
+                                                            : <span className="text-gray-300">--</span>}
                                                     </td>
                                                     <td className="py-1.5 text-right font-mono text-gray-800">
                                                         {Number(line.credit) > 0
                                                             ? formatCurrency(Number(line.credit), currency)
-                                                            : <span className="text-gray-300">—</span>}
+                                                            : <span className="text-gray-300">--</span>}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -269,7 +269,7 @@ export function JournalEntryList({ businessId, currency, accounts = [], onNewEnt
             {/* Pagination */}
             {total > LIMIT && (
                 <div className="flex items-center justify-between text-xs text-gray-500 px-1">
-                    <span>Showing {offset + 1}–{Math.min(offset + LIMIT, total)} of {total}</span>
+                    <span>Showing {offset + 1}-{Math.min(offset + LIMIT, total)} of {total}</span>
                     <div className="flex gap-2">
                         <Button
                             variant="outline"

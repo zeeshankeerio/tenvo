@@ -82,7 +82,7 @@ export function BatchManager({
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // 🛡️ DEFENSIVE CHECK
+        // [SHIELD] DEFENSIVE CHECK
         if (!product || !product.id) {
             console.error('BatchManager: Product context is missing during submit', { product });
             toast.error('Product context missing. Please close and try again.');

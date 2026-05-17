@@ -109,7 +109,7 @@ export default function NewPurchasePage() {
                     }));
                 } else {
                     toast('No warehouse found. Please create one to manage stock.', {
-                        icon: '⚠️',
+                        icon: '[WARNING]',
                         duration: 5000
                     });
                 }

@@ -390,9 +390,9 @@ export function StockAdjustment({
                     <div className="font-medium">{adjustment.productName}</div>
                     <div className="text-sm text-gray-500">
                       {adjustment.adjustmentType === 'increase' ? '+' : '-'}{adjustment.quantity} units
-                      {' • '}
+                      {' * '}
                       {adjustment.previousStock} → {adjustment.newStock}
-                      {' • '}
+                      {' * '}
                       Reason: {adjustment.reason}
                     </div>
                     <div className="text-xs text-gray-400 mt-1">

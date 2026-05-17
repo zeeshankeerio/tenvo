@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo } from 'react';
 import { EnhancedDashboard } from '@/components/EnhancedDashboard';
@@ -301,7 +301,7 @@ export function SalesDashboard({
               onClick={() => onQuickAction?.('view-commission-history')}
               className="w-full text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors py-2"
             >
-              {t.view_commission_history || 'View Commission History'} â†’
+              {t.view_commission_history || 'View Commission History'} →
             </button>
           </CardContent>
         </Card>
@@ -359,9 +359,9 @@ export function SalesDashboard({
                     </div>
                     <div className="flex items-center gap-3 text-xs text-gray-500">
                       <span>{customer.phone}</span>
-                      <span>â€¢</span>
+                      <span>*</span>
                       <span>{customer.orderCount} {t.orders || 'orders'}</span>
-                      <span>â€¢</span>
+                      <span>*</span>
                       <span>{formatTimeAgo(customer.lastPurchase)}</span>
                     </div>
                   </div>
@@ -385,13 +385,13 @@ export function SalesDashboard({
               onClick={() => onQuickAction?.('view-all-customers')}
               className="flex-1 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors py-2"
             >
-              {t.view_all_customers || 'View All Customers'} â†’
+              {t.view_all_customers || 'View All Customers'} →
             </button>
             <button
               onClick={() => onQuickAction?.('search-customer')}
               className="flex-1 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors py-2"
             >
-              {t.search_customers || 'Search Customers'} â†’
+              {t.search_customers || 'Search Customers'} →
             </button>
           </div>
         </CardContent>

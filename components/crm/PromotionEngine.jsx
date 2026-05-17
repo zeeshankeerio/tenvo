@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
-// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Constants ----------------------------------------------------------------
 
 const PROMO_TYPES = [
     {
@@ -52,7 +52,7 @@ const STATUS_COLORS = {
     paused: 'bg-amber-100 text-amber-700 border-amber-200',
 };
 
-// â”€â”€â”€ Promo Form Dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Promo Form Dialog -------------------------------------------------------
 
 function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = 'Rs.' }) {
     const isEditing = !!promotion;
@@ -394,7 +394,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                 {/* Footer */}
                 <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
                     <Button variant="outline" onClick={step === 0 ? onClose : () => setStep(0)} className="h-10 rounded-xl text-xs font-bold">
-                        {step === 0 ? 'Cancel' : 'â† Back'}
+                        {step === 0 ? 'Cancel' : '<- Back'}
                     </Button>
                     {step === 1 && (
                         <Button
@@ -412,7 +412,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
     );
 }
 
-// â”€â”€â”€ Promotion Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Promotion Card ----------------------------------------------------------
 
 function PromoCard({ promotion, onEdit, onToggle, onDuplicate, onDelete, currency }) {
     const typeInfo = PROMO_TYPES.find(t => t.key === promotion.type) || PROMO_TYPES[0];
@@ -478,7 +478,7 @@ function PromoCard({ promotion, onEdit, onToggle, onDuplicate, onDelete, currenc
                     {promotion.start_date && (
                         <span className="flex items-center gap-0.5">
                             <Calendar className="w-3 h-3" />
-                            {new Date(promotion.start_date).toLocaleDateString()} â€” {promotion.end_date ? new Date(promotion.end_date).toLocaleDateString() : 'Ongoing'}
+                            {new Date(promotion.start_date).toLocaleDateString()} -- {promotion.end_date ? new Date(promotion.end_date).toLocaleDateString() : 'Ongoing'}
                         </span>
                     )}
                     {promotion.min_order > 0 && (
@@ -536,7 +536,7 @@ function PromoCard({ promotion, onEdit, onToggle, onDuplicate, onDelete, currenc
     );
 }
 
-// â”€â”€â”€ Main Promotion Engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Main Promotion Engine ---------------------------------------------------
 
 export function PromotionEngine({ businessId, currency = 'Rs.' }) {
     const [promotions, setPromotions] = useState([

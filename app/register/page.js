@@ -554,7 +554,7 @@ export default function RegisterWizard() {
                                                         <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Security Password</Label>
                                                         <Input
                                                             type="password"
-                                                            placeholder="••••••••••••"
+                                                            placeholder="************"
                                                             value={formData.password}
                                                             onChange={e => setFormData({ ...formData, password: e.target.value })}
                                                             className="h-12 rounded-2xl border-gray-100 focus:ring-wine/20"
@@ -705,7 +705,7 @@ export default function RegisterWizard() {
                                                                 <p className="text-xs font-black text-wine mt-2">PKR {config.price_pkr} / mo</p>
                                                                 <ul className="mt-2 space-y-1">
                                                                     {(PLAN_HIGHLIGHTS[tier] || []).map(item => (
-                                                                        <li key={item} className="text-[11px] text-gray-600">• {item}</li>
+                                                                        <li key={item} className="text-[11px] text-gray-600">* {item}</li>
                                                                     ))}
                                                                 </ul>
                                                             </button>

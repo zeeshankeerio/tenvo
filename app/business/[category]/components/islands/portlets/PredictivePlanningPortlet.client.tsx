@@ -105,7 +105,20 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                         )}
 
                         {item.priority === 'high' && (
-                            <button className="w-full mt-3 py-1.5 bg-wine text-white rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-wine/90 transition-colors shadow-sm shadow-wine/10">
+                            <button 
+                                onClick={async () => {
+                                    if (confirm(`Do you want the AI Agent to prepare a procurement proposal for ${item.name}?`)) {
+                                        const { runAgenticProcurementAction } = await import('@/lib/actions/premium/ai/agentic');
+                                        const res = await runAgenticProcurementAction(businessId!, item.id);
+                                        if (res.success) {
+                                            alert('AI Agent has prepared a procurement proposal. You can review it in the Approvals section.');
+                                        } else {
+                                            alert('Agent failed: ' + res.error);
+                                        }
+                                    }
+                                }}
+                                className="w-full mt-3 py-1.5 bg-wine text-white rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-wine/90 transition-colors shadow-sm shadow-wine/10"
+                            >
                                 <ShoppingCart className="w-3.5 h-3.5" />
                                 Draft Restock Order
                             </button>

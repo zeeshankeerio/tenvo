@@ -17,7 +17,7 @@ import { DomainFieldRenderer } from '@/components/domain/DomainFieldRenderer';
 import { getDomainProductFields, getDomainFormLabels, isHighPrecisionDomain, sanitizeDomainData } from '@/lib/utils/domainHelpers';
 import { validateDomainData } from '@/lib/validation/domainSchemas';
 
-// ─── Step Definitions ────────────────────────────────────────────────────────
+// --- Step Definitions --------------------------------------------------------
 
 const PRECISION_STEPS = [
     { key: 'basics', label: 'Product Info', icon: Package, description: 'Name, SKU, and category' },
@@ -35,7 +35,7 @@ const STANDARD_STEPS = [
     { key: 'review', label: 'Review', icon: CheckCircle2, description: 'Confirm and save' },
 ];
 
-// ─── Auto-Suggestion Categories by Domain ────────────────────────────────────
+// --- Auto-Suggestion Categories by Domain ------------------------------------
 
 const DOMAIN_CATEGORY_SUGGESTIONS = {
     'restaurant-cafe': ['Appetizers', 'Main Course', 'Beverages', 'Desserts', 'Sides', 'Combo Meals', 'Specials'],
@@ -57,7 +57,7 @@ const TAX_PRESETS = [
     { label: 'Exempt', value: 0 },
 ];
 
-// ─── Step 1: Basic Info ──────────────────────────────────────────────────────
+// --- Step 1: Basic Info ------------------------------------------------------
 
 function StepBasics({ formData, onChange, category, errors }) {
     const categorySuggestions = DOMAIN_CATEGORY_SUGGESTIONS[category] || DOMAIN_CATEGORY_SUGGESTIONS['retail'];
@@ -177,7 +177,7 @@ function StepBasics({ formData, onChange, category, errors }) {
     );
 }
 
-// ─── Step 2: Pricing ─────────────────────────────────────────────────────────
+// --- Step 2: Pricing ---------------------------------------------------------
 
 function StepPricing({ formData, onChange, currency, errors }) {
     const margin = formData.price && formData.cost_price
@@ -304,7 +304,7 @@ function StepPricing({ formData, onChange, currency, errors }) {
     );
 }
 
-// ─── Step 3: Inventory ───────────────────────────────────────────────────────
+// --- Step 3: Inventory -------------------------------------------------------
 
 function StepInventory({ formData, onChange, errors, category }) {
     const labels = getDomainFormLabels(category);
@@ -400,7 +400,7 @@ function StepInventory({ formData, onChange, errors, category }) {
     );
 }
 
-// ─── Step 4: Domain Attributes ───────────────────────────────────────────────
+// --- Step 4: Domain Attributes -----------------------------------------------
 
 function StepAttributes({ formData, onChange, category, errors }) {
     const domainFields = useMemo(() => {
@@ -453,7 +453,7 @@ function StepAttributes({ formData, onChange, category, errors }) {
     );
 }
 
-// ─── Step 5: Review ──────────────────────────────────────────────────────────
+// --- Step 5: Review ----------------------------------------------------------
 
 function StepReview({ formData, currency }) {
     const sections = [
@@ -462,8 +462,8 @@ function StepReview({ formData, currency }) {
                 { label: 'Name', value: formData.name },
                 { label: 'SKU', value: formData.sku || 'Auto-generated' },
                 { label: 'Category', value: formData.category },
-                { label: 'Brand', value: formData.brand || '—' },
-                { label: 'Barcode', value: formData.barcode || '—' },
+                { label: 'Brand', value: formData.brand || '--' },
+                { label: 'Barcode', value: formData.barcode || '--' },
             ]
         },
         {
@@ -476,7 +476,7 @@ function StepReview({ formData, currency }) {
         {
             title: 'Inventory', items: [
                 { label: 'Opening Stock', value: formData.stock ?? 0 },
-                { label: 'Reorder Point', value: formData.reorder_point || '—' },
+                { label: 'Reorder Point', value: formData.reorder_point || '--' },
                 { label: 'Weight Item', value: formData.is_weight_item ? 'Yes' : 'No' },
             ]
         },
@@ -510,7 +510,7 @@ function StepReview({ formData, currency }) {
     );
 }
 
-// ─── Main Product Wizard ─────────────────────────────────────────────────────
+// --- Main Product Wizard -----------------------------------------------------
 
 export function ProductWizard({
     product = null,
@@ -553,7 +553,7 @@ export function ProductWizard({
         setErrors(prev => ({ ...prev, [field]: null }));
     }, []);
 
-    // ─── Validation ──────────────────────────────────────────────────────────
+    // --- Validation ----------------------------------------------------------
 
     const validateStep = useCallback((step) => {
         const newErrors = {};
@@ -626,7 +626,7 @@ export function ProductWizard({
         }
     }, [formData, onSave, isSaving]);
 
-    // ─── Keyboard Navigation ─────────────────────────────────────────────────
+    // --- Keyboard Navigation -------------------------------------------------
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -639,7 +639,7 @@ export function ProductWizard({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [currentStep, handleNext]);
 
-    // ─── Render ──────────────────────────────────────────────────────────────
+    // --- Render --------------------------------------------------------------
 
     const StepComponent = [StepBasics, StepPricing, StepInventory, StepAttributes, StepReview][currentStep];
 
@@ -656,7 +656,7 @@ export function ProductWizard({
                             {isEditing ? 'Edit Product' : 'Add New Product'}
                         </h2>
                         <p className="text-[10px] text-gray-400 font-bold">
-                            Step {currentStep + 1} of {wizardSteps.length} — {wizardSteps[currentStep].description}
+                            Step {currentStep + 1} of {wizardSteps.length} -- {wizardSteps[currentStep].description}
                         </p>
                     </div>
                 </div>

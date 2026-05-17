@@ -93,14 +93,14 @@ function getDomainGapSuggestions({ category, planTier, domainKnowledge }) {
   return suggestions;
 }
 
-// ─── Grouped Navigation Definition ──────────────────────────────────────────
+// --- Grouped Navigation Definition ------------------------------------------
 // Each item has: key (matches tab param), label, icon, and optional:
 //   - alwaysShow: bypass all gating checks
 //   - conditionKey: domain-knowledge condition (manufacturing, multiLocation, etc.)
 //   - domainOnly: array of domain categories where this item appears
 //   - badge: text badge like 'NEW' or 'BETA'
 
-// ─── ADVANCED MODE Navigation (full power, consolidated — no duplicates) ─────
+// --- ADVANCED MODE Navigation (full power, consolidated -- no duplicates) -----
 // Finance section: Accounting/Expenses/Credit-Notes/Fiscal/Exchange-Rates are all
 // sub-tabs inside Finance Hub, so they're removed as standalone sidebar items.
 const ADVANCED_NAV_SECTIONS = [
@@ -161,7 +161,7 @@ const ADVANCED_NAV_SECTIONS = [
   },
 ];
 
-// ─── EASY MODE Navigation (simple, flat — for beginners & POS operators) ─────
+// --- EASY MODE Navigation (simple, flat -- for beginners & POS operators) -----
 const EASY_NAV_SECTIONS = [
   {
     label: 'MAIN',
@@ -246,7 +246,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
     setCollapsedSections(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
-  // ─── Navigation access control ─────────────────────────────────────────────
+  // --- Navigation access control ---------------------------------------------
   // Check if a nav item should be visible + whether it's locked behind subscription
   const getItemState = (item) => {
     // Platform-only items: only visible to platform owner/admin
@@ -306,7 +306,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
           isOpen ? "translate-x-0" : (language === 'ur' ? "translate-x-full" : "-translate-x-full")
         )}
       >
-        {/* ─── Brand Header ──────────────────────────────────────── */}
+        {/* --- Brand Header ---------------------------------------- */}
         <div className={cn(
           "flex-none px-4 h-14 flex items-center border-b border-gray-100 relative group/header",
           isSidebarCollapsed && "px-0 flex flex-col justify-center"
@@ -345,7 +345,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
           )}
         </div>
 
-        {/* ─── Grouped Navigation ────────────────────────────────── */}
+        {/* --- Grouped Navigation ---------------------------------- */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2.5 space-y-0.5 scrollbar-thin">
           {!navAccessReady ? (
             <div className="space-y-2 px-1 py-2">
@@ -493,7 +493,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
           })}
         </nav>
 
-        {/* ─── Upgrade Banner (shown for free/starter plans, hidden for platform owner and compact mode) ─── */}
+        {/* --- Upgrade Banner (shown for free/starter plans, hidden for platform owner and compact mode) --- */}
         {!isSidebarCollapsed && !safeIsPlatformOwner && (planTier === 'free' || planTier === 'starter') && (
           <div className="flex-none mx-3 mb-2.5">
             <div className="bg-gradient-to-r from-brand-primary to-brand-primary-dark rounded-xl p-3 text-white">
@@ -543,7 +543,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
           </div>
         )}
 
-        {/* ─── Footer ────────────────────────────────────────────── */}
+        {/* --- Footer ---------------------------------------------- */}
         <div className={cn(
           "flex-none p-2 border-t border-gray-100 bg-white space-y-2",
           isSidebarCollapsed && "p-2 items-center flex flex-col"

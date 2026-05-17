@@ -17,12 +17,12 @@ import { DashboardTemplateSelector } from './DashboardTemplateSelector';
  * RoleBasedDashboardController
  *
  * Selects the correct dashboard based on user role first, then domain.
- * - owner / admin → OwnerDashboard (full access + domain widgets)
- * - manager       → ManagerDashboard (approvals + team + domain widgets)
- * - sales_staff   → SalesDashboard (quick invoice + customers)
- * - inventory_staff → InventoryDashboard (stock ops + cycle counts)
- * - accountant    → AccountantDashboard (financials + FBR compliance)
- * - fallback      → DashboardTemplateSelector (domain-specific or EnhancedDashboard)
+ * - owner / admin -> OwnerDashboard (full access + domain widgets)
+ * - manager       -> ManagerDashboard (approvals + team + domain widgets)
+ * - sales_staff   -> SalesDashboard (quick invoice + customers)
+ * - inventory_staff -> InventoryDashboard (stock ops + cycle counts)
+ * - accountant    -> AccountantDashboard (financials + FBR compliance)
+ * - fallback      -> DashboardTemplateSelector (domain-specific or EnhancedDashboard)
  */
 export function RoleBasedDashboardController({
   businessId,
@@ -34,7 +34,7 @@ export function RoleBasedDashboardController({
   const userId = user?.id;
   const currency = 'PKR';
 
-  // Map role → dashboard component
+  // Map role -> dashboard component
   const DashboardComponent = useMemo(() => {
     switch (userRole) {
       case 'owner':
@@ -49,7 +49,7 @@ export function RoleBasedDashboardController({
       case 'accountant':
         return AccountantDashboard;
       default:
-        // Unknown role → fall back to domain template
+        // Unknown role -> fall back to domain template
         return null;
     }
   }, [userRole]);
@@ -77,7 +77,7 @@ export function RoleBasedDashboardController({
   );
 }
 
-// ─── Utility helpers (kept for external use) ────────────────────────────────
+// --- Utility helpers (kept for external use) --------------------------------
 
 export function getRoleDisplayName(role) {
   const roleNames = {

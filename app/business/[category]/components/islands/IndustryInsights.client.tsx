@@ -50,7 +50,7 @@ export function IndustryInsights({ category }: IndustryInsightsProps) {
                             <p className="font-bold text-xs uppercase tracking-wide text-brand-primary-dark">Seasonality: {intelligence.seasonality}</p>
                             <p className="text-[11px] leading-relaxed text-muted-foreground mt-0.5">
                                 {isPeakMonth
-                                    ? `⚠️ Peak period (${currentMonth}). Recommended: 20% safety stock buffer.`
+                                    ? `[WARNING] Peak period (${currentMonth}). Recommended: 20% safety stock buffer.`
                                     : `Next peak: ${intelligence.peakMonths?.[0] || 'N/A'}. Plan procurement cycle 4 weeks out.`}
                             </p>
                         </div>

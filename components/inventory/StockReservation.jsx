@@ -472,9 +472,9 @@ export function StockReservation({
                         <div className="font-medium">{product?.name || 'Unknown Product'}</div>
                         <div className="text-sm text-gray-500">
                           Qty: {reservation.quantity}
-                          {reservation.batchNumber && ` • Batch: ${reservation.batchNumber}`}
-                          {customer && ` • Customer: ${customer.name}`}
-                          {reservation.orderId && ` • Order: ${reservation.orderId}`}
+                          {reservation.batchNumber && ` * Batch: ${reservation.batchNumber}`}
+                          {customer && ` * Customer: ${customer.name}`}
+                          {reservation.orderId && ` * Order: ${reservation.orderId}`}
                         </div>
                         {reservation.reservedUntil && (
                           <div className="text-xs text-gray-400 mt-1">

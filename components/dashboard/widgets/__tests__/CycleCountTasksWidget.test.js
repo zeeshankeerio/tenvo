@@ -152,7 +152,7 @@ describe('CycleCountTasksWidget', () => {
     );
     
     // Click view all tasks button
-    const viewAllButton = screen.getByText('View All Tasks →');
+    const viewAllButton = screen.getByText('View All Tasks ->');
     fireEvent.click(viewAllButton);
     
     expect(mockOnViewAllTasks).toHaveBeenCalled();

@@ -139,7 +139,7 @@ export function InventoryValuation({ businessId, costingMethod = 'FIFO', currenc
                     <h2 className="text-2xl font-bold text-gray-900">Inventory Valuation Report</h2>
                     <p className="text-sm text-gray-600">
                         Using {costingMethod} costing method
-                        {valuation && ` â€¢ Generated ${new Date(valuation.calculated_at).toLocaleString()}`}
+                        {valuation && ` * Generated ${new Date(valuation.calculated_at).toLocaleString()}`}
                     </p>
                 </div>
                 <div className="flex gap-2">
@@ -312,7 +312,7 @@ export function InventoryValuation({ businessId, costingMethod = 'FIFO', currenc
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className="text-sm text-gray-600 font-mono">
-                                                    {product.product_sku || 'â€”'}
+                                                    {product.product_sku || '--'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
@@ -321,7 +321,7 @@ export function InventoryValuation({ businessId, costingMethod = 'FIFO', currenc
                                                         {product.category}
                                                     </Badge>
                                                 ) : (
-                                                    <span className="text-sm text-gray-400">â€”</span>
+                                                    <span className="text-sm text-gray-400">--</span>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3 text-right">

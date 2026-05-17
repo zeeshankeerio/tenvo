@@ -478,7 +478,7 @@ export function Header({ onMenuClick }) {
                                             })()}
                                             <div className="p-2 bg-gray-50/30 text-center">
                                                 <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">
-                                                    Use Arrow Keys to Navigate • Enter to Open
+                                                    Use Arrow Keys to Navigate * Enter to Open
                                                 </span>
                                             </div>
                                         </>
@@ -491,7 +491,7 @@ export function Header({ onMenuClick }) {
 
                 {/* Right: Consolidated Actions */}
                 <div className="flex items-center gap-2 shrink-0">
-                    {/* Date Range — hidden in Easy mode for cleanliness */}
+                    {/* Date Range -- hidden in Easy mode for cleanliness */}
                     {!isEasyMode && (
                         <div className="hidden md:flex items-center gap-1.5 border-r border-gray-100 pr-2">
                             <DateRangePicker

@@ -21,11 +21,13 @@ import { RemindersPortlet } from '../islands/portlets/RemindersPortlet.client';
 import { RecentActivityFeed } from '../islands/portlets/RecentActivityFeed.client';
 import { AnalyticsDashboard } from '../islands/AnalyticsDashboard.client';
 import { PredictivePlanningPortlet } from '../islands/portlets/PredictivePlanningPortlet.client';
+import { AgenticAuditPortlet } from '../islands/portlets/AgenticAuditPortlet.client';
+import { AgenticAnalystChat } from '../islands/portlets/AgenticAnalystChat.client';
 import NetsuiteDashboard from '../islands/NetsuiteDashboard.client';
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 interface DomainDashboardProps {
     businessId?: string;
@@ -122,9 +124,9 @@ interface MetricCardProps {
     className?: string;
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // SPECIALIZED KPI CARDS
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 function DomainMetricCard({ label, value, subValue, trend, icon: Icon, colorClass, className }: MetricCardProps) {
     return (
@@ -157,9 +159,9 @@ function DomainMetricCard({ label, value, subValue, trend, icon: Icon, colorClas
     );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 export function DomainDashboard({
     businessId,
@@ -290,7 +292,7 @@ export function DomainDashboard({
     const expenseTrend = calcGrowth(periodMetrics.currentExpenses, periodMetrics.previousExpenses);
     const customerTrend = dashboardMetrics?.customers?.growth ?? calcGrowth(periodMetrics.currentCustomers, periodMetrics.previousCustomers);
 
-    // ─── Robust KPI Logic ─────────────────────────────────────────
+    // --- Robust KPI Logic -----------------------------------------
     const domainKpis = useMemo(() => {
         const expenseValue = periodMetrics.currentExpenses > 0 ? periodMetrics.currentExpenses : totalExpenses;
         const activeCustomers = dashboardMetrics?.customers?.active ?? periodMetrics.currentCustomers;
@@ -663,9 +665,9 @@ export function DomainDashboard({
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // EASY MODE DASHBOARD — Clean, beginner-friendly view
-    // ═══════════════════════════════════════════════════════════════
+    // ===============================================================
+    // EASY MODE DASHBOARD -- Clean, beginner-friendly view
+    // ===============================================================
     if (isEasyMode) {
         const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
         const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening';
@@ -969,8 +971,10 @@ export function DomainDashboard({
                                 onClick={() => onQuickAction?.('invoices')}
                                 className="text-xs font-bold text-brand-primary hover:text-brand-primary-dark"
                             >
-                                View All →
+                                View All {'→'}
                             </button>
+
+
                         </div>
                         {recentInvoices.length === 0 ? (
                         <Card className="border-dashed border-2 border-gray-200 bg-gray-50/50">
@@ -1059,9 +1063,9 @@ export function DomainDashboard({
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // ADVANCED MODE DASHBOARD — Full power view
-    // ═══════════════════════════════════════════════════════════════
+    // ===============================================================
+    // ADVANCED MODE DASHBOARD -- Full power view
+    // ===============================================================
 
     return (
         <NetsuiteDashboard>
@@ -1278,28 +1282,13 @@ export function DomainDashboard({
                         <PredictivePlanningPortlet businessId={activeBusinessId} domainKnowledge={domainKnowledge} />
                     </div>
                     <div className="lg:col-span-4">
-                        <Card className="border border-slate-200 shadow-sm bg-white h-full">
-                            <CardContent className="p-3.5">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Zap className="w-4 h-4 text-amber-500" />
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">KPI Insight Summary</p>
-                                </div>
-                                <div className="space-y-2.5">
-                                    <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
-                                        <p className="text-[10px] font-black text-slate-600">Collection Posture</p>
-                                        <p className="text-sm font-extrabold text-slate-900 mt-1">{paidOrderRateDisplay} paid order ratio</p>
-                                    </div>
-                                    <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
-                                        <p className="text-[10px] font-black text-slate-600">At-Risk SKUs</p>
-                                        <p className="text-sm font-extrabold text-slate-900 mt-1">{remindersData.lowStock} need restock planning</p>
-                                    </div>
-                                    <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
-                                        <p className="text-[10px] font-black text-slate-600">Outstanding Receivables</p>
-                                        <p className="text-sm font-extrabold text-slate-900 mt-1">{formatCurrencyCompact(outstandingAmount)}</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <AgenticAuditPortlet businessId={activeBusinessId!} />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:items-stretch">
+                    <div className="lg:col-span-12">
+                        <AgenticAnalystChat businessId={activeBusinessId!} />
                     </div>
                 </div>
             </div>

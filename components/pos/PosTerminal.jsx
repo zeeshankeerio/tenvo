@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
-// â”€â”€â”€ Product Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Product Grid ------------------------------------------------------------
 
 function PosProductGrid({ products, categories, activeCategory, onCategoryChange, onAddToCart, searchTerm, onSearchChange }) {
     const filtered = useMemo(() => {
@@ -100,10 +100,10 @@ function PosProductGrid({ products, categories, activeCategory, onCategoryChange
                             disabled={parseInt(product.stock) <= 0}
                         >
                             <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mb-2 text-2xl">
-                                ðŸ“¦
+                                [BOX]
                             </div>
                             <p className="text-xs font-semibold text-gray-900 truncate w-full">{product.name}</p>
-                            <p className="text-[10px] text-gray-400 truncate w-full">{product.sku || 'â€”'}</p>
+                            <p className="text-[10px] text-gray-400 truncate w-full">{product.sku || '--'}</p>
                             <div className="flex items-center justify-between w-full mt-1.5">
                                 <span className="text-sm font-black text-brand-primary">
                                     Rs.{parseFloat(product.selling_price || product.price || 0).toLocaleString()}
@@ -131,16 +131,23 @@ function PosProductGrid({ products, categories, activeCategory, onCategoryChange
     );
 }
 
-// â”€â”€â”€ Cart Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Cart Panel --------------------------------------------------------------
 
 function PosCart({
     items, onQuantityChange, onRemoveItem, onClearCart,
-    customer, onCustomerSelect, taxPercent = 17, discount = 0,
+    customer, onCustomerSelect, discount = 0,
     onDiscountChange, onPaymentMethodSelect, onCompleteSale, isProcessing,
     loyaltyBalance = 0, currency = 'Rs.'
 }) {
     const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
-    const taxAmount = Math.round(subtotal * (taxPercent / 100) * 100) / 100;
+    
+    // Calculate total tax by summing per-item tax stored in items
+    const totalTax = items.reduce((sum, i) => {
+        const itemTax = (i.unitPrice * i.quantity) * ((i.taxPercent || 0) / 100);
+        return sum + itemTax;
+    }, 0);
+    
+    const taxAmount = Math.round(totalTax * 100) / 100;
     const discountAmount = parseFloat(discount || 0);
     const total = Math.round((subtotal + taxAmount - discountAmount) * 100) / 100;
 
@@ -251,7 +258,7 @@ function PosCart({
                             <span>{currency}{subtotal.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-gray-400">
-                            <span>GST ({taxPercent}%)</span>
+                            <span>Tax</span>
                             <span>{currency}{taxAmount.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center justify-between text-gray-400">
@@ -306,7 +313,7 @@ function PosCart({
                         ) : (
                             <>
                                 <CheckCircle2 className="w-5 h-5 mr-2" />
-                                COMPLETE SALE â€” {currency}{total.toLocaleString()}
+                                COMPLETE SALE -- {currency}{total.toLocaleString()}
                             </>
                         )}
                     </Button>
@@ -316,7 +323,7 @@ function PosCart({
     );
 }
 
-// â”€â”€â”€ Main POS Terminal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Main POS Terminal -------------------------------------------------------
 
 export function PosTerminal({ businessId, products = [], customers = [], onStartSession, onCompleteSale, currency = 'Rs.', session }) {
     const [cart, setCart] = useState([]);
@@ -410,6 +417,7 @@ export function PosTerminal({ businessId, products = [], customers = [], onStart
                 name: product.name,
                 sku: product.sku,
                 unitPrice: parseFloat(product.selling_price || product.price || 0),
+                taxPercent: parseFloat(product.tax_percent || 17),
                 quantity: 1,
             }];
         });
@@ -428,8 +436,15 @@ export function PosTerminal({ businessId, products = [], customers = [], onStart
         setIsProcessing(true);
         try {
             const subtotal = cart.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
-            const taxAmount = Math.round(subtotal * 0.17 * 100) / 100;
-            const total = subtotal + taxAmount - parseFloat(discount || 0);
+            
+            // Calculate total tax by summing per-item tax
+            const totalTax = cart.reduce((sum, i) => {
+                const itemTax = (i.unitPrice * i.quantity) * (i.taxPercent / 100);
+                return sum + itemTax;
+            }, 0);
+            
+            const taxAmount = Math.round(totalTax * 100) / 100;
+            const total = Math.round((subtotal + taxAmount - parseFloat(discount || 0)) * 100) / 100;
 
             const result = await onCompleteSale?.({
                 businessId,
@@ -440,7 +455,8 @@ export function PosTerminal({ businessId, products = [], customers = [], onStart
                     productName: i.name,
                     quantity: i.quantity,
                     unitPrice: i.unitPrice,
-                    taxAmount: Math.round(i.unitPrice * i.quantity * 0.17 * 100) / 100,
+                    taxPercent: i.taxPercent,
+                    taxAmount: Math.round((i.unitPrice * i.quantity * (i.taxPercent / 100)) * 100) / 100,
                 })),
                 payments: [{ method: paymentMethod, amount: total }],
             });
@@ -480,7 +496,7 @@ export function PosTerminal({ businessId, products = [], customers = [], onStart
                 )}>
                     <span>
                         {hasSession
-                            ? `POS Session Active • ${terminalLabel}${sessionStartedLabel ? ` • Opened ${sessionStartedLabel}` : ''}`
+                            ? `POS Session Active * ${terminalLabel}${sessionStartedLabel ? ` * Opened ${sessionStartedLabel}` : ''}`
                             : 'Session not active: checkout will use invoice fallback mode'}
                     </span>
                     {!hasSession && (
@@ -538,7 +554,7 @@ export function PosTerminal({ businessId, products = [], customers = [], onStart
                         <div>
                             <p className="font-bold text-sm">Sale Completed!</p>
                             <p className="text-xs text-emerald-100">
-                                {lastSale?.transaction_number} â€” {currency}{lastSale?.total?.toLocaleString()} ({lastSale?.mode === 'invoice-fallback' ? 'Invoice Mode' : 'POS Mode'})
+                                {lastSale?.transaction_number} -- {currency}{lastSale?.total?.toLocaleString()} ({lastSale?.mode === 'invoice-fallback' ? 'Invoice Mode' : 'POS Mode'})
                             </p>
                         </div>
                         <Button

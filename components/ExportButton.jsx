@@ -62,20 +62,20 @@ export function ExportButton({ data, filename = 'export', columns, title, minima
               onClick={() => handleExport('csv')}
               className="w-full text-left py-1.5 text-[10px] font-black uppercase text-gray-500 hover:text-gray-900 transition-colors"
             >
-              • Download CSV
+              * Download CSV
             </button>
             <button
               onClick={() => handleExport('excel')}
               className="w-full text-left py-1.5 text-[10px] font-black uppercase text-gray-500 hover:text-gray-900 transition-colors"
             >
-              • Download Excel
+              * Download Excel
             </button>
             {columns && title && (
               <button
                 onClick={() => handleExport('pdf')}
                 className="w-full text-left py-1.5 text-[10px] font-black uppercase text-gray-500 hover:text-gray-900 transition-colors"
               >
-                • Download PDF
+                * Download PDF
               </button>
             )}
           </div>

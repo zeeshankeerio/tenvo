@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -28,7 +28,7 @@ import { PLAN_TIERS } from '@/lib/config/plans';
 import { ROLE_DESCRIPTIONS } from '@/lib/config/platform';
 import toast from 'react-hot-toast';
 
-// â”€â”€â”€ Sub-views â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Sub-views ---------------------------------------------------------------
 
 const ADMIN_TABS = [
     { key: 'overview', label: 'Overview', icon: Activity },
@@ -38,7 +38,7 @@ const ADMIN_TABS = [
     { key: 'roles', label: 'Roles & Access', icon: UserCog },
 ];
 
-// â”€â”€â”€ Overview Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Overview Panel ----------------------------------------------------------
 
 function OverviewPanel({ stats, isLoading }) {
     if (isLoading) {
@@ -141,7 +141,7 @@ function OverviewPanel({ stats, isLoading }) {
     );
 }
 
-// â”€â”€â”€ Businesses Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Businesses Panel --------------------------------------------------------
 
 function BusinessesPanel() {
     const [businesses, setBusinesses] = useState([]);
@@ -264,11 +264,11 @@ function BusinessesPanel() {
                                             </div>
                                             <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                                                 <span>{biz.domain}</span>
-                                                <span>Â·</span>
+                                                <span>&middot;</span>
                                                 <span>{biz.owner_name || biz.owner_email}</span>
-                                                <span>Â·</span>
+                                                <span>&middot;</span>
                                                 <span>{biz.active_users} users</span>
-                                                <span>Â·</span>
+                                                <span>&middot;</span>
                                                 <span>{biz.product_count} products</span>
                                             </div>
                                         </div>
@@ -366,7 +366,7 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                     <div className="flex items-center justify-between">
                         <div>
                             <CardTitle className="text-lg">{business.business_name}</CardTitle>
-                            <CardDescription>{business.domain} Â· {business.category} Â· {business.country}</CardDescription>
+                            <CardDescription>{business.domain} &middot; {business.category} &middot; {business.country}</CardDescription>
                         </div>
                         <Button variant="ghost" size="sm" onClick={onClose}><X className="w-4 h-4" /></Button>
                     </div>
@@ -436,7 +436,7 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
     );
 }
 
-// â”€â”€â”€ Users Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Users Panel -------------------------------------------------------------
 
 function UsersPanel() {
     const [users, setUsers] = useState([]);
@@ -565,7 +565,7 @@ function UsersPanel() {
     );
 }
 
-// â”€â”€â”€ Subscriptions Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Subscriptions Panel -----------------------------------------------------
 
 function SubscriptionsPanel({ stats, isLoading }) {
     if (isLoading) {
@@ -599,11 +599,11 @@ function SubscriptionsPanel({ stats, isLoading }) {
                                     </div>
                                     <div className="flex justify-between text-gray-500">
                                         <span>Max Users</span>
-                                        <span className="font-semibold">{plan.limits.max_users === -1 ? 'âˆž' : plan.limits.max_users}</span>
+                                        <span className="font-semibold">{plan.limits.max_users === -1 ? '∞' : plan.limits.max_users}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-500">
                                         <span>Max Products</span>
-                                        <span className="font-semibold">{plan.limits.max_products === -1 ? 'âˆž' : plan.limits.max_products}</span>
+                                        <span className="font-semibold">{plan.limits.max_products === -1 ? '∞' : plan.limits.max_products}</span>
                                     </div>
                                     {trials > 0 && (
                                         <div className="flex justify-between text-amber-600 font-medium">
@@ -627,7 +627,7 @@ function SubscriptionsPanel({ stats, isLoading }) {
     );
 }
 
-// â”€â”€â”€ Roles & Access Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Roles & Access Panel ----------------------------------------------------
 
 function RolesPanel() {
     return (
@@ -635,7 +635,7 @@ function RolesPanel() {
             <Card className="border-none shadow-sm">
                 <CardHeader>
                     <CardTitle className="text-base font-bold">Role Hierarchy</CardTitle>
-                    <CardDescription>Platform roles and their access levels (highest â†’ lowest)</CardDescription>
+                    <CardDescription>Platform roles and their access levels (highest → lowest)</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-2">
@@ -660,11 +660,11 @@ function RolesPanel() {
                     <CardTitle className="text-base font-bold">Access Notes</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-gray-600 space-y-2">
-                    <p><strong>Platform Owner</strong> (your account) has full access to everything â€” no plan restrictions, no role gates, no limits.</p>
+                    <p><strong>Platform Owner</strong> (your account) has full access to everything -- no plan restrictions, no role gates, no limits.</p>
                     <p><strong>Platform Admin</strong> users (user.role = &quot;admin&quot;) also bypass all business-level checks.</p>
                     <p><strong>Business Owner</strong> = the person who registered a business (has &quot;owner&quot; role in business_users). They manage their team&apos;s roles.</p>
                     <p><strong>Admin</strong> = business-level admin, can manage team members, settings, and most operations.</p>
-                    <p><strong>Team Members</strong> (manager â†’ viewer) have progressively restricted access based on their role and the business&apos;s subscription plan.</p>
+                    <p><strong>Team Members</strong> (manager → viewer) have progressively restricted access based on their role and the business&apos;s subscription plan.</p>
                     <p className="pt-2 text-xs text-gray-400">All new businesses get a <strong>7-day Starter trial</strong>. After expiry, they downgrade to Free unless they subscribe.</p>
                 </CardContent>
             </Card>
@@ -672,7 +672,7 @@ function RolesPanel() {
     );
 }
 
-// â”€â”€â”€ Main Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Main Panel --------------------------------------------------------------
 
 export default function PlatformAdminPanel() {
     const [activeTab, setActiveTab] = useState('overview');

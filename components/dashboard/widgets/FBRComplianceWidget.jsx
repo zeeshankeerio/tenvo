@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { FileText, AlertCircle, CheckCircle2, Clock, TrendingUp } from 'lucide-react';
@@ -308,7 +308,7 @@ export function FBRComplianceWidget({ businessId, currency = 'PKR', onViewDetail
                 {/* Quick Action */}
                 <div className="pt-2 border-t border-gray-100">
                     <button className="text-xs font-bold text-green-600 hover:text-green-700 transition-colors w-full text-center">
-                        {t.view_tax_reports || 'View Tax Reports'} â†’
+                        {t.view_tax_reports || 'View Tax Reports'} →
                     </button>
                 </div>
             </CardContent>

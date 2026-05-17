@@ -46,7 +46,7 @@ const PROCUREMENT_CONFIGS = {
     }
 };
 
-// Static class map for Tailwind JIT — avoids dynamic template-literal classes
+// Static class map for Tailwind JIT -- avoids dynamic template-literal classes
 const THEME_CLASSES = {
     indigo: {
         iconBg: 'bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500/50',
@@ -259,7 +259,7 @@ export function PurchaseDocumentForm({
                         <div>
                             <CardTitle className="text-2xl font-black uppercase tracking-tighter">{config.title}</CardTitle>
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                {business?.name} • Procurement Module
+                                {business?.name} * Procurement Module
                             </p>
                         </div>
                     </div>

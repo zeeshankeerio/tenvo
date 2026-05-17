@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -309,7 +309,7 @@ export function BusinessSwitcherEnhanced({ isCollapsed = false }) {
                                                     {biz.name}
                                                 </p>
                                                 <p className="text-[10px] text-neutral-500 truncate capitalize leading-tight">
-                                                    {biz.domain?.replace(/-/g, ' ')} Â· {biz.user_role}
+                                                    {biz.domain?.replace(/-/g, ' ')} &middot; {biz.user_role}
                                                 </p>
                                             </div>
                                         </button>

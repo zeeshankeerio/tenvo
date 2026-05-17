@@ -30,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 /**
  * Excel Import Modal Component
- * 4-Step import workflow: Upload → Parse → Preview → Validate → Confirm
+ * 4-Step import workflow: Upload -> Parse -> Preview -> Validate -> Confirm
  * Production-ready with comprehensive error handling
  */
 export function ExcelImportModal({ onImport, onCancel, existingProducts = {} }) {
@@ -326,14 +326,14 @@ export function ExcelImportModal({ onImport, onCancel, existingProducts = {} }) 
                         {result.errors.length > 0 && (
                           <div className="mt-1 space-y-1">
                             {result.errors.map((err, i) => (
-                              <p key={i} className="text-xs text-red-700">❌ {err}</p>
+                              <p key={i} className="text-xs text-red-700">[X] {err}</p>
                             ))}
                           </div>
                         )}
                         {result.warnings.length > 0 && (
                           <div className="mt-1 space-y-1">
                             {result.warnings.map((warn, i) => (
-                              <p key={i} className="text-xs text-yellow-700">⚠️ {warn}</p>
+                              <p key={i} className="text-xs text-yellow-700">[WARNING] {warn}</p>
                             ))}
                           </div>
                         )}

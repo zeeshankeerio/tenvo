@@ -73,7 +73,7 @@ export default function IndustriesPage() {
             <BenefitCard
               title="Best Practice Reports"
               description="Industry-standard reports and KPIs are ready to use out of the box."
-              icon="📊"
+              icon="[CHART]"
             />
             <BenefitCard
               title="Continuous Updates"

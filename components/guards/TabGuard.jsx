@@ -9,19 +9,19 @@ import { hasPermission, NAV_PERMISSION_MAP } from '@/lib/rbac/permissions';
 import { useBusiness } from '@/lib/context/BusinessContext';
 
 /**
- * TabGuard — Unified access control wrapper for tab content.
+ * TabGuard -- Unified access control wrapper for tab content.
  *
  * Checks three gates IN ORDER:
- *   1. Domain relevance  (optional `domainCheck` prop — a boolean)
+ *   1. Domain relevance  (optional `domainCheck` prop -- a boolean)
  *   2. RBAC / role        (permission key from NAV_PERMISSION_MAP or explicit)
  *   3. Subscription tier  (feature key from NAV_PERMISSION_MAP or explicit)
  *
  * Platform owner bypasses ALL gates automatically.
  *
- * If all pass → renders children.
- * If domain blocked → shows "not relevant" card.
- * If RBAC blocked  → shows "access restricted" card.
- * If plan blocked  → shows <UpgradePrompt />.
+ * If all pass -> renders children.
+ * If domain blocked -> shows "not relevant" card.
+ * If RBAC blocked  -> shows "access restricted" card.
+ * If plan blocked  -> shows <UpgradePrompt />.
  */
 export function TabGuard({
     tabKey,
@@ -40,7 +40,7 @@ export function TabGuard({
     const { isPlatformOwner } = useBusiness();
     const effectiveRole = role || 'viewer';
 
-    // Platform owner bypasses ALL gates — full access to everything
+    // Platform owner bypasses ALL gates -- full access to everything
     if (isPlatformOwner) {
         return <>{children}</>;
     }
@@ -50,7 +50,7 @@ export function TabGuard({
     const permission = permissionOverride || mapping?.permission;
     const featureKey = featureOverride ?? mapping?.feature; // null = no plan gate
 
-    // ── Gate 1: Domain Relevance ────────────────────────────────────────────
+    // -- Gate 1: Domain Relevance --------------------------------------------
     if (domainCheck === false) {
         return (
             <Card className="p-12 text-center border-none shadow-sm">
@@ -61,7 +61,7 @@ export function TabGuard({
         );
     }
 
-    // ── Gate 2: RBAC Permission ─────────────────────────────────────────────
+    // -- Gate 2: RBAC Permission ---------------------------------------------
     if (permission && !hasPermission(effectiveRole, permission)) {
         return (
             <Card className="p-12 text-center border-none shadow-sm">
@@ -75,7 +75,7 @@ export function TabGuard({
         );
     }
 
-    // ── Gate 3: Subscription Plan ───────────────────────────────────────────
+    // -- Gate 3: Subscription Plan -------------------------------------------
     if (featureKey && !planHasFeature(planTier, featureKey)) {
         return (
             <UpgradePrompt
@@ -87,6 +87,6 @@ export function TabGuard({
         );
     }
 
-    // ── All gates passed ────────────────────────────────────────────────────
+    // -- All gates passed ----------------------------------------------------
     return <>{children}</>;
 }

@@ -148,7 +148,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="absolute bottom-8 left-12 right-12 flex justify-between items-center text-white/40 text-xs font-bold uppercase tracking-widest">
-                    <span>© 2026 TENVO</span>
+                    <span>(C) 2026 TENVO</span>
                     <span>Localized Compliance v4.0</span>
                 </div>
             </div>
@@ -196,7 +196,7 @@ export default function LoginPage() {
                                         id="password"
                                         type="password"
                                         required
-                                        placeholder="••••••••••••"
+                                        placeholder="************"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="pl-12 h-14 bg-white border-gray-100 focus:border-wine/30 focus:ring-wine/20 rounded-2xl shadow-sm transition-all text-base font-medium"

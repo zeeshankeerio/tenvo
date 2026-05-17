@@ -175,7 +175,7 @@ export function WarehouseDistributionWidget({ businessId, currency = 'PKR', onVi
                         {formatCurrency(stats.totalValue, currency)}
                     </div>
                     <div className="text-[10px] text-wine-700 font-medium mt-1">
-                        {stats.totalQuantity.toLocaleString()} {t.units || 'units'} â€¢ {stats.totalProducts} {t.products || 'products'}
+                        {stats.totalQuantity.toLocaleString()} {t.units || 'units'} * {stats.totalProducts} {t.products || 'products'}
                     </div>
                 </div>
 
@@ -205,7 +205,7 @@ export function WarehouseDistributionWidget({ businessId, currency = 'PKR', onVi
                                                     )}
                                                 </div>
                                                 <div className="text-[10px] text-gray-500">
-                                                    {warehouse.productCount} {t.products || 'products'} â€¢ {warehouse.totalQuantity.toLocaleString()} {t.units || 'units'}
+                                                    {warehouse.productCount} {t.products || 'products'} * {warehouse.totalQuantity.toLocaleString()} {t.units || 'units'}
                                                 </div>
                                             </div>
                                         </div>
