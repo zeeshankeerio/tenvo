@@ -150,34 +150,34 @@ export default function Home() {
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             
             {/* Left Content Column */}
-            <div className="lg:col-span-6 space-y-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-brand-primary">
+            <div className="lg:col-span-6 space-y-6 lg:space-y-8 max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-brand-primary">
                 <ShieldCheck className="h-4 w-4" />
                 Pakistan-Ready Enterprise Operations
               </div>
               
               <div className="space-y-4">
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 leading-[1.08]">
-                  Orchestrate your inventory, sales, and <span className="text-brand-primary">FBR compliance on autopilot</span>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4rem] font-extrabold tracking-tight text-neutral-900 leading-[1.1]">
+                  Run your entire business from one <span className="text-brand-primary">simple dashboard</span>
                 </h1>
-                <p className="max-w-2xl text-lg sm:text-xl font-medium leading-relaxed text-neutral-600">
-                  Tenvo is the modern enterprise hub built to automate your warehouses, sync local courier APIs, and stream live retail channels in real time. Transition from manual tracking to agentic intelligence in under 4 days.
+                <p className="max-w-xl text-lg sm:text-xl font-medium leading-relaxed text-neutral-600">
+                  Say goodbye to messy spreadsheets. Tenvo automatically tracks your stock, syncs with online stores and couriers, and handles FBR tax compliance for you—so you can focus on growing your business.
                 </p>
               </div>
 
               {/* Zoho Style Premium Gold/White Call to Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                <Button asChild size="lg" className="h-14 rounded-xl bg-brand-primary hover:bg-brand-primary-dark text-white px-8 text-base font-black uppercase tracking-[0.12em] shadow-md transition-all active:scale-[0.98]">
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Button asChild size="lg" className="h-14 rounded-xl bg-brand-primary hover:bg-brand-primary-dark text-white px-8 text-sm sm:text-base font-black uppercase tracking-[0.12em] shadow-md transition-all active:scale-[0.98] w-full sm:w-auto">
                   <Link href="/demo">BOOK A DEMO</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="h-14 rounded-xl border-2 border-neutral-300 bg-white hover:border-brand-primary hover:text-brand-primary px-8 text-base font-black uppercase tracking-[0.12em] transition-all">
+                <Button asChild size="lg" variant="outline" className="h-14 rounded-xl border-2 border-neutral-300 bg-white hover:border-brand-primary hover:text-brand-primary px-8 text-sm sm:text-base font-black uppercase tracking-[0.12em] transition-all w-full sm:w-auto">
                   <Link href={primaryHref}>{primaryText}</Link>
                 </Button>
               </div>
             </div>
 
             {/* Right Column: Zoho Clone Masterpiece Visual (Zeeshan Keerio + Stacked CSS Boxes + 5 Floating Cards) */}
-            <div className="lg:col-span-6 relative h-[520px] sm:h-[600px] w-full flex items-end justify-center">
+            <div className="lg:col-span-6 relative h-[450px] sm:h-[550px] lg:h-[600px] w-full flex items-end justify-center mt-12 lg:mt-0">
               
               {/* STACKED CARDBOARD BOXES (Minimalist CSS Shapes replicating stacked boxes in photo) */}
               <div className="absolute inset-0 z-0 pointer-events-none">
@@ -317,12 +317,12 @@ export default function Home() {
       <section className="bg-white py-20 lg:py-28 border-b border-neutral-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.25em]">Comprehensive Operations</h2>
+            <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.25em]">Your Complete Toolkit</h2>
             <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-neutral-900 tracking-tight">
-              One dashboard. Infinite inventory control.
+              One dashboard. Complete control.
             </h3>
             <p className="text-lg text-neutral-500 font-medium">
-              Every section is natively built to handle the complex realities of modern Pakistani warehousing, sales, and localized compliance.
+              Everything you need to easily manage your stock, handle sales, and stay compliant with local tax laws—all in one place.
             </p>
           </div>
 
@@ -343,8 +343,8 @@ export default function Home() {
                   <Package className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-base text-neutral-900">Inventory & Expiry Control</h4>
-                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Track batches, expiry, serial numbers, and composite kits.</p>
+                  <h4 className="font-black text-base text-neutral-900">Easy Inventory Tracking</h4>
+                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Track your items, expiration dates, and custom bundles.</p>
                 </div>
               </button>
 
@@ -360,8 +360,8 @@ export default function Home() {
                   <Layers className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-base text-neutral-900">Multi-Warehouse Hub</h4>
-                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Manage stock across locations and inter-warehouse transfers.</p>
+                  <h4 className="font-black text-base text-neutral-900">Manage Multiple Locations</h4>
+                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Keep tabs on stock across different shops or warehouses.</p>
                 </div>
               </button>
 
@@ -377,8 +377,8 @@ export default function Home() {
                   <Globe className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-base text-neutral-900">Multichannel Sell Sync</h4>
-                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Integrate Daraz, Shopify, and Amazon instantly.</p>
+                  <h4 className="font-black text-base text-neutral-900">Sell Everywhere Instantly</h4>
+                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Connect with Daraz, Shopify, and Amazon in a few clicks.</p>
                 </div>
               </button>
 
@@ -394,8 +394,8 @@ export default function Home() {
                   <Workflow className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-base text-neutral-900">Fulfillment & Shipping</h4>
-                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Sales orders, automatic packaging, and carrier integration.</p>
+                  <h4 className="font-black text-base text-neutral-900">Simple Shipping & Orders</h4>
+                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Handle sales orders, packing, and courier delivery tracking.</p>
                 </div>
               </button>
 
@@ -411,8 +411,8 @@ export default function Home() {
                   <Receipt className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-base text-neutral-900">Accounting & FBR Compliance</h4>
-                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Ledgers, customer billing, and automated sales tax filings.</p>
+                  <h4 className="font-black text-base text-neutral-900">Accounting & Tax Filing</h4>
+                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Generate invoices and automate your FBR tax filings easily.</p>
                 </div>
               </button>
             </div>
@@ -424,28 +424,28 @@ export default function Home() {
               {activeFeatureTab === 'inventory' && (
                 <div className="space-y-6">
                   <div className="flex items-center gap-2 text-xs font-black text-brand-primary uppercase tracking-widest">
-                    <Check className="w-4 h-4" /> Item Groups, Serials & Batch Expiries
+                    <Check className="w-4 h-4" /> Clear Item Tracking
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-black text-neutral-900">
-                    Granular tracking for absolute SKU precision.
+                    Never lose track of a single item again.
                   </h3>
                   <p className="text-sm text-neutral-600 font-medium leading-relaxed">
-                    Set up complex product structures easily. Group items by variants (e.g., sizes, materials, colors) and track them with exact batch numbers, expiry alerts, and unique serial tracking. No more expiring shelf stock or untraceable electronics.
+                    Organize your products by size, color, or material. You can automatically track expiration dates and serial numbers so you always know exactly what is on your shelves and when it needs to be sold.
                   </p>
                   <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-neutral-200">
                     <div className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-bold text-neutral-800">Composite Kits & Bundles</p>
-                        <p className="text-xs text-neutral-500">Combine raw materials into finished packages automatically.</p>
-                      </div>
+                       <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
+                       <div>
+                         <p className="text-sm font-bold text-neutral-800">Create Custom Bundles</p>
+                         <p className="text-xs text-neutral-500">Easily combine multiple items into special gift packages or sets.</p>
+                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-bold text-neutral-800">Auto-calculated Margins</p>
-                        <p className="text-xs text-neutral-500">Adjust unit pricing instantly based on live cost swings.</p>
-                      </div>
+                       <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
+                       <div>
+                         <p className="text-sm font-bold text-neutral-800">Smart Pricing Updates</p>
+                         <p className="text-xs text-neutral-500">Automatically adjust your selling prices when your supplier costs change.</p>
+                       </div>
                     </div>
                   </div>
                 </div>
