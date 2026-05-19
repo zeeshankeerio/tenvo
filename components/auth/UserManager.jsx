@@ -13,8 +13,13 @@ import {
     Shield,
     BadgeCheck,
     Mail,
-    Smartphone
+    Smartphone,
+    Sparkles,
+    Globe
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useLanguage } from '@/lib/context/LanguageContext';
+import { useAppMode } from '@/lib/context/BusyModeContext';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -46,6 +51,8 @@ export function UserManager({ trigger }) {
     const { user, signOut, updateProfile } = useAuth();
     const router = useRouter();
     const { business, role, isPlatformOwner } = useBusiness();
+    const { language, toggleLanguage } = useLanguage();
+    const { setAppMode, isEasyMode } = useAppMode();
     const [showProfileDialog, setShowProfileDialog] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const canManageBilling = isPlatformOwner || role === 'owner';
@@ -164,6 +171,68 @@ export function UserManager({ trigger }) {
                             </div>
                             <ChevronRight className="ml-auto w-4 h-4 text-gray-300 group-focus:text-wine/40" />
                         </DropdownMenuItem>
+                    </div>
+
+                    <DropdownMenuSeparator className="-mx-2 bg-gray-50" />
+
+                    {/* Preferences Area (Interface Mode and Language) */}
+                    <div className="p-2.5 bg-gray-50/50 rounded-xl m-1 space-y-2.5 border border-gray-100/60">
+                        {/* Interface Toggle */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="w-3.5 h-3.5 text-brand-primary" />
+                                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Interface</span>
+                            </div>
+                            <div className="flex bg-white border border-gray-100 rounded-lg p-0.5 shadow-sm">
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setAppMode('easy');
+                                    }}
+                                    className={cn(
+                                        "px-2.5 py-0.5 text-[10px] font-bold rounded-md transition-all",
+                                        isEasyMode
+                                            ? "bg-brand-primary text-white shadow-sm font-black"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    )}
+                                >
+                                    Simple
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setAppMode('advanced');
+                                    }}
+                                    className={cn(
+                                        "px-2.5 py-0.5 text-[10px] font-bold rounded-md transition-all",
+                                        !isEasyMode
+                                            ? "bg-brand-primary text-white shadow-sm font-black"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    )}
+                                >
+                                    Pro
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Language Toggle */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Globe className="w-3.5 h-3.5 text-gray-400" />
+                                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Language</span>
+                            </div>
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    toggleLanguage();
+                                }}
+                                className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold rounded-lg border border-gray-100 bg-white hover:bg-gray-50 text-gray-600 transition-colors shadow-sm"
+                            >
+                                <span className={cn(language === 'ur' ? 'font-urdu' : '')}>
+                                    {language === 'en' ? 'Urdu (اردو)' : 'English'}
+                                </span>
+                            </button>
+                        </div>
                     </div>
 
                     <DropdownMenuSeparator className="-mx-2 bg-gray-50" />

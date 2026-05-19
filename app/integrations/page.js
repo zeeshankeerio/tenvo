@@ -15,6 +15,7 @@ import {
   Plug
 } from 'lucide-react';
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
+import Hero from '@/components/marketing/sections/Hero';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/context/AuthContext';
 
@@ -96,23 +97,16 @@ export default function IntegrationsPage() {
     <MarketingLayout transparentNav={false}>
       
       {/* Hero Section */}
-      <section className="bg-white py-20 lg:py-32 border-b border-neutral-200/80 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-neutral-50/50 rounded-bl-[100px] -z-10" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 text-center space-y-6 relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-brand-primary mx-auto">
-            <Plug className="h-4 w-4" />
-            Ecosystem Connectivity
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-neutral-900 leading-[1.1] max-w-4xl mx-auto">
-            Connect Tenvo to your <span className="text-brand-primary relative">entire stack
-              <svg className="absolute w-full h-3 -bottom-2 left-0 text-brand-200 z-[-1]" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="8" fill="transparent"/></svg>
-            </span>
-          </h1>
-          <p className="max-w-2xl mx-auto text-lg sm:text-xl font-medium leading-relaxed text-neutral-600">
-            Automate your operations by connecting your e-commerce stores, marketplaces, and compliance agencies directly to your ERP core.
-          </p>
-        </div>
-      </section>
+      <Hero 
+        variant="centered"
+        badge={{ text: 'Ecosystem Connectivity', icon: 'Plug' }}
+        title={
+          <>
+            Connect Tenvo to your <span className="text-brand-primary">entire stack</span>
+          </>
+        }
+        subtitle="Automate your operations by connecting your e-commerce stores, marketplaces, and compliance agencies directly to your ERP core."
+      />
 
       {/* Grid Section */}
       <section className="bg-neutral-50 py-20 lg:py-28">

@@ -327,8 +327,8 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
       >
         {/* --- Brand Header ---------------------------------------- */}
         <div className={cn(
-          "flex-none px-4 h-14 flex items-center border-b border-gray-100 relative group/header",
-          isSidebarCollapsed && "px-0 flex flex-col justify-center"
+          "flex-none px-4 pt-4 pb-2 relative group/header flex flex-col gap-1",
+          isSidebarCollapsed && "px-0 flex flex-col justify-center pt-3 pb-1"
         )}>
           <Link href="/" className={cn(
             "flex items-center gap-3 hover:opacity-90 transition-opacity",
@@ -564,75 +564,16 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
 
         {/* --- Footer ---------------------------------------------- */}
         <div className={cn(
-          "flex-none p-2 border-t border-gray-100 bg-white space-y-2",
+          "flex-none p-3 bg-transparent border-t-0",
           isSidebarCollapsed && "p-2 items-center flex flex-col"
         )}>
-          {/* Easy / Advanced Mode Toggle */}
-          {!isSidebarCollapsed ? (
-            <div className="flex items-center justify-between px-1 py-1">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-brand-primary" />
-                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Interface</span>
-              </div>
-              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5">
-                <button
-                  onClick={() => setAppMode('easy')}
-                  className={cn(
-                    "px-2.5 py-1 text-[10px] font-bold rounded-md transition-all flex items-center gap-1",
-                    isEasyMode
-                      ? "bg-white dark:bg-gray-600 text-brand-primary shadow-sm"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
-                  )}
-                  title="Simplified interface for everyday operations"
-                >
-                  Simple
-                </button>
-                <button
-                  onClick={() => setAppMode('advanced')}
-                  className={cn(
-                    "px-2.5 py-1 text-[10px] font-bold rounded-md transition-all flex items-center gap-1",
-                    !isEasyMode
-                      ? "bg-white dark:bg-gray-600 text-brand-primary shadow-sm"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700"
-                  )}
-                  title="Full ERP features for power users"
-                >
-                  Pro
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setAppMode(isEasyMode ? 'advanced' : 'easy')}
-              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors group relative"
-              title={isEasyMode ? 'Switch to Advanced' : 'Switch to Easy'}
-            >
-              <Sparkles className={cn("w-4 h-4", isEasyMode ? "text-brand-primary" : "text-gray-400")} />
-              <span className="absolute left-14 px-2.5 py-1.5 text-xs font-bold bg-gray-900 text-white rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-[60] shadow-xl whitespace-nowrap">
-                {isEasyMode ? 'Easy Mode' : 'Advanced Mode'}
-                <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-[6px] border-y-transparent border-r-[6px] border-r-gray-900" />
-              </span>
-            </button>
-          )}
-
-          <div className="flex items-center justify-between px-1">
-            {!isSidebarCollapsed && (
-              <div className="flex items-center gap-1.5">
-                <Globe className="w-3 h-3 text-gray-400" />
-                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Language</span>
-              </div>
-            )}
-            <LanguageToggle isCompact={isSidebarCollapsed} />
-          </div>
-
           <UserManager trigger={
             <button className={cn(
               "w-full bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl p-2 flex items-center gap-2.5 transition-all text-left group",
               isSidebarCollapsed && "p-1.5 border-none bg-transparent"
             )}>
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0"
-                style={{ background: 'linear-gradient(135deg, #c49c3b 0%, #e34242 100%)' }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white bg-brand-primary shrink-0"
               >
                 {user?.email?.substring(0, 2).toUpperCase() || 'ME'}
               </div>

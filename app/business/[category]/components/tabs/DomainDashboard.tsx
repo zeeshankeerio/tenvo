@@ -22,7 +22,6 @@ import { RecentActivityFeed } from '../islands/portlets/RecentActivityFeed.clien
 import { AnalyticsDashboard } from '../islands/AnalyticsDashboard.client';
 import { PredictivePlanningPortlet } from '../islands/portlets/PredictivePlanningPortlet.client';
 import { AgenticAuditPortlet } from '../islands/portlets/AgenticAuditPortlet.client';
-import { AgenticAnalystChat } from '../islands/portlets/AgenticAnalystChat.client';
 import NetsuiteDashboard from '../islands/NetsuiteDashboard.client';
 
 // ===============================================================
@@ -874,7 +873,7 @@ export function DomainDashboard({
                         const borderColors: Record<string, string> = {
                             'bg-emerald-500': 'border-l-4 border-l-emerald-500',
                             'bg-brand-primary': 'border-l-4 border-l-[#e34242]',
-                            'bg-brand-primary-dark': 'border-l-4 border-l-[#c49c3b]',
+                            'bg-brand-primary-dark': 'border-l-4 border-l-[#b91c1c]',
                             'bg-rose-500': 'border-l-4 border-l-rose-500',
                             'bg-slate-500': 'border-l-4 border-l-slate-400',
                             'bg-cyan-500': 'border-l-4 border-l-cyan-500',
@@ -884,7 +883,7 @@ export function DomainDashboard({
                         const textColors: Record<string, string> = {
                             'bg-emerald-500': 'text-emerald-600',
                             'bg-brand-primary': 'text-[#e34242]',
-                            'bg-brand-primary-dark': 'text-[#c49c3b]',
+                            'bg-brand-primary-dark': 'text-[#b91c1c]',
                             'bg-rose-500': 'text-rose-600',
                             'bg-slate-500': 'text-slate-500',
                             'bg-cyan-500': 'text-cyan-600',
@@ -1362,12 +1361,6 @@ export function DomainDashboard({
                     </div>
                     <div className="lg:col-span-4">
                         <AgenticAuditPortlet businessId={activeBusinessId!} />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:items-stretch">
-                    <div className="lg:col-span-12">
-                        <AgenticAnalystChat businessId={activeBusinessId!} />
                     </div>
                 </div>
             </div>

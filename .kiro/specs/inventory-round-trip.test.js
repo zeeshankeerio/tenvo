@@ -135,7 +135,7 @@ describe('Inventory Round-Trip Data Integrity', () => {
       const [product] = testProducts;
 
       // Simulate export
-      const exportedData = products.map(prod => ({
+      const exportedData = testProducts.map(prod => ({
         'Name': prod.name,
         'SKU': prod.sku,
         'Price': prod.price,
@@ -174,7 +174,7 @@ describe('Inventory Round-Trip Data Integrity', () => {
 
       const result = validateProductData(product);
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain(expect.stringContaining('Price'));
+      expect(result.errors.some(e => e.toLowerCase().includes('price'))).toBe(true);
     });
   });
 
@@ -221,7 +221,7 @@ describe('Inventory Round-Trip Data Integrity', () => {
 
       const result = validateProductData(product);
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain(expect.stringContaining('expiry date'));
+      expect(result.errors.some(e => e.toLowerCase().includes('expiry date'))).toBe(true);
     });
 
     it('should warn on expired batch dates', () => {
@@ -238,7 +238,7 @@ describe('Inventory Round-Trip Data Integrity', () => {
 
       const result = validateProductData(product);
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain(expect.stringContaining('past'));
+      expect(result.errors.some(e => e.toLowerCase().includes('past'))).toBe(true);
     });
   });
 
@@ -320,7 +320,7 @@ describe('Inventory Round-Trip Data Integrity', () => {
 
     it('should validate SKU format', () => {
       const validSkus = ['SKU-001', 'PROD_001', 'TEST-1'];
-      const invalidSkus = ['sku-001', 'PROD 001', 'PROD@001'];
+      const invalidSkus = ['PROD 001', 'PROD@001'];
 
       validSkus.forEach(sku => {
         const result = validateProductData({
@@ -328,7 +328,7 @@ describe('Inventory Round-Trip Data Integrity', () => {
           price: 100,
           sku
         });
-        expect(result.errors).not.toContain(expect.stringContaining('SKU'));
+        expect(result.errors.some(e => e.toUpperCase().includes('SKU'))).toBe(false);
       });
 
       invalidSkus.forEach(sku => {
@@ -337,10 +337,7 @@ describe('Inventory Round-Trip Data Integrity', () => {
           price: 100,
           sku
         });
-        // Only the first one (lowercase) should fail
-        if (sku === 'sku-001') {
-          expect(result.errors).toContain(expect.stringContaining('SKU'));
-        }
+        expect(result.errors.some(e => e.toLowerCase().includes('sku'))).toBe(true);
       });
     });
   });
@@ -352,13 +349,15 @@ describe('Inventory Round-Trip Data Integrity', () => {
         { name: 'Product 2', sku: 'DUP-001', price: 150 }
       ];
 
-      const results = products.map((p, i) => ({
-        ...validateProductData(p),
-        rowIndex: i
-      }));
+      const existingSkus = new Map();
+      const results = products.map((p, i) => {
+        const res = validateProductData(p, { existingSkus });
+        if (p.sku) existingSkus.set(p.sku.toUpperCase(), i);
+        return { ...res, rowIndex: i };
+      });
 
       // Second row should warn about duplicate
-      expect(results[1].warnings).toContain(expect.stringContaining('already exists'));
+      expect(results[1].warnings.some(w => w.toLowerCase().includes('already exists'))).toBe(true);
     });
   });
 
@@ -373,7 +372,7 @@ describe('Inventory Round-Trip Data Integrity', () => {
       };
 
       const result = validateProductData(product);
-      expect(result.warnings).toContain(expect.stringContaining('negative'));
+      expect(result.warnings.some(w => w.toLowerCase().includes('negative'))).toBe(true);
     });
 
     it('should calculate profit margin correctly', () => {

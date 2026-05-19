@@ -737,6 +737,36 @@ export function InventoryManager({
     });
   }, [products]);
 
+  const abcStats = useMemo(() => {
+    const totalCount = products.length || 1;
+    const aItems = abcAnalysis.filter(p => p.category === 'A');
+    const bItems = abcAnalysis.filter(p => p.category === 'B');
+    const cItems = abcAnalysis.filter(p => p.category === 'C');
+
+    const aValue = aItems.reduce((sum, p) => sum + (p.value || 0), 0);
+    const bValue = bItems.reduce((sum, p) => sum + (p.value || 0), 0);
+    const cValue = cItems.reduce((sum, p) => sum + (p.value || 0), 0);
+    const totalValue = aValue + bValue + cValue || 1;
+
+    return {
+      A: {
+        count: aItems.length,
+        pct: Math.round((aItems.length / totalCount) * 100),
+        valPct: Math.round((aValue / totalValue) * 100)
+      },
+      B: {
+        count: bItems.length,
+        pct: Math.round((bItems.length / totalCount) * 100),
+        valPct: Math.round((bValue / totalValue) * 100)
+      },
+      C: {
+        count: cItems.length,
+        pct: Math.round((cItems.length / totalCount) * 100),
+        valPct: Math.round((cValue / totalValue) * 100)
+      }
+    };
+  }, [abcAnalysis, products]);
+
   const turnoverRate = useMemo(() => {
     if (!products.length || !invoices.length) return '0.0';
 
@@ -1102,21 +1132,22 @@ export function InventoryManager({
 
   return (
     <div className="space-y-4">
-      {/* Refined Action Bar - Consolidated & Aligned */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-1">
-        <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto lg:overflow-visible whitespace-nowrap">
-          <div className="flex items-center gap-2 pr-2 border-r border-gray-100">
-            <div className="flex items-center gap-2 px-2.5 py-1 bg-green-50 rounded-lg border border-green-100">
+      {/* Refined Action Bar - Consolidated, Responsive & Aligned */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-2 border-b border-gray-100/50">
+        {/* Left/Primary Row: Status, Switcher, and Pinned CTA */}
+        <div className="flex items-center justify-between w-full lg:w-auto gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none whitespace-nowrap">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-50 rounded-lg border border-green-100 shrink-0">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">Live Sync</span>
             </div>
-            {/* View Mode Switcher - Integrated & Compact */}
-            <div className="bg-gray-100/90 p-1 rounded-lg flex items-center border border-gray-200 shadow-sm ml-1 h-9">
+            {/* View Mode Switcher */}
+            <div className="bg-gray-100/90 p-1 rounded-lg flex items-center border border-gray-200 shadow-sm h-9 shrink-0">
               <button
                 onClick={() => setViewMode('visual')}
                 className={cn(
                   "px-3 h-7 text-[10px] font-black uppercase tracking-wider rounded-md transition-colors",
-                  viewMode === 'visual' ? "bg-white shadow-md text-blue-600" : "text-gray-500 hover:text-gray-900"
+                  viewMode === 'visual' ? "bg-white shadow-md text-brand-primary" : "text-gray-500 hover:text-gray-900"
                 )}
               >
                 Visual
@@ -1125,31 +1156,42 @@ export function InventoryManager({
                 onClick={() => setViewMode('busy')}
                 className={cn(
                   "px-3 h-7 text-[10px] font-black uppercase tracking-wider rounded-md transition-colors",
-                  viewMode === 'busy' ? "bg-white shadow-md text-blue-600" : "text-gray-500 hover:text-gray-900"
+                  viewMode === 'busy' ? "bg-white shadow-md text-brand-primary" : "text-gray-500 hover:text-gray-900"
                 )}
               >
                 Busy
               </button>
             </div>
           </div>
+
+          {/* Pinned Primary CTA on Mobile ONLY (hidden on lg+) */}
+          <Button
+            size="sm"
+            onClick={(e) => onAdd ? onAdd(e) : setShowProductFormInternal(true)}
+            className="lg:hidden h-9 text-white rounded-lg px-4 font-black text-[10px] uppercase tracking-wider bg-brand-primary hover:bg-brand-primary-dark transition-all shadow-md shadow-brand-primary/10 shrink-0"
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Add
+          </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Barcode Scanner - Prominent Access */}
+        {/* Right Row: Utility Buttons - Swipeable on mobile, aligned on desktop */}
+        <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto scrollbar-none pb-1 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0 whitespace-nowrap">
+          {/* Barcode Scanner */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowBarcodeScanner(true)}
-            className="h-9 rounded-lg px-3 font-black text-[10px] uppercase tracking-wider border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors"
+            className="h-9 rounded-lg px-3 font-black text-[10px] uppercase tracking-wider border-brand-primary/20 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary transition-colors shrink-0"
           >
-            <ScanBarcode className="w-4 h-4 mr-2 text-blue-500" />
+            <ScanBarcode className="w-4 h-4 mr-2 text-brand-primary" />
             Scan
           </Button>
 
           {/* Secondary Actions Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 rounded-lg px-3.5 font-black text-[10px] uppercase tracking-wider border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors">
+              <Button variant="outline" size="sm" className="h-9 rounded-lg px-3.5 font-black text-[10px] uppercase tracking-wider border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition-colors shrink-0">
                 <Settings className="w-3.5 h-3.5 mr-2 text-gray-400" />
                 More Actions
                 <ChevronDown className="w-3 h-3 ml-2 opacity-50" />
@@ -1193,11 +1235,7 @@ export function InventoryManager({
           <Button
             size="sm"
             onClick={() => setShowQuickAddModal(true)}
-            className="h-9 text-white rounded-lg shadow-md px-4 font-black text-[10px] uppercase tracking-wider border-none transition-colors group"
-            style={{
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-              boxShadow: '0 6px 12px -4px rgba(15, 23, 42, 0.35)'
-            }}
+            className="h-9 text-white rounded-lg px-4 font-black text-[10px] uppercase tracking-wider bg-slate-900 hover:bg-slate-800 transition-all shadow-md shadow-slate-950/10 group shrink-0"
           >
             <BrainCircuit className="w-4 h-4 mr-2 text-blue-400 group-hover:rotate-12 transition-transform" />
             AI Smart Add
@@ -1206,35 +1244,32 @@ export function InventoryManager({
           <Button
             size="sm"
             onClick={() => setShowExcelMode(true)}
-            className="h-9 text-white rounded-lg shadow-md px-4 font-black text-[10px] uppercase tracking-wider border-none transition-colors group"
-            style={{
-              background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
-              boxShadow: '0 6px 12px -4px rgba(6, 78, 59, 0.35)'
-            }}
+            className="h-9 text-white rounded-lg px-4 font-black text-[10px] uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/10 group shrink-0"
           >
             <Table2 className="w-4 h-4 mr-2 text-green-400 group-hover:rotate-6 transition-transform" />
             Excel Mode
           </Button>
 
-          <ExcelImportModal
-            onImport={handleExcelImport}
-            existingProducts={products}
-          />
+          <div className="shrink-0">
+            <ExcelImportModal
+              onImport={handleExcelImport}
+              existingProducts={products}
+            />
+          </div>
 
-          <QuickAddTemplates
-            domain={category}
-            currency={currency}
-            onAddProduct={handleAddProduct}
-          />
+          <div className="shrink-0">
+            <QuickAddTemplates
+              domain={category}
+              currency={currency}
+              onAddProduct={handleAddProduct}
+            />
+          </div>
 
+          {/* Standard Primary CTA on Desktop (hidden on mobile) */}
           <Button
             size="sm"
             onClick={(e) => onAdd ? onAdd(e) : setShowProductFormInternal(true)}
-            className="h-9 text-white rounded-lg shadow-md px-5 font-black text-[10px] uppercase tracking-wider transition-colors"
-            style={{
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primary}dd 100%)`,
-              boxShadow: `0 6px 12px -4px ${colors.primary}40`
-            }}
+            className="hidden lg:flex h-9 text-white rounded-lg px-5 font-black text-[10px] uppercase tracking-wider bg-brand-primary hover:bg-brand-primary-dark transition-all shadow-md shadow-brand-primary/10 shrink-0"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Product
@@ -1284,72 +1319,70 @@ export function InventoryManager({
         {/* Products Tab */}
         <TabsContent value="products" className="space-y-6">
 
-          {/* Alerts and Stats - Premium Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="group bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-3 opacity-10 transform translate-x-4 -translate-y-4 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-500">
-                <Package className="w-24 h-24" />
-              </div>
-              <div className="flex flex-col relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Package className="w-5 h-5 text-blue-600" />
+          {/* Alerts and Stats - Compact Premium KPI Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {/* Total Products */}
+            <div className="group bg-white p-3 rounded-xl border border-gray-150 shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden flex items-center justify-between min-h-[72px]">
+              <div className="flex items-center gap-2.5 relative z-10">
+                <div className="w-8 h-8 rounded-lg bg-blue-50/70 flex items-center justify-center shrink-0">
+                  <Package className="w-4 h-4 text-blue-600" />
                 </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Total Products</p>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-3xl font-black text-gray-900 tracking-tighter">{products.length}</p>
-                  <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full italic">Inventory Units</span>
+                <div>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Total Products</p>
+                  <p className="text-xl font-bold text-gray-900 mt-0.5 leading-none">{products.length}</p>
                 </div>
               </div>
-            </div>
-
-            <div className="group bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-3 opacity-10 transform translate-x-4 -translate-y-4 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-500">
-                <AlertTriangle className="w-24 h-24" />
-              </div>
-              <div className="flex flex-col relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Stock Alerts</p>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-3xl font-black text-red-600 tracking-tighter">{lowStockItems.length}</p>
-                  <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full italic">Replenish Now</span>
-                </div>
+              <div className="relative z-10 shrink-0 text-right">
+                <span className="text-[8px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">Units</span>
               </div>
             </div>
 
-            <div className="group bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-3 opacity-10 transform translate-x-4 -translate-y-4 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-500">
-                <TrendingUp className="w-24 h-24" />
-              </div>
-              <div className="flex flex-col relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
+            {/* Stock Alerts */}
+            <div className="group bg-white p-3 rounded-xl border border-gray-150 shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden flex items-center justify-between min-h-[72px]">
+              <div className="flex items-center gap-2.5 relative z-10">
+                <div className="w-8 h-8 rounded-lg bg-red-50/70 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
                 </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Inventory Value</p>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-2xl font-black text-gray-900 tracking-tighter">
+                <div>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Stock Alerts</p>
+                  <p className="text-xl font-bold text-red-600 mt-0.5 leading-none">{lowStockItems.length}</p>
+                </div>
+              </div>
+              <div className="relative z-10 shrink-0 text-right">
+                <span className="text-[8px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md">Replenish</span>
+              </div>
+            </div>
+
+            {/* Inventory Value */}
+            <div className="group bg-white p-3 rounded-xl border border-gray-150 shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden flex items-center justify-between min-h-[72px]">
+              <div className="flex items-center gap-2.5 relative z-10">
+                <div className="w-8 h-8 rounded-lg bg-green-50/70 flex items-center justify-center shrink-0">
+                  <TrendingUp className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Inventory Value</p>
+                  <p className="text-base font-bold text-gray-900 mt-0.5 leading-none">
                     {formatCurrency(products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0), standards.currency)}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="group bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-3 opacity-10 transform translate-x-4 -translate-y-4 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-500">
-                <BarChart3 className="w-24 h-24" />
-              </div>
-              <div className="flex flex-col relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-wine-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <BarChart3 className="w-5 h-5 text-wine-600" />
+            {/* Efficiency Class */}
+            <div className="group bg-white p-3 rounded-xl border border-gray-150 shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden flex items-center justify-between min-h-[72px]">
+              <div className="flex items-center gap-2.5 relative z-10">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50/70 flex items-center justify-center shrink-0">
+                  <BarChart3 className="w-4 h-4 text-indigo-600" />
                 </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Efficiency Class</p>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">
+                <div>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Efficiency Class</p>
+                  <p className="text-lg font-bold text-gray-900 mt-0.5 leading-none uppercase">
                     Class {abcAnalysis.length > 0 ? "A+" : "-"}
                   </p>
-                  <span className="text-[10px] font-bold text-wine-500 bg-wine-50 px-2 py-0.5 rounded-full italic">Optimized</span>
                 </div>
+              </div>
+              <div className="relative z-10 shrink-0 text-right">
+                <span className="text-[8px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Optimized</span>
               </div>
             </div>
           </div>
@@ -1525,64 +1558,109 @@ export function InventoryManager({
             )}
           </div>
 
-          {/* ABC Analysis Section - Premium Analytics */}
-          <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full -translate-y-32 translate-x-32" />
+          {/* ABC Analysis Section - Premium Executive Analytics */}
+          <div className="bg-white rounded-2xl border border-gray-150 p-4 sm:p-5 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-full -translate-y-24 translate-x-24" />
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-3 relative z-10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2 relative z-10">
               <div>
-                <h3 className="text-2xl font-black text-gray-900 tracking-tight italic">ABC Inventory Matrix</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1 opacity-80">Strategic Stock Optimization Engine</p>
+                <h3 className="text-lg font-bold text-gray-900 tracking-tight">ABC Inventory Matrix</h3>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-0.5">Strategic Stock Optimization Engine</p>
               </div>
-              <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.16em] shadow-md shadow-slate-200">
-                <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
+              <div className="self-start sm:self-center flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider shadow-sm">
+                <BarChart3 className="w-3 h-3 text-blue-400" />
                 Live Distribution
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 relative z-10">
-              <div className="group bg-gradient-to-tr from-red-50/50 to-white p-6 rounded-2xl border border-red-100/50 hover:shadow-lg hover:shadow-red-500/5 transition-all duration-300">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center font-black text-2xl text-red-600 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-transform">A</div>
-                  <Badge className="bg-red-500 text-white border-none font-black text-[9px] uppercase tracking-tighter px-3 h-6">Critical Hub</Badge>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+              {/* Category A Card */}
+              <div className="group bg-gradient-to-br from-red-50/10 via-white to-white p-4 rounded-xl border border-red-100/40 hover:shadow-md hover:border-red-200/50 transition-all duration-300 flex flex-col justify-between min-h-[170px]">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-9 h-9 rounded-lg bg-red-100/70 flex items-center justify-center font-bold text-lg text-red-600 shadow-sm group-hover:scale-105 transition-transform">A</div>
+                    <Badge className="bg-red-500 hover:bg-red-600 text-white border-none font-bold text-[8px] uppercase tracking-wider px-2 py-0.5 h-5">Critical Hub</Badge>
+                  </div>
+                  <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider leading-snug">High Value Assets</h4>
+                  <p className="text-[10px] text-gray-400 font-medium">Top 80% Cumulative Value</p>
                 </div>
-                <h4 className="text-sm font-black text-gray-800 uppercase tracking-widest leading-tight">High Value Assets<br />(Top 80%)</h4>
-                <div className="h-1.5 w-full bg-red-100 rounded-full mt-4 mb-6 overflow-hidden">
-                  <div className="h-full bg-red-500 w-[80%] rounded-full shadow-[0_0_12px_rgba(239,68,68,0.4)]" />
+                
+                <div className="my-3">
+                  <div className="flex justify-between text-[9px] font-bold text-red-600/90 mb-1">
+                    <span>Value Share</span>
+                    <span>{abcStats.A.valPct}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-red-100/40 rounded-full overflow-hidden">
+                    <div className="h-full bg-red-500 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]" style={{ width: `${Math.max(3, abcStats.A.valPct)}%` }} />
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-black text-gray-900 tracking-tighter">{abcAnalysis.filter(p => p.category === 'A').length}</p>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic leading-3">Exclusive<br />SKUs</span>
+
+                <div className="flex items-end justify-between pt-2 border-t border-gray-100/40">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold text-gray-900 leading-none">{abcStats.A.count}</span>
+                    <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">SKUs</span>
+                  </div>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{abcStats.A.pct}% of catalog</span>
                 </div>
               </div>
 
-              <div className="group bg-gradient-to-tr from-orange-50/50 to-white p-6 rounded-2xl border border-orange-100/50 hover:shadow-lg hover:shadow-orange-500/5 transition-all duration-300">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center font-black text-2xl text-orange-600 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-transform">B</div>
-                  <Badge className="bg-orange-500 text-white border-none font-black text-[9px] uppercase tracking-tighter px-3 h-6">Normal Flow</Badge>
+              {/* Category B Card */}
+              <div className="group bg-gradient-to-br from-orange-50/10 via-white to-white p-4 rounded-xl border border-orange-100/40 hover:shadow-md hover:border-orange-200/50 transition-all duration-300 flex flex-col justify-between min-h-[170px]">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-9 h-9 rounded-lg bg-orange-100/70 flex items-center justify-center font-bold text-lg text-orange-600 shadow-sm group-hover:scale-105 transition-transform">B</div>
+                    <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-none font-bold text-[8px] uppercase tracking-wider px-2 py-0.5 h-5">Normal Flow</Badge>
+                  </div>
+                  <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider leading-snug">Medium Value Assets</h4>
+                  <p className="text-[10px] text-gray-400 font-medium">Next 15% Cumulative Value</p>
                 </div>
-                <h4 className="text-sm font-black text-gray-800 uppercase tracking-widest leading-tight">Medium Value Assets<br />(Mid 15%)</h4>
-                <div className="h-1.5 w-full bg-orange-100 rounded-full mt-4 mb-6 overflow-hidden">
-                  <div className="h-full bg-orange-500 w-[15%] rounded-full shadow-[0_0_12px_rgba(249,115,22,0.4)]" />
+                
+                <div className="my-3">
+                  <div className="flex justify-between text-[9px] font-bold text-orange-600/90 mb-1">
+                    <span>Value Share</span>
+                    <span>{abcStats.B.valPct}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-orange-100/40 rounded-full overflow-hidden">
+                    <div className="h-full bg-orange-500 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(249,115,22,0.2)]" style={{ width: `${Math.max(3, abcStats.B.valPct)}%` }} />
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-black text-gray-900 tracking-tighter">{abcAnalysis.filter(p => p.category === 'B').length}</p>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic leading-3">Steady<br />SKUs</span>
+
+                <div className="flex items-end justify-between pt-2 border-t border-gray-100/40">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold text-gray-900 leading-none">{abcStats.B.count}</span>
+                    <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">SKUs</span>
+                  </div>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{abcStats.B.pct}% of catalog</span>
                 </div>
               </div>
 
-              <div className="group bg-gradient-to-tr from-green-50/50 to-white p-6 rounded-2xl border border-green-100/50 hover:shadow-lg hover:shadow-green-500/5 transition-all duration-300">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center font-black text-2xl text-green-600 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-transform">C</div>
-                  <Badge className="bg-green-500 text-white border-none font-black text-[9px] uppercase tracking-tighter px-3 h-6">Bulk Layer</Badge>
+              {/* Category C Card */}
+              <div className="group bg-gradient-to-br from-green-50/10 via-white to-white p-4 rounded-xl border border-green-100/40 hover:shadow-md hover:border-green-200/50 transition-all duration-300 flex flex-col justify-between min-h-[170px]">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-9 h-9 rounded-lg bg-green-100/70 flex items-center justify-center font-bold text-lg text-green-600 shadow-sm group-hover:scale-105 transition-transform">C</div>
+                    <Badge className="bg-green-500 hover:bg-green-600 text-white border-none font-bold text-[8px] uppercase tracking-wider px-2 py-0.5 h-5">Bulk Layer</Badge>
+                  </div>
+                  <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider leading-snug">Low Value Assets</h4>
+                  <p className="text-[10px] text-gray-400 font-medium">Bottom 5% Cumulative Value</p>
                 </div>
-                <h4 className="text-sm font-black text-gray-800 uppercase tracking-widest leading-tight">Low Value Assets<br />(Base 5%)</h4>
-                <div className="h-1.5 w-full bg-green-100 rounded-full mt-4 mb-6 overflow-hidden">
-                  <div className="h-full bg-green-500 w-[5%] rounded-full shadow-[0_0_12px_rgba(34,197,94,0.4)]" />
+                
+                <div className="my-3">
+                  <div className="flex justify-between text-[9px] font-bold text-green-600/90 mb-1">
+                    <span>Value Share</span>
+                    <span>{abcStats.C.valPct}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-green-100/40 rounded-full overflow-hidden">
+                    <div className="h-full bg-green-500 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(34,197,94,0.2)]" style={{ width: `${Math.max(3, abcStats.C.valPct)}%` }} />
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-black text-gray-900 tracking-tighter">{abcAnalysis.filter(p => p.category === 'C').length}</p>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic leading-3">Bulk<br />SKUs</span>
+
+                <div className="flex items-end justify-between pt-2 border-t border-gray-100/40">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold text-gray-900 leading-none">{abcStats.C.count}</span>
+                    <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">SKUs</span>
+                  </div>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{abcStats.C.pct}% of catalog</span>
                 </div>
               </div>
             </div>

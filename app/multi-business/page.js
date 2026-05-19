@@ -21,7 +21,9 @@ import {
   TrendingUp,
   ShieldCheck,
   Zap,
-  LayoutGrid
+  LayoutGrid,
+  Search,
+  List
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
@@ -33,6 +35,8 @@ export default function MultiBusinessPage() {
   const { user, loading: authLoading } = useAuth();
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState('grid');
 
   useEffect(() => {
     async function fetchBusinesses() {
@@ -58,6 +62,12 @@ export default function MultiBusinessPage() {
   const handleEnterBusiness = (domain) => {
     router.push(`/business/${domain}`);
   };
+  
+  const filteredBusinesses = businesses.filter(biz => 
+    biz.business_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    biz.domain?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    biz.city?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (loading || authLoading) {
     return (
@@ -123,10 +133,10 @@ export default function MultiBusinessPage() {
           </p>
         </div>
 
-        {/* Businesses Grid */}
-        <div className="mt-12">
+        {/* Businesses Hub & Filters */}
+        <div className="mt-8">
           {businesses.length === 0 ? (
-            <div className="text-center py-24 bg-white rounded-[2rem] border-2 border-dashed border-gray-100 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="text-center py-24 bg-white rounded-[2rem] border border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
                 <Building2 className="w-10 h-10 text-gray-300" />
               </div>
@@ -141,67 +151,177 @@ export default function MultiBusinessPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {businesses.map((biz, idx) => (
-                <div
-                  key={biz.id}
-                  className="group bg-white rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-[0_34px_90px_-44px_rgba(15,23,42,0.45)] hover:border-wine/20 transition-all duration-500 overflow-hidden relative animate-in fade-in slide-in-from-bottom-4"
-                  style={{ animationDelay: `${idx * 100}ms` }}
-                >
-                  {/* Decorative Gradient Background */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-wine/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-wine/10 transition-colors" />
+            <div className="space-y-6">
+              {/* Interactive Filter & View Controls */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white/60 backdrop-blur-sm p-4 rounded-3xl border border-slate-200/60 shadow-sm">
+                {/* Search Bar */}
+                <div className="relative w-full sm:max-w-md">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search entity name, domain or city..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-11 pr-4 h-12 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-wine transition-all shadow-inner"
+                  />
+                </div>
 
-                  <div className="p-8 pb-6 relative">
-                    <div className="flex items-start justify-between mb-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-wine/5 rounded-2xl flex items-center justify-center text-wine shadow-inner group-hover:scale-110 transition-transform duration-500">
-                          {biz.category === 'retail-shop' ? <Store className="w-7 h-7" /> :
-                            biz.category === 'manufacturing' ? <Factory className="w-7 h-7" /> :
-                              biz.category === 'ecommerce' ? <Globe className="w-7 h-7" /> :
-                                <Briefcase className="w-7 h-7" />}
+                {/* View Toggles & Details */}
+                <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+                  <span className="hidden md:inline text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                    {filteredBusinesses.length} of {businesses.length} Hubs
+                  </span>
+                  <div className="bg-slate-100 p-1 rounded-2xl flex items-center border border-slate-200/50 shadow-sm">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      title="Compact Grid"
+                      className={cn(
+                        "p-2 rounded-xl transition-all",
+                        viewMode === 'grid' ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-700"
+                      )}
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      title="Sleek List View"
+                      className={cn(
+                        "p-2 rounded-xl transition-all",
+                        viewMode === 'list' ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-700"
+                      )}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Business Selectors List/Grid */}
+              {filteredBusinesses.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-[2rem] border border-slate-200 shadow-sm animate-in fade-in">
+                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-6 h-6 text-gray-300" />
+                  </div>
+                  <h3 className="text-lg font-black text-gray-900 tracking-tight">No matching entities found</h3>
+                  <p className="text-xs text-gray-500 font-semibold mb-6 max-w-xs mx-auto">Try refining your search query or launch a new entity instead.</p>
+                  <Button
+                    onClick={() => setSearchQuery('')}
+                    variant="outline"
+                    className="rounded-xl px-6 text-xs uppercase font-black tracking-wider"
+                  >
+                    Clear Search
+                  </Button>
+                </div>
+              ) : viewMode === 'grid' ? (
+                /* COMPACT GRID VIEW */
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredBusinesses.map((biz, idx) => (
+                    <div
+                      key={biz.id}
+                      onClick={() => handleEnterBusiness(biz.domain)}
+                      className="group cursor-pointer bg-white rounded-3xl border border-slate-200 p-6 hover:shadow-[0_20px_50px_-30px_rgba(15,23,42,0.15)] hover:border-wine/40 active:scale-[0.99] transition-all duration-350 overflow-hidden relative flex flex-col justify-between h-full animate-in fade-in"
+                      style={{ animationDelay: `${idx * 50}ms` }}
+                    >
+                      {/* Top row */}
+                      <div>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="w-11 h-11 bg-wine/5 rounded-2xl flex items-center justify-center text-wine shadow-inner group-hover:scale-105 transition-transform duration-300">
+                            {biz.category === 'retail-shop' ? <Store className="w-5.5 h-5.5" /> :
+                              biz.category === 'manufacturing' ? <Factory className="w-5.5 h-5.5" /> :
+                                biz.category === 'ecommerce' ? <Globe className="w-5.5 h-5.5" /> :
+                                  <Briefcase className="w-5.5 h-5.5" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-black text-gray-900 text-base leading-snug truncate group-hover:text-wine transition-colors">
+                              {biz.business_name}
+                            </h3>
+                            <p className="text-[9px] text-wine font-black uppercase tracking-widest mt-1 opacity-70 truncate">
+                              {biz.domain?.replace(/-/g, ' ')}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-black text-gray-900 text-lg leading-tight group-hover:text-wine transition-colors">{biz.business_name}</h3>
-                          <p className="text-[10px] text-wine font-black uppercase tracking-widest mt-1.5 opacity-70">
+
+                        {/* Mid Row Base and Authority badges */}
+                        <div className="grid grid-cols-2 gap-3 mt-5">
+                          <div className="px-3 py-2 bg-gray-50 rounded-xl border border-gray-100/50">
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Global Base</p>
+                            <p className="font-bold text-gray-800 text-xs truncate">{biz.city || 'Karachi, PK'}</p>
+                          </div>
+                          <div className="px-3 py-2 bg-gray-50 rounded-xl border border-gray-100/50">
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Authority</p>
+                            <p className="font-bold text-gray-800 text-xs truncate uppercase">{biz.user_role || 'Executive'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom sync status and click trigger */}
+                      <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">Active Sync</span>
+                        </div>
+                        <span className="text-xs font-black text-gray-950 group-hover:text-wine transition-colors flex items-center gap-1">
+                          Enter Workplace
+                          <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* SLEEK LIST VIEW */
+                <div className="space-y-3">
+                  {filteredBusinesses.map((biz, idx) => (
+                    <div
+                      key={biz.id}
+                      onClick={() => handleEnterBusiness(biz.domain)}
+                      className="group cursor-pointer bg-white rounded-2xl border border-slate-200 p-4 hover:border-wine/40 hover:shadow-md transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in"
+                      style={{ animationDelay: `${idx * 40}ms` }}
+                    >
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="w-10 h-10 bg-wine/5 rounded-xl flex items-center justify-center text-wine group-hover:scale-105 transition-transform flex-shrink-0">
+                          {biz.category === 'retail-shop' ? <Store className="w-5 h-5" /> :
+                            biz.category === 'manufacturing' ? <Factory className="w-5 h-5" /> :
+                              biz.category === 'ecommerce' ? <Globe className="w-5 h-5" /> :
+                                <Briefcase className="w-5 h-5" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-black text-gray-900 text-sm md:text-base leading-tight group-hover:text-wine transition-colors truncate">
+                            {biz.business_name}
+                          </h3>
+                          <p className="text-[9px] text-wine font-black uppercase tracking-widest mt-1 opacity-70 truncate">
                             {biz.domain?.replace(/-/g, ' ')}
                           </p>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                      <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-100/50">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Global Base</p>
-                        <p className="font-bold text-gray-800 tracking-tight text-sm truncate">{biz.city || 'Karachi, PK'}</p>
+                      {/* Info badges */}
+                      <div className="flex items-center gap-3 flex-shrink-0 w-full md:w-auto">
+                        <div className="px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100/50 flex items-center gap-2">
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Base:</span>
+                          <span className="font-bold text-gray-800 text-xs">{biz.city || 'Karachi, PK'}</span>
+                        </div>
+                        <div className="px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100/50 flex items-center gap-2">
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Role:</span>
+                          <span className="font-bold text-gray-800 text-xs uppercase">{biz.user_role || 'Executive'}</span>
+                        </div>
                       </div>
-                      <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-100/50">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Authority</p>
-                        <p className="font-bold text-gray-800 tracking-tight text-sm truncate uppercase">{biz.user_role || 'Executive'}</p>
+
+                      {/* Status and Action */}
+                      <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto flex-shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">Active Sync</span>
+                        </div>
+                        <span className="text-xs font-black text-gray-950 group-hover:text-wine transition-colors flex items-center gap-1">
+                          Enter Workplace
+                          <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+                        </span>
                       </div>
                     </div>
-
-                    <Button
-                      onClick={() => handleEnterBusiness(biz.domain)}
-                      className="w-full h-14 bg-gray-900 hover:bg-wine text-white rounded-2xl transition-all duration-300 font-black text-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] group/btn"
-                    >
-                      Enter Workplace
-                      <ArrowRight className="w-4 h-4 transform group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
-                  </div>
-
-                  {/* Status Footer */}
-                  <div className="px-8 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Active Sync</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-                      <ShieldCheck className="w-3.5 h-3.5 text-wine" />
-                      <span className="text-[10px] font-black text-gray-400 group-hover:text-wine uppercase tracking-widest">Verified Vault</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>

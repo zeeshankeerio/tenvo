@@ -35,15 +35,17 @@ export function ExcelModeModal({
     const [validationErrors, setValidationErrors] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
 
+    const wasOpenRef = useRef(false);
+
     // History Tracking (Undo/Redo)
     const [history, setHistory] = useState([]);
     const [future, setFuture] = useState([]);
 
     const colors = getDomainColors(category);
 
-    // Sync local data when modal opens
+    // Sync local data when modal opens (run only on initial open transition)
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !wasOpenRef.current) {
             const sanitizedData = data.map(item => {
                 const newItem = { ...item };
                 // Flatten nested domain_data if needed or sanitize Dates
@@ -59,6 +61,7 @@ export function ExcelModeModal({
             setHasUnsavedChanges(false);
             setValidationErrors({});
         }
+        wasOpenRef.current = isOpen;
     }, [isOpen, data]);
 
     // History Logic
@@ -389,6 +392,37 @@ export function ExcelModeModal({
 
     const handleClear = () => { if (window.confirm('Delete all products in this session?')) { setLocalData([]); setHasUnsavedChanges(true); pushState([]); } };
 
+    const handleLocalDeleteRow = useCallback(async (row) => {
+        if (!row) return;
+        const isNew = !row.id;
+        const confirmMsg = isNew
+            ? 'Are you sure you want to remove this new row?'
+            : `Are you sure you want to permanently delete "${row.name || 'this item'}" from the database?`;
+
+        if (!window.confirm(confirmMsg)) return;
+
+        if (!isNew && onDeleteRow) {
+            try {
+                await onDeleteRow(row);
+            } catch (err) {
+                console.error("Failed to delete row:", err);
+                toast.error("Failed to delete from database");
+                return;
+            }
+        }
+
+        setLocalData(prev => {
+            const next = prev.filter(r => {
+                if (row.id) return r.id !== row.id;
+                return r._tempId !== row._tempId;
+            });
+            setHasUnsavedChanges(true);
+            pushState(next);
+            return next;
+        });
+        toast.success(isNew ? 'Row removed' : 'Product deleted successfully');
+    }, [onDeleteRow, pushState]);
+
     const handleClose = () => {
         if (hasUnsavedChanges) {
             if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
@@ -471,7 +505,7 @@ export function ExcelModeModal({
                         columns={enhancedColumns}
                         onCellEdit={handleLocalCellEdit}
                         onAddRow={handleLocalAddRow}
-                        onDeleteRow={onDeleteRow}
+                        onDeleteRow={handleLocalDeleteRow}
                         validationErrors={validationErrors}
                         category={category}
                         className="h-full border-0"

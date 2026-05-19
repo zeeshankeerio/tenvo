@@ -33,51 +33,7 @@
   --color-error-dark: var(--error-dark);
   --color-info: var(--info);
   --color-info-light: var(--info-light);
-  --color-info-dark: var(--info-dark);
-  --color-indigo-50: #fefbf0;
-  --color-indigo-100: #fdf4d4;
-  --color-indigo-200: #fae9aa;
-  --color-indigo-300: #f6da7c;
-  --color-indigo-400: #f2d15d;
-  --color-indigo-500: #e34242;
-  --color-indigo-600: #e34242;
-  --color-indigo-700: #b28729;
-  --color-indigo-800: #8f6721;
-  --color-indigo-900: #74521d;
-  --color-indigo-950: #46300f;
-  --color-violet-50: #fefbf0;
-  --color-violet-100: #fdf4d4;
-  --color-violet-200: #fae9aa;
-  --color-violet-300: #f6da7c;
-  --color-violet-400: #f2d15d;
-  --color-violet-500: #e34242;
-  --color-violet-600: #e34242;
-  --color-violet-700: #b28729;
-  --color-violet-800: #8f6721;
-  --color-violet-900: #74521d;
-  --color-violet-950: #46300f;
-  --color-purple-50: #fefbf0;
-  --color-purple-100: #fdf4d4;
-  --color-purple-200: #fae9aa;
-  --color-purple-300: #f6da7c;
-  --color-purple-400: #f2d15d;
-  --color-purple-500: #e34242;
-  --color-purple-600: #e34242;
-  --color-purple-700: #b28729;
-  --color-purple-800: #8f6721;
-  --color-purple-900: #74521d;
-  --color-purple-950: #46300f;
-  --color-fuchsia-50: #fefbf0;
-  --color-fuchsia-100: #fdf4d4;
-  --color-fuchsia-200: #fae9aa;
-  --color-fuchsia-300: #f6da7c;
-  --color-fuchsia-400: #f2d15d;
-  --color-fuchsia-500: #e34242;
-  --color-fuchsia-600: #e34242;
-  --color-fuchsia-700: #b28729;
-  --color-fuchsia-800: #8f6721;
-  --color-fuchsia-900: #74521d;
-  --color-fuchsia-950: #46300f;
+   --color-info-dark: var(--info-dark);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -128,12 +84,12 @@
      ENTERPRISE COLOR SYSTEM - Professional Grade
      ═══════════════════════════════════════════════════════════════ */
 
-  /* BRAND COLORS - Gold Theme */
+  /* BRAND COLORS - Professional Red/Slate Theme */
   --brand-primary: #e34242;
-  --brand-primary-light: #f2d785;
-  --brand-primary-dark: #c49c3b;
-  --brand-primary-50: #fefbf0;
-  --brand-primary-100: #fdf4d4;
+  --brand-primary-light: #ef4444;
+  --brand-primary-dark: #b91c1c;
+  --brand-primary-50: #F8FAFC;
+  --brand-primary-100: #F1F5F9;
 
   /* NEUTRAL PALETTE - Professional Gray Scale */
   --neutral-50: #FAFAFA;
@@ -151,15 +107,15 @@
   --success: #10B981;
   --success-light: #D1FAE5;
   --success-dark: #059669;
-  --warning: #c69214;
-  --warning-light: #fff3d6;
-  --warning-dark: #8f6710;
-  --error: #8b1538;
-  --error-light: #f9e8ed;
-  --error-dark: #6b0f28;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --warning-dark: #D97706;
+  --error: #EF4444;
+  --error-light: #FEE2E2;
+  --error-dark: #B91C1C;
   --info: #e34242;
-  --info-light: #fdf4d4;
-  --info-dark: #c49c3b;
+  --info-light: #F8FAFC;
+  --info-dark: #b91c1c;
 
   /* CHART COLORS - Data Visualization */
   --chart-1: #e34242;
@@ -268,9 +224,9 @@
   --neutral-800: #FAFAFA;
   --neutral-900: #FFFFFF;
 
-  --brand-primary: #f2d785;
-  --brand-primary-light: #fefbf0;
-  --brand-primary-dark: #c49c3b;
+  --brand-primary: #ef4444;
+  --brand-primary-light: #fca5a5;
+  --brand-primary-dark: #b91c1c;
 
   --border: #404040;
   --input: #404040;
@@ -353,8 +309,33 @@
     /* Improve letter definition */
   }
 
+  /* Global elegant & thin scrollbars */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3); /* Premium Slate-400 opacity */
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.55);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
+    height: 5px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -362,12 +343,12 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 9999px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+    background: rgba(148, 163, 184, 0.55);
   }
 }
 

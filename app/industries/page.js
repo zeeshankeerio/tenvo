@@ -16,7 +16,7 @@ export default function IndustriesPage() {
         title={
           <>
             Purpose-Built Workflows for <br />
-            <span className="text-amber-300">Every Industry</span>
+            <span className="text-brand-primary">Every Industry</span>
           </>
         }
         subtitle="Pre-configured ERP solutions designed for real operations, real teams, and compliance-sensitive workflows across Pakistan's major sectors."
@@ -111,8 +111,8 @@ export default function IndustriesPage() {
 
 function BenefitCard({ title, description, icon }) {
   return (
-    <div className="bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,251,255,0.9))] border border-slate-200 rounded-[1.75rem] p-8 hover:-translate-y-1 hover:shadow-[0_24px_70px_-42px_rgba(15,23,42,0.38)] transition-all duration-300">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-wine/10 text-2xl">{icon}</div>
+    <div className="bg-white border border-slate-200 rounded-3xl p-8 hover:-translate-y-1 hover:shadow-[0_12px_30px_-10px_rgba(15,23,42,0.08)] transition-all duration-300">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 border border-brand-100 text-brand-primary text-2xl">{icon}</div>
       <h4 className="text-xl font-black text-gray-900 mb-3">{title}</h4>
       <p className="text-gray-500 font-medium leading-relaxed">{description}</p>
     </div>

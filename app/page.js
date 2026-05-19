@@ -711,7 +711,7 @@ export default function Home() {
               </ul>
 
               <div className="pt-4">
-                <Button onClick={runExcelSimulation} disabled={simulationStatus === 'processing'} className="bg-brand-primary hover:bg-brand-primary-dark text-neutral-900 font-black rounded-2xl h-12 px-6 uppercase tracking-wider">
+                <Button onClick={runExcelSimulation} disabled={simulationStatus === 'processing'} className="bg-brand-primary hover:bg-brand-primary-dark text-white font-black rounded-2xl h-12 px-6 uppercase tracking-wider">
                   {simulationStatus === 'processing' ? 'Validating Sheet...' : 'Simulate Excel Upload'}
                 </Button>
                 {simulationStatus !== 'idle' && (

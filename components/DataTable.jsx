@@ -239,7 +239,7 @@ export function DataTable({
                     <th
                       key={header.id}
                       className={cn(
-                        "px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] cursor-pointer hover:bg-gray-100/80 transition-colors border-b-2 border-transparent",
+                        "px-3 py-2 text-left text-[9px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/80 transition-colors border-b-2 border-transparent",
                         header.column.getIsSorted() && "border-blue-500 text-blue-600 bg-blue-50/30",
                         index === 0 && "sticky left-0 z-30 bg-gray-50/95 backdrop-blur-sm shadow-[2px_0_10px_-4px_rgba(0,0,0,0.1)]"
                       )}
@@ -264,7 +264,7 @@ export function DataTable({
             <tbody className="bg-white divide-y divide-gray-200">
               {table.getRowModel().rows.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="px-4 py-2 text-center text-gray-500">
+                  <td colSpan={columns.length} className="px-3 py-2 text-center text-gray-500">
                     {emptyComponent || (
                       <div className="flex flex-col items-center justify-center space-y-3 py-12">
                         <div className="p-3 bg-gray-50 rounded-full">
@@ -288,7 +288,7 @@ export function DataTable({
                       <td
                         key={cell.id}
                         className={cn(
-                          "px-4 py-4 text-sm text-gray-700 font-medium border-b border-gray-100/50",
+                          "px-3 py-1.5 text-xs text-gray-700 font-medium border-b border-gray-100/50",
                           index === 0 && "sticky left-0 z-20 border-r border-gray-100/50 shadow-[4px_0_12px_-6px_rgba(0,0,0,0.05)]",
                           index === 0 && rowIndex % 2 === 0 && "bg-white/95 backdrop-blur-sm",
                           index === 0 && rowIndex % 2 !== 0 && "bg-gray-50/95 backdrop-blur-sm"

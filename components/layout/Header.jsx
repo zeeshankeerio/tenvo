@@ -456,7 +456,7 @@ export function Header({ onMenuClick }) {
                                                         <div key={category} className="p-2 border-b border-gray-50 last:border-0">
                                                             <div className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 bg-gray-50/50 rounded-lg mb-1">
                                                                 {category === 'inventory' && <PackageIcon className="w-3 h-3 text-brand-primary" />}
-                                                                {category === 'sales' && <FileText className="w-3 h-3 text-wine" />}
+                                                                {category === 'sales' && <FileText className="w-3 h-3 text-brand-primary" />}
                                                                 {category === 'crm' && <UsersIcon className="w-3 h-3 text-green-500" />}
                                                                 {category === 'manufacturing' && <Factory className="w-3 h-3 text-orange-500" />}
                                                                 {category === 'management' && <ClipboardList className="w-3 h-3 text-brand-primary" />}

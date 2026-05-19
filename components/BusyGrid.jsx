@@ -43,6 +43,7 @@ export function BusyGrid({
 
     const getValue = useCallback((row, accessor) => {
         if (!accessor) return '';
+        if (!row) return '';
         if (accessor.includes('.')) {
             return accessor.split('.').reduce((o, i) => (o ? o[i] : undefined), row) ?? '';
         }
@@ -96,9 +97,10 @@ export function BusyGrid({
     };
 
     const startEditing = (initialChar = null) => {
+        if (sortedData.length === 0) return;
         const colDef = columns[selectedCell.col];
         if (colDef.readOnly) return;
-        const row = data[selectedCell.row];
+        const row = sortedData[selectedCell.row];
         let val = getValue(row, colDef.accessorKey);
         setEditingCell(selectedCell);
         setEditValue(initialChar !== null ? initialChar : val);
@@ -146,6 +148,7 @@ export function BusyGrid({
     const copyToClipboard = useCallback(() => {
         const colDef = columns[selectedCell.col];
         const row = sortedData[selectedCell.row];
+        if (!row) return;
         const val = getValue(row, colDef.accessorKey);
         navigator.clipboard.writeText(String(val));
         setContextMenu(null);
@@ -156,6 +159,7 @@ export function BusyGrid({
             const text = await navigator.clipboard.readText();
             const colDef = columns[selectedCell.col];
             const row = sortedData[selectedCell.row];
+            if (!row) return;
             if (!colDef.readOnly) onCellEdit?.(row, colDef.accessorKey, text);
         } catch (err) { console.error(err); }
         setContextMenu(null);

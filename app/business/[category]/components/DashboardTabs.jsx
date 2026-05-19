@@ -892,10 +892,26 @@ export function DashboardTabs({
                                     />
                                 )}
                                 {hrView === 'attendance' && (
-                                    <AttendanceTracker businessId={business?.id} />
+                                    <AttendanceTracker 
+                                        businessId={business?.id} 
+                                        employees={(handlers.payrollEmployees || []).map(emp => ({
+                                            id: emp.id,
+                                            name: emp.full_name || 'Unnamed Employee',
+                                            role: emp.designation || 'Staff',
+                                            department: emp.department || 'Operations'
+                                        }))}
+                                    />
                                 )}
                                 {hrView === 'shifts' && (
-                                    <ShiftScheduler businessId={business?.id} />
+                                    <ShiftScheduler 
+                                        businessId={business?.id} 
+                                        employees={(handlers.payrollEmployees || []).map(emp => ({
+                                            id: emp.id,
+                                            name: emp.full_name || 'Unnamed Employee',
+                                            role: emp.designation || 'Staff',
+                                            department: emp.department || 'Operations'
+                                        }))}
+                                    />
                                 )}
                             </div>
                         </TabGuard>

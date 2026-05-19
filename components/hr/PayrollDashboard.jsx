@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -28,7 +28,7 @@ export function PayrollDashboard({
     const [isProcessing, setIsProcessing] = useState(false);
 
     const activeEmployees = employees.filter(e => e.status === 'active');
-    const totalBaseSalary = activeEmployees.reduce((sum, e) => sum + parseFloat(e.base_salary || 0), 0);
+    const totalBaseSalary = activeEmployees.reduce((sum, e) => sum + (parseFloat(e.base_salary) || 0), 0);
     const lastRun = payrollRuns[0];
 
     const handleRunPayroll = async () => {
@@ -81,7 +81,7 @@ export function PayrollDashboard({
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Last Run Net</p>
                                 <p className="text-2xl font-black text-brand-primary mt-1">
-                                    {lastRun ? `${currency}${parseFloat(lastRun.total_net || 0).toLocaleString()}` : '--'}
+                                    {lastRun ? `${currency}${(parseFloat(lastRun.total_net) || 0).toLocaleString()}` : '--'}
                                 </p>
                             </div>
                             <div className="p-2.5 bg-brand-50 rounded-lg">
@@ -136,7 +136,7 @@ export function PayrollDashboard({
                                         <p className="text-[10px] text-gray-400">{emp.department || '--'} * {emp.designation || '--'}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-bold text-gray-900">{currency}{parseFloat(emp.base_salary).toLocaleString()}</p>
+                                        <p className="text-sm font-bold text-gray-900">{currency}{(parseFloat(emp.base_salary) || 0).toLocaleString()}</p>
                                         <p className="text-[10px] text-gray-400">{emp.employee_code}</p>
                                     </div>
                                     <Badge variant={emp.tax_filer ? 'default' : 'secondary'} className="text-[9px]">
@@ -175,7 +175,7 @@ export function PayrollDashboard({
                                         <p className="text-[10px] text-gray-400">{run.period_month}/{run.period_year} * {run.employee_count} staff</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xs font-black text-gray-900">{currency}{parseFloat(run.total_net || 0).toLocaleString()}</p>
+                                        <p className="text-xs font-black text-gray-900">{currency}{(parseFloat(run.total_net) || 0).toLocaleString()}</p>
                                     </div>
                                     <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                                 </button>

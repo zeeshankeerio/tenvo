@@ -68,7 +68,7 @@ export default function Hero({
     const BadgeIcon = (typeof badge === 'object' && badge.icon) ? LucideIcons[badge.icon] : null;
     
     return (
-      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold mb-6 shadow-sm shadow-amber-100">
+      <div className="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-brand-primary mb-6 shadow-sm">
         {BadgeIcon && <BadgeIcon className="w-4 h-4" />}
         <span>{badgeText}</span>
       </div>
@@ -87,8 +87,8 @@ export default function Hero({
           return (
             <div key={index} className="flex items-center gap-3">
               {StatIcon && (
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 shadow-sm shadow-amber-100">
-                  <StatIcon className="w-5 h-5 text-amber-600" />
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 shadow-sm">
+                  <StatIcon className="w-5 h-5 text-slate-600" />
                 </div>
               )}
               <div>
@@ -109,7 +109,7 @@ export default function Hero({
         <Button
           asChild
           size="lg"
-          className="bg-brand-primary hover:bg-brand-primary-dark text-neutral-900 px-8 py-6 text-lg font-bold rounded-2xl shadow-[0_18px_44px_-20px_rgba(237,199,92,0.65)] hover:shadow-[0_24px_54px_-20px_rgba(237,199,92,0.55)] transition-all duration-300"
+          className="bg-brand-primary hover:bg-brand-primary-dark text-white px-8 py-6 text-lg font-bold rounded-2xl shadow-sm transition-all duration-300"
           onClick={() => handleCTAClick('primary', primaryCTA.href)}
         >
           <Link href={primaryCTA.href}>
@@ -123,7 +123,7 @@ export default function Hero({
           asChild
           variant="outline"
           size="lg"
-          className="border-2 border-neutral-300 hover:border-brand-primary hover:text-brand-primary-dark px-8 py-6 text-lg font-semibold rounded-2xl bg-white/70 backdrop-blur-sm transition-all duration-300"
+          className="border-2 border-neutral-300 hover:border-brand-primary hover:text-brand-primary px-8 py-6 text-lg font-semibold rounded-2xl bg-white/70 backdrop-blur-sm transition-all duration-300"
           onClick={() => handleCTAClick('secondary', secondaryCTA.href)}
         >
           <Link href={secondaryCTA.href}>
@@ -137,10 +137,10 @@ export default function Hero({
   // Default variant: Split layout with text left, image right
   if (variant === 'default') {
     return (
-      <section className="relative overflow-hidden bg-[linear-gradient(135deg,#fdfdfa_0%,#ffffff_55%,#fefbf0_100%)]">
+      <section className="relative overflow-hidden bg-slate-50 border-b border-slate-200/50">
         {/* Decorative blur elements */}
-        <div className="absolute top-0 right-0 w-[32rem] h-[32rem] bg-amber-200/35 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[28rem] h-[28rem] bg-amber-200/25 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-[32rem] h-[32rem] bg-slate-200/40 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[28rem] h-[28rem] bg-slate-200/30 rounded-full blur-3xl" />
         
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -189,7 +189,7 @@ export default function Hero({
                 
                 {/* Decorative elements */}
                 <div className="absolute -top-4 -right-4 w-24 h-24 bg-brand-primary rounded-[1.75rem] opacity-20 blur-xl" />
-                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-amber-300 rounded-[1.75rem] opacity-20 blur-xl" />
+                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-slate-300 rounded-[1.75rem] opacity-20 blur-xl" />
               </div>
             )}
           </div>
@@ -198,55 +198,40 @@ export default function Hero({
     );
   }
 
-  // Centered variant: Centered text with background image
+  // Centered variant: Centered text with light themed standard hero matching pricing page
   if (variant === 'centered') {
     return (
-      <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0c0f16_0%,#1b1c24_45%,#c49c3b_100%)] text-white">
-        {/* Background image */}
-        {heroImageSrc && (
-          <div className="absolute inset-0">
-            <Image
-              src={heroImageSrc}
-              alt={heroImageAltText}
-              fill
-              priority
-              className="object-cover opacity-30"
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/80 via-neutral-900/60 to-neutral-900/80" />
-          </div>
-        )}
-        
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-          <div className={`max-w-4xl mx-auto text-center space-y-8 ${mounted ? 'animate-fade-in-up' : 'opacity-0'}`}>
+      <section className="relative overflow-hidden bg-white py-16 lg:py-24 border-b border-neutral-200/80">
+        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center space-y-8">
+          <div className={`${mounted ? 'animate-fade-in-up' : 'opacity-0'} space-y-6`}>
             {renderBadge()}
             
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 leading-tight max-w-4xl mx-auto">
               {headlineText}
             </h1>
             
-            <p className="text-xl sm:text-2xl text-neutral-300 max-w-3xl mx-auto leading-relaxed">
+            <p className="max-w-2xl mx-auto text-lg text-neutral-500 font-medium leading-relaxed">
               {subheadlineText}
             </p>
             
-            <div className="flex justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               {renderCTAs()}
             </div>
             
             {stats && stats.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-12 pt-12 mt-12 border-t border-white/20">
+              <div className="flex flex-wrap justify-center gap-12 pt-12 mt-12 border-t border-neutral-200">
                 {stats.map((stat, index) => {
                   const StatIcon = stat.icon ? LucideIcons[stat.icon] : null;
                   
                   return (
                     <div key={index} className="text-center">
                       {StatIcon && (
-                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 rounded-lg bg-white/10">
-                          <StatIcon className="w-6 h-6 text-amber-300" />
+                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 rounded-xl bg-slate-100 shadow-sm">
+                          <StatIcon className="w-6 h-6 text-slate-600" />
                         </div>
                       )}
-                      <div className="text-3xl font-bold">{stat.value}</div>
-                      <div className="text-sm text-neutral-400 mt-1">{stat.label}</div>
+                      <div className="text-3xl font-bold text-neutral-900">{stat.value}</div>
+                      <div className="text-sm text-neutral-500 mt-1">{stat.label}</div>
                     </div>
                   );
                 })}
@@ -264,7 +249,7 @@ export default function Hero({
       <section className="relative overflow-hidden bg-white">
         <div className="grid lg:grid-cols-2 min-h-[600px]">
           {/* Text content */}
-          <div className="flex items-center bg-[linear-gradient(135deg,#fefbf0_0%,#ffffff_70%)]">
+          <div className="flex items-center bg-slate-50">
             <div className={`container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 space-y-6 ${mounted ? 'animate-fade-in-up' : 'opacity-0'}`}>
               {renderBadge()}
               
