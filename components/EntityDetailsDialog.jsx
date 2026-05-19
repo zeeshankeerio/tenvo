@@ -251,7 +251,7 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
                     </div>
                     <div className="flex items-center gap-3">
                         <Button variant="ghost" onClick={isEditing ? () => setIsEditing(false) : onClose} className="rounded-xl font-black uppercase text-[10px] tracking-widest px-6">{isEditing ? 'Cancel' : 'Close'}</Button>
-                        <Button onClick={() => setIsEditing(!isEditing)} className="rounded-xl bg-gray-950 text-white font-black uppercase text-[10px] tracking-widest px-6 shadow-lg shadow-gray-200 hover:bg-black border-none">
+                        <Button onClick={() => setIsEditing(!isEditing)} className="rounded-xl font-black uppercase tracking-widest px-6 shadow-lg shadow-gray-200 border-none bg-emerald-600 hover:bg-emerald-700 text-white">
                             {isEditing ? <React.Fragment><Eye className="w-3.5 h-3.5 mr-2" />View Details</React.Fragment> : <React.Fragment><Edit3 className="w-3.5 h-3.5 mr-2" />Update Record<ArrowUpRight className="w-3.5 h-3.5 ml-2" /></React.Fragment>}
                         </Button>
                     </div>

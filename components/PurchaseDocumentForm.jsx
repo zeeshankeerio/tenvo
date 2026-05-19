@@ -503,7 +503,7 @@ export function PurchaseDocumentForm({
                             onClick={handleSave}
                             className={`h-12 px-10 rounded-xl ${THEME_CLASSES[config.theme]?.saveBtn} text-white font-black text-xs uppercase tracking-widest active:scale-95 transition-all flex items-center gap-2`}
                         >
-                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin bg-emerald-600 hover:bg-emerald-700 text-white" /> : <Save className="w-4 h-4" />}
                             Process {config.title}
                         </Button>
                     </div>

@@ -95,7 +95,7 @@ export function QuickWarehouseForm({ onSave, onCancel }) {
                 <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg"
+                    className="flex-1 h-11 rounded-xl font-bold shadow-lg bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                     Create Location

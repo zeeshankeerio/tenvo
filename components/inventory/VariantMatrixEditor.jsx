@@ -240,7 +240,7 @@ export function VariantMatrixEditor({
         {variants.length === 0 && (
           <Button
             onClick={() => setShowCreateMatrix(true)}
-            className="bg-wine hover:bg-wine/90"
+            className=" bg-emerald-600 hover:bg-emerald-700 text-white"
             disabled={!product?.id}
           >
             <Grid3x3 className="w-4 h-4 mr-2" />
@@ -399,7 +399,7 @@ export function VariantMatrixEditor({
                 <p className="text-gray-600 mb-4">
                   Create a size-color matrix to manage product variants
                 </p>
-                <Button onClick={() => setShowCreateMatrix(true)} className="bg-wine hover:bg-wine/90">
+                <Button onClick={() => setShowCreateMatrix(true)} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
                   <Grid3x3 className="w-4 h-4 mr-2" />
                   Create Variant Matrix
                 </Button>
@@ -497,7 +497,7 @@ export function VariantMatrixEditor({
               <Button variant="outline" onClick={() => setShowCreateMatrix(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleCreateMatrix} disabled={loading} className="bg-wine hover:bg-wine/90">
+              <Button onClick={handleCreateMatrix} disabled={loading} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
                 {loading ? 'Creating...' : 'Create Matrix'}
               </Button>
             </div>
@@ -572,7 +572,7 @@ export function VariantMatrixEditor({
               <Button variant="outline" onClick={() => setEditingVariant(null)}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdateVariant} disabled={loading} className="bg-wine hover:bg-wine/90">
+              <Button onClick={handleUpdateVariant} disabled={loading} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
                 <Save className="w-4 h-4 mr-2" />
                 {loading ? 'Updating...' : 'Update Variant'}
               </Button>

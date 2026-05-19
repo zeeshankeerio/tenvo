@@ -220,7 +220,7 @@ export function QuickVendorForm({ onSave, onCancel }) {
 
             <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
                 <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
-                <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button type="submit" disabled={isLoading} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Vendor'}
                 </Button>
             </div>

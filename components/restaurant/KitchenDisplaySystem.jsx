@@ -147,7 +147,7 @@ function KitchenTicket({ order, onStatusUpdate, onBump }) {
                             nextAction.color
                         )}
                     >
-                        {nextAction.next === 'ready' ? <CheckCircle className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                        {nextAction.next === 'ready' ? <CheckCircle className="w-4 h-4 bg-emerald-600 hover:bg-emerald-700 text-white" /> : <ArrowRight className="w-4 h-4" />}
                         {nextAction.label}
                     </button>
                 </div>

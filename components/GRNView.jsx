@@ -176,7 +176,7 @@ export default function GRNView({ poId, businessId, business, onUpdateStatus, co
                 </Button>
                 {!isReceived && (
                     <Button
-                        className="rounded-xl h-11 px-8 font-black shadow-lg shadow-emerald-200 transition-all hover:scale-105 active:scale-95 text-white"
+                        className="rounded-xl h-11 px-8 font-black shadow-lg shadow-emerald-200 transition-all hover:scale-105 active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white"
                         style={{ backgroundColor: '#059669' }}
                         onClick={() => onUpdateStatus?.(purchase.id, 'received')}
                     >

@@ -283,7 +283,7 @@ export function ExpenseEntryForm({
                     <Button
                         disabled={isSaving}
                         onClick={handleSave}
-                        className="h-12 px-10 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-red-500/20 active:scale-95 transition-all flex items-center gap-2"
+                        className="h-12 px-10 rounded-xl font-black uppercase tracking-widest shadow-xl shadow-red-500/20 active:scale-95 transition-all flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                     >
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Record Expense

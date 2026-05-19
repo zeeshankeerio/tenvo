@@ -225,7 +225,7 @@ export function CostingMethodSelector({ businessId, currentMethod = 'FIFO', onUp
                         <Button
                             onClick={handleSave}
                             disabled={loading}
-                            className="bg-wine hover:bg-wine/90"
+                            className=" bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             {loading ? 'Saving...' : 'Save Changes'}
                         </Button>

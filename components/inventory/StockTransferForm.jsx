@@ -336,7 +336,7 @@ export function StockTransferForm({
                                 parseFloat(formData.quantity) <= 0 ||
                                 parseFloat(formData.quantity) > availableStock
                             }
-                            className="bg-wine hover:bg-wine/90"
+                            className=" bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             <Send className="w-4 h-4 mr-2" />
                             {loading ? 'Initiating Transfer...' : 'Initiate Transfer'}

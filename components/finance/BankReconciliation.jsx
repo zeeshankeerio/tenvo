@@ -492,7 +492,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                                             ...prev,
                                             { id: Date.now(), statement_date: newSession.statement_date, description: '', debit: '', credit: '' }
                                         ])}
-                                        className="text-xs h-7 px-3 text-brand-primary"
+                                        className="text-xs h-7 px-3 text-emerald-600"
                                     >
                                         <Plus className="w-3 h-3 mr-1" /> Add Line
                                     </Button>
@@ -546,7 +546,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                                     size="sm"
                                     onClick={handleCreateSession}
                                     disabled={creating}
-                                    className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl text-xs h-9 px-6"
+                                    className="emerald-600 hover:emerald-700 rounded-xl h-9 px-6 bg-emerald-600 hover:bg-emerald-700 text-white"
                                 >
                                     {creating ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <GitMerge className="w-4 h-4 mr-1.5" />}
                                     Start Reconciliation

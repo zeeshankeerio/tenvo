@@ -117,7 +117,7 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                                         }
                                     }
                                 }}
-                                className="w-full mt-3 py-1.5 bg-wine text-white rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-wine/90 transition-colors shadow-sm shadow-wine/10"
+                                className="w-full mt-3 py-1.5 rounded-lg font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-colors shadow-sm shadow-wine/10 bg-emerald-600 hover:bg-emerald-700 text-white"
                             >
                                 <ShoppingCart className="w-3.5 h-3.5" />
                                 Draft Restock Order

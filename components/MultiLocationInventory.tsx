@@ -586,7 +586,7 @@ export function MultiLocationInventory({
                         <Button variant="outline" onClick={() => setShowAddDialog(false)}>
                             Cancel
                         </Button>
-                        <Button onClick={handleAddLocation} disabled={isSubmitting}>
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all" onClick={handleAddLocation} disabled={isSubmitting}>
                             {isSubmitting ? 'Adding...' : 'Add Location'}
                         </Button>
                     </div>
@@ -690,7 +690,7 @@ export function MultiLocationInventory({
                         <Button variant="outline" onClick={() => setShowEditDialog(false)}>
                             Cancel
                         </Button>
-                        <Button onClick={handleUpdateLocation} disabled={isSubmitting}>
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all" onClick={handleUpdateLocation} disabled={isSubmitting}>
                             {isSubmitting ? 'Updating...' : 'Update Location'}
                         </Button>
                     </div>
@@ -791,7 +791,7 @@ export function MultiLocationInventory({
                         <Button variant="outline" onClick={() => setShowTransferDialog(false)}>
                             Cancel
                         </Button>
-                        <Button onClick={handleStockTransfer} disabled={isSubmitting}>
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all" onClick={handleStockTransfer} disabled={isSubmitting}>
                             {isSubmitting ? 'Transferring...' : 'Transfer Stock'}
                         </Button>
                     </div>

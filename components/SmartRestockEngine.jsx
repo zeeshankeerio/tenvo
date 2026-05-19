@@ -245,7 +245,7 @@ export const SmartRestockEngine = memo(function SmartRestockEngine({
             {restockSuggestions.length > 0 && (
                 <CardFooter className="bg-wine/[0.02] border-t border-wine/5 p-4">
                     <Button
-                        className="w-full bg-wine hover:bg-wine/90 text-white font-black text-sm h-10 shadow-md shadow-wine/20 rounded-xl group"
+                        className="w-full font-black h-10 shadow-md shadow-wine/20 rounded-xl group bg-emerald-600 hover:bg-emerald-700 text-white"
                         disabled={selectedItems.length === 0 || isGenerating || !effectiveBusinessId}
                         onClick={handleBulkRestock}
                     >

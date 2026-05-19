@@ -699,7 +699,7 @@ export function QuickInvoiceModal({
                                 type="button"
                                 onClick={handleCompleteSale}
                                 disabled={isSubmitting}
-                                className="ml-auto h-9 bg-wine hover:bg-wine/90 text-white"
+                                className="ml-auto h-9 bg-emerald-600 hover:bg-emerald-700 text-white"
                             >
                                 {isSubmitting ? 'Processing...' : `Pay ${formatCurrency(totals.total, currency)}`}
                             </Button>
@@ -724,7 +724,7 @@ export function QuickInvoiceModal({
                         type="button"
                         onClick={handleCompleteSale}
                         disabled={cartItems.length === 0 || isSubmitting}
-                        className="flex-1 bg-wine hover:bg-wine/90 text-white font-bold h-11 text-lg"
+                        className="flex-1 font-bold h-11 bg-emerald-600 hover:bg-emerald-700 text-white"
                     >
                         <Check className="w-4 h-4 mr-2" />
                         {isSubmitting ? 'Processing...' : 'Complete Sale (Shift+Enter)'}

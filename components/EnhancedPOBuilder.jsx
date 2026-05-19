@@ -356,7 +356,7 @@ export default function EnhancedPOBuilder({ businessId, onSuccess, onCancel, cat
                     <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="w-full font-black rounded-xl h-11 shadow-lg mt-4"
+                        className="w-full font-black rounded-xl h-11 shadow-lg mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
                         style={{ backgroundColor: colors?.primary, boxShadow: `0 8px 16px -4px ${colors?.primary}40` }}
                     >
                         {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}

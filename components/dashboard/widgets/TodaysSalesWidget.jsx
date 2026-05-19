@@ -249,7 +249,7 @@ export function TodaysSalesWidget({
           {onCreateInvoice && (
             <Button
               onClick={onCreateInvoice}
-              className="w-full bg-wine hover:bg-wine/90 text-white font-bold"
+              className="w-full font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
               size="sm"
             >
               <Plus className="w-4 h-4 mr-2" />

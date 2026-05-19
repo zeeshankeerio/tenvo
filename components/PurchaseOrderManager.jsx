@@ -162,7 +162,7 @@ export function PurchaseOrderManager({ purchaseOrders = [], onCreate, onUpdateSt
             onClick={() => {
               setShowPOForm(true);
             }}
-            className="bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all font-bold h-11 px-6"
+            className="rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all font-bold h-11 px-6 bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Purchase

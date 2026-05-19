@@ -137,7 +137,7 @@ function KitchenTicket({ order, onStatusUpdate }) {
                     {order.status === 'pending' && (
                         <Button
                             size="sm"
-                            className="flex-1 h-7 text-[10px] font-bold bg-blue-600 hover:bg-blue-700"
+                            className="flex-1 h-7 font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
                             onClick={() => onStatusUpdate(order.id, 'preparing')}
                         >
                             <ChefHat className="w-3 h-3 mr-1" /> Start

@@ -482,7 +482,7 @@ export function VendorForm({ initialData = null, onSave, onClose, onEntitlementE
 
                 <div className="flex justify-end gap-3 pt-6 border-t font-bold sticky bottom-0 bg-white pb-6 z-10">
                     <Button variant="ghost" className="text-gray-400 hover:text-wine rounded-xl px-6" onClick={onClose}>Discard</Button>
-                    <Button onClick={handleSave} disabled={isLoading} className="text-white px-10 rounded-xl shadow-xl transition-all active:scale-95" style={{ backgroundColor: colors.primary }}>
+                    <Button onClick={handleSave} disabled={isLoading} className="px-10 rounded-xl shadow-xl transition-all active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white" >
                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (initialData ? 'Save Changes' : 'Onboard Supplier')}
                     </Button>
                 </div>

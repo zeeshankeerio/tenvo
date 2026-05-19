@@ -330,12 +330,12 @@ export function PosRefundPanel({ businessId }) {
                                                 <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                                                     <div className="flex items-center gap-1">
                                                         <button onClick={() => updateRefundQty(item.productId, -1)}
-                                                            className="w-6 h-6 rounded-md bg-white border flex items-center justify-center">
+                                                            className="w-6 h-6 rounded-md border flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white">
                                                             <Minus className="w-3 h-3 text-gray-500" />
                                                         </button>
                                                         <span className="w-6 text-center text-xs font-black">{ri.refundQty}</span>
                                                         <button onClick={() => updateRefundQty(item.productId, 1)}
-                                                            className="w-6 h-6 rounded-md bg-white border flex items-center justify-center">
+                                                            className="w-6 h-6 rounded-md border flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white">
                                                             <Plus className="w-3 h-3 text-gray-500" />
                                                         </button>
                                                     </div>

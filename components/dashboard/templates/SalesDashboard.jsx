@@ -182,7 +182,7 @@ export function SalesDashboard({
             <Button
               onClick={() => onQuickAction?.('create-invoice')}
               size="lg"
-              className="bg-wine hover:bg-wine/90 text-white font-bold px-8"
+              className="font-bold px-8 bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               <Plus className="w-5 h-5 mr-2" />
               {t.new_invoice || 'New Invoice'}

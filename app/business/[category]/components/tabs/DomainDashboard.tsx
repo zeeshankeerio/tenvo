@@ -1058,7 +1058,7 @@ export function DomainDashboard({
                                     <p className="text-[11px] text-slate-400 mt-0.5">Create your first invoice to get started</p>
                                     <Button
                                         size="sm"
-                                        className="mt-3 bg-[#e34242] hover:bg-[#c49c3b] text-white text-[11px] font-bold h-7"
+                                        className="mt-3 font-bold h-7 bg-emerald-600 hover:bg-emerald-700 text-white"
                                         onClick={() => onQuickAction?.('new-invoice')}
                                     >
                                         <Plus className="w-3.5 h-3.5 mr-1" />

@@ -346,7 +346,7 @@ export function BulkOperationsPanel({
                             onClick={handleBulkUpdate}
                             disabled={!updateField || updateValue === '' || isProcessing}
                         >
-                            {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin bg-emerald-600 hover:bg-emerald-700 text-white" />}
                             Update {selectedRows.length} Items
                         </Button>
                     </DialogFooter>

@@ -245,7 +245,7 @@ export function ReportBuilder({ businessId, currency = 'Rs.' }) {
                 <Button variant="outline" className="h-10 text-xs font-bold rounded-xl border-2">
                     <Download className="w-4 h-4 mr-2" /> Export PDF
                 </Button>
-                <Button className="h-10 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700">
+                <Button className="h-10 font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white">
                     <Save className="w-4 h-4 mr-2" /> Save Report
                 </Button>
             </div>

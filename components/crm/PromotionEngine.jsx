@@ -400,7 +400,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                         <Button
                             onClick={handleSave}
                             disabled={!formData.name.trim()}
-                            className="h-10 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-md px-6"
+                            className="h-10 rounded-xl font-bold from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-md px-6 bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             <CheckCircle2 className="w-4 h-4 mr-1.5" />
                             {isEditing ? 'Update Promotion' : 'Create Promotion'}

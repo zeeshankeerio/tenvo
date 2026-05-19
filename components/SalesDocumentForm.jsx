@@ -503,7 +503,7 @@ export function SalesDocumentForm({
                         <Button
                             disabled={isSaving}
                             onClick={handleSave}
-                            className="bg-wine-600 hover:opacity-90 text-white font-black px-8 h-12 rounded-xl transition-all active:scale-95 flex items-center gap-2"
+                            className="hover:opacity-90 font-black px-8 h-12 rounded-xl transition-all active:scale-95 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             Save {config.title}

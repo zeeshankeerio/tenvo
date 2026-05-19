@@ -154,7 +154,7 @@ export default function MarketingFooter({ variant = 'default' }) {
                 />
                 <Button
                   type="submit"
-                  className="bg-brand-primary hover:bg-brand-primary-dark text-neutral-900 font-bold rounded-xl"
+                  className="emerald-600 hover:emerald-700 text-neutral-900 font-bold rounded-xl"
                   disabled={loading}
                 >
                   {loading ? 'Subscribing...' : 'Subscribe'}

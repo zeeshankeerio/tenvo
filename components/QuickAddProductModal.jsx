@@ -328,7 +328,7 @@ export function SmartQuickAddModal({
                         </Button>
                         <Button
                             type="submit"
-                            className="rounded-xl bg-blue-600 text-white hover:bg-blue-700 px-8 font-black shadow-lg shadow-blue-200 transition-all active:scale-95 group"
+                            className="rounded-xl px-8 font-black shadow-lg shadow-blue-200 transition-all active:scale-95 group bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             Quick Deploy <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>

@@ -467,7 +467,7 @@ export function AdvancedInventoryFeatures({
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-wine hover:bg-wine/90">
+            <Button onClick={handleSave} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
               <CheckCircle2 className="w-4 h-4 mr-2" />
               Save Changes
             </Button>

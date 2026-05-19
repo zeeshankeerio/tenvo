@@ -555,7 +555,7 @@ export function ReservationManager({ businessId, tables = [], onSave }) {
                         <Button variant="outline" onClick={() => setShowDialog(false)} className="rounded-lg text-xs font-bold">
                             Cancel
                         </Button>
-                        <Button onClick={handleSave} className="rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700">
+                        <Button onClick={handleSave} className="rounded-lg font-bold bg-emerald-600 hover:bg-emerald-700 text-white">
                             {editingReservation ? 'Update Booking' : 'Create Booking'}
                         </Button>
                     </DialogFooter>

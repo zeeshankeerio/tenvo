@@ -171,7 +171,7 @@ export function FloorPlanEditor({
                     <Button
                         onClick={handleSaveLayout}
                         disabled={isSaving}
-                        className="h-10 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-lg shadow-indigo-100 text-xs font-bold px-6"
+                        className="h-10 rounded-xl from-indigo-500 to-indigo-600 shadow-lg shadow-indigo-100 font-bold px-6 bg-emerald-600 hover:bg-emerald-700 text-white"
                     >
                         {isSaving ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save Floor Plan</>}
                     </Button>
@@ -277,14 +277,14 @@ export function FloorPlanEditor({
                                         <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
                                             <button
                                                 onClick={() => handleUpdateTable(selectedTable.id, { capacity: Math.max(1, selectedTable.capacity - 1) })}
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-sm border border-gray-100 hover:bg-gray-50"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg shadow-sm border border-gray-100 bg-emerald-600 hover:bg-emerald-700 text-white"
                                             >
                                                 -
                                             </button>
                                             <span className="flex-1 text-center text-xs font-black">{selectedTable.capacity}</span>
                                             <button
                                                 onClick={() => handleUpdateTable(selectedTable.id, { capacity: selectedTable.capacity + 1 })}
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-sm border border-gray-100 hover:bg-gray-50"
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg shadow-sm border border-gray-100 bg-emerald-600 hover:bg-emerald-700 text-white"
                                             >
                                                 +
                                             </button>

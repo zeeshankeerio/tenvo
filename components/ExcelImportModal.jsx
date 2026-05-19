@@ -409,7 +409,7 @@ export function ExcelImportModal({ onImport, onCancel, existingProducts = {} }) 
                 disabled={loading || (step === 2 && !selectedSheet) || (step === 3 && importSummary?.rowsWithErrors === importSummary?.totalRows)}
               >
                 {step === 1 ? 'Choose File' : step === 2 ? 'Validate' : 'Confirm'}
-                <ChevronRight className="w-4 h-4 ml-2" />
+                <ChevronRight className="w-4 h-4 ml-2 bg-emerald-600 hover:bg-emerald-700 text-white" />
               </Button>
             )}
 

@@ -285,7 +285,7 @@ export function ProductDetailsDialog({
                         <Button variant="ghost" onClick={isEditing ? () => setIsEditing(false) : onClose} className="rounded-xl font-black uppercase text-[10px] tracking-widest px-6 hover:bg-gray-200 hover:text-gray-900 transition-all active:scale-95">
                             {isEditing ? 'Cancel' : 'Close'}
                         </Button>
-                        <Button onClick={() => setIsEditing(!isEditing)} className="rounded-xl bg-blue-600 text-white font-black uppercase text-[10px] tracking-widest px-6 shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95 border-none">
+                        <Button onClick={() => setIsEditing(!isEditing)} className="rounded-xl font-black uppercase tracking-widest px-6 shadow-lg shadow-blue-100 transition-all active:scale-95 border-none bg-emerald-600 hover:bg-emerald-700 text-white">
                             {isEditing ? (
                                 <React.Fragment>
                                     <Eye className="w-3.5 h-3.5 mr-2" />

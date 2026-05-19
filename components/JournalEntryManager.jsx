@@ -168,7 +168,7 @@ export default function JournalEntryManager({ businessId, onSuccess, colors }) {
                             }
                         }}
                         disabled={submitting}
-                        className="mt-4"
+                        className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
                         style={{ backgroundColor: colors?.primary }}
                     >
                         {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
@@ -311,7 +311,7 @@ export default function JournalEntryManager({ businessId, onSuccess, colors }) {
                     <Button
                         onClick={handleSubmit}
                         disabled={submitting || totals.diff > 0.01 || totals.debit === 0}
-                        className="w-48 font-bold shadow-lg"
+                        className="w-48 font-bold shadow-lg bg-emerald-600 hover:bg-emerald-700 text-white"
                         style={{ backgroundColor: colors?.primary }}
                     >
                         {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}

@@ -438,7 +438,7 @@ export function BatchManager({
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={loading} className="bg-wine hover:bg-wine/90">
+                            <Button type="submit" disabled={loading} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
                                 <Save className="w-4 h-4 mr-2" />
                                 {loading ? 'Creating...' : 'Create Batch'}
                             </Button>

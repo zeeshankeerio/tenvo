@@ -245,7 +245,7 @@ export function UserManager({ trigger }) {
                             <Button type="button" variant="ghost" onClick={() => setShowProfileDialog(false)} className="flex-1 font-bold rounded-xl h-11">
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={isUpdating} className="flex-1 bg-wine hover:bg-wine/90 text-white font-bold rounded-xl h-11 shadow-lg shadow-wine/20">
+                            <Button type="submit" disabled={isUpdating} className="flex-1 font-bold rounded-xl h-11 shadow-lg shadow-wine/20 bg-emerald-600 hover:bg-emerald-700 text-white">
                                 {isUpdating ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </DialogFooter>

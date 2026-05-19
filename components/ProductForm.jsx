@@ -1171,13 +1171,13 @@ export function ProductForm({
                                         type="button"
                                         onClick={(e) => handleSubmit(e, true)}
                                         disabled={isLoading}
-                                        className="font-black px-6 h-11 rounded-2xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
+                                        className="font-black px-6 h-11 rounded-2xl border border-white/10 transition-all bg-emerald-600 hover:bg-emerald-700 text-white"
                                     >
                                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save & Next'}
                                     </Button>
                                 )}
 
-                                <Button type="submit" disabled={isLoading} className="bg-indigo-600 hover:bg-indigo-500 text-white font-black px-10 h-11 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                                <Button type="submit" disabled={isLoading} className="font-black px-10 h-11 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
                                     {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (product ? <><Save className="w-4 h-4" /> Finalize Update</> : <><CheckCircle2 className="w-4 h-4" /> Deploy to Stock</>)}
                                 </Button>
                             </div>

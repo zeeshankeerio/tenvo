@@ -198,7 +198,7 @@ export function ApprovalThresholdConfig({ businessId, currentThreshold = 10000, 
                         <Button
                             onClick={handleSave}
                             disabled={loading}
-                            className="bg-wine hover:bg-wine/90"
+                            className=" bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             <Save className="w-4 h-4 mr-2" />
                             {loading ? 'Saving...' : 'Save Threshold'}

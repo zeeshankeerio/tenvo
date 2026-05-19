@@ -259,7 +259,7 @@ export function SerialScanner({
                             />
                         </div>
 
-                        <Button type="submit" disabled={loading} className="w-full bg-wine hover:bg-wine/90">
+                        <Button type="submit" disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
                             <Scan className="w-4 h-4 mr-2" />
                             {loading ? 'Verifying...' : 'Verify Serial'}
                         </Button>
@@ -415,7 +415,7 @@ export function SerialScanner({
                         <Button
                             type="submit"
                             disabled={loading || !product?.id}
-                            className="bg-wine hover:bg-wine/90"
+                            className=" bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             <Check className="w-4 h-4 mr-2" />
                             {!product?.id ? 'Select Product' : loading ? 'Registering...' : 'Register Serial'}

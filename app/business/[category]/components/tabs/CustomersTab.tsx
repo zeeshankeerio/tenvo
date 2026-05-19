@@ -136,7 +136,7 @@ export function CustomersTab({
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => onUpdate?.(row.original)}
-                                            className="h-8 w-8 text-brand-primary hover:text-brand-primary-dark"
+                                            className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
                                         >
                                             <Pencil className="w-4 h-4" />
                                         </Button>

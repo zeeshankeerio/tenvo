@@ -458,7 +458,7 @@ export function SerialTrackingManager({ businessId, productId, warehouseId, prod
                             <Button
                                 type="submit"
                                 disabled={loading}
-                                className="bg-wine hover:bg-wine/90"
+                                className=" bg-emerald-600 hover:bg-emerald-700 text-white"
                             >
                                 <Check className="w-4 h-4 mr-2" />
                                 {loading ? 'Registering...' : 'Register Serial'}

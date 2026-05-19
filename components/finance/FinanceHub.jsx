@@ -335,7 +335,7 @@ function CreditNotesPanel({ businessId, creditNotes, currency, onRefresh }) {
                                 <Button
                                     onClick={handleSubmit}
                                     disabled={submitting || totalCredit === 0}
-                                    className="bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs h-9 px-6 shadow-lg shadow-red-500/20"
+                                    className="rounded-xl font-bold h-9 px-6 shadow-lg shadow-red-500/20 bg-emerald-600 hover:bg-emerald-700 text-white"
                                 >
                                     {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCcw className="w-3 h-3 mr-1.5" />}
                                     Issue Credit Note ({currency} {totalCredit.toLocaleString()})

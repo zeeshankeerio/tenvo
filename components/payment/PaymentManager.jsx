@@ -329,7 +329,7 @@ export default function PaymentManager({
                                 </div>
 
                                 <Button
-                                    className="w-full mt-2 bg-wine hover:bg-wine/90"
+                                    className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                                     onClick={handleCreatePayment}
                                     disabled={isSubmitting}
                                 >

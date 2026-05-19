@@ -688,7 +688,7 @@ export function BatchTrackingManager({
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="h-4 w-4 mr-2 bg-emerald-600 hover:bg-emerald-700 text-white" />
                 Save Batch
               </Button>
             </DialogFooter>

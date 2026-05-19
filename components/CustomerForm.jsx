@@ -558,7 +558,7 @@ export function CustomerForm({
 
                     <div className="flex justify-end gap-3 pt-6 border-t font-bold sticky bottom-0 bg-white pb-2 z-10">
                         <Button variant="ghost" className="text-gray-400 hover:text-wine hover:bg-wine/5 rounded-xl px-6" onClick={onClose}>Cancel</Button>
-                        <Button onClick={handleSubmit} disabled={isLoading} className="bg-wine hover:bg-wine/90 text-white px-10 rounded-xl shadow-lg shadow-wine/20 transition-all active:scale-95">
+                        <Button onClick={handleSubmit} disabled={isLoading} className="px-10 rounded-xl shadow-lg shadow-wine/20 transition-all active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white">
                             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (initialData ? 'Update Customer' : 'Confirm & Add Customer')}
                         </Button>
                     </div>

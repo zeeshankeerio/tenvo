@@ -113,7 +113,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
                 </div>
                 <Button
                     onClick={() => setShowCreateForm(prev => !prev)}
-                    className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl font-bold text-xs px-5 shadow-lg shadow-brand-primary/20"
+                    className="emerald-600 hover:emerald-700 rounded-xl font-bold px-5 shadow-lg shadow-emerald-600/20 bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                     <Plus className="w-4 h-4 mr-1.5" /> New Period
                 </Button>
@@ -166,7 +166,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
                             size="sm"
                             onClick={handleCreate}
                             disabled={working}
-                            className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl text-xs h-9 px-6"
+                            className="emerald-600 hover:emerald-700 rounded-xl h-9 px-6 bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             {working ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Calendar className="w-4 h-4 mr-1.5" />}
                             Create Period
@@ -183,7 +183,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
                     <p className="text-xs mt-1">Create a fiscal period to control which dates accept GL postings.</p>
                     <Button
                         onClick={() => setShowCreateForm(true)}
-                        className="mt-4 bg-brand-primary text-white rounded-xl text-xs px-6 h-9"
+                        className="mt-4 emerald-600 rounded-xl px-6 h-9 bg-emerald-600 hover:bg-emerald-700 text-white"
                     >
                         <Plus className="w-4 h-4 mr-1.5" /> Create First Period
                     </Button>

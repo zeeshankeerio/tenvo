@@ -249,7 +249,7 @@ export function SettingsManager({ category }) {
           <Button
             onClick={handleProfileSave}
             disabled={isSaving}
-            className="bg-wine hover:bg-wine/90 text-white font-black shadow-lg shadow-wine/20 rounded-xl px-8 h-11"
+            className="font-black shadow-lg shadow-wine/20 rounded-xl px-8 h-11 bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             <Save className="w-4 h-4 mr-2" />
             Save Changes
@@ -440,7 +440,7 @@ export function SettingsManager({ category }) {
                   </div>
                 </div>
                 <Button
-                  className="bg-green-600 hover:bg-green-700 text-white rounded-xl h-11 px-6 font-bold w-full md:w-auto"
+                  className="rounded-xl h-11 px-6 font-bold w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={async () => {
                     const newPassword = document.getElementById('new-password').value;
                     const confirmPassword = document.getElementById('confirm-password').value;
@@ -706,7 +706,7 @@ export function SettingsManager({ category }) {
                       disabled={planBusy}
                       className={`text-left rounded-2xl border p-4 transition-all ${selected ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-indigo-300'}`}
                     >
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-1 bg-emerald-600 hover:bg-emerald-700 text-white">
                         <span className="text-sm font-black text-gray-900">{config.name}</span>
                         {selected && <span className="text-[10px] font-black uppercase text-indigo-600">Current</span>}
                       </div>

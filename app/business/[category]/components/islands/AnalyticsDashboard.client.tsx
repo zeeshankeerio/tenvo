@@ -63,7 +63,7 @@ export function AnalyticsDashboard({ businessId, chartData, products, invoices, 
                     <div className="mt-4 flex items-center justify-center gap-2">
                         <button
                             onClick={() => onQuickAction?.('new-invoice')}
-                            className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg bg-brand-primary text-white hover:bg-brand-primary-dark transition-colors"
+                            className="px-3 py-1.5 font-black uppercase tracking-wider rounded-lg emerald-600 hover:emerald-700 transition-colors bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             Create Invoice
                         </button>

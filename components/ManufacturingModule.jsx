@@ -428,12 +428,12 @@ export function ManufacturingModule({
                   </div>
                   <div className="flex gap-2">
                     {order.status === 'planned' && (
-                      <Button size="sm" onClick={() => handleUpdateStatus(order.id, 'in-progress')} className="bg-blue-600 hover:bg-blue-700 text-white">
+                      <Button size="sm" onClick={() => handleUpdateStatus(order.id, 'in-progress')} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
                         <Play className="w-4 h-4 mr-2" /> Start
                       </Button>
                     )}
                     {order.status === 'in-progress' && (
-                      <Button size="sm" onClick={() => handleUpdateStatus(order.id, 'completed')} className="bg-green-600 hover:bg-green-700 text-white">
+                      <Button size="sm" onClick={() => handleUpdateStatus(order.id, 'completed')} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
                         <CheckSquare className="w-4 h-4 mr-2" /> Complete
                       </Button>
                     )}
@@ -507,7 +507,7 @@ export function ManufacturingModule({
                     <Button
                       size="sm"
                       onClick={() => handleUpdateStatus(order.id, 'completed')}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-10 shadow-md transition-all active:scale-[0.98]"
+                      className="w-full font-bold h-10 shadow-md transition-all active:scale-[0.98] bg-emerald-600 hover:bg-emerald-700 text-white"
                     >
                       <CheckCircle2 className="w-4 h-4 mr-2" />
                       Mark Batch as Finished
@@ -686,7 +686,7 @@ export function ManufacturingModule({
                 <Button variant="outline" onClick={() => setShowBOMForm(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleSaveBOM} disabled={isLoading} className="bg-wine hover:bg-wine/90 text-white">
+                <Button onClick={handleSaveBOM} disabled={isLoading} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save BOM'}
                 </Button>
               </div>
@@ -783,7 +783,7 @@ export function ManufacturingModule({
                 <Button variant="outline" onClick={() => setShowProductionForm(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateProductionOrder} disabled={isLoading} className="bg-wine hover:bg-wine/90 text-white">
+                <Button onClick={handleCreateProductionOrder} disabled={isLoading} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Order'}
                 </Button>
               </div>
@@ -804,7 +804,7 @@ export function ManufacturingModule({
             <Button variant="outline" onClick={() => setShowCompleteDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={confirmCompletion} disabled={isLoading} className="bg-green-600 hover:bg-green-700 text-white">
+            <Button onClick={confirmCompletion} disabled={isLoading} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Completion'}
             </Button>
           </div>
@@ -823,7 +823,7 @@ export function ManufacturingModule({
             <Button variant="outline" onClick={() => setShowDeleteBOMDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={confirmDeleteBOM} disabled={isLoading} className="bg-red-600 hover:bg-red-700 text-white">
+            <Button onClick={confirmDeleteBOM} disabled={isLoading} className=" bg-emerald-600 hover:bg-emerald-700 text-white">
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete BOM'}
             </Button>
           </div>

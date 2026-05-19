@@ -244,7 +244,7 @@ export function DiscountSchemeManager({
                 <Button variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>
                   Cancel
                 </Button>
-                <Button onClick={handleSave} disabled={!formData.name || formData.value <= 0}>
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all" onClick={handleSave} disabled={!formData.name || formData.value <= 0}>
                   {editingScheme ? 'Update' : 'Create'} Scheme
                 </Button>
               </div>

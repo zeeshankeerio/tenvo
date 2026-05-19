@@ -498,7 +498,7 @@ export function ExcelModeModal({
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-4 text-slate-500">
                             <button onClick={handleClear} className="hover:text-red-400 transition-colors flex items-center gap-1.5"><Eraser className="w-3.5 h-3.5" /> Clear Workspace</button>
-                            <button onClick={() => { const csv = localData.map(r => enhancedColumns.map(c => `"${r[c.accessorKey] || ''}"`).join(',')).join('\n'); const b = new Blob([csv], { type: 'text/csv' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'export.csv'; a.click(); }} className="hover:text-blue-400 transition-colors flex items-center gap-1.5"><Download className="w-3.5 h-3.5" /> Export CSV</button>
+                            <button onClick={() => { const csv = localData.map(r => enhancedColumns.map(c => `"${r[c.accessorKey] || ''}"`).join(',')).join('\n'); const b = new Blob([csv], { type: 'text/csv' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'export.csv'; a.click(); }} className="hover:text-blue-400 transition-colors flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"><Download className="w-3.5 h-3.5" /> Export CSV</button>
                         </div>
                         <div className="h-4 w-px bg-slate-700" />
                         <span className="text-slate-300">INTELLIGENT MODE ACTIVE</span>

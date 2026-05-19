@@ -308,7 +308,7 @@ export function TransferReceiptConfirmation({
                                     parseFloat(receivedQuantity) <= 0 ||
                                     parseFloat(receivedQuantity) > selectedTransfer.quantity_requested
                                 }
-                                className="bg-green-600 hover:bg-green-700"
+                                className=" bg-emerald-600 hover:bg-emerald-700 text-white"
                             >
                                 <Check className="w-4 h-4 mr-2" />
                                 {loading ? 'Confirming...' : 'Confirm Receipt'}

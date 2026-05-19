@@ -1666,7 +1666,7 @@ export function EnhancedInvoiceBuilder({
                 type="button"
                 disabled={isSaving}
                 onClick={handleSave}
-                className="flex-1 md:flex-none bg-wine-600 hover:opacity-90 text-white font-black px-8 h-12 rounded-xl shadow-xl shadow-wine-600/20 transition-all active:scale-95"
+                className="flex-1 md:flex-none hover:opacity-90 font-black px-8 h-12 rounded-xl shadow-xl shadow-wine-600/20 transition-all active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
                 Save Draft

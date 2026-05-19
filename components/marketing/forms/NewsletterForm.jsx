@@ -102,7 +102,7 @@ export function NewsletterForm({ variant = 'inline', className = '' }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-brand-primary text-white font-medium rounded-lg hover:bg-brand-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="px-6 py-2 emerald-600 text-white font-medium rounded-lg hover:emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {isSubmitting ? 'Subscribing...' : 'Subscribe'}
             </button>
@@ -157,7 +157,7 @@ export function NewsletterForm({ variant = 'inline', className = '' }) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full px-6 py-3 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-6 py-3 emerald-600 text-white font-semibold rounded-lg hover:emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Subscribing...' : 'Subscribe to Newsletter'}
         </button>

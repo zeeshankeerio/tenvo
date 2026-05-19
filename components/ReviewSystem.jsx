@@ -124,7 +124,7 @@ export function ReviewSystem({ category = 'system', targetName = '', targetId = 
                                     />
                                 </div>
                                 <DialogFooter>
-                                    <Button type="submit">Submit Review</Button>
+                                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all" type="submit">Submit Review</Button>
                                 </DialogFooter>
                             </form>
                         </DialogContent>

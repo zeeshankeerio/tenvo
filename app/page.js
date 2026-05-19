@@ -63,12 +63,12 @@ export default function Home() {
 
   // --- STATE FOR INTERACTIVE COMPONENTS ---
   const [activeFeatureTab, setActiveFeatureTab] = useState('inventory');
-  
+
   // Cost & Margin Calculator State
   const [calcCost, setCalcCost] = useState(1200);
   const [calcMargin, setCalcMargin] = useState(25);
   const [calcTaxRate, setCalcTaxRate] = useState(18); // FBR standard GST 18%
-  
+
   // Live calculations
   const marginAmount = Math.round((calcCost * calcMargin) / 100);
   const basePrice = Number(calcCost) + Number(marginAmount);
@@ -110,7 +110,7 @@ export default function Home() {
   const runExcelSimulation = () => {
     setIsSimulatingExcel(true);
     setSimulationStatus('processing');
-    
+
     // Simulate line-by-line smart FBR/SKU validation
     setTimeout(() => {
       setExcelRows(prev => prev.map((row, idx) => {
@@ -143,25 +143,25 @@ export default function Home() {
 
   return (
     <MarketingLayout transparentNav={true}>
-      
+
       {/* 1. HERO SECTION - Zoho Inventory Accurate Clone with Zeeshan Keerio & Styled CSS Boxes */}
       <section className="bg-brand-50 pt-16 pb-12 lg:pt-20 lg:pb-16 overflow-hidden relative border-b border-neutral-200/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
-            
+
             {/* Left Content Column */}
             <div className="lg:col-span-6 space-y-6 lg:space-y-8 max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-brand-primary">
                 <ShieldCheck className="h-4 w-4" />
                 Pakistan-Ready Enterprise Operations
               </div>
-              
+
               <div className="space-y-4">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[4rem] font-extrabold tracking-tight text-neutral-900 leading-[1.1]">
-                  Run your entire business from one <span className="text-brand-primary">simple dashboard</span>
+                  Run Your Entire Business From One <span className="text-brand-primary">Intelligent Dashboard</span>
                 </h1>
                 <p className="max-w-xl text-lg sm:text-xl font-medium leading-relaxed text-neutral-600">
-                  Say goodbye to messy spreadsheets. Tenvo automatically tracks your stock, syncs with online stores and couriers, and handles FBR tax compliance for you—so you can focus on growing your business.
+                  From sales to HR, accounts to inventory, Tenvo is your all‑in‑one ERP and POS platform. Manage multiple domains and tenants seamlessly, track stock in real time, sync with online stores and couriers, and stay compliant with FBR regulations—without the chaos of spreadsheets.
                 </p>
               </div>
 
@@ -178,7 +178,7 @@ export default function Home() {
 
             {/* Right Column: Zoho Clone Masterpiece Visual (Zeeshan Keerio + Stacked CSS Boxes + 5 Floating Cards) */}
             <div className="lg:col-span-6 relative h-[450px] sm:h-[550px] lg:h-[600px] w-full flex items-end justify-center mt-12 lg:mt-0">
-              
+
               {/* STACKED CARDBOARD BOXES (Minimalist CSS Shapes replicating stacked boxes in photo) */}
               <div className="absolute inset-0 z-0 pointer-events-none">
                 {/* Large Background Box Right */}
@@ -237,7 +237,7 @@ export default function Home() {
               {/* Widget 2: Total Sales & Sync ring (Upper Right) */}
               <div className="absolute right-[-2%] top-[6%] z-20 bg-white border border-neutral-200/80 rounded-2xl p-4 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.12)] w-[160px] transform hover:-translate-y-1 transition-all duration-300 text-center">
                 <h5 className="font-extrabold text-[10px] text-neutral-400 uppercase tracking-wider mb-2">Omnichannel Sync</h5>
-                
+
                 {/* Visual Sync Ring */}
                 <div className="relative w-16 h-16 mx-auto mb-2 flex items-center justify-center">
                   <div className="absolute inset-0 rounded-full border-4 border-dashed border-brand-primary/40 animate-spin duration-10000" />
@@ -328,16 +328,15 @@ export default function Home() {
 
           {/* Interactive Hub Tabs */}
           <div className="grid lg:grid-cols-12 gap-8 items-start">
-            
+
             {/* Left Hand side Tab List */}
             <div className="lg:col-span-4 space-y-3">
               <button
                 onClick={() => setActiveFeatureTab('inventory')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-                  activeFeatureTab === 'inventory'
-                    ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                    : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                }`}
+                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeFeatureTab === 'inventory'
+                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
+                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
+                  }`}
               >
                 <div className={`p-3 rounded-xl ${activeFeatureTab === 'inventory' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
                   <Package className="w-5 h-5" />
@@ -350,11 +349,10 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveFeatureTab('warehouse')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-                  activeFeatureTab === 'warehouse'
-                    ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                    : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                }`}
+                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeFeatureTab === 'warehouse'
+                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
+                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
+                  }`}
               >
                 <div className={`p-3 rounded-xl ${activeFeatureTab === 'warehouse' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
                   <Layers className="w-5 h-5" />
@@ -367,11 +365,10 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveFeatureTab('selling')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-                  activeFeatureTab === 'selling'
-                    ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                    : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                }`}
+                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeFeatureTab === 'selling'
+                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
+                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
+                  }`}
               >
                 <div className={`p-3 rounded-xl ${activeFeatureTab === 'selling' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
                   <Globe className="w-5 h-5" />
@@ -384,11 +381,10 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveFeatureTab('fulfillment')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-                  activeFeatureTab === 'fulfillment'
-                    ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                    : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                }`}
+                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeFeatureTab === 'fulfillment'
+                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
+                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
+                  }`}
               >
                 <div className={`p-3 rounded-xl ${activeFeatureTab === 'fulfillment' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
                   <Workflow className="w-5 h-5" />
@@ -401,11 +397,10 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveFeatureTab('accounting')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-                  activeFeatureTab === 'accounting'
-                    ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                    : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                }`}
+                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeFeatureTab === 'accounting'
+                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
+                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
+                  }`}
               >
                 <div className={`p-3 rounded-xl ${activeFeatureTab === 'accounting' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
                   <Receipt className="w-5 h-5" />
@@ -419,7 +414,7 @@ export default function Home() {
 
             {/* Right Hand side Feature Visual Container */}
             <div className="lg:col-span-8 bg-neutral-50 border border-neutral-200/80 rounded-[2rem] p-6 lg:p-8 min-h-[460px] flex flex-col justify-between">
-              
+
               {/* Feature Tab Description */}
               {activeFeatureTab === 'inventory' && (
                 <div className="space-y-6">
@@ -434,18 +429,18 @@ export default function Home() {
                   </p>
                   <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-neutral-200">
                     <div className="flex items-start gap-3">
-                       <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
-                       <div>
-                         <p className="text-sm font-bold text-neutral-800">Create Custom Bundles</p>
-                         <p className="text-xs text-neutral-500">Easily combine multiple items into special gift packages or sets.</p>
-                       </div>
+                      <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-bold text-neutral-800">Create Custom Bundles</p>
+                        <p className="text-xs text-neutral-500">Easily combine multiple items into special gift packages or sets.</p>
+                      </div>
                     </div>
                     <div className="flex items-start gap-3">
-                       <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
-                       <div>
-                         <p className="text-sm font-bold text-neutral-800">Smart Pricing Updates</p>
-                         <p className="text-xs text-neutral-500">Automatically adjust your selling prices when your supplier costs change.</p>
-                       </div>
+                      <CheckCircle2 className="w-5 h-5 text-brand-primary flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-bold text-neutral-800">Smart Pricing Updates</p>
+                        <p className="text-xs text-neutral-500">Automatically adjust your selling prices when your supplier costs change.</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -582,7 +577,7 @@ export default function Home() {
                   </div>
                   <span className="text-[10px] font-bold text-neutral-400">organization-id: tenvo-001</span>
                 </div>
-                
+
                 {activeFeatureTab === 'inventory' && (
                   <div className="space-y-2.5 font-mono text-xs text-neutral-700">
                     <div className="flex justify-between border-b border-neutral-50 pb-1">
@@ -678,9 +673,9 @@ export default function Home() {
       {/* 4. EXCEL-FIRST & SPREADSHEET POWER SIMULATOR */}
       <section className="bg-neutral-50 border-b border-neutral-200/80 py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          
+
           <div className="grid lg:grid-cols-12 gap-12 items-center">
-            
+
             {/* Left Content column */}
             <div className="lg:col-span-5 space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-amber-800">
@@ -693,7 +688,7 @@ export default function Home() {
               <p className="text-base text-neutral-600 font-medium leading-relaxed">
                 Most platforms break when you upload an Excel sheet. TENVO has a native, full-screen **Excel Mode** that lets you copy-paste rows directly from your existing spreadsheets, perform bulk operations, and validates every single cell with crystal clear feedback.
               </p>
-              
+
               <ul className="space-y-3 font-semibold text-neutral-700">
                 <li className="flex items-center gap-3">
                   <div className="h-6 w-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-800">
@@ -735,13 +730,12 @@ export default function Home() {
                   <p className="text-xs text-neutral-500 font-semibold mt-0.5">Validating 4 lines of imported products</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`h-2.5 w-2.5 rounded-full ${
-                    simulationStatus === 'idle' ? 'bg-neutral-300' :
+                  <span className={`h-2.5 w-2.5 rounded-full ${simulationStatus === 'idle' ? 'bg-neutral-300' :
                     simulationStatus === 'processing' ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'
-                  }`} />
+                    }`} />
                   <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">
                     {simulationStatus === 'idle' ? 'Ready to parse' :
-                     simulationStatus === 'processing' ? 'Validating FBR & SKU' : 'Partial Import Available'}
+                      simulationStatus === 'processing' ? 'Validating FBR & SKU' : 'Partial Import Available'}
                   </span>
                 </div>
               </div>
@@ -802,15 +796,15 @@ export default function Home() {
       {/* 5. INTERACTIVE MARGIN-FIRST PRICING CALCULATOR */}
       <section className="bg-white border-b border-neutral-200/80 py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          
+
           <div className="grid lg:grid-cols-12 gap-12 items-center">
-            
+
             {/* Right Interactive Simulator Column (rendered on left in visual desktop flow for variety) */}
             <div className="lg:col-span-6 bg-neutral-50 border border-neutral-200/80 rounded-[2.5rem] p-6 lg:p-10 order-2 lg:order-1">
               <h4 className="font-black text-neutral-900 text-xl mb-6">Interactive Margin-First Engine</h4>
-              
+
               <div className="space-y-6">
-                
+
                 {/* Cost Input */}
                 <div>
                   <div className="flex justify-between mb-2">
@@ -901,7 +895,7 @@ export default function Home() {
               <p className="text-base text-neutral-600 font-medium leading-relaxed">
                 With inflation and supply chain volatility, inventory cost shifts happen daily in Pakistan. TENVO handles this elegantly. Rather than setting static prices that drift into loss, you define your target profit margin per product category. When vendor cost rises, TENVO recalculates optimal selling prices automatically.
               </p>
-              
+
               <ul className="space-y-3 font-semibold text-neutral-700">
                 <li className="flex items-center gap-3">
                   <div className="h-6 w-6 rounded-full bg-brand-50 flex items-center justify-center text-brand-primary">
@@ -932,7 +926,7 @@ export default function Home() {
       {/* 5.5 LIVE WAREHOUSE OPERATIONAL SIMULATOR (NEW ADVANCED FEATURE) */}
       <section className="bg-white border-b border-neutral-200/80 py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          
+
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-neutral-800">
               <Cpu className="h-4 w-4" /> Live Operational Terminal
@@ -946,17 +940,16 @@ export default function Home() {
           </div>
 
           <div className="grid lg:grid-cols-12 gap-12 items-stretch">
-            
+
             {/* Left Controls column */}
             <div className="lg:col-span-4 space-y-3 flex flex-col justify-center">
-              
+
               <button
                 onClick={() => setActiveTerminalTab('stocktake')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-                  activeTerminalTab === 'stocktake'
-                    ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                    : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                }`}
+                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeTerminalTab === 'stocktake'
+                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
+                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
+                  }`}
               >
                 <div className={`p-3 rounded-xl ${activeTerminalTab === 'stocktake' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
                   <Package className="w-5 h-5" />
@@ -969,11 +962,10 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTerminalTab('reorder')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-                  activeTerminalTab === 'reorder'
-                    ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                    : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                }`}
+                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeTerminalTab === 'reorder'
+                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
+                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
+                  }`}
               >
                 <div className={`p-3 rounded-xl ${activeTerminalTab === 'reorder' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
                   <Settings className="w-5 h-5" />
@@ -986,11 +978,10 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTerminalTab('fbr')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-                  activeTerminalTab === 'fbr'
-                    ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                    : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                }`}
+                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeTerminalTab === 'fbr'
+                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
+                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
+                  }`}
               >
                 <div className={`p-3 rounded-xl ${activeTerminalTab === 'fbr' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
                   <Receipt className="w-5 h-5" />
@@ -1003,11 +994,10 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTerminalTab('packaging')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-                  activeTerminalTab === 'packaging'
-                    ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                    : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                }`}
+                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeTerminalTab === 'packaging'
+                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
+                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
+                  }`}
               >
                 <div className={`p-3 rounded-xl ${activeTerminalTab === 'packaging' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
                   <Truck className="w-5 h-5" />
@@ -1022,7 +1012,7 @@ export default function Home() {
 
             {/* Right Interactive Console display */}
             <div className="lg:col-span-8 bg-neutral-50 border border-neutral-200/80 rounded-[2.5rem] p-6 lg:p-10 flex flex-col justify-between shadow-sm min-h-[460px]">
-              
+
               {/* TERMINAL CONTENT FOR TAB 1: STOCKTAKE SCAN */}
               {activeTerminalTab === 'stocktake' && (
                 <div className="space-y-6 flex-1 flex flex-col justify-between">
@@ -1086,7 +1076,7 @@ export default function Home() {
                         className="bg-brand-primary hover:bg-brand-primary-dark text-white font-black text-xs uppercase tracking-wider rounded-xl h-10 px-4"
                       >
                         {scanStatus === 'idle' ? 'Trigger Barcode Scan' :
-                         scanStatus === 'scanning' ? 'Verifying...' : 'Scan Complete'}
+                          scanStatus === 'scanning' ? 'Verifying...' : 'Scan Complete'}
                       </Button>
                     </div>
 
@@ -1107,7 +1097,7 @@ export default function Home() {
 
                   {/* Auto-PO Terminal Box */}
                   <div className="bg-white border border-neutral-200 rounded-2xl p-5 space-y-4 shadow-sm my-4">
-                    
+
                     {/* Interactive Slider */}
                     <div>
                       <div className="flex justify-between mb-2">
@@ -1176,7 +1166,7 @@ export default function Home() {
                         className="bg-brand-primary hover:bg-brand-primary-dark text-white font-black text-xs uppercase tracking-wider rounded-xl h-10 px-4 disabled:opacity-50"
                       >
                         {poStatus === 'idle' ? 'Auto-Draft Purchase Order' :
-                         poStatus === 'generating' ? 'Drafting...' : 'Purchase Draft Generated'}
+                          poStatus === 'generating' ? 'Drafting...' : 'Purchase Draft Generated'}
                       </Button>
                     </div>
 
@@ -1197,7 +1187,7 @@ export default function Home() {
 
                   {/* FBR invoice terminal box */}
                   <div className="bg-white border border-neutral-200 rounded-2xl p-5 space-y-4 shadow-sm my-4">
-                    
+
                     {/* Invoice amount slider */}
                     <div>
                       <div className="flex justify-between mb-2">
@@ -1260,16 +1250,15 @@ export default function Home() {
 
                   {/* Packaging Terminal Box */}
                   <div className="bg-white border border-neutral-200 rounded-2xl p-5 space-y-4 shadow-sm my-4">
-                    
+
                     {/* Box selection */}
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={() => setSelectedBox('standard')}
-                        className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
-                          selectedBox === 'standard'
-                            ? 'bg-neutral-50 border-brand-primary'
-                            : 'bg-white border-neutral-200'
-                        }`}
+                        className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${selectedBox === 'standard'
+                          ? 'bg-neutral-50 border-brand-primary'
+                          : 'bg-white border-neutral-200'
+                          }`}
                       >
                         <span className="block font-black text-neutral-800">Box A (Medium Courier)</span>
                         <span className="text-[10px] text-neutral-400 block mt-0.5">Capacity limit: 5kg</span>
@@ -1277,11 +1266,10 @@ export default function Home() {
 
                       <button
                         onClick={() => setSelectedBox('heavy')}
-                        className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
-                          selectedBox === 'heavy'
-                            ? 'bg-neutral-50 border-brand-primary'
-                            : 'bg-white border-neutral-200'
-                        }`}
+                        className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${selectedBox === 'heavy'
+                          ? 'bg-neutral-50 border-brand-primary'
+                          : 'bg-white border-neutral-200'
+                          }`}
                       >
                         <span className="block font-black text-neutral-800">Box B (Large Cargo)</span>
                         <span className="text-[10px] text-neutral-400 block mt-0.5">Capacity limit: 20kg</span>
@@ -1321,7 +1309,7 @@ export default function Home() {
       {/* 6. WHO BENEFITS (AUDIENCE VERTICALS) - Pure Light Theme */}
       <section className="bg-neutral-50 border-b border-neutral-200/80 py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          
+
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.25em]">Industry Specific Solutions</h2>
             <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-neutral-900 tracking-tight">
@@ -1333,7 +1321,7 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                   {/* Card 1: Retail & E-commerce */}
+            {/* Card 1: Retail & E-commerce */}
             <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 space-y-5 hover:border-brand-primary transition-colors">
               <div className="h-12 w-12 bg-neutral-50 rounded-2xl flex items-center justify-center text-brand-primary border border-neutral-200/80">
                 <Store className="w-6 h-6" />
@@ -1405,7 +1393,7 @@ export default function Home() {
       {/* 7. UNIQUE BENEFITS & COMPETITIVE ANALYSIS - Pure Light Theme */}
       <section className="bg-white border-b border-neutral-200/80 py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          
+
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.25em]">Why Choose Tenvo</h2>
             <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-neutral-900 tracking-tight">
@@ -1424,7 +1412,7 @@ export default function Home() {
                 Your office managers might prefer English, but your warehouse team on the ground doesn’t have to suffer. TENVO features a full **Urdu UI toggle** designed for easy catalog searches, barcode scanning, and transfer entries.
               </p>
             </div>
-            
+
             <div className="p-8 border border-neutral-200/80 rounded-[2rem] bg-neutral-50 space-y-4">
               <h4 className="font-black text-lg text-neutral-900">2. Zero-Data-Loss Migration</h4>
               <p className="text-sm text-neutral-600 font-medium leading-relaxed">
@@ -1443,7 +1431,7 @@ export default function Home() {
           {/* Comparison Table: Traditional vs Basic vs Tenvo */}
           <div className="bg-white border border-neutral-200/80 rounded-[2.5rem] p-6 lg:p-10 overflow-x-auto shadow-sm">
             <h4 className="font-black text-neutral-900 text-xl mb-6">Detailed Platform Comparison</h4>
-            
+
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-neutral-200 font-black text-[10px] uppercase tracking-wider text-neutral-400">
@@ -1454,7 +1442,7 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                
+
                 <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
                   <td className="p-4 font-bold text-neutral-900">Implementation Time</td>
                   <td className="p-4 text-neutral-400">6 - 12 Months</td>
@@ -1507,7 +1495,7 @@ export default function Home() {
       {/* 8. STEP-BY-STEP ADOPTION PATHWAY - Pure Light Theme */}
       <section className="bg-neutral-50 border-b border-neutral-200/80 py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          
+
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.25em]">Simple Onboarding</h2>
             <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-neutral-900 tracking-tight">
@@ -1519,7 +1507,7 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
-            
+
             <div className="bg-white p-6 border border-neutral-200/80 rounded-3xl space-y-3 shadow-sm relative">
               <div className="text-xs font-black text-brand-primary uppercase tracking-widest">Phase 01</div>
               <h4 className="font-black text-lg text-neutral-900">Pick Industry Preset</h4>
@@ -1569,9 +1557,9 @@ export default function Home() {
       {/* 9. SOCIAL PROOF / OPERATOR TESTIMONIALS - Pure Light Theme */}
       <section className="bg-white border-b border-neutral-200/80 py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          
+
           <div className="grid lg:grid-cols-12 gap-12 items-center">
-            
+
             {/* Left Content column */}
             <div className="lg:col-span-4 space-y-4">
               <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.25em]">Social Proof</h2>
@@ -1590,7 +1578,7 @@ export default function Home() {
 
             {/* Right Testimonial Grid Column */}
             <div className="lg:col-span-8 grid sm:grid-cols-2 gap-6">
-              
+
               <div className="bg-neutral-50 border border-neutral-200/85 p-6 rounded-3xl space-y-4">
                 <p className="text-xs font-medium text-neutral-600 leading-relaxed">
                   &ldquo;Moving from 4 different spreadsheets to TENVO saved our wholesale pharmacy hours. The Urdu UI toggle was a game-changer for our loaders, and we haven&apos;t had a single batch expire unnoticed since we migrated.&rdquo;
@@ -1621,7 +1609,7 @@ export default function Home() {
       {/* 10. EXPANDABLE COMPREHENSIVE FAQ - Pure Light Theme */}
       <section className="bg-neutral-50 border-b border-neutral-200/80 py-20 lg:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          
+
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.25em]">Frequently Asked Questions</h2>
             <h3 className="text-3xl sm:text-4xl font-black text-neutral-900 tracking-tight">
@@ -1633,7 +1621,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-4">
-            
+
             {/* FAQ Item 1 */}
             <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm">
               <button
@@ -1714,7 +1702,7 @@ export default function Home() {
       {/* 11. HIGH IMPACT CALL-TO-ACTION (CTA) - Pure Light Theme */}
       <section className="bg-white py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          
+
           <div className="bg-neutral-50 border border-neutral-200/80 rounded-[3rem] p-8 sm:p-12 lg:p-16 text-center space-y-6 relative overflow-hidden shadow-sm">
             <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.32em]">Ready to take command?</h2>
             <h3 className="text-3xl sm:text-5xl font-black text-neutral-900 tracking-tight max-w-4xl mx-auto">
@@ -1723,7 +1711,7 @@ export default function Home() {
             <p className="max-w-2xl mx-auto text-sm sm:text-base text-neutral-600 font-medium leading-relaxed">
               Join serious operational teams switching from fragmented spreadsheets to Pakistan&apos;s first unified, FBR-compliant, Excel-first operating system. Start your free trial today.
             </p>
-            
+
             <div className="pt-4 flex flex-col sm:flex-row justify-center gap-4">
               <Button asChild size="lg" className="h-14 rounded-xl bg-brand-primary hover:bg-brand-primary-dark text-white px-8 text-base font-black uppercase tracking-[0.15em] shadow-md transition-all">
                 <Link href={primaryHref}>{primaryText}</Link>

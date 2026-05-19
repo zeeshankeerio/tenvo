@@ -440,7 +440,7 @@ export function StockAdjustmentManager({
                             >
                                 {formData.adjustment_type === 'increase' ? (
                                     <>
-                                        <Plus className="w-4 h-4 mr-2" />
+                                        <Plus className="w-4 h-4 mr-2 bg-emerald-600 hover:bg-emerald-700 text-white" />
                                         {requiresApproval ? 'Submit for Approval' : 'Increase Stock'}
                                     </>
                                 ) : (

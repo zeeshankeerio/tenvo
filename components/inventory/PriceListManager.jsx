@@ -265,7 +265,7 @@ export function PriceListManager({
                 <Button variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>
                   Cancel
                 </Button>
-                <Button onClick={handleSave} disabled={!formData.name}>
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all" onClick={handleSave} disabled={!formData.name}>
                   {editingList ? 'Update' : 'Create'} Price List
                 </Button>
               </div>
