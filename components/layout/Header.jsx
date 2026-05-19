@@ -105,6 +105,20 @@ export function Header({ onMenuClick }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Global hotkey to focus search bar
+    React.useEffect(() => {
+        const handleGlobalKeyDown = (e) => {
+            // Focus search on '/' if not already focusing an input
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                const input = searchRef.current?.querySelector('input');
+                if (input) input.focus();
+            }
+        };
+        document.addEventListener('keydown', handleGlobalKeyDown);
+        return () => document.removeEventListener('keydown', handleGlobalKeyDown);
+    }, []);
+
     // Search Results Logic
     const searchResults = React.useMemo(() => {
         if (!searchQuery || searchQuery.length < 2 || !isSearchFocused) return null;
@@ -399,7 +413,7 @@ export function Header({ onMenuClick }) {
                     <div className="relative w-full group">
                         <Search className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 group-focus-within:text-brand-primary transition-colors ${language === 'ur' ? 'right-3' : 'left-3'}`} />
                         <Input
-                            placeholder={t.search_placeholder + '...  (Ctrl+K)'}
+                            placeholder={t.search_placeholder + '...  (/)'}
                             className={`h-9 text-xs bg-gray-50 border-gray-200/50 focus:bg-white focus:border-brand-100 focus:ring-4 focus:ring-brand-50 transition-all rounded-xl ${language === 'ur' ? 'pr-9' : 'pl-9'}`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}

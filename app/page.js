@@ -161,7 +161,7 @@ export default function Home() {
                   Run Your Entire Business From One <span className="text-brand-primary">Intelligent Dashboard</span>
                 </h1>
                 <p className="max-w-xl text-lg sm:text-xl font-medium leading-relaxed text-neutral-600">
-                  From sales to HR, accounts to inventory, Tenvo is your all‑in‑one ERP and POS platform. Manage multiple domains and tenants seamlessly, track stock in real time, sync with online stores and couriers, and stay compliant with FBR regulations—without the chaos of spreadsheets.
+                  From sales to HR, accounts to inventory, Tenvo is your all‑in‑one ERP and POS platform. Manage multiple domains and tenants seamlessly, track stock in real time, sync with online stores and couriers, and stay compliant with FBR regulations, without the chaos of spreadsheets.
                 </p>
               </div>
 
@@ -322,7 +322,7 @@ export default function Home() {
               One dashboard. Complete control.
             </h3>
             <p className="text-lg text-neutral-500 font-medium">
-              Everything you need to easily manage your stock, handle sales, and stay compliant with local tax laws—all in one place.
+              Everything you need to easily manage your stock, handle sales, and stay compliant with local tax laws, all in one place.
             </p>
           </div>
 

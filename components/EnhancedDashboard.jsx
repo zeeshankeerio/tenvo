@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -186,25 +186,7 @@ export function EnhancedDashboard({ businessId, category, onQuickAction }) {
     return baseStats;
   }, [metrics, currency, t, colors, isManufacturing, isService]);
 
-  const quickActions = [
-    { label: t.new_invoice, icon: DollarSign, id: 'new-invoice' },
-  ];
 
-  if (hasQuotations) {
-    quickActions.push({ label: t.new_quotation || 'New Quotation', icon: FileText, id: 'new-quotation' });
-  }
-
-  if (isManufacturing) {
-    quickActions.push({ label: t.new_production || 'New Production', icon: Wrench, id: 'new-production' });
-  } else {
-    quickActions.push({ label: t.add_product, icon: Package, id: 'add-product' });
-  }
-
-  quickActions.push({ label: t.new_customer, icon: Users, id: 'new-customer' });
-  // Ensure max 4
-  if (quickActions.length < 4) {
-    quickActions.push({ label: t.reports, icon: Download, id: 'generate-report' });
-  }
 
   // Simplified recent activity (no invoices array needed)
   const recentActivity = useMemo(() => {
@@ -358,7 +340,14 @@ export function EnhancedDashboard({ businessId, category, onQuickAction }) {
             <CardDescription>Monthly revenue vs expenses overview</CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8 text-xs">Last 6 Months</Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 text-xs"
+              onClick={() => setTimeRange(timeRange === '6_months' ? 'month' : '6_months')}
+            >
+              {timeRange === '6_months' ? 'This Month' : 'Last 6 Months'}
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="h-[300px] w-full pl-0">
@@ -474,9 +463,6 @@ export function EnhancedDashboard({ businessId, category, onQuickAction }) {
                 <CardTitle className="text-lg font-semibold">{t.recent_activity}</CardTitle>
                 <CardDescription>{t.latest_activities}</CardDescription>
               </div>
-              <Button variant="ghost" size="sm">
-                <RefreshCw className="w-4 h-4" />
-              </Button>
             </div>
           </CardHeader>
           <CardContent>
