@@ -85,7 +85,7 @@ export default function PricingSection({
             <button
               onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
               className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
-                billingPeriod === 'annual' ? 'bg-wine-600' : 'bg-neutral-300'
+                billingPeriod === 'annual' ? 'bg-brand-primary' : 'bg-neutral-300'
               }`}
               aria-label="Toggle billing period"
             >
@@ -119,14 +119,14 @@ export default function PricingSection({
                 key={tier.id}
                 className={`relative bg-white rounded-2xl p-8 border-2 transition-all duration-300 ${
                   isHighlighted
-                    ? 'border-wine-500 shadow-2xl scale-105 lg:scale-110'
-                    : 'border-neutral-200 hover:border-wine-300 hover:shadow-xl'
+                    ? 'border-brand-primary shadow-2xl scale-105 lg:scale-110'
+                    : 'border-neutral-200 hover:border-brand-primary/50 hover:shadow-xl'
                 } ${mounted ? 'animate-fade-in-up' : 'opacity-0'}`}
                 style={{ animationDelay: `${index * 150}ms` }}
               >
                 {/* Popular badge */}
                 {tier.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-wine-600 text-white text-sm font-bold rounded-full shadow-lg">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-brand-primary text-white text-sm font-bold rounded-full shadow-lg">
                     {tier.badge || 'Most Popular'}
                   </div>
                 )}
@@ -168,8 +168,8 @@ export default function PricingSection({
                   size="lg"
                   className={`w-full mb-6 ${
                     isHighlighted
-                      ? 'bg-wine-600 hover:bg-wine-700 text-white'
-                      : 'bg-white border-2 border-wine-600 text-wine-600 hover:bg-wine-50'
+                      ? 'bg-brand-primary hover:bg-brand-primary-dark text-white'
+                      : 'bg-white border-2 border-brand-primary text-brand-primary hover:bg-brand-50'
                   }`}
                   onClick={() => handleCTAClick(tier)}
                 >

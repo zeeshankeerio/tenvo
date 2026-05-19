@@ -56,8 +56,10 @@ export default function MarketingNav({
 
   const navClasses = `sticky top-0 z-50 transition-all duration-300 ${transparent && !scrolled
       ? 'bg-transparent'
-      : 'bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 shadow-[0_18px_48px_-32px_rgba(15,23,42,0.45)]'
+      : 'bg-white/90 backdrop-blur-2xl border-b border-neutral-200/50 shadow-[0_4px_24px_-12px_rgba(0,0,0,0.1)]'
     }`;
+
+  const [currency, setCurrency] = useState('PKR');
 
   return (
     <nav className={navClasses}>
@@ -146,15 +148,35 @@ export default function MarketingNav({
               </button>
             </div>
 
-            <div className="h-4 w-px bg-gray-200 mx-2" />
+            <div className="h-4 w-px bg-neutral-200 mx-2" />
+
+            {/* Currency Selector */}
+            <div className="relative group">
+              <button className="flex items-center gap-1 text-xs font-black tracking-wider text-neutral-500 hover:text-neutral-900 transition-colors uppercase px-2 py-1 rounded-md hover:bg-neutral-100">
+                {currency} <ChevronDown className="w-3 h-3 opacity-50" />
+              </button>
+              <div className="absolute top-[calc(100%+0.5rem)] right-0 bg-white border border-neutral-200 shadow-lg rounded-xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-24 z-50">
+                {['PKR', 'USD', 'AED', 'INR'].map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCurrency(c)}
+                    className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors ${currency === c ? 'bg-brand-50 text-brand-primary' : 'text-neutral-600 hover:bg-neutral-50'}`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-4 w-px bg-neutral-200 mx-2" />
 
             {/* Auth Buttons */}
             {showAuthButtons && (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {user ? (
                   <Button
                     onClick={() => handleCTAClick('nav', 'Enter Dashboard', '/multi-business')}
-                    className="bg-brand-primary hover:bg-brand-primary-dark text-white font-black rounded-2xl px-8 shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)] transition-all active:scale-[0.98]"
+                    className="bg-brand-primary hover:bg-brand-primary-dark text-white font-black rounded-xl px-6 shadow-[0_8px_20px_-8px_rgba(227,66,66,0.6)] transition-all active:scale-[0.98]"
                   >
                     Enter Dashboard
                   </Button>
@@ -162,14 +184,14 @@ export default function MarketingNav({
                   <>
                     <Button
                       variant="ghost"
-                      className="font-bold text-gray-900 hover:bg-gray-50 rounded-xl px-6"
+                      className="font-bold text-neutral-700 hover:bg-neutral-100 rounded-xl px-5"
                       onClick={() => handleCTAClick('nav', 'Log In', '/login')}
                     >
                       Log In
                     </Button>
                     <Button
                       onClick={() => handleCTAClick('nav', 'Start Your Journey', '/register')}
-                      className="bg-brand-primary hover:bg-brand-primary-dark text-white font-black rounded-2xl px-8 shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)] transition-all active:scale-[0.98]"
+                      className="bg-brand-primary hover:bg-brand-primary-dark text-white font-black rounded-xl px-6 shadow-[0_8px_20px_-8px_rgba(227,66,66,0.6)] transition-all active:scale-[0.98]"
                     >
                       Start Your Journey
                     </Button>
@@ -216,10 +238,10 @@ export default function MarketingNav({
           </div>
 
           {showAuthButtons && (
-            <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
+            <div className="flex flex-col gap-3 pt-4 border-t border-neutral-100">
               {user ? (
                 <Button
-                  className="w-full h-12 bg-brand-primary font-black text-white rounded-2xl shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)]"
+                  className="w-full h-12 bg-brand-primary font-black text-white rounded-xl shadow-[0_8px_20px_-8px_rgba(227,66,66,0.6)]"
                   onClick={() => handleCTAClick('mobile-nav', 'Enter Dashboard', '/multi-business')}
                 >
                   Enter Dashboard
@@ -234,7 +256,7 @@ export default function MarketingNav({
                     Log In
                   </Button>
                   <Button
-                    className="w-full h-12 bg-brand-primary font-black text-white rounded-2xl shadow-[0_18px_44px_-20px_rgba(47,91,255,0.65)]"
+                    className="w-full h-12 bg-brand-primary font-black text-white rounded-xl shadow-[0_8px_20px_-8px_rgba(227,66,66,0.6)]"
                     onClick={() => handleCTAClick('mobile-nav', 'Join Enterprise', '/register')}
                   >
                     Join Enterprise
