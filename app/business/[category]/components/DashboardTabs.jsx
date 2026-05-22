@@ -50,6 +50,7 @@ const CustomerLoyaltyPortal = dynamic(() => import('@/components/crm/CustomerLoy
 const AIInsightsPanel = dynamic(() => import('@/components/intelligence/AIInsightsPanel').then(mod => mod.AIInsightsPanel));
 const ReportBuilder = dynamic(() => import('@/components/reports/ReportBuilder').then(mod => mod.ReportBuilder));
 const StoreSettingsManager = dynamic(() => import('@/components/StoreSettingsManager').then(mod => mod.StoreSettingsManager));
+const OrdersManager = dynamic(() => import('@/components/orders/OrdersManager').then(mod => mod.OrdersManager));
 const TabGuard = dynamic(() => import('@/components/guards/TabGuard').then(mod => mod.TabGuard));
 const ResourceLimitBanner = dynamic(() => import('@/components/ui/ResourceLimitBanner').then(mod => mod.ResourceLimitBanner));
 import { isPosRelevant, isHospitality, isCampaignRelevant } from '@/lib/config/domains';
@@ -757,6 +758,24 @@ export function DashboardTabs({
                                     session={posSession}
                                 />
                             )}
+                        </TabGuard>
+                    )}
+                </TabsContent>
+
+                {/* --- Orders Tab - Storefront Orders ----------------------- */}
+                <TabsContent value="orders" className="space-y-6 outline-none">
+                    {wrapTab(
+                        <TabGuard
+                            tabKey="orders"
+                            role={role}
+                            planTier={planTier}
+                            featureName="Orders Management"
+                            onUpgrade={() => handleTabChange('settings')}
+                        >
+                            <OrdersManager
+                                business={business}
+                                category={category}
+                            />
                         </TabGuard>
                     )}
                 </TabsContent>

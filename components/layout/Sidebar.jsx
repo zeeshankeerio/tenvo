@@ -119,6 +119,7 @@ const ADVANCED_NAV_SECTIONS = [
   {
     label: 'STOREFRONT',
     items: [
+      { key: 'orders', label: 'Orders', icon: Package, alwaysShow: true, badge: 'NEW' },
       { key: 'pos', label: 'Point of Sale', icon: ShoppingCart, domainRule: 'posRelevant' },
       { key: 'refunds', label: 'Refunds & Returns', icon: RefreshCcw, domainRule: 'posRelevant' },
       { key: 'restaurant', label: 'Restaurant', icon: UtensilsCrossed, domainRule: 'hospitality' },
@@ -178,6 +179,7 @@ const EASY_NAV_SECTIONS = [
     items: [
       { key: 'invoices', label: 'Invoices', icon: FileText, alwaysShow: true },
       { key: 'customers', label: 'Customers', icon: Users, alwaysShow: true },
+      { key: 'orders', label: 'Orders', icon: Package, alwaysShow: true, badge: 'NEW' },
       { key: 'pos', label: 'Point of Sale', icon: ShoppingCart, domainRule: 'posRelevant' },
       { key: 'quotations', label: 'Estimates', icon: ClipboardList, conditionKey: 'quotations' },
       { key: 'view-storefront', label: 'View Public Store', icon: ExternalLink, alwaysShow: true, isExternal: true, externalUrl: (business) => `/store/${business?.handle || business?.domain || ''}` },
