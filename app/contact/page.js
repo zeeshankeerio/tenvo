@@ -131,11 +131,15 @@ export default function ContactPage() {
 
 function ContactInfoCard({ icon, title, content, link }) {
   const CardContent = (
-    <div className="flex items-start gap-4 p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-lg transition-all duration-300">
-      <div className="text-brand-primary flex-shrink-0">{icon}</div>
+    <div className="group flex items-start gap-4 p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-xl hover:shadow-brand-primary/10 hover:border-brand-primary/20 transition-all duration-300 hover:-translate-y-1">
+      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-brand-50 to-brand-100 shadow-md group-hover:shadow-lg group-hover:from-brand-100 group-hover:to-brand-200 transition-all duration-300 flex-shrink-0">
+        <div className="text-brand-primary group-hover:scale-110 transition-transform duration-300">
+          {icon}
+        </div>
+      </div>
       <div>
-        <h3 className="font-bold text-gray-900 mb-1">{title}</h3>
-        <p className="text-gray-600">{content}</p>
+        <h3 className="font-bold text-gray-900 mb-1 group-hover:text-brand-primary transition-colors duration-300">{title}</h3>
+        <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300">{content}</p>
       </div>
     </div>
   );

@@ -102,18 +102,19 @@ export default function Hero({
     );
   };
 
-  // Render CTA buttons
+  // Render CTA buttons with enhanced effects
   const renderCTAs = () => (
     <div className="flex flex-col sm:flex-row gap-4">
       {primaryCTA && (
         <Button
           asChild
           size="lg"
-          className="bg-brand-primary hover:bg-brand-primary-dark text-white px-8 py-6 text-lg font-bold rounded-2xl shadow-sm transition-all duration-300"
+          className="group bg-gradient-to-r from-brand-primary to-brand-primary-dark hover:from-brand-primary-dark hover:to-brand-primary text-white px-8 py-6 text-lg font-bold rounded-2xl shadow-lg shadow-brand-primary/25 hover:shadow-xl hover:shadow-brand-primary/30 transition-all duration-300 hover:-translate-y-0.5"
           onClick={() => handleCTAClick('primary', primaryCTA.href)}
         >
-          <Link href={primaryCTA.href}>
+          <Link href={primaryCTA.href} className="flex items-center gap-2">
             {primaryCTA.text}
+            <LucideIcons.ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
         </Button>
       )}
@@ -123,7 +124,7 @@ export default function Hero({
           asChild
           variant="outline"
           size="lg"
-          className="border-2 border-neutral-300 hover:border-brand-primary hover:text-brand-primary px-8 py-6 text-lg font-semibold rounded-2xl bg-white/70 backdrop-blur-sm transition-all duration-300"
+          className="group border-2 border-neutral-300 hover:border-brand-primary hover:bg-brand-primary/5 hover:text-brand-primary px-8 py-6 text-lg font-semibold rounded-2xl bg-white/80 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
           onClick={() => handleCTAClick('secondary', secondaryCTA.href)}
         >
           <Link href={secondaryCTA.href}>
@@ -138,9 +139,10 @@ export default function Hero({
   if (variant === 'default') {
     return (
       <section className="relative overflow-hidden bg-slate-50 border-b border-slate-200/50">
-        {/* Decorative blur elements */}
-        <div className="absolute top-0 right-0 w-[32rem] h-[32rem] bg-slate-200/40 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[28rem] h-[28rem] bg-slate-200/30 rounded-full blur-3xl" />
+        {/* Enhanced decorative blur elements */}
+        <div className="absolute top-0 right-0 w-[32rem] h-[32rem] bg-brand-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[28rem] h-[28rem] bg-brand-secondary/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50rem] h-[50rem] bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 rounded-full blur-3xl" />
         
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -170,16 +172,16 @@ export default function Hero({
               {renderStats()}
             </div>
  
-            {/* Hero image */}
+            {/* Hero image with enhanced styling */}
             {heroImageSrc && (
               <div className={`relative ${mounted ? 'animate-fade-in' : 'opacity-0'}`}>
-                <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border border-white/70 shadow-[0_30px_90px_-30px_rgba(15,23,42,0.35)]">
+                <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border border-white/70 shadow-[0_30px_90px_-30px_rgba(15,23,42,0.35)] group">
                   <Image
                     src={heroImageSrc}
                     alt={heroImageAltText}
                     fill
                     priority
-                    className="object-cover"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                   
@@ -187,9 +189,10 @@ export default function Hero({
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/20 to-transparent" />
                 </div>
                 
-                {/* Decorative elements */}
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-brand-primary rounded-[1.75rem] opacity-20 blur-xl" />
-                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-slate-300 rounded-[1.75rem] opacity-20 blur-xl" />
+                {/* Enhanced decorative elements */}
+                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-brand-primary to-brand-primary-dark rounded-[1.75rem] opacity-30 blur-xl animate-pulse" />
+                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-tr from-brand-secondary to-brand-primary rounded-[1.75rem] opacity-20 blur-xl" />
+                <div className="absolute top-1/2 -right-8 w-16 h-16 bg-brand-primary/40 rounded-full blur-lg" />
               </div>
             )}
           </div>

@@ -297,7 +297,7 @@ export default function PricingPage() {
             </div>
 
             {/* PLAN 2: BASIC PLAN */}
-            <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 flex flex-col justify-between hover:border-neutral-300 transition-colors shadow-sm">
+            <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 flex flex-col justify-between hover:border-neutral-300 hover:shadow-lg transition-all duration-300 shadow-sm group">
               <div className="space-y-4">
                 <div>
                   <h4 className="font-black text-neutral-900 text-xs uppercase tracking-widest">Basic</h4>
@@ -315,8 +315,8 @@ export default function PricingPage() {
                 {/* Features list */}
                 <ul className="space-y-3 pt-2">
                   {planFeatures.basic.map((feat, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-xs text-neutral-600 font-semibold leading-tight">
-                      <Check className="w-3.5 h-3.5 text-brand-primary flex-shrink-0 mt-0.5" />
+                    <li key={idx} className="flex items-start gap-2.5 text-xs text-neutral-600 font-semibold leading-tight group/item">
+                      <Check className="w-3.5 h-3.5 text-brand-primary flex-shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform" />
                       <span>{feat}</span>
                     </li>
                   ))}
@@ -324,17 +324,20 @@ export default function PricingPage() {
               </div>
 
               <div className="pt-8">
-                <Button asChild className="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-black rounded-xl h-11 text-xs uppercase tracking-wider">
-                  <Link href={primaryHref}>Start Trial</Link>
+                <Button asChild className="w-full bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-900 hover:to-neutral-950 text-white font-black rounded-xl h-11 text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 group/btn">
+                  <Link href={primaryHref} className="flex items-center justify-center gap-2">
+                    Start Trial
+                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                  </Link>
                 </Button>
               </div>
             </div>
 
             {/* PLAN 3: STANDARD PLAN (BEST VALUE / FEATURED) */}
-            <div className="bg-white border-2 border-brand-primary rounded-3xl p-6 flex flex-col justify-between shadow-md relative">
+            <div className="bg-gradient-to-b from-white to-brand-50/30 border-2 border-brand-primary rounded-3xl p-6 flex flex-col justify-between shadow-lg shadow-brand-primary/10 relative hover:shadow-xl hover:shadow-brand-primary/20 transition-all duration-300 hover:-translate-y-1 group">
               
               {/* Featured Badge */}
-              <div className="absolute top-0 right-[10%] -translate-y-1/2 bg-brand-primary text-white font-black text-[9px] uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
+              <div className="absolute top-0 right-[10%] -translate-y-1/2 bg-gradient-to-r from-brand-primary to-brand-primary-dark text-white font-black text-[9px] uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg">
                 Most Popular
               </div>
 
@@ -355,8 +358,8 @@ export default function PricingPage() {
                 {/* Features list */}
                 <ul className="space-y-3 pt-2">
                   {planFeatures.standard.map((feat, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-xs text-neutral-800 font-bold leading-tight">
-                      <Check className="w-3.5 h-3.5 text-brand-primary flex-shrink-0 mt-0.5" />
+                    <li key={idx} className="flex items-start gap-2.5 text-xs text-neutral-800 font-bold leading-tight group/item">
+                      <Check className="w-3.5 h-3.5 text-brand-primary flex-shrink-0 mt-0.5 group-hover/item:scale-110 group-hover/item:rotate-3 transition-all" />
                       <span>{feat}</span>
                     </li>
                   ))}
@@ -364,14 +367,17 @@ export default function PricingPage() {
               </div>
 
               <div className="pt-8">
-                <Button asChild className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white font-black rounded-xl h-11 text-xs uppercase tracking-wider shadow-[0_6px_20px_-6px_rgba(237,199,92,0.45)]">
-                  <Link href={primaryHref}>Start Trial</Link>
+                <Button asChild className="w-full bg-gradient-to-r from-brand-primary to-brand-primary-dark hover:from-brand-primary-dark hover:to-brand-primary text-white font-black rounded-xl h-11 text-xs uppercase tracking-wider shadow-lg shadow-brand-primary/25 hover:shadow-xl hover:shadow-brand-primary/40 transition-all duration-300 hover:-translate-y-0.5 group/btn">
+                  <Link href={primaryHref} className="flex items-center justify-center gap-2">
+                    Start Trial
+                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                  </Link>
                 </Button>
               </div>
             </div>
 
             {/* PLAN 4: PREMIUM PLAN */}
-            <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 flex flex-col justify-between hover:border-neutral-300 transition-colors shadow-sm">
+            <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 flex flex-col justify-between hover:border-neutral-300 hover:shadow-lg transition-all duration-300 shadow-sm group">
               <div className="space-y-4">
                 <div>
                   <h4 className="font-black text-neutral-900 text-xs uppercase tracking-widest">Premium</h4>
@@ -389,8 +395,8 @@ export default function PricingPage() {
                 {/* Features list */}
                 <ul className="space-y-3 pt-2">
                   {planFeatures.premium.map((feat, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-xs text-neutral-600 font-semibold leading-tight">
-                      <Check className="w-3.5 h-3.5 text-brand-primary flex-shrink-0 mt-0.5" />
+                    <li key={idx} className="flex items-start gap-2.5 text-xs text-neutral-600 font-semibold leading-tight group/item">
+                      <Check className="w-3.5 h-3.5 text-brand-primary flex-shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform" />
                       <span>{feat}</span>
                     </li>
                   ))}

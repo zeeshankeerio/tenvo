@@ -68,9 +68,14 @@ export default async function OrderHistoryPage({ params, searchParams }) {
   // Get orders for this customer email
   let orders = [];
   if (email) {
-    const ordersResult = await getStorefrontOrders(business.id, { customerEmail: email, limit: 50 });
-    if (ordersResult.success) {
-      orders = ordersResult.orders;
+    try {
+      const ordersResult = await getStorefrontOrders(business.id, { customerEmail: email, limit: 50 });
+      if (ordersResult?.success && ordersResult?.orders) {
+        orders = ordersResult.orders;
+      }
+    } catch (error) {
+      console.error('[OrderHistoryPage] Error loading orders:', error);
+      orders = [];
     }
   }
 

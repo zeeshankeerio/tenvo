@@ -37,7 +37,7 @@ export default async function StoreHomePage({ params }) {
     notFound();
   }
   
-  const { business } = businessResult;
+  const { business, settings } = businessResult;
   
   // Check if store is enabled - getBusinessByDomain already validates this
   // but we double-check here for safety
