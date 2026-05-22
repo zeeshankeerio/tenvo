@@ -74,6 +74,28 @@ export async function POST(request) {
         break;
       }
 
+      // Payment Intent Events for Storefront
+      case 'payment_intent.succeeded': {
+        await handlePaymentIntentSucceeded(event.data.object);
+        break;
+      }
+
+      case 'payment_intent.payment_failed': {
+        await handlePaymentIntentFailed(event.data.object);
+        break;
+      }
+
+      case 'payment_intent.created': {
+        await handlePaymentIntentCreated(event.data.object);
+        break;
+      }
+
+      // Account Events for Stripe Connect
+      case 'account.updated': {
+        await handleAccountUpdated(event.data.object);
+        break;
+      }
+
       default:
         console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
     }
@@ -302,5 +324,166 @@ async function handleTrialWillEnd(subscription) {
     console.log('[Stripe Webhook] Trial ending soon for:', subscription.id);
   } catch (error) {
     console.error('[Stripe Webhook] Trial ending handler error:', error);
+  }
+}
+
+/**
+ * Handle payment_intent.succeeded
+ */
+async function handlePaymentIntentSucceeded(paymentIntent) {
+  const client = await pool.connect();
+  
+  try {
+    const { orderId, businessId } = paymentIntent.metadata || {};
+    
+    if (!orderId || !businessId) {
+      console.error('[Stripe Webhook] Missing metadata in payment intent');
+      return;
+    }
+
+    await client.query('BEGIN');
+
+    // Update transaction status
+    await client.query(
+      `UPDATE payment_transactions 
+       SET status = 'completed', 
+           provider_response = $1,
+           completed_at = NOW(),
+           updated_at = NOW(),
+           card_last_four = $2,
+           card_brand = $3
+       WHERE stripe_payment_intent_id = $4`,
+      [
+        JSON.stringify(paymentIntent),
+        paymentIntent.charges?.data?.[0]?.payment_method_details?.card?.last4 || null,
+        paymentIntent.charges?.data?.[0]?.payment_method_details?.card?.brand || null,
+        paymentIntent.id,
+      ]
+    );
+
+    // Update order status
+    await client.query(
+      `UPDATE orders 
+       SET payment_status = 'paid',
+           order_status = 'confirmed',
+           updated_at = NOW()
+       WHERE id = $1::uuid AND business_id = $2::uuid`,
+      [orderId, businessId]
+    );
+
+    await client.query('COMMIT');
+
+    // Send order confirmation email
+    const orderResult = await pool.query(
+      `SELECT o.*, b.email as business_email, b.business_name 
+       FROM orders o 
+       JOIN businesses b ON o.business_id = b.id
+       WHERE o.id = $1`,
+      [orderId]
+    );
+
+    if (orderResult.rows.length > 0) {
+      const order = orderResult.rows[0];
+      const { sendOrderConfirmationEmail } = await import('@/lib/email/resend');
+      sendOrderConfirmationEmail({
+        to: order.customer_email,
+        order: order,
+        business: {
+          name: order.business_name,
+          email: order.business_email,
+        },
+      }).catch(console.error);
+    }
+
+    console.log('[Stripe Webhook] Payment succeeded for order:', orderId);
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('[Stripe Webhook] Payment success handler error:', error);
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Handle payment_intent.payment_failed
+ */
+async function handlePaymentIntentFailed(paymentIntent) {
+  try {
+    const { orderId } = paymentIntent.metadata || {};
+    
+    if (!orderId) {
+      console.error('[Stripe Webhook] Missing orderId in payment intent');
+      return;
+    }
+
+    await pool.query(
+      `UPDATE payment_transactions 
+       SET status = 'failed', 
+           error_message = $1,
+           provider_response = $2,
+           updated_at = NOW()
+       WHERE stripe_payment_intent_id = $3`,
+      [
+        paymentIntent.last_payment_error?.message || 'Payment failed',
+        JSON.stringify(paymentIntent),
+        paymentIntent.id,
+      ]
+    );
+
+    // Update order status
+    await pool.query(
+      `UPDATE orders 
+       SET payment_status = 'failed',
+           updated_at = NOW()
+       WHERE id = $1::uuid`,
+      [orderId]
+    );
+
+    console.log('[Stripe Webhook] Payment failed for order:', orderId);
+
+  } catch (error) {
+    console.error('[Stripe Webhook] Payment failed handler error:', error);
+  }
+}
+
+/**
+ * Handle payment_intent.created
+ */
+async function handlePaymentIntentCreated(paymentIntent) {
+  console.log('[Stripe Webhook] Payment intent created:', paymentIntent.id);
+}
+
+/**
+ * Handle account.updated (Stripe Connect)
+ */
+async function handleAccountUpdated(account) {
+  try {
+    // Update Stripe Connect account status
+    await pool.query(
+      `UPDATE stripe_connect_accounts 
+       SET is_charges_enabled = $1,
+           is_payouts_enabled = $2,
+           requirements_due = $3,
+           card_payments_enabled = $4,
+           transfers_enabled = $5,
+           onboarding_complete = $6,
+           updated_at = NOW()
+       WHERE stripe_account_id = $7`,
+      [
+        account.charges_enabled,
+        account.payouts_enabled,
+        JSON.stringify(account.requirements?.currently_due || []),
+        account.capabilities?.card_payments === 'active',
+        account.capabilities?.transfers === 'active',
+        account.charges_enabled && account.payouts_enabled,
+        account.id,
+      ]
+    );
+
+    console.log('[Stripe Webhook] Account updated:', account.id);
+
+  } catch (error) {
+    console.error('[Stripe Webhook] Account update handler error:', error);
   }
 }

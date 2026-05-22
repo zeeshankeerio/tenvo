@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   CreditCard, Truck, MapPin, Check, ChevronRight, 
-  Shield, Lock, AlertCircle, Wallet, Banknote
+  Shield, Lock, AlertCircle, Wallet, Banknote,
+  Smartphone, Building2, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,9 +22,22 @@ import { toast } from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { createStorefrontOrder } from '@/lib/actions/storefront/orders';
+import { getAvailablePaymentMethods, createPaymentIntent } from '@/lib/actions/storefront/payments';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+// Payment method icons mapping
+const paymentIcons = {
+  stripe: CreditCard,
+  cod: Banknote,
+  easypaisa: Smartphone,
+  jazzcash: Smartphone,
+  bank_transfer: Building2,
+  paypal: Wallet,
+  card: CreditCard,
+  wallet: Wallet,
+};
 
 const steps = [
   { id: 'information', label: 'Information' },
@@ -56,8 +70,14 @@ export default function CheckoutPage({ params }) {
     sameAsBilling: true,
     saveInfo: false,
     shippingMethod: 'standard',
-    paymentMethod: 'card',
+    paymentMethod: '',
   });
+  
+  // Payment methods from store configuration
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
+  const [clientSecret, setClientSecret] = useState(null);
+  const [paymentIntentId, setPaymentIntentId] = useState(null);
   
   const { subtotal, itemCount } = calculateTotals();
   
@@ -78,6 +98,35 @@ export default function CheckoutPage({ params }) {
       router.push(`/store/${businessDomain}/cart`);
     }
   }, [cart.items.length, orderComplete, router, businessDomain]);
+  
+  // Load available payment methods
+  useEffect(() => {
+    async function loadPaymentMethods() {
+      if (!businessId) return;
+      
+      try {
+        setLoadingPaymentMethods(true);
+        const result = await getAvailablePaymentMethods(businessId);
+        
+        if (result.success && result.data.methods) {
+          setPaymentMethods(result.data.methods);
+          // Set default payment method
+          if (result.data.methods.length > 0 && !formData.paymentMethod) {
+            setFormData(prev => ({
+              ...prev,
+              paymentMethod: result.data.methods[0].provider
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('[Checkout] Error loading payment methods:', error);
+      } finally {
+        setLoadingPaymentMethods(false);
+      }
+    }
+    
+    loadPaymentMethods();
+  }, [businessId]);
   
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -437,45 +486,92 @@ export default function CheckoutPage({ params }) {
                       <h2 className="text-xl font-semibold">Payment Method</h2>
                     </div>
                     
-                    <RadioGroup 
-                      value={formData.paymentMethod}
-                      onValueChange={(value) => handleInputChange('paymentMethod', value)}
-                      className="space-y-3"
-                    >
-                      <div className="flex items-center space-x-2 border rounded-lg p-4">
-                        <RadioGroupItem value="card" id="card" />
-                        <Label htmlFor="card" className="flex-1 cursor-pointer flex items-center gap-3">
-                          <CreditCard className="w-5 h-5" />
-                          <span>Credit/Debit Card</span>
-                        </Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2 border rounded-lg p-4">
-                        <RadioGroupItem value="cod" id="cod" />
-                        <Label htmlFor="cod" className="flex-1 cursor-pointer flex items-center gap-3">
-                          <Banknote className="w-5 h-5" />
-                          <span>Cash on Delivery</span>
-                        </Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2 border rounded-lg p-4">
-                        <RadioGroupItem value="wallet" id="wallet" />
-                        <Label htmlFor="wallet" className="flex-1 cursor-pointer flex items-center gap-3">
-                          <Wallet className="w-5 h-5" />
-                          <span>JazzCash / EasyPaisa</span>
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                    
-                    {formData.paymentMethod === 'card' && (
-                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-600 mb-4">
-                          Card payment will be processed securely via Stripe
-                        </p>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Lock className="w-4 h-4" />
-                          <span>256-bit SSL encryption</span>
+                    {loadingPaymentMethods ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                  </div>
+                ) : paymentMethods.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                    <p>No payment methods available</p>
+                  </div>
+                ) : (
+                  <RadioGroup 
+                    value={formData.paymentMethod}
+                    onValueChange={(value) => handleInputChange('paymentMethod', value)}
+                    className="space-y-3"
+                  >
+                    {paymentMethods.map((method) => {
+                      const Icon = paymentIcons[method.provider] || CreditCard;
+                      return (
+                        <div key={method.id} className="flex items-center space-x-2 border rounded-lg p-4 hover:border-blue-300 transition-colors">
+                          <RadioGroupItem value={method.provider} id={method.provider} />
+                          <Label htmlFor={method.provider} className="flex-1 cursor-pointer flex items-center gap-3">
+                            <Icon className="w-5 h-5" />
+                            <div className="flex-1">
+                              <span className="font-medium">{method.display_name}</span>
+                              {method.description && (
+                                <p className="text-xs text-gray-500">{method.description}</p>
+                              )}
+                            </div>
+                            {(method.fee_percentage > 0 || method.fee_fixed > 0) && (
+                              <Badge variant="secondary" className="text-xs">
+                                Fee: {method.fee_percentage > 0 ? `${method.fee_percentage}%` : ''}
+                                {method.fee_percentage > 0 && method.fee_fixed > 0 ? ' + ' : ''}
+                                {method.fee_fixed > 0 ? `Rs. ${method.fee_fixed}` : ''}
+                              </Badge>
+                            )}
+                          </Label>
                         </div>
+                      );
+                    })}
+                  </RadioGroup>
+                )}
+                    
+                    {/* Dynamic Payment Method Info */}
+                    {formData.paymentMethod && (
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                        {formData.paymentMethod === 'stripe' && (
+                          <>
+                            <p className="text-sm text-gray-600 mb-4">
+                              Card payment will be processed securely via Stripe
+                            </p>
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <Lock className="w-4 h-4" />
+                              <span>256-bit SSL encryption</span>
+                            </div>
+                          </>
+                        )}
+                        {formData.paymentMethod === 'cod' && (
+                          <>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Cash on Delivery (COD)
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {paymentMethods.find(m => m.provider === 'cod')?.description || 'Pay when you receive your order'}
+                            </p>
+                          </>
+                        )}
+                        {(formData.paymentMethod === 'easypaisa' || formData.paymentMethod === 'jazzcash') && (
+                          <>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Mobile Wallet Payment
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              You will be redirected to complete payment via {formData.paymentMethod === 'easypaisa' ? 'EasyPaisa' : 'JazzCash'}
+                            </p>
+                          </>
+                        )}
+                        {formData.paymentMethod === 'bank_transfer' && (
+                          <>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Bank Transfer
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Order will be processed after payment confirmation
+                            </p>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
