@@ -202,7 +202,7 @@ export default function CheckoutPage({ params }) {
           country: formData.country,
         },
         items: cart.items.map(item => ({
-          id: item.id,
+          id: item.productId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,

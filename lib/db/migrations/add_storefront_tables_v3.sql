@@ -114,7 +114,7 @@ CREATE INDEX IF NOT EXISTS idx_storefront_orders_created_at ON storefront_orders
 CREATE TABLE IF NOT EXISTS storefront_order_items (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL,
-    product_id INTEGER,
+    product_id UUID,
     product_name VARCHAR(255) NOT NULL,
     product_sku VARCHAR(100),
     quantity INTEGER NOT NULL DEFAULT 1,
@@ -125,3 +125,14 @@ CREATE TABLE IF NOT EXISTS storefront_order_items (
 );
 
 CREATE INDEX IF NOT EXISTS idx_storefront_order_items_order_id ON storefront_order_items(order_id);
+
+-- 7. STOREFRONT ANALYTICS (without FK constraint)
+CREATE TABLE IF NOT EXISTS storefront_analytics (
+    business_id UUID NOT NULL,
+    date DATE NOT NULL,
+    orders_count INTEGER DEFAULT 0,
+    revenue DECIMAL(12, 2) DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    PRIMARY KEY (business_id, date)
+);
