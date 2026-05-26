@@ -235,7 +235,7 @@ export function DashboardTabs({
         handlePosCheckout,
         handleTableAction,
         handleNewRestaurantOrder,
-        handleKitchenStatusUpdate
+        handleKitchenStatusUpdate,
     } = handlers;
 
     const tabVariants = {
@@ -735,7 +735,8 @@ export function DashboardTabs({
                                     products={filteredProducts}
                                     customers={filteredCustomers}
                                     onStartSession={handleStartPosSession}
-                                    onCompleteSale={handlePosCheckout}
+                                    onOrderSent={handleNewRestaurantOrder}
+                                    onOrderComplete={() => refreshAllData?.()}
                                     currency={currency}
                                     session={posSession}
                                 />
@@ -838,7 +839,14 @@ export function DashboardTabs({
                                             businessId={business?.id}
                                             tables={restaurantTables || []}
                                             kitchenQueue={kitchenQueue || []}
-                                            onTableAction={handleTableAction}
+                                            onTableAction={(table) => {
+                                                // RestaurantManager passes the table object; adapt to handleTableAction(action, tableId)
+                                                if (!table?.id) return;
+                                                const nextStatus = table.status === 'occupied' ? 'clear'
+                                                    : table.status === 'available' ? 'occupy'
+                                                    : table.status;
+                                                handleTableAction(nextStatus, table.id, table);
+                                            }}
                                             onNewOrder={handleNewRestaurantOrder}
                                             onKitchenStatusUpdate={handleKitchenStatusUpdate}
                                             onRefresh={refreshAllData}

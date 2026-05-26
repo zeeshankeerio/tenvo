@@ -1,0 +1,13 @@
+import pg from 'pg';
+import dotenv from 'dotenv';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, '..', '.env') });
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+const client = await pool.connect();
+const r = await client.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'storefront_order_items' ORDER BY ordinal_position`);
+console.log('storefront_order_items columns:', r.rows.map(r => r.column_name).join(', '));
+await client.query(`CREATE INDEX IF NOT EXISTS idx_storefront_order_items_business ON storefront_order_items(business_id)`);
+console.log('Index created OK');
+client.release(); await pool.end();

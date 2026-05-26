@@ -1046,23 +1046,36 @@ function BusinessDashboardContent() {
     }));
   };
 
-  const handleNewRestaurantOrder = (order) => {
-    const kItem = {
-      id: `k-${Date.now()}`,
-      orderId: order.id,
-      items: order.items,
-      status: 'pending',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    setKitchenQueue(prev => [...prev, kItem]);
-    toast.success('Order sent to kitchen');
+  const handleNewRestaurantOrder = async () => {
+    // Refresh queue from DB so the new kitchen order appears with real data
+    try {
+      const res = await getKitchenQueueAction(business.id);
+      if (res.success) setKitchenQueue(res.queue || []);
+    } catch (err) {
+      console.error('[Restaurant] Failed to refresh kitchen queue:', err);
+    }
   };
 
-  const handleKitchenStatusUpdate = (itemId, newStatus) => {
-    setKitchenQueue(prev => prev.map(item =>
-      item.id === itemId ? { ...item, status: newStatus } : item
-    ));
-    if (newStatus === 'ready') toast.success('Order ready for serving', { icon: '🍽️' });
+  const handleKitchenStatusUpdate = async (data) => {
+    // data = { kitchenOrderId, status, businessId } from RestaurantManager
+    const { kitchenOrderId, status, businessId: bId } = data || {};
+    if (!kitchenOrderId || !status) return;
+    try {
+      const result = await import('@/lib/actions/standard/restaurant')
+        .then(m => m.updateKitchenOrderAction({ businessId: bId || business.id, kitchenOrderId, status }));
+      if (result?.success) {
+        if (status === 'ready') toast.success('Order ready for serving', { icon: '🍽️' });
+        else if (status === 'preparing') toast.success('Cooking started', { icon: '🔥' });
+        // Refresh queue from DB
+        const res = await getKitchenQueueAction(business.id);
+        if (res.success) setKitchenQueue(res.queue || []);
+      } else {
+        toast.error(result?.error || 'Failed to update kitchen order');
+      }
+    } catch (err) {
+      console.error('[Restaurant] Kitchen status update failed:', err);
+      toast.error('Failed to update kitchen order');
+    }
   };
 
   // --- Payroll Handlers ------------------------------------------------------

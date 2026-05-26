@@ -2,7 +2,7 @@
 
 import { useState, use } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, ArrowRight, ArrowLeft, Trash2, Plus, Minus,
@@ -179,7 +179,7 @@ export default function CartPage({ params }) {
                     >
                       <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden">
                         {item.image ? (
-                          <Image
+                          <SmartProductImage
                             src={item.image}
                             alt={item.name}
                             width={80}

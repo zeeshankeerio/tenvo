@@ -86,7 +86,10 @@ function CategoryBar({ categories, active, onSelect }) {
 // ===============================================================
 
 function MenuItemCard({ product, onAdd, currency }) {
-    const isLow = (product.stock || 0) <= 5;
+    // Only show LOW badge if stock is explicitly tracked (stock > 0 previously, now <= 5)
+    // Items with stock=0 that have never been stocked are untracked menu items — no badge
+    const stockTracked = product.stock_status === 'low_stock' || (product.stock !== null && product.stock !== undefined && product.stock > 0 && product.stock <= 5);
+    const isLow = stockTracked;
     return (
         <motion.button
             initial={{ opacity: 0, scale: 0.95 }}
@@ -152,7 +155,7 @@ function OrderItemRow({ item, onQty, onRemove, currency }) {
 // MAIN RESTAURANT POS
 // ===============================================================
 
-export function RestaurantPOS({ businessId, products = [], onCompleteSale, currency = 'Rs.', taxConfig }) {
+export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrderComplete, onOrderSent, currency = 'Rs.', taxConfig }) {
     const { business } = useBusiness();
     const effectiveBusinessId = businessId || business?.id;
 
@@ -171,6 +174,11 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
     const [currentOrderId, setCurrentOrderId] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const containerRef = React.useRef(null);
+    // Customer info for takeaway/delivery
+    const [customerName, setCustomerName] = useState('');
+    const [customerPhone, setCustomerPhone] = useState('');
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [deliveryFee, setDeliveryFee] = useState(0);
 
     // --- Fullscreen Logic ----------------------------------------------------
 
@@ -232,7 +240,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
     // Priority: taxConfig.sales_tax_rate -> 16.0 (fallback for restaurant service tax)
     const effectiveTaxRate = (taxConfig?.sales_tax_rate ?? 16.0) / 100;
     const tax = Math.round(subtotal * effectiveTaxRate);
-    const total = subtotal + tax;
+    const total = subtotal + tax + (orderType === 'delivery' ? deliveryFee : 0);
 
     // Handlers
     const addItem = useCallback((product) => {
@@ -259,13 +267,33 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
 
     const handleSendToKitchen = async () => {
         if (!effectiveBusinessId || orderItems.length === 0) return;
+        // Delivery validation
+        if (orderType === 'delivery' && !customerName.trim()) {
+            toast.error('Customer name is required for delivery orders'); return;
+        }
+        if (orderType === 'delivery' && !customerPhone.trim()) {
+            toast.error('Customer phone is required for delivery orders'); return;
+        }
+        if (orderType === 'delivery' && !deliveryAddress.trim()) {
+            toast.error('Delivery address is required'); return;
+        }
+        // Dine-in validation — only enforce table selection if tables are configured
+        if (orderType === 'dine-in' && tables.length > 0 && !selectedTable) {
+            toast.error('Please select a table for dine-in orders'); return;
+        }
         setIsProcessing(true);
         try {
+            // Normalize order type to DB format (dine_in not dine-in)
+            const dbOrderType = orderType === 'dine-in' ? 'dine_in' : orderType;
             const result = await createRestaurantOrderAction({
                 businessId: effectiveBusinessId,
-                tableId: selectedTable?.id,
-                orderType,
-                covers,
+                tableId: selectedTable?.id || null,
+                orderType: dbOrderType,
+                covers: orderType === 'dine-in' ? covers : 1,
+                customerName: customerName.trim() || null,
+                customerPhone: customerPhone.trim() || null,
+                deliveryAddress: deliveryAddress.trim() || null,
+                deliveryFee: deliveryFee || 0,
                 items: orderItems.map(i => ({
                     productId: i.id,
                     name: i.name,
@@ -279,9 +307,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
             if (result.success) {
                 toast.success(`Order #${result.order?.order_number || 'NEW'} sent to kitchen`, { icon: '🔥' });
                 setCurrentOrderId(result.order?.id || null);
-                if (selectedTable && orderType === 'dine-in') {
-                    updateTableStatusAction({ businessId: effectiveBusinessId, tableId: selectedTable.id, status: 'occupied' });
-                }
+                onOrderSent?.();
                 setShowPayment(true);
             } else {
                 toast.error(result.error || 'Failed to create order');
@@ -308,7 +334,9 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
 
             if (result.success) {
                 toast.success('Payment processed!', { icon: '✅' });
-                onCompleteSale?.(result);
+                // Notify parent for dashboard refresh only — do NOT call onCompleteSale
+                // (that triggers POS invoice logic which is incompatible with restaurant orders)
+                onOrderComplete?.(result);
                 // Reset all state for next order
                 setOrderItems([]);
                 setSelectedTable(null);
@@ -316,6 +344,10 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
                 setWaiterNote('');
                 setCurrentOrderId(null);
                 setShowPayment(false);
+                setCustomerName('');
+                setCustomerPhone('');
+                setDeliveryAddress('');
+                setDeliveryFee(0);
                 // Refresh tables
                 getTablesAction(effectiveBusinessId).then(res => {
                     if (res.success) setTables(res.tables || []);
@@ -346,7 +378,16 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
                 {/* Order Type + Table Selection */}
                 <div className="p-4 bg-white border-b border-gray-100 space-y-3">
                     <div className="flex items-center justify-between">
-                        <OrderTypeSelector selected={orderType} onSelect={setOrderType} />
+                        <OrderTypeSelector selected={orderType} onSelect={(type) => {
+                            setOrderType(type);
+                            // Clear table when leaving dine-in
+                            if (type !== 'dine-in') setSelectedTable(null);
+                            // Clear customer fields when switching
+                            setCustomerName('');
+                            setCustomerPhone('');
+                            setDeliveryAddress('');
+                            setDeliveryFee(0);
+                        }} />
                         {orderType === 'dine-in' && (
                             <div className="flex items-center gap-2">
                                 <Users className="w-3.5 h-3.5 text-gray-400" />
@@ -359,6 +400,65 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
                             </div>
                         )}
                     </div>
+
+                    {/* Takeaway: optional customer name + phone */}
+                    {orderType === 'takeaway' && (
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                placeholder="Customer name (optional)"
+                                value={customerName}
+                                onChange={e => setCustomerName(e.target.value)}
+                                className="flex-1 text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-200 outline-none"
+                            />
+                            <input
+                                type="tel"
+                                placeholder="Phone (optional)"
+                                value={customerPhone}
+                                onChange={e => setCustomerPhone(e.target.value)}
+                                className="w-36 text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-200 outline-none"
+                            />
+                        </div>
+                    )}
+
+                    {/* Delivery: required name, phone + address */}
+                    {orderType === 'delivery' && (
+                        <div className="space-y-2">
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Customer name *"
+                                    value={customerName}
+                                    onChange={e => setCustomerName(e.target.value)}
+                                    className="flex-1 text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-200 outline-none"
+                                />
+                                <input
+                                    type="tel"
+                                    placeholder="Phone *"
+                                    value={customerPhone}
+                                    onChange={e => setCustomerPhone(e.target.value)}
+                                    className="w-36 text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-200 outline-none"
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Delivery address *"
+                                    value={deliveryAddress}
+                                    onChange={e => setDeliveryAddress(e.target.value)}
+                                    className="flex-1 text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-200 outline-none"
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Delivery fee"
+                                    value={deliveryFee || ''}
+                                    onChange={e => setDeliveryFee(Number(e.target.value) || 0)}
+                                    className="w-28 text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-200 outline-none"
+                                    min="0"
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {/* Table Grid (dine-in only) */}
                     {orderType === 'dine-in' && (
@@ -497,9 +597,15 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
                         <span className="font-bold">{currency} {subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500">
-                        <span>Service Tax (16%)</span>
+                        <span>Service Tax ({Math.round(effectiveTaxRate * 100)}%)</span>
                         <span className="font-bold">{currency} {tax.toLocaleString()}</span>
                     </div>
+                    {orderType === 'delivery' && deliveryFee > 0 && (
+                        <div className="flex justify-between text-xs text-gray-500">
+                            <span>Delivery Fee</span>
+                            <span className="font-bold">{currency} {deliveryFee.toLocaleString()}</span>
+                        </div>
+                    )}
                     <div className="flex justify-between text-base font-black text-gray-900 pt-1 border-t border-gray-100">
                         <span>Total</span>
                         <span>{currency} {total.toLocaleString()}</span>
@@ -556,15 +662,15 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
                     <div className="p-4 border-t border-gray-100 space-y-2">
                         <button
                             onClick={handleSendToKitchen}
-                            disabled={orderItems.length === 0 || isProcessing || (orderType === 'dine-in' && !selectedTable)}
+                            disabled={orderItems.length === 0 || isProcessing}
                             className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                            <Send className="w-4 h-4" />
-                            Send to Kitchen
+                            {isProcessing ? <span className="animate-spin">⏳</span> : <Send className="w-4 h-4" />}
+                            {orderType === 'delivery' ? 'Place Delivery Order' : orderType === 'takeaway' ? 'Place Takeaway Order' : 'Send to Kitchen'}
                         </button>
                         <button
-                            onClick={() => orderItems.length > 0 && setShowPayment(true)}
-                            disabled={orderItems.length === 0}
+                            onClick={handleSendToKitchen}
+                            disabled={orderItems.length === 0 || isProcessing}
                             className="w-full py-2.5 border-2 border-gray-200 text-gray-600 text-xs font-bold rounded-xl hover:border-gray-300 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             <CreditCard className="w-3.5 h-3.5" />

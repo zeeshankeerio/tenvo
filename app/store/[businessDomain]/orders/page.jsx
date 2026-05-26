@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import {
@@ -52,8 +53,24 @@ export default function OrderHistoryPage({ params }) {
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const searchParams = useSearchParams();
 
   const currency = ctxCurrency || 'PKR';
+
+  // Auto-search when redirected from checkout with ?email=
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (!emailParam || !business?.id || searched) return;
+    setEmailInput(emailParam);
+    setTab('email');
+    setLoading(true);
+    getStorefrontOrders(business.id, { customerEmail: emailParam, limit: 50 })
+      .then(result => {
+        setOrders(result?.success ? (result.orders || []) : []);
+      })
+      .catch(() => setOrders([]))
+      .finally(() => { setLoading(false); setSearched(true); });
+  }, [business?.id, searchParams, searched]);
 
   const handleSearch = async (e) => {
     e.preventDefault();

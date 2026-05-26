@@ -119,8 +119,8 @@ function KitchenTicket({ order, onStatusUpdate }) {
                         }
                         return items.map((item, i) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
-                                <span className="font-bold text-gray-700">{item.qty}×</span>
-                                <span className="text-gray-800">{item.item_name}</span>
+                                <span className="font-bold text-gray-700">{item.quantity || item.qty || 1}×</span>
+                                <span className="text-gray-800">{item.name || item.item_name || item.product_name || 'Item'}</span>
                                 {item.mods?.length > 0 && (
                                     <span className="text-[9px] text-gray-400">+{item.mods.map(m => m.name).join(', ')}</span>
                                 )}
