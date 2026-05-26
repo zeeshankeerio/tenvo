@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -21,9 +21,9 @@ import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CartPage({ params }) {
-  const { businessDomain } = params;
+  const { businessDomain } = use(params);
   const router = useRouter();
-  const { cart, updateQuantity, removeItem, isLoading, calculateTotals } = useCart();
+  const { cart, updateQuantity, removeItem, isLoading, calculateTotals, hydrated } = useCart();
   const { currency, settings, business } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
 
@@ -79,6 +79,15 @@ export default function CartPage({ params }) {
       setApplyingPromo(false);
     }
   };
+
+  // ── Pre-hydration loading
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   // ── Empty cart ───────────────────────────────────────────────────────
   if (cart.items.length === 0) {
@@ -364,7 +373,7 @@ export default function CartPage({ params }) {
                     size="lg"
                     className="w-full gap-2 rounded-xl font-bold"
                     style={{ backgroundColor: accent }}
-                    onClick={() => router.push(`/store/${businessDomain}/checkout`)}
+                    onClick={() => router.push(`/store/${businessDomain}/checkout?shipping=${shippingMethod}`)}
                   >
                     Proceed to Checkout
                     <ArrowRight className="w-5 h-5" />

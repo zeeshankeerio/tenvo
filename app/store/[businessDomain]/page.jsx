@@ -45,7 +45,7 @@ export default async function StoreHomePage({ params }) {
 
   const { business, settings } = businessResult;
 
-  if (business.is_storefront_enabled === false) {
+  if (businessResult.settings?.is_storefront_enabled === false) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
@@ -64,18 +64,20 @@ export default async function StoreHomePage({ params }) {
   const accentDark = domainCfg.accentDark;
   const accentLight = domainCfg.accentLight;
 
-  // Fetch data in parallel
-  const [featuredResult, newArrivalsResult, categoriesResult, onSaleResult] = await Promise.all([
-    getProducts(business.id, { limit: 8, featured: true, inStock: true }),
-    getProducts(business.id, { limit: 8, sort: 'newest', inStock: true }),
+  // Fetch data in parallel — no hard inStock filter so all inventory items show
+  const [featuredResult, newArrivalsResult, categoriesResult, onSaleResult, popularResult] = await Promise.all([
+    getProducts(business.id, { limit: 8, sort: 'featured' }),
+    getProducts(business.id, { limit: 8, sort: 'newest' }),
     getCategories(business.id),
-    getProducts(business.id, { limit: 4, onSale: true, inStock: true }),
+    getProducts(business.id, { limit: 4, onSale: true }),
+    getProducts(business.id, { limit: 4, sort: 'popularity' }),
   ]);
 
   const featuredProducts = featuredResult.success ? featuredResult.products : [];
   const newArrivals = newArrivalsResult.success ? newArrivalsResult.products : [];
   const categories = categoriesResult.success ? categoriesResult.categories : [];
   const onSaleProducts = onSaleResult.success ? onSaleResult.products : [];
+  const popularProducts = popularResult.success ? popularResult.products : [];
 
   const heroImage = business.cover_image_url || domainCfg.heroImage;
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
@@ -161,7 +163,7 @@ export default async function StoreHomePage({ params }) {
             {/* Quick stats */}
             <div className="flex flex-wrap gap-6 mt-10">
               {[
-                { label: `${featuredProducts.length + newArrivals.length}+ Products`, icon: Package },
+                { label: `${featuredResult.total || featuredProducts.length}+ Products`, icon: Package },
                 { label: `Free Shipping over Rs. ${freeShippingThreshold.toLocaleString()}`, icon: Truck },
                 { label: `${returnDays}-Day Returns`, icon: RotateCcw },
               ].map((stat) => (
@@ -533,8 +535,35 @@ export default async function StoreHomePage({ params }) {
         </section>
       )}
 
+      {/* ── Best Sellers ─────────────────────────────────────────────────────── */}
+      {popularProducts.length > 0 && onSaleProducts.length === 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ backgroundColor: accentLight }}>
+                <TrendingUp className="w-5 h-5" style={{ color: accent }} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-gray-900">Best Sellers</h2>
+                <p className="text-gray-500 text-sm">Our most popular products</p>
+              </div>
+            </div>
+            <Link
+              href={`/store/${businessDomain}/products?sort=popularity`}
+              className="flex items-center gap-1 text-sm font-semibold hover:gap-2 transition-all"
+              style={{ color: accent }}
+            >
+              View All <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <Suspense fallback={<ProductsSkeleton count={4} />}>
+            <ProductGrid products={popularProducts} businessDomain={businessDomain} />
+          </Suspense>
+        </section>
+      )}
+
       {/* ── Empty State ──────────────────────────────────────────────────────── */}
-      {featuredProducts.length === 0 && newArrivals.length === 0 && (
+      {featuredProducts.length === 0 && newArrivals.length === 0 && popularProducts.length === 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
           <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: accentLight }}>
             <Package className="w-12 h-12" style={{ color: accent }} />

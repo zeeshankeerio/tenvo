@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { 
   Select,
   SelectContent,
@@ -27,14 +28,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { 
-  Package, Search, Filter, Eye, CheckCircle, XCircle, 
+import {
+  Package, Search, Filter, Eye, CheckCircle, XCircle,
   Truck, Clock, DollarSign, User, Calendar, ArrowLeft,
-  ChevronLeft, ChevronRight, RefreshCw
+  ChevronLeft, ChevronRight, RefreshCw, PlusCircle, Banknote,
+  CreditCard, Smartphone, FileText, Hash, StickyNote, X
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { formatDate } from '@/lib/utils';
 import { getBusinessOrders, getOrderDetails, updateOrderStatus } from '@/lib/actions/storefront/orders';
+import { updateOrderPaymentStatus, recordManualPayment } from '@/lib/actions/storefront/payments';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
@@ -54,6 +57,24 @@ const PAYMENT_STATUS_CONFIG = {
   refunded: { label: 'Refunded', color: 'bg-gray-100 text-gray-800' },
 };
 
+const PAYMENT_MODES = [
+  { value: 'cash',          label: 'Cash',          icon: Banknote },
+  { value: 'bank_transfer', label: 'Bank Transfer',  icon: CreditCard },
+  { value: 'easypaisa',     label: 'EasyPaisa',      icon: Smartphone },
+  { value: 'jazzcash',      label: 'JazzCash',       icon: Smartphone },
+  { value: 'cheque',        label: 'Cheque',         icon: FileText },
+  { value: 'other',         label: 'Other',          icon: DollarSign },
+];
+
+const DEFAULT_PAYMENT_FORM = {
+  amount: '',
+  paymentMode: 'cash',
+  referenceId: '',
+  notes: '',
+  receivedAt: '',
+  markFullyPaid: true,
+};
+
 export function OrdersManager({ business, category }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +86,9 @@ export function OrdersManager({ business, category }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState('7days');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentForm, setPaymentForm] = useState(DEFAULT_PAYMENT_FORM);
+  const [recordingPayment, setRecordingPayment] = useState(false);
   const limit = 10;
 
   const loadOrders = useCallback(async () => {
@@ -155,17 +179,99 @@ export function OrdersManager({ business, category }) {
       
       if (result.success) {
         toast.success(`Order status updated to ${newStatus}`);
+        // Auto-reflect payment status for COD delivered orders
+        const newPayStatus = newStatus === 'delivered' &&
+          orderDetails.order.payment_status === 'pending' ? 'paid' : orderDetails.order.payment_status;
         setOrderDetails(prev => ({
           ...prev,
-          order: { ...prev.order, status: newStatus }
+          order: { ...prev.order, status: newStatus, payment_status: newPayStatus }
         }));
-        loadOrders(); // Refresh list
+        loadOrders();
       } else {
         toast.error('Failed to update status');
       }
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Failed to update status');
+    }
+  };
+
+  const handlePaymentStatusUpdate = async (newPaymentStatus) => {
+    if (!selectedOrder || !orderDetails) return;
+    try {
+      const result = await updateOrderPaymentStatus(
+        selectedOrder.id,
+        business.id,
+        newPaymentStatus,
+        `Payment marked as ${newPaymentStatus}`
+      );
+      if (result.success) {
+        toast.success(`Payment marked as ${newPaymentStatus}`);
+        setOrderDetails(prev => ({
+          ...prev,
+          order: { ...prev.order, payment_status: newPaymentStatus }
+        }));
+        loadOrders();
+      } else {
+        toast.error('Failed to update payment status');
+      }
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      toast.error('Failed to update payment status');
+    }
+  };
+
+  const handleRecordPayment = async () => {
+    if (!selectedOrder || !orderDetails) return;
+    if (!paymentForm.amount || parseFloat(paymentForm.amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    setRecordingPayment(true);
+    try {
+      const result = await recordManualPayment(selectedOrder.id, business.id, {
+        amount: parseFloat(paymentForm.amount),
+        paymentMode: paymentForm.paymentMode,
+        referenceId: paymentForm.referenceId.trim(),
+        notes: paymentForm.notes.trim(),
+        receivedAt: paymentForm.receivedAt || new Date().toISOString().split('T')[0],
+        markFullyPaid: paymentForm.markFullyPaid,
+      });
+      if (result.success) {
+        toast.success(result.message || 'Payment recorded');
+        setShowPaymentModal(false);
+        // Optimistically update local order details
+        const newPayStatus = paymentForm.markFullyPaid ? 'paid' : orderDetails.order.payment_status;
+        const existingHistory = orderDetails.order.metadata?.payment_history || [];
+        const newEntry = {
+          amount: parseFloat(paymentForm.amount),
+          payment_mode: paymentForm.paymentMode,
+          reference_id: paymentForm.referenceId.trim() || null,
+          notes: paymentForm.notes.trim() || null,
+          status: newPayStatus,
+          recorded_manually: true,
+          recorded_at: new Date().toISOString(),
+        };
+        setOrderDetails(prev => ({
+          ...prev,
+          order: {
+            ...prev.order,
+            payment_status: newPayStatus,
+            metadata: {
+              ...(prev.order.metadata || {}),
+              payment_history: [...existingHistory, newEntry],
+            },
+          },
+        }));
+        loadOrders();
+      } else {
+        toast.error(result.error || 'Failed to record payment');
+      }
+    } catch (err) {
+      console.error('Error recording payment:', err);
+      toast.error('Failed to record payment');
+    } finally {
+      setRecordingPayment(false);
     }
   };
 
@@ -577,7 +683,7 @@ export function OrdersManager({ business, category }) {
               {/* Status Update */}
               {orderDetails.order.status !== 'cancelled' && orderDetails.order.status !== 'delivered' && (
                 <div className="flex flex-wrap gap-2">
-                  <p className="w-full text-sm font-medium mb-2">Update Status:</p>
+                  <p className="w-full text-sm font-medium mb-2">Update Order Status:</p>
                   {['pending', 'processing', 'shipped', 'delivered'].map((status) => (
                     <Button
                       key={status}
@@ -599,6 +705,81 @@ export function OrdersManager({ business, category }) {
                   </Button>
                 </div>
               )}
+
+              {/* Payment Panel */}
+              <div className="rounded-xl border border-gray-200 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-semibold text-gray-700">Payment</span>
+                    {getPaymentStatusBadge(orderDetails.order.payment_status)}
+                  </div>
+                  {orderDetails.order.payment_status !== 'paid' && (
+                    <Button
+                      size="sm"
+                      className="gap-1.5 bg-green-600 hover:bg-green-700 text-white h-8 text-xs"
+                      onClick={() => {
+                        setPaymentForm({
+                          ...DEFAULT_PAYMENT_FORM,
+                          amount: String(parseFloat(orderDetails.order.total || 0).toFixed(2)),
+                          receivedAt: new Date().toISOString().split('T')[0],
+                        });
+                        setShowPaymentModal(true);
+                      }}
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" /> Record Payment
+                    </Button>
+                  )}
+                </div>
+
+                {/* Payment history from metadata */}
+                {(() => {
+                  const history = orderDetails.order.metadata?.payment_history || [];
+                  if (history.length === 0) {
+                    return (
+                      <div className="px-4 py-4 text-sm text-gray-400 italic">
+                        {orderDetails.order.payment_status === 'paid'
+                          ? 'Payment received (recorded via system checkout).'
+                          : 'No payment recorded yet.'}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="divide-y divide-gray-100">
+                      {history.map((p, i) => {
+                        const ModeIcon = PAYMENT_MODES.find(m => m.value === p.payment_mode)?.icon || DollarSign;
+                        return (
+                          <div key={i} className="flex items-center gap-3 px-4 py-3">
+                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                              <ModeIcon className="w-4 h-4 text-green-700" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900">
+                                {formatCurrency(parseFloat(p.amount || 0), business.currency || 'PKR')}
+                                <span className="ml-2 text-xs font-normal text-gray-500 capitalize">
+                                  via {PAYMENT_MODES.find(m => m.value === p.payment_mode)?.label || p.payment_mode}
+                                </span>
+                                {p.recorded_manually && (
+                                  <span className="ml-1 text-xs text-amber-600">(manual)</span>
+                                )}
+                              </p>
+                              {p.reference_id && (
+                                <p className="text-xs text-gray-400">Ref: {p.reference_id}</p>
+                              )}
+                              {p.notes && (
+                                <p className="text-xs text-gray-400 truncate">{p.notes}</p>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-400 flex-shrink-0">
+                              {p.recorded_at ? formatDate(p.recorded_at) : ''}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
 
               {/* Status History */}
               {orderDetails.history.length > 0 && (
@@ -623,6 +804,173 @@ export function OrdersManager({ business, category }) {
               )}
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Record Manual Payment Modal ─────────────────────────── */}
+      <Dialog open={showPaymentModal} onOpenChange={(open) => { if (!recordingPayment) setShowPaymentModal(open); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Banknote className="w-5 h-5 text-green-600" />
+              Record Payment
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedOrder && orderDetails && (
+            <div className="space-y-5 py-1">
+              {/* Order ref banner */}
+              <div className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                <span className="text-gray-500">Order</span>
+                <span className="font-semibold text-gray-800">{orderDetails.order.order_number}</span>
+                <span className="text-gray-500">Total</span>
+                <span className="font-bold text-gray-900">
+                  {formatCurrency(parseFloat(orderDetails.order.total || 0), business.currency || 'PKR')}
+                </span>
+              </div>
+
+              {/* Amount */}
+              <div className="space-y-1.5">
+                <Label htmlFor="pm-amount">Amount Received *</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium">
+                    {business.currency || 'PKR'}
+                  </span>
+                  <Input
+                    id="pm-amount"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="pl-14 rounded-lg"
+                    value={paymentForm.amount}
+                    onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="space-y-1.5">
+                <Label>Payment Method *</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {PAYMENT_MODES.map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setPaymentForm(f => ({ ...f, paymentMode: value }))}
+                      className={cn(
+                        'flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg border-2 text-xs font-medium transition-all',
+                        paymentForm.paymentMode === value
+                          ? 'border-green-500 bg-green-50 text-green-700'
+                          : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reference ID */}
+              <div className="space-y-1.5">
+                <Label htmlFor="pm-ref" className="flex items-center gap-1.5">
+                  <Hash className="w-3.5 h-3.5 text-gray-400" />
+                  Reference / Transaction ID
+                  <span className="text-gray-400 font-normal">(optional)</span>
+                </Label>
+                <Input
+                  id="pm-ref"
+                  placeholder={
+                    paymentForm.paymentMode === 'cheque' ? 'Cheque number' :
+                    paymentForm.paymentMode === 'bank_transfer' ? 'Bank transaction ID' :
+                    paymentForm.paymentMode === 'easypaisa' || paymentForm.paymentMode === 'jazzcash'
+                      ? 'Transaction / confirmation ID' : 'Reference number'
+                  }
+                  className="rounded-lg"
+                  value={paymentForm.referenceId}
+                  onChange={e => setPaymentForm(f => ({ ...f, referenceId: e.target.value }))}
+                />
+              </div>
+
+              {/* Date Received */}
+              <div className="space-y-1.5">
+                <Label htmlFor="pm-date" className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                  Date Received
+                </Label>
+                <Input
+                  id="pm-date"
+                  type="date"
+                  className="rounded-lg"
+                  value={paymentForm.receivedAt}
+                  onChange={e => setPaymentForm(f => ({ ...f, receivedAt: e.target.value }))}
+                />
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-1.5">
+                <Label htmlFor="pm-notes" className="flex items-center gap-1.5">
+                  <StickyNote className="w-3.5 h-3.5 text-gray-400" />
+                  Notes
+                  <span className="text-gray-400 font-normal">(optional)</span>
+                </Label>
+                <Input
+                  id="pm-notes"
+                  placeholder="e.g. Paid by owner on behalf, partial payment, etc."
+                  className="rounded-lg"
+                  value={paymentForm.notes}
+                  onChange={e => setPaymentForm(f => ({ ...f, notes: e.target.value }))}
+                />
+              </div>
+
+              {/* Mark fully paid toggle */}
+              <label className="flex items-center gap-3 cursor-pointer select-none p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div
+                  className={cn(
+                    'w-10 h-6 rounded-full transition-colors flex-shrink-0 relative',
+                    paymentForm.markFullyPaid ? 'bg-green-500' : 'bg-gray-300'
+                  )}
+                  onClick={() => setPaymentForm(f => ({ ...f, markFullyPaid: !f.markFullyPaid }))}
+                >
+                  <div className={cn(
+                    'absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
+                    paymentForm.markFullyPaid ? 'translate-x-4' : 'translate-x-0.5'
+                  )} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-800">Mark order as fully paid</p>
+                  <p className="text-xs text-gray-500">
+                    {paymentForm.markFullyPaid
+                      ? 'Payment status will be updated to Paid'
+                      : 'Payment recorded but status stays Pending (for partial payments)'}
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              variant="outline"
+              className="rounded-lg"
+              onClick={() => setShowPaymentModal(false)}
+              disabled={recordingPayment}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="rounded-lg gap-2 bg-green-600 hover:bg-green-700 text-white"
+              onClick={handleRecordPayment}
+              disabled={recordingPayment || !paymentForm.amount}
+            >
+              {recordingPayment ? (
+                <><RefreshCw className="w-4 h-4 animate-spin" /> Saving…</>
+              ) : (
+                <><CheckCircle className="w-4 h-4" /> Save Payment</>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

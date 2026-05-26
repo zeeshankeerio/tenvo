@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 
@@ -68,7 +68,7 @@ function FaqItem({ q, a, accent }) {
 }
 
 export default function FaqsPage({ params }) {
-  const { businessDomain } = params;
+  const { businessDomain } = use(params);
   const [search, setSearch] = useState('');
 
   const filtered = FAQS.map((cat) => ({

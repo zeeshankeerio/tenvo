@@ -50,7 +50,7 @@ export default async function ProductDetailPage({ params }) {
     notFound();
   }
   
-  const { business } = businessResult;
+  const { business, settings } = businessResult;
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,13 +59,14 @@ export default async function ProductDetailPage({ params }) {
           businessId={business.id}
           businessDomain={businessDomain}
           slug={slug}
+          settings={settings}
         />
       </Suspense>
     </div>
   );
 }
 
-async function ProductContent({ businessId, businessDomain, slug }) {
+async function ProductContent({ businessId, businessDomain, slug, settings }) {
   const productResult = await getProductBySlug(businessId, slug);
   
   if (!productResult.success) {
@@ -124,36 +125,42 @@ async function ProductContent({ businessId, businessDomain, slug }) {
               businessDomain={businessDomain}
             />
             
-            {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Truck className="w-5 h-5 text-blue-600" />
+            {/* Trust Badges — dynamic from store settings */}
+            {(() => {
+              const threshold = settings?.freeShippingThreshold || 2000;
+              const returnDays = settings?.returnPolicyDays || 7;
+              return (
+                <div className="grid grid-cols-3 gap-4 pt-6 border-t">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Truck className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-xs text-gray-900">Free Shipping</p>
+                      <p className="text-xs text-gray-500">Over Rs. {Number(threshold).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-xs text-gray-900">Secure Payment</p>
+                      <p className="text-xs text-gray-500">100% safe</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <RotateCcw className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-xs text-gray-900">Easy Returns</p>
+                      <p className="text-xs text-gray-500">{returnDays}-day policy</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-xs text-gray-900">Free Shipping</p>
-                  <p className="text-xs text-gray-500">Over Rs. 2,000</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-xs text-gray-900">Secure Payment</p>
-                  <p className="text-xs text-gray-500">100% safe</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <RotateCcw className="w-5 h-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-xs text-gray-900">Easy Returns</p>
-                  <p className="text-xs text-gray-500">7-day policy</p>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
         </div>
       </div>

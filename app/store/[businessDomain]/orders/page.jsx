@@ -1,248 +1,367 @@
-import { notFound } from 'next/navigation';
-import { getBusinessByDomain, getStorefrontOrders } from '@/lib/actions/storefront/business';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Package, Clock, CheckCircle, XCircle, Truck } from 'lucide-react';
+'use client';
+
+import { useState, use } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import {
+  Package, Clock, CheckCircle, XCircle, Truck, Search,
+  Mail, Hash, ArrowLeft, ChevronRight, DollarSign, MapPin,
+  AlertCircle, RefreshCw, ShoppingBag
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/currency';
+import { useStorefront } from '@/lib/context/StorefrontContext';
+import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { getStorefrontOrders } from '@/lib/actions/storefront/business';
 
-export async function generateMetadata({ params }) {
-  const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
-  
-  if (!result.success) {
-    return { title: 'Order History' };
-  }
-  
-  return {
-    title: `Order History | ${result.business.business_name}`,
-    description: `View your order history with ${result.business.business_name}`,
-  };
-}
-
-const statusIcons = {
-  pending: Clock,
-  confirmed: CheckCircle,
-  processing: Package,
-  shipped: Truck,
-  delivered: CheckCircle,
-  cancelled: XCircle,
+const STATUS_CONFIG = {
+  pending:    { label: 'Pending',    color: 'bg-amber-100 text-amber-700',   icon: Clock },
+  confirmed:  { label: 'Confirmed',  color: 'bg-blue-100 text-blue-700',     icon: CheckCircle },
+  processing: { label: 'Processing', color: 'bg-purple-100 text-purple-700', icon: RefreshCw },
+  shipped:    { label: 'Shipped',    color: 'bg-indigo-100 text-indigo-700', icon: Truck },
+  delivered:  { label: 'Delivered',  color: 'bg-green-100 text-green-700',   icon: CheckCircle },
+  cancelled:  { label: 'Cancelled',  color: 'bg-red-100 text-red-700',       icon: XCircle },
 };
 
-const statusColors = {
-  pending: 'bg-amber-100 text-amber-700',
-  confirmed: 'bg-blue-100 text-blue-700',
-  processing: 'bg-purple-100 text-purple-700',
-  shipped: 'bg-indigo-100 text-indigo-700',
-  delivered: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
+const PAYMENT_CONFIG = {
+  pending:  { label: 'Unpaid',   color: 'bg-amber-100 text-amber-700' },
+  paid:     { label: 'Paid',     color: 'bg-green-100 text-green-700' },
+  failed:   { label: 'Failed',   color: 'bg-red-100 text-red-700' },
+  refunded: { label: 'Refunded', color: 'bg-gray-100 text-gray-600' },
 };
 
-function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function formatCurrency(amount, currency = 'PKR') {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-  }).format(amount);
-}
+export default function OrderHistoryPage({ params }) {
+  const { businessDomain } = use(params);
+  const { business, settings, currency: ctxCurrency } = useStorefront();
+  const accent = getStoreAccentColor(settings, business?.category);
 
-export default async function OrderHistoryPage({ params, searchParams }) {
-  const { businessDomain } = await params;
-  const { email } = await searchParams || {};
-  
-  const result = await getBusinessByDomain(businessDomain);
-  
-  if (!result.success) {
-    notFound();
-  }
-  
-  const { business } = result;
-  
-  // Get orders for this customer email
-  let orders = [];
-  if (email) {
+  const [tab, setTab] = useState('email'); // 'email' | 'number'
+  const [emailInput, setEmailInput] = useState('');
+  const [orderNumInput, setOrderNumInput] = useState('');
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [error, setError] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
+
+  const currency = ctxCurrency || 'PKR';
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    setError('');
+    const query = tab === 'email' ? emailInput.trim() : orderNumInput.trim();
+    if (!query) return;
+    setLoading(true);
+    setSearched(false);
     try {
-      const ordersResult = await getStorefrontOrders(business.id, { customerEmail: email, limit: 50 });
-      if (ordersResult?.success && ordersResult?.orders) {
-        orders = ordersResult.orders;
+      const filters = tab === 'email'
+        ? { customerEmail: query, limit: 50 }
+        : { orderNumber: query, limit: 10 };
+      const result = await getStorefrontOrders(business.id, filters);
+      if (result?.success) {
+        setOrders(result.orders || []);
+      } else {
+        setOrders([]);
+        setError('Unable to load orders. Please try again.');
       }
-    } catch (error) {
-      console.error('[OrderHistoryPage] Error loading orders:', error);
-      orders = [];
+    } catch (err) {
+      setOrders([]);
+      setError('Unable to load orders. Please try again.');
+    } finally {
+      setLoading(false);
+      setSearched(true);
     }
-  }
+  };
+
+  const reset = () => {
+    setOrders([]);
+    setSearched(false);
+    setError('');
+    setEmailInput('');
+    setOrderNumInput('');
+    setExpandedId(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Link 
+      {/* ── Hero strip */}
+      <div className="bg-white border-b">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <Link
             href={`/store/${businessDomain}`}
-            className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors"
           >
-            ← Back to Store
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Store
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Order History</h1>
-          <p className="text-gray-600 mt-2">
-            View and track your orders with {business.business_name}
+          <h1 className="text-3xl font-black text-gray-900">Order Tracking</h1>
+          <p className="text-gray-500 mt-1">
+            Find and track your orders with {business?.business_name}
           </p>
         </div>
+      </div>
 
-        {/* Email Input (if no email provided) */}
-        {!email && (
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <form className="flex gap-4">
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email to view orders"
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                />
-                <Button type="submit">
-                  View Orders
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+        {/* ── Lookup card */}
+        {!searched && (
+          <Card className="rounded-2xl shadow-sm border-0">
+            <CardContent className="p-6 space-y-5">
+              {/* Tab switcher */}
+              <div className="flex rounded-xl border border-gray-200 overflow-hidden p-1 gap-1 bg-gray-50">
+                {[
+                  { id: 'email',  label: 'By Email',        icon: Mail },
+                  { id: 'number', label: 'By Order Number',  icon: Hash },
+                ].map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => setTab(id)}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all',
+                      tab === id
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSearch} className="flex gap-3">
+                {tab === 'email' ? (
+                  <Input
+                    type="email"
+                    placeholder="Enter the email you used at checkout"
+                    value={emailInput}
+                    onChange={e => setEmailInput(e.target.value)}
+                    className="flex-1 rounded-xl"
+                    required
+                  />
+                ) : (
+                  <Input
+                    type="text"
+                    placeholder="e.g. ORD-20240523-0042"
+                    value={orderNumInput}
+                    onChange={e => setOrderNumInput(e.target.value.toUpperCase())}
+                    className="flex-1 rounded-xl font-mono"
+                    required
+                  />
+                )}
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="gap-2 rounded-xl px-6 font-bold"
+                  style={{ backgroundColor: accent }}
+                >
+                  {loading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Search className="w-4 h-4" />
+                  )}
+                  {loading ? 'Searching…' : 'Find Orders'}
                 </Button>
               </form>
+
+              <p className="text-xs text-gray-400 text-center">
+                Use the email address or order number from your confirmation
+              </p>
             </CardContent>
           </Card>
         )}
 
-        {/* Orders List */}
-        {email && (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-gray-600">
-                Showing orders for: <span className="font-medium text-gray-900">{email}</span>
-              </p>
-              <Link 
-                href={`/store/${businessDomain}/orders`}
-                className="text-sm text-indigo-600 hover:text-indigo-700"
-              >
-                Use different email
-              </Link>
+        {/* ── Results header */}
+        {searched && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-600">
+              {orders.length > 0
+                ? <><span className="font-semibold text-gray-900">{orders.length}</span> order{orders.length !== 1 ? 's' : ''} found</>
+                : 'No orders found'}
+            </p>
+            <button
+              onClick={reset}
+              className="text-sm font-semibold hover:opacity-80 transition-opacity"
+              style={{ color: accent }}
+            >
+              ← Search again
+            </button>
+          </div>
+        )}
+
+        {/* ── Error */}
+        {error && (
+          <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            {error}
+          </div>
+        )}
+
+        {/* ── Empty state */}
+        {searched && !loading && orders.length === 0 && !error && (
+          <div className="text-center py-16">
+            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <Package className="w-10 h-10 text-gray-300" />
             </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">No orders found</h3>
+            <p className="text-sm text-gray-500 mb-6 max-w-xs mx-auto">
+              {tab === 'email'
+                ? `We couldn't find any orders for that email. Make sure it matches what you used at checkout.`
+                : `Order number not found. Check the number in your confirmation email.`}
+            </p>
+            <Link href={`/store/${businessDomain}/products`}>
+              <Button className="rounded-xl gap-2 font-bold" style={{ backgroundColor: accent }}>
+                <ShoppingBag className="w-4 h-4" /> Browse Products
+              </Button>
+            </Link>
+          </div>
+        )}
 
-            {orders.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <Package className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-                  <p className="text-gray-500">
-                    We couldn&apos;t find any orders for {email}. 
-                    Check your email or try a different one.
-                  </p>
-                  <Link href={`/store/${businessDomain}`}>
-                    <Button className="mt-6" variant="outline">
-                      Continue Shopping
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {orders.map((order) => {
-                  const StatusIcon = statusIcons[order.status] || Package;
-                  
-                  return (
-                    <Card key={order.id} className="overflow-hidden">
-                      <CardHeader className="bg-gray-50/50 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="text-lg">
-                              Order #{order.order_number}
-                            </CardTitle>
-                            <p className="text-sm text-gray-500 mt-1">
-                              Placed on {formatDate(order.created_at)}
-                            </p>
-                          </div>
-                          <Badge className={statusColors[order.status] || 'bg-gray-100'}>
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {order.status}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      
-                      <CardContent className="p-6">
-                        {/* Order Items */}
-                        <div className="space-y-3">
-                          {order.items?.map((item) => (
-                            <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
-                              <div>
-                                <p className="font-medium text-gray-900">{item.product_name}</p>
-                                {item.product_sku && (
-                                  <p className="text-sm text-gray-500">SKU: {item.product_sku}</p>
-                                )}
-                                <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                              </div>
-                              <p className="font-medium text-gray-900">
-                                {formatCurrency(item.total_price, order.currency)}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
+        {/* ── Orders list */}
+        {orders.length > 0 && (
+          <div className="space-y-4">
+            {orders.map((order) => {
+              const sc = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
+              const pc = PAYMENT_CONFIG[order.payment_status] || PAYMENT_CONFIG.pending;
+              const StatusIcon = sc.icon;
+              const isExpanded = expandedId === order.id;
+              const addr = order.shipping_address;
 
-                        {/* Order Total */}
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                          <div className="flex justify-between items-center">
-                            <div className="space-y-1 text-sm text-gray-500">
-                              <p>Subtotal: {formatCurrency(order.subtotal, order.currency)}</p>
-                              {order.tax_amount > 0 && (
-                                <p>Tax: {formatCurrency(order.tax_amount, order.currency)}</p>
-                              )}
-                              {order.shipping_amount > 0 && (
-                                <p>Shipping: {formatCurrency(order.shipping_amount, order.currency)}</p>
-                              )}
-                              {order.discount_amount > 0 && (
-                                <p className="text-green-600">
-                                  Discount: -{formatCurrency(order.discount_amount, order.currency)}
-                                </p>
+              return (
+                <Card key={order.id} className="rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  {/* Card header */}
+                  <CardHeader className="bg-gray-50/60 border-b border-gray-100 px-5 py-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-black text-gray-900 text-base">
+                          #{order.order_number}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">{fmtDate(order.created_at)}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className={cn('text-xs font-semibold border-0', sc.color)}>
+                          <StatusIcon className="w-3 h-3 mr-1" />
+                          {sc.label}
+                        </Badge>
+                        <Badge className={cn('text-xs font-semibold border-0', pc.color)}>
+                          <DollarSign className="w-3 h-3 mr-1" />
+                          {pc.label}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="px-5 py-4 space-y-4">
+                    {/* Items preview */}
+                    <div className="space-y-2">
+                      {(isExpanded ? order.items : order.items?.slice(0, 3))?.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between gap-3 text-sm">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
+                              {item.image_url ? (
+                                <Image src={item.image_url} alt={item.product_name} width={40} height={40} className="object-cover w-full h-full" />
+                              ) : (
+                                <Package className="w-4 h-4 text-gray-300" />
                               )}
                             </div>
-                            <div className="text-right">
-                              <p className="text-sm text-gray-500">Total</p>
-                              <p className="text-2xl font-bold text-gray-900">
-                                {formatCurrency(order.total_amount, order.currency)}
-                              </p>
+                            <div className="min-w-0">
+                              <p className="font-medium text-gray-900 truncate">{item.product_name}</p>
+                              <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
                             </div>
                           </div>
+                          <p className="font-semibold text-gray-900 flex-shrink-0">
+                            {formatCurrency(parseFloat(item.total_price || 0), order.currency || currency)}
+                          </p>
+                        </div>
+                      ))}
+                      {!isExpanded && order.items?.length > 3 && (
+                        <p className="text-xs text-gray-400">+{order.items.length - 3} more items</p>
+                      )}
+                    </div>
+
+                    {/* Totals + address (expanded) */}
+                    {isExpanded && (
+                      <div className="space-y-3 pt-3 border-t border-gray-100">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                          <span className="text-gray-500">Subtotal</span>
+                          <span className="text-right font-medium">{formatCurrency(parseFloat(order.subtotal || 0), order.currency || currency)}</span>
+                          {parseFloat(order.shipping_amount) > 0 && (
+                            <>
+                              <span className="text-gray-500">Shipping</span>
+                              <span className="text-right font-medium">{formatCurrency(parseFloat(order.shipping_amount), order.currency || currency)}</span>
+                            </>
+                          )}
+                          {parseFloat(order.tax_amount) > 0 && (
+                            <>
+                              <span className="text-gray-500">Tax</span>
+                              <span className="text-right font-medium">{formatCurrency(parseFloat(order.tax_amount), order.currency || currency)}</span>
+                            </>
+                          )}
+                          {parseFloat(order.discount_amount) > 0 && (
+                            <>
+                              <span className="text-gray-500 text-green-600">Discount</span>
+                              <span className="text-right font-medium text-green-600">-{formatCurrency(parseFloat(order.discount_amount), order.currency || currency)}</span>
+                            </>
+                          )}
                         </div>
 
-                        {/* Shipping Address */}
-                        {order.shipping_address && (
-                          <div className="mt-4 pt-4 border-t border-gray-100">
-                            <h4 className="font-medium text-gray-900 mb-2">Shipping Address</h4>
-                            <div className="text-sm text-gray-600">
-                              <p>{order.shipping_address.name}</p>
-                              <p>{order.shipping_address.street}</p>
-                              {order.shipping_address.city && (
-                                <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.zip}</p>
-                              )}
-                              {order.shipping_address.country && (
-                                <p>{order.shipping_address.country}</p>
-                              )}
-                              {order.shipping_address.phone && (
-                                <p className="mt-1">Phone: {order.shipping_address.phone}</p>
-                              )}
+                        {addr && (
+                          <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-xl text-sm">
+                            <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                            <div className="text-gray-600">
+                              {addr.name && <p className="font-medium text-gray-800">{addr.name}</p>}
+                              {addr.street && <p>{addr.street}</p>}
+                              {addr.city && <p>{addr.city}{addr.state ? `, ${addr.state}` : ''}{addr.zip ? ` ${addr.zip}` : ''}</p>}
+                              {addr.country && <p>{addr.country}</p>}
+                              {addr.phone && <p className="mt-1 text-gray-500">📞 {addr.phone}</p>}
                             </div>
                           </div>
                         )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </>
+                      </div>
+                    )}
+
+                    {/* Footer row */}
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <div>
+                        <span className="text-xs text-gray-400">Total</span>
+                        <p className="text-lg font-black text-gray-900">
+                          {formatCurrency(parseFloat(order.total_amount || 0), order.currency || currency)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                        className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 transition-opacity"
+                        style={{ color: accent }}
+                      >
+                        {isExpanded ? 'Show less' : 'View details'}
+                        <ChevronRight className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-90')} />
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
+
+        {/* ── Continue shopping CTA */}
+        {searched && (
+          <div className="text-center pt-4">
+            <Link href={`/store/${businessDomain}/products`} className="inline-flex items-center gap-2 text-sm font-semibold hover:opacity-80 transition-opacity" style={{ color: accent }}>
+              <ShoppingBag className="w-4 h-4" /> Continue Shopping
+            </Link>
+          </div>
+        )}
+
       </div>
     </div>
   );

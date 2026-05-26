@@ -46,8 +46,9 @@ export default async function ProductsPage({ params, searchParams }) {
     maxPrice: searchParams.maxPrice ? parseFloat(searchParams.maxPrice) : undefined,
     search: searchParams.search,
     sort: searchParams.sort || 'featured',
-    inStock: searchParams.inStock === 'true',
+    inStock: searchParams.inStock === 'true' ? true : undefined,
     onSale: searchParams.onSale === 'true',
+    featured: searchParams.featured === 'true' ? 'only' : undefined,
     page: parseInt(searchParams.page || '1'),
     limit: 24,
   };

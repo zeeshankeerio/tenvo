@@ -78,31 +78,32 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* ── Image ──────────────────────────────────────────────────────── */}
-      <Link
-        href={productHref}
+      {/* ── Image area (relative container for all overlays) ───────────── */}
+      <div
         className={cn(
-          'relative block overflow-hidden bg-gray-50',
+          'relative overflow-hidden bg-gray-50',
           variant === 'compact' ? 'aspect-square rounded-xl' : 'aspect-[4/5]'
         )}
-        tabIndex={-1}
       >
-        {product.image_url ? (
-          <Image
-            src={product.image_url}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <ShoppingBag className="w-10 h-10 text-gray-200" />
-          </div>
-        )}
+        {/* Clickable image */}
+        <Link href={productHref} className="absolute inset-0" tabIndex={-1} aria-label={product.name}>
+          {product.image_url ? (
+            <Image
+              src={product.image_url}
+              alt={product.name}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ShoppingBag className="w-10 h-10 text-gray-200" />
+            </div>
+          )}
+        </Link>
 
         {/* Badges */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none">
           {discount > 0 && (
             <Badge className="bg-red-500 text-white border-0 text-[10px] font-bold px-2 py-0.5">
               -{discount}%
@@ -124,7 +125,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
           )}
         </div>
 
-        {/* Quick action buttons */}
+        {/* Quick action buttons — wishlist + quick-view */}
         <div
           className={cn(
             'absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10 transition-all duration-200',
@@ -145,7 +146,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
           <Link
             href={productHref}
             className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
-            aria-label="Quick view"
+            aria-label="View product"
           >
             <Eye className="w-4 h-4" />
           </Link>
@@ -153,14 +154,14 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
 
         {/* Out of stock overlay */}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 pointer-events-none">
             <span className="bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full">
               Out of Stock
             </span>
           </div>
         )}
 
-        {/* Quick add — slides up on hover */}
+        {/* Quick add — slides up on hover (button is outside Link, valid DOM) */}
         {!isOutOfStock && variant !== 'compact' && (
           <div
             className={cn(
@@ -179,7 +180,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
             </button>
           </div>
         )}
-      </Link>
+      </div>
 
       {/* ── Info ───────────────────────────────────────────────────────── */}
       <div className={cn('space-y-1.5', variant === 'compact' ? 'mt-2.5' : 'p-3.5')}>

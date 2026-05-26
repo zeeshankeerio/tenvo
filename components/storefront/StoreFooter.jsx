@@ -15,15 +15,33 @@ export function StoreFooter({ business, settings }) {
   const accent = getStoreAccentColor(settings, business?.category);
   const currentYear = new Date().getFullYear();
   const [email, setEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
   const returnDays = settings?.returnPolicyDays || 7;
 
-  const handleNewsletter = (e) => {
+  const handleNewsletter = async (e) => {
     e.preventDefault();
     if (!email.trim()) return;
-    toast.success('Thanks for subscribing! 🎉');
-    setEmail('');
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/storefront/${businessDomain}/newsletter/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      if (res.ok) {
+        toast.success('Thanks for subscribing! 🎉');
+        setEmail('');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || 'Failed to subscribe. Try again.');
+      }
+    } catch {
+      toast.error('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const socialLinks = [
@@ -208,11 +226,14 @@ export function StoreFooter({ business, settings }) {
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-white transition-opacity hover:opacity-80"
+                  disabled={submitting}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-white transition-opacity hover:opacity-80 disabled:opacity-50"
                   style={{ backgroundColor: accent }}
                   aria-label="Subscribe"
                 >
-                  <Send className="w-3.5 h-3.5" />
+                  {submitting
+                    ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : <Send className="w-3.5 h-3.5" />}
                 </button>
               </div>
               <p className="text-xs text-gray-600">

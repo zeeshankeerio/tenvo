@@ -482,13 +482,15 @@ function BusinessDashboardContent() {
         productData: {
           ...normalizedProductData,
           business_id: business.id,
-          batches: undefined, // Don't send nested arrays in cleanProductData if not handled by action
+          batches: undefined,
           serialNumbers: undefined
         },
         batches: allBatches,
         serialNumbers: allSerials,
         isUpdate: isEditing,
-        productId: productId || productData.id
+        productId: productId || productData.id,
+        // Pass initial stock for new products without batch/serial tracking
+        initialStock: !isEditing ? (normalizedProductData.stock || 0) : 0,
       });
 
       toast.success(isEditing ? 'Product updated' : 'Product created');

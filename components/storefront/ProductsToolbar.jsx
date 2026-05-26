@@ -10,10 +10,11 @@ import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 const SORT_OPTIONS = [
   { value: 'featured',   label: 'Featured' },
   { value: 'newest',     label: 'Newest Arrivals' },
+  { value: 'popularity', label: 'Most Popular' },
+  { value: 'rating',     label: 'Top Rated' },
   { value: 'price-asc',  label: 'Price: Low to High' },
   { value: 'price-desc', label: 'Price: High to Low' },
   { value: 'name-asc',   label: 'Name: A–Z' },
-  { value: 'popularity', label: 'Most Popular' },
 ];
 
 export function SortDropdown({ currentSort, businessDomain }) {

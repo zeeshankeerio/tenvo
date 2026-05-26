@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -18,23 +17,15 @@ import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function CartDrawer() {
-  const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
-  const { cart, updateQuantity, removeItem, calculateTotals, isLoading } = useCart();
+  const { cart, updateQuantity, removeItem, calculateTotals, isLoading, isOpen, setIsOpen } = useCart();
   const { currency, businessDomain, settings } = useStorefront();
   const { subtotal, itemCount } = calculateTotals();
 
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
   const remaining = Math.max(0, freeShippingThreshold - subtotal);
   const progressPct = Math.min(100, (subtotal / freeShippingThreshold) * 100);
-
-  // Listen for the global toggle-cart event dispatched by AddToCartSection
-  useEffect(() => {
-    const handleToggle = () => setIsOpen(true);
-    window.addEventListener('toggle-cart', handleToggle);
-    return () => window.removeEventListener('toggle-cart', handleToggle);
-  }, []);
 
   const handleQuantityChange = (item, newQty) => {
     if (newQty < 1) {

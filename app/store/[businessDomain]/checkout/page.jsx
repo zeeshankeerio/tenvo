@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, use } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -39,14 +39,21 @@ const STEPS = [
 ];
 
 export default function CheckoutPage({ params }) {
-  const { businessDomain } = params;
+  const { businessDomain } = use(params);
   const router = useRouter();
-  const { cart, calculateTotals, clearCart } = useCart();
+  const searchParams = useSearchParams();
+  const { cart, calculateTotals, clearCart, hydrated } = useCart();
   const { currency, businessId, settings, business } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
 
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
   const taxRate = settings?.taxRate ?? 0.17;
+
+  // Pre-fill shipping method from cart page selection (?shipping=express etc.)
+  const shippingParam = searchParams.get('shipping');
+  const defaultShipping = ['standard', 'express', 'pickup'].includes(shippingParam)
+    ? shippingParam
+    : 'standard';
 
   const [step, setStep] = useState(0);
   const [processing, setProcessing] = useState(false);
@@ -58,7 +65,7 @@ export default function CheckoutPage({ params }) {
   const [form, setForm] = useState({
     email: '', firstName: '', lastName: '', phone: '',
     address: '', city: '', postalCode: '', country: 'PK',
-    shippingMethod: 'standard', paymentMethod: '',
+    shippingMethod: defaultShipping, paymentMethod: '',
   });
 
   const { subtotal, itemCount } = calculateTotals();
@@ -68,12 +75,13 @@ export default function CheckoutPage({ params }) {
   const tax = subtotal * taxRate;
   const total = subtotal + shippingCost + tax;
 
-  // Redirect empty cart
+  // Redirect empty cart — only after localStorage hydration to avoid false redirect
   useEffect(() => {
+    if (!hydrated) return;
     if (!orderDone && cart.items.length === 0) {
       router.replace(`/store/${businessDomain}/cart`);
     }
-  }, [cart.items.length, orderDone, router, businessDomain]);
+  }, [hydrated, cart.items.length, orderDone, router, businessDomain]);
 
   // Load payment methods
   useEffect(() => {
@@ -151,6 +159,15 @@ export default function CheckoutPage({ params }) {
       setProcessing(false);
     }
   };
+
+  // ── Pre-hydration loading state — prevents premature empty-cart redirect
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   // ── Order Success Screen ─────────────────────────────────────────────
   if (orderDone) {

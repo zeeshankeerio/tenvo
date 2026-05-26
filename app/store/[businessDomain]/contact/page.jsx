@@ -6,8 +6,7 @@ import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 
-export default function ContactPage({ params }) {
-  const { businessDomain } = params;
+export default function ContactPage() {
   const { business, settings } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
 

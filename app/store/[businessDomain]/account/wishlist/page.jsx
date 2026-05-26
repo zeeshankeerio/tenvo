@@ -1,5 +1,6 @@
 'use client';
 
+import { use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, ShoppingBag, Trash2, Package } from 'lucide-react';
@@ -11,7 +12,7 @@ import { formatCurrency } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
 
 export default function WishlistPage({ params }) {
-  const { businessDomain } = params;
+  const { businessDomain } = use(params);
   const { business, settings, currency } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
   const { addItem } = useCart();
