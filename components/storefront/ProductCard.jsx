@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { Heart, ShoppingBag, Eye, Star, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -88,7 +88,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
         {/* Clickable image */}
         <Link href={productHref} className="absolute inset-0" tabIndex={-1} aria-label={product.name}>
           {product.image_url ? (
-            <Image
+            <SmartProductImage
               src={product.image_url}
               alt={product.name}
               fill

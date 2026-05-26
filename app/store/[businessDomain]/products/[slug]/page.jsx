@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import { getProductBySlug, getRelatedProducts } from '@/lib/actions/storefront/products';
@@ -10,7 +9,6 @@ import { RelatedProducts } from '@/components/storefront/RelatedProducts';
 import { ProductReviews } from '@/components/storefront/ProductReviews';
 import { ProductBreadcrumbs } from '@/components/storefront/ProductBreadcrumbs';
 import { ProductTabs } from '@/components/storefront/ProductTabs';
-import { ProductDetailSkeleton } from '@/components/storefront/LoadingSkeletons';
 import { Truck, Shield, RotateCcw } from 'lucide-react';
 
 export async function generateMetadata({ params }) {
@@ -29,14 +27,27 @@ export async function generateMetadata({ params }) {
   
   const { product } = productResult;
   
+  // Only pass absolute https:// URLs to OG — data: URIs cause Server Component crashes
+  const ogImage = product.image_url && product.image_url.startsWith('https://')
+    ? [{ url: product.image_url, width: 800, height: 800, alt: product.name }]
+    : result.business.logo_url && result.business.logo_url.startsWith('https://')
+      ? [{ url: result.business.logo_url }]
+      : [];
+
   return {
     title: `${product.name} - ${result.business.business_name}`,
     description: product.description?.substring(0, 160) || `Buy ${product.name}`,
     openGraph: {
       title: product.name,
-      description: product.description,
-      images: product.image_url ? [{ url: product.image_url }] : [],
-      type: 'product',
+      description: product.description?.substring(0, 160) || `Buy ${product.name}`,
+      images: ogImage,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description: product.description?.substring(0, 160) || `Buy ${product.name}`,
+      images: ogImage.map(i => i.url),
     },
   };
 }
@@ -51,34 +62,32 @@ export default async function ProductDetailPage({ params }) {
   }
   
   const { business, settings } = businessResult;
+
+  // Fetch product at page level so notFound() never fires inside <Suspense>
+  const productResult = await getProductBySlug(business.id, slug);
+  if (!productResult.success) {
+    notFound();
+  }
+
+  const { product } = productResult;
+
+  // Fetch related products
+  const relatedResult = await getRelatedProducts(business.id, product.id, 8);
+  const relatedProducts = relatedResult.success ? relatedResult.products : [];
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <Suspense fallback={<ProductDetailSkeleton />}>
-        <ProductContent 
-          businessId={business.id}
-          businessDomain={businessDomain}
-          slug={slug}
-          settings={settings}
-        />
-      </Suspense>
+      <ProductContent 
+        product={product}
+        relatedProducts={relatedProducts}
+        businessDomain={businessDomain}
+        settings={settings}
+      />
     </div>
   );
 }
 
-async function ProductContent({ businessId, businessDomain, slug, settings }) {
-  const productResult = await getProductBySlug(businessId, slug);
-  
-  if (!productResult.success) {
-    notFound();
-  }
-  
-  const { product } = productResult;
-  
-  // Get related products
-  const relatedResult = await getRelatedProducts(businessId, product.id, 8);
-  const relatedProducts = relatedResult.success ? relatedResult.products : [];
-  
+function ProductContent({ product, relatedProducts, businessDomain, settings }) {
   // Prepare images array
   const images = product.images?.length > 0 
     ? product.images 

@@ -9,8 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
-import { getTablesAction, createRestaurantOrderAction, updateTableStatusAction } from '@/lib/actions/standard/restaurant';
-import { createPosTransactionAction } from '@/lib/actions/standard/pos';
+import { getTablesAction, createRestaurantOrderAction, updateTableStatusAction, settleRestaurantOrderAction } from '@/lib/actions/standard/restaurant';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 
@@ -169,6 +168,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
     const [paymentMethod, setPaymentMethod] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showPayment, setShowPayment] = useState(false);
+    const [currentOrderId, setCurrentOrderId] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const containerRef = React.useRef(null);
 
@@ -278,6 +278,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
 
             if (result.success) {
                 toast.success(`Order #${result.order?.order_number || 'NEW'} sent to kitchen`, { icon: '🔥' });
+                setCurrentOrderId(result.order?.id || null);
                 if (selectedTable && orderType === 'dine-in') {
                     updateTableStatusAction({ businessId: effectiveBusinessId, tableId: selectedTable.id, status: 'occupied' });
                 }
@@ -295,38 +296,30 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, curre
 
     const handlePayment = async () => {
         if (!paymentMethod) { toast.error('Select payment method'); return; }
+        if (!currentOrderId) { toast.error('Send order to kitchen first'); return; }
         setIsProcessing(true);
         try {
-            const result = await createPosTransactionAction({
+            const result = await settleRestaurantOrderAction({
                 businessId: effectiveBusinessId,
-                items: orderItems.map(i => ({
-                    productId: i.id,
-                    name: i.name,
-                    quantity: i.quantity,
-                    price: Number(i.price || i.selling_price || 0),
-                })),
-                payments: [{ method: paymentMethod, amount: total }],
-                subtotal,
-                taxAmount: tax,
-                total,
-                orderType,
-                tableId: selectedTable?.id,
-                metadata: {
-                    domain: 'restaurant',
-                    covers: covers,
-                    taxRate: effectiveTaxRate * 100
-                }
+                orderId: currentOrderId,
+                paymentMethod,
+                amount: total,
             });
 
             if (result.success) {
-                toast.success('Payment processed!', { icon: '[OK]' });
+                toast.success('Payment processed!', { icon: '✅' });
                 onCompleteSale?.(result);
-                // Reset
+                // Reset all state for next order
                 setOrderItems([]);
                 setSelectedTable(null);
                 setPaymentMethod('');
                 setWaiterNote('');
+                setCurrentOrderId(null);
                 setShowPayment(false);
+                // Refresh tables
+                getTablesAction(effectiveBusinessId).then(res => {
+                    if (res.success) setTables(res.tables || []);
+                });
             } else {
                 toast.error(result.error || 'Payment failed');
             }

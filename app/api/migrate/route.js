@@ -34,8 +34,10 @@ export async function GET(request) {
     `);
         await client.query(`
       ALTER TABLE payments 
-      ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false,
-      ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+      ADD COLUMN IF NOT EXISTS status      VARCHAR(20)  DEFAULT 'active',
+      ADD COLUMN IF NOT EXISTS is_deleted  BOOLEAN      DEFAULT false,
+      ADD COLUMN IF NOT EXISTS deleted_at  TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS domain_data JSONB        DEFAULT '{}'::jsonb;
     `);
         await client.query(`
       ALTER TABLE purchase_items 

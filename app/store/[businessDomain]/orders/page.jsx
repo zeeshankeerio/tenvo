@@ -2,7 +2,7 @@
 
 import { useState, use } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import {
   Package, Clock, CheckCircle, XCircle, Truck, Search,
   Mail, Hash, ArrowLeft, ChevronRight, DollarSign, MapPin,
@@ -268,7 +268,7 @@ export default function OrderHistoryPage({ params }) {
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
                               {item.image_url ? (
-                                <Image src={item.image_url} alt={item.product_name} width={40} height={40} className="object-cover w-full h-full" />
+                                <SmartProductImage src={item.image_url} alt={item.product_name} width={40} height={40} className="object-cover w-full h-full" />
                               ) : (
                                 <Package className="w-4 h-4 text-gray-300" />
                               )}

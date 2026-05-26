@@ -8,7 +8,7 @@ import { formatCurrency } from '@/lib/currency';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { useClickOutside } from '@/lib/hooks/useClickOutside';
-import Image from 'next/image';
+import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const RECENT_KEY = 'tenvo_recent_searches';
@@ -264,7 +264,7 @@ export function SearchBar({ businessDomain, initialQuery = '', onClose }) {
                   {/* Product Image */}
                   <div className="relative w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                     {product.image_url ? (
-                      <Image
+                      <SmartProductImage
                         src={product.image_url}
                         alt={product.name}
                         fill

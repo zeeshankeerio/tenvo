@@ -20,7 +20,8 @@ const DashboardClient = nextDynamic(() => import('./DashboardClient'), {
 });
 
 export async function generateMetadata({ params }) {
-  const category = params?.category || 'retail-shop';
+  const { category: categoryParam } = await params;
+  const category = categoryParam || 'retail-shop';
   const title = category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
   return {

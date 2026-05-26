@@ -16,6 +16,7 @@ import { SerialNumberInput } from '@/components/domain/SerialTracking';
 import { BrandAutocomplete } from '@/components/BrandAutocomplete';
 import { QuickAddTemplates } from '@/components/QuickAddTemplates';
 import { FileUpload } from '@/components/FileUpload';
+import { ProductImageManager } from '@/components/ProductImageManager';
 import { PropheticInsightCard } from '@/components/domain/PropheticInsightCard';
 import {
     Tooltip,
@@ -831,30 +832,17 @@ export function ProductForm({
                                             <ImagePlus className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-semibold text-gray-900">Product Media</h3>
-                                            <p className="text-sm text-gray-500">Upload product images for catalogs and invoices</p>
+                                            <h3 className="text-lg font-semibold text-gray-900">Product Image</h3>
+                                            <p className="text-sm text-gray-500">Upload your own or auto-fetch from the internet. Images are auto-resized to 800×800 WebP.</p>
                                         </div>
                                     </div>
 
-                                    <div className="p-6 border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50/30">
-                                        <FileUpload
-                                            accept="image/*"
-                                            maxSize={2}
-                                            onFileSelect={(file) => {
-                                                toast.success('Image selected: ' + (file?.name || 'File'));
-                                                if (file) updateField('image_url', file.name);
-                                            }}
-                                        />
-                                    </div>
-
-                                    {formData.image_url && (
-                                        <Badge variant="outline" className="mt-2 px-4 py-2 border-green-200 bg-green-50 text-green-700 rounded-xl flex items-center justify-between w-full">
-                                            <span className="truncate flex-1">Image: {formData.image_url}</span>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => updateField('image_url', '')}>
-                                                <X className="w-3 h-3" />
-                                            </Button>
-                                        </Badge>
-                                    )}
+                                    <ProductImageManager
+                                        value={formData.image_url || ''}
+                                        onChange={(url) => updateField('image_url', url)}
+                                        productName={formData.name || ''}
+                                        category={category}
+                                    />
                                 </div>
                             </div>
                         </TabsContent>

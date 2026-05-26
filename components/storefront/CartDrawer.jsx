@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, Plus, Minus, Trash2, ArrowRight,
@@ -102,7 +102,7 @@ export function CartDrawer() {
                     >
                       <div className="w-18 h-18 w-[72px] h-[72px] bg-gray-100 rounded-xl overflow-hidden">
                         {item.image ? (
-                          <Image
+                          <SmartProductImage
                             src={item.image}
                             alt={item.name}
                             width={72}

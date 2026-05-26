@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { ProductCard } from './ProductCard';
 import { ChevronLeft, ChevronRight, Package, ShoppingBag, Heart } from 'lucide-react';
 import { useCart } from '@/lib/hooks/storefront/useCart';
@@ -43,7 +43,7 @@ function ProductListItem({ product, businessDomain }) {
       <Link href={`/store/${businessDomain}/products/${product.slug || product.id}`} className="flex-shrink-0">
         <div className="w-28 h-28 sm:w-36 sm:h-36 bg-gray-50 rounded-xl overflow-hidden">
           {product.image_url ? (
-            <Image src={product.image_url} alt={product.name} width={144} height={144} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <SmartProductImage src={product.image_url} alt={product.name} width={144} height={144} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><Package className="w-8 h-8 text-gray-200" /></div>
           )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import Image from 'next/image';
+import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { ZoomIn, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -51,7 +51,7 @@ export function ProductGallery({ images, productName }) {
       >
         {selectedImage?.url ? (
           <>
-            <Image
+            <SmartProductImage
               src={selectedImage.url}
               alt={selectedImage.alt || productName}
               fill
@@ -123,7 +123,7 @@ export function ProductGallery({ images, productName }) {
               )}
             >
               {image?.url ? (
-                <Image
+                <SmartProductImage
                   src={image.url}
                   alt={image.alt || `${productName} - ${index + 1}`}
                   fill
@@ -154,7 +154,7 @@ export function ProductGallery({ images, productName }) {
             </button>
             
             {selectedImage?.url && (
-              <Image
+              <SmartProductImage
                 src={selectedImage.url}
                 alt={selectedImage.alt || productName}
                 fill
