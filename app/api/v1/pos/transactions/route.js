@@ -197,11 +197,13 @@ export const GET = withApiAuth(async (request, { businessId, session }) => {
  */
 
 // Zod schema for POS transaction creation
-const posTransactionItemSchema = z.object({
-    product_id: z.string().uuid('Product ID is required'),
+const posTransactionItemSchema = z
+  .object({
+    product_id: z.string().uuid().optional(),
     productId: z.string().uuid().optional(), // Accept camelCase variant
-    product_name: z.string().min(1, 'Product name is required'),
-    productName: z.string().optional(), // Accept camelCase variant
+    // Display-only for clients; not persisted on pos_transaction_items (schema uses product_id + totals).
+    product_name: z.string().optional().nullable(),
+    productName: z.string().optional().nullable(),
     quantity: z.number().positive('Quantity must be positive').default(1),
     unit_price: z.number().min(0, 'Unit price must be non-negative'),
     unitPrice: z.number().min(0).optional(), // Accept camelCase variant
@@ -210,8 +212,12 @@ const posTransactionItemSchema = z.object({
     discount_amount: z.number().min(0).optional().default(0),
     discountAmount: z.number().min(0).optional(), // Accept camelCase variant
     warehouse_id: z.string().uuid().optional().nullable(),
-    warehouseId: z.string().uuid().optional().nullable() // Accept camelCase variant
-});
+    warehouseId: z.string().uuid().optional().nullable(), // Accept camelCase variant
+  })
+  .refine((d) => Boolean(d.product_id || d.productId), {
+    message: 'Product ID is required',
+    path: ['product_id'],
+  });
 
 const posPaymentSchema = z.object({
     method: z.string().min(1, 'Payment method is required'),

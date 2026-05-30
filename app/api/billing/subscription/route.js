@@ -1,120 +1,104 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
-import { auth } from '@/lib/auth';
-import { getSubscription } from '@/lib/payments/stripe';
+import { prismaBase } from '@/lib/db';
+import { getSessionUser } from '@/lib/auth/session';
+import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
+import { getSubscription, listStripeCustomerInvoices } from '@/lib/payments/stripe';
+import { isManualBillingMode } from '@/lib/config/billingMode';
 
 /**
- * GET /api/billing/subscription
- * Get current subscription details
+ * GET /api/billing/subscription?business_id=...
+ * Current SaaS subscription for a business (Stripe + local `businesses` row).
  */
-export async function GET() {
+export async function GET(request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const sessionWrap = await getSessionUser();
+    if (!sessionWrap?.user) {
+      return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHENTICATED' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const businessId =
+      searchParams.get('business_id') || searchParams.get('businessId');
+    if (!businessId) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        {
+          error: 'business_id query parameter is required',
+          code: 'MISSING_BUSINESS_ID',
+        },
+        { status: 400 }
       );
     }
 
-    // Get business with subscription details
-    const result = await pool.query(
-      `SELECT 
-        id,
-        business_name,
-        email,
-        current_plan,
-        subscription_status,
-        subscription_start_date,
-        subscription_end_date,
-        trial_end_date,
-        last_payment_date,
-        billing_cycle,
-        auto_renew,
-        stripe_customer_id,
-        stripe_subscription_id
-       FROM businesses 
-       WHERE owner_id = $1 
-       LIMIT 1`,
-      [session.user.id]
-    );
-
-    if (result.rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Business not found' },
-        { status: 404 }
-      );
+    const allowed = await assertUserHasBusinessAccess({
+      userId: sessionWrap.user.id,
+      businessId,
+      sessionUser: sessionWrap.user,
+    });
+    if (!allowed) {
+      return NextResponse.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
     }
 
-    const business = result.rows[0];
+    const business = await prismaBase.businesses.findUnique({
+      where: { id: businessId },
+    });
+    if (!business) {
+      return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+    }
 
-    // Get Stripe subscription details if available
     let stripeSubscription = null;
-    if (business.stripe_subscription_id) {
+    if (business.stripe_subscription_id && !isManualBillingMode()) {
       stripeSubscription = await getSubscription(business.stripe_subscription_id);
     }
 
-    // Get recent invoices
-    const invoicesResult = await pool.query(
-      `SELECT 
-        id,
-        invoice_number,
-        amount_due,
-        amount_paid,
-        currency,
-        status,
-        period_start,
-        period_end,
-        paid_at,
-        hosted_invoice_url,
-        created_at
-       FROM invoices 
-       WHERE business_id = $1 
-       ORDER BY created_at DESC 
-       LIMIT 10`,
-      [business.id]
-    );
+    let invoices = [];
+    if (!isManualBillingMode() && business.stripe_customer_id) {
+      invoices = await listStripeCustomerInvoices(business.stripe_customer_id, 10);
+    }
 
-    // Get subscription history
-    const historyResult = await pool.query(
-      `SELECT 
-        plan_tier,
-        status,
-        amount_paid,
-        currency,
-        billing_period_start,
-        billing_period_end,
-        created_at
-       FROM subscription_history 
-       WHERE business_id = $1 
-       ORDER BY created_at DESC 
-       LIMIT 5`,
-      [business.id]
-    );
+    let history = [];
+    try {
+      history = await prismaBase.subscription_history.findMany({
+        where: { business_id: businessId },
+        orderBy: { created_at: 'desc' },
+        take: 5,
+      });
+    } catch {
+      // Table may be missing before migrations
+    }
+
+    const status =
+      business.stripe_subscription_status ||
+      (business.plan_tier === 'free' ? 'inactive' : 'unknown');
 
     return NextResponse.json({
+      billingMode: isManualBillingMode() ? 'manual' : 'stripe',
       subscription: {
-        planTier: business.current_plan,
-        status: business.subscription_status,
-        isActive: business.subscription_status === 'active',
-        isTrial: business.subscription_status === 'trialing',
-        startDate: business.subscription_start_date,
-        endDate: business.subscription_end_date,
-        trialEndDate: business.trial_end_date,
-        lastPaymentDate: business.last_payment_date,
-        billingCycle: business.billing_cycle,
-        autoRenew: business.auto_renew,
+        planTier: business.plan_tier,
+        status,
+        isActive:
+          status === 'active' ||
+          status === 'trialing' ||
+          status === 'manual_dev',
+        isTrial: status === 'trialing',
+        startDate: business.created_at,
+        endDate: business.plan_expires_at,
+        trialEndDate: null,
+        lastPaymentDate: null,
+        billingCycle: null,
+        autoRenew: status !== 'canceled' && status !== 'cancelled',
         stripeSubscriptionId: business.stripe_subscription_id,
-        stripeDetails: stripeSubscription ? {
-          currentPeriodStart: stripeSubscription.current_period_start,
-          currentPeriodEnd: stripeSubscription.current_period_end,
-          cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
-        } : null,
+        stripeCustomerId: business.stripe_customer_id,
+        stripeDetails: stripeSubscription
+          ? {
+              currentPeriodStart: stripeSubscription.current_period_start,
+              currentPeriodEnd: stripeSubscription.current_period_end,
+              cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+            }
+          : null,
       },
-      invoices: invoicesResult.rows,
-      history: historyResult.rows,
+      invoices,
+      history,
     });
-
   } catch (error) {
     console.error('[Get Subscription] Error:', error);
     return NextResponse.json(

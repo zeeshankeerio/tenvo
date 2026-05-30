@@ -165,11 +165,13 @@ export function ExcelModeModal({
     }, [columns, category, entityType]);
 
     // Validation
-    const validateRow = useCallback((row, index) => {
+    const validateRow = useCallback((row, rowKey) => {
         const errors = {};
-        if (!row.name || row.name.trim() === '') errors[`${index}-name`] = 'Required';
-        if (row.price < 0) errors[`${index}-price`] = 'Positive Only';
-        if (row.stock < 0) errors[`${index}-stock`] = 'Non-negative';
+        if (!row.name || String(row.name).trim() === '') errors[`${rowKey}-name`] = 'Required';
+        const price = Number(row.price);
+        if (Number.isFinite(price) && price < 0) errors[`${rowKey}-price`] = 'Positive Only';
+        const stock = Number(row.stock);
+        if (Number.isFinite(stock) && stock < 0) errors[`${rowKey}-stock`] = 'Non-negative';
         return errors;
     }, []);
 
@@ -190,10 +192,9 @@ export function ExcelModeModal({
     const validateAllData = useCallback(() => {
         const allErrors = {};
         localData.forEach((row, index) => {
-            // Skip empty rows during validation
             if (isEmptyRow(row)) return;
-
-            Object.assign(allErrors, validateRow(row, index));
+            const rowKey = row.id || row._tempId || `idx-${index}`;
+            Object.assign(allErrors, validateRow(row, rowKey));
         });
         setValidationErrors(allErrors);
         return Object.keys(allErrors).length === 0;
@@ -222,7 +223,7 @@ export function ExcelModeModal({
         const dataToSave = localData.filter(row => !isEmptyRow(row));
 
         if (dataToSave.length === 0 && localData.length > 0) {
-            toast.info("Nothing to save (empty rows ignored)");
+            toast('Nothing to save (empty rows ignored)', { id: 'excel-empty-save', duration: 2200 });
             if (!isAutoSave) onClose();
             return;
         }
@@ -292,11 +293,13 @@ export function ExcelModeModal({
                 setHasUnsavedChanges(true);
                 pushState(newData);
 
-                // Real-time validation update
-                const rowErrors = validateRow(updated, idx);
+                const rowKey = updated.id || updated._tempId || `idx-${idx}`;
+                const rowErrors = validateRow(updated, rowKey);
                 setValidationErrors(prevE => {
                     const next = { ...prevE };
-                    Object.keys(next).forEach(k => { if (k.startsWith(`${idx}-`)) delete next[k]; });
+                    Object.keys(next).forEach(k => {
+                        if (k.startsWith(`${rowKey}-`)) delete next[k];
+                    });
                     return { ...next, ...rowErrors };
                 });
             }
@@ -445,7 +448,7 @@ export function ExcelModeModal({
                 isFullscreen ? "w-full h-full rounded-none" : "w-[96vw] h-[92vh] rounded-3xl border border-gray-200"
             )}>
                 {/* Premium Header */}
-                <div className="h-16 border-b-2 flex items-center justify-between px-6 shrink-0" style={{ backgroundColor: colors?.bg || '#f8fafc', borderColor: colors?.border || '#e2e8f0' }}>
+                <div className="h-14 shrink-0 border-b-2 flex items-center justify-between gap-3 px-4 sm:px-6" style={{ backgroundColor: colors?.bg || '#f8fafc', borderColor: colors?.border || '#e2e8f0' }}>
                     <div className="flex items-center gap-4">
                         <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform" style={{ backgroundColor: colors?.primary || '#3b82f6' }}>
                             <Table2 className="w-6 h-6 text-white" aria-hidden="true" />
@@ -456,7 +459,8 @@ export function ExcelModeModal({
                             </h2>
                             <div className="flex items-center gap-3 mt-0.5">
                                 <Badge variant="secondary" className="bg-white/50 border-slate-200 text-slate-500 text-[10px] uppercase font-bold px-1.5 py-0">
-                                    {localData.length} Records
+                                    {localData.length} rows
+                                    {searchQuery.trim() ? ` · showing ${filteredData.length}` : ''}
                                 </Badge>
                                 {hasUnsavedChanges && <span className="flex items-center gap-1 text-[10px] font-bold text-orange-500 uppercase"><span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" /> Unsaved</span>}
                             </div>
@@ -505,13 +509,14 @@ export function ExcelModeModal({
                         onDeleteRow={handleLocalDeleteRow}
                         validationErrors={validationErrors}
                         category={category}
-                        className="h-full border-0"
+                        variant="excel"
+                        className="h-full border-0 shadow-none"
                     />
                 </div>
 
                 {/* Intelligent Footer */}
-                <div className="h-10 border-t-2 bg-slate-900 text-slate-400 flex items-center px-6 text-[11px] font-bold uppercase tracking-wider justify-between shadow-2xl">
-                    <div className="flex items-center gap-6">
+                <div className="h-9 shrink-0 border-t-2 bg-slate-900 px-4 text-[10px] font-bold uppercase tracking-wide text-slate-400 shadow-2xl sm:px-6 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between py-1.5 sm:py-0 sm:h-10">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                         <div className="flex items-center gap-2">
                             {errorCount > 0 ? (
                                 <span className="flex items-center gap-2 text-red-400 animate-pulse"><AlertCircle className="w-4 h-4" /> {errorCount} Critical Errors</span>
@@ -523,10 +528,14 @@ export function ExcelModeModal({
                         <div className="flex items-center gap-2">
                             <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[9px] text-slate-300">CTRL+S</kbd> Save
                             <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[9px] text-slate-300 ml-2">CTRL+Z</kbd> Undo
+                            <kbd className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] text-slate-300">
+                                Ctrl+D
+                            </kbd>
+                            <span className="text-slate-500">Dup last</span>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                         <div className="flex items-center gap-4 text-slate-500">
                             <button onClick={handleClear} className="hover:text-red-400 transition-colors flex items-center gap-1.5"><Eraser className="w-3.5 h-3.5" /> Clear Workspace</button>
                             <button onClick={() => { const csv = localData.map(r => enhancedColumns.map(c => `"${r[c.accessorKey] || ''}"`).join(',')).join('\n'); const b = new Blob([csv], { type: 'text/csv' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'export.csv'; a.click(); }} className="hover:text-blue-400 transition-colors flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"><Download className="w-3.5 h-3.5" /> Export CSV</button>

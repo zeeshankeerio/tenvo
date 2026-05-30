@@ -137,14 +137,25 @@ export function isManufacturingEnabled(category: string): boolean {
 }
 
 /**
- * Get manufacturing process configuration for a domain
+ * Normalized manufacturing hints for BOM / production UIs.
+ * Supports both legacy keys (defaultLossPercent, allowWastageTracking) and
+ * UI keys (defaultLoss, trackWastage) so callers never see undefined%.
  */
 export function getManufacturingConfig(category: string) {
   const knowledge: any = getDomainKnowledge(category);
-  return knowledge?.manufacturingConfig || {
-    defaultLossPercent: 0,
-    allowWastageTracking: false,
-    processSteps: []
+  const raw = knowledge?.manufacturingConfig || {};
+  const defaultLoss = Number(
+    raw.defaultLoss ?? raw.defaultLossPercent ?? raw.recommendedWastagePercent ?? 0
+  );
+  const safeLoss = Number.isFinite(defaultLoss) ? defaultLoss : 0;
+  const trackWastage = Boolean(raw.trackWastage ?? raw.allowWastageTracking ?? false);
+  return {
+    ...raw,
+    defaultLoss: safeLoss,
+    defaultLossPercent: safeLoss,
+    trackWastage,
+    allowWastageTracking: trackWastage,
+    processSteps: Array.isArray(raw.processSteps) ? raw.processSteps : [],
   };
 }
 
@@ -815,6 +826,16 @@ export function getDomainTableColumns(category: string, currencySymbol: string =
       width: width,
       // Custom cell renderer to handle nested domain_data
       cell: ({ row }: any) => {
+        if (key === 'unitcost') {
+          const r = row.original;
+          const v =
+            r?.domain_data?.unitcost ??
+            r?.domain_data?.unitCost ??
+            r?.cost_price;
+          if (v === 0 || v === '0') return '0';
+          if (v !== undefined && v !== null && v !== '') return v;
+          return '-';
+        }
         // Handle both flattened and nested data structures
         const val = row.original?.[key] ||
           row.original?.domain_data?.[key] ||

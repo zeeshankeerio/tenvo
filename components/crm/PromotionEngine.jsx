@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
@@ -547,32 +548,66 @@ function PromoCard({ promotion, onEdit, onToggle, onDuplicate, onDelete, currenc
 
 // --- Main Promotion Engine ---------------------------------------------------
 
-export function PromotionEngine({ businessId, currency = 'Rs.' }) {
+/**
+ * @param {string} [businessId]
+ * @param {string} [currency]
+ * @param {any[] | undefined} [seedPromotions] — from campaigns hub prefetch; avoids empty spinner when tab opens.
+ * @param {() => void} [onHubRefresh] — notify parent to refetch hub (counts + seed) after mutations.
+ */
+export function PromotionEngine({ businessId, currency = 'Rs.', seedPromotions, onHubRefresh }) {
     const { business } = useBusiness();
     const effectiveBusinessId = businessId || business?.id;
 
-    const [promotions, setPromotions] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [promotions, setPromotions] = useState(() => (Array.isArray(seedPromotions) ? seedPromotions : []));
+    const [loading, setLoading] = useState(() => !Array.isArray(seedPromotions));
+    const [loadError, setLoadError] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [editingPromo, setEditingPromo] = useState(null);
     const [filterStatus, setFilterStatus] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
-    const loadPromotions = useCallback(async () => {
-        if (!effectiveBusinessId) return;
+    const loadPromotions = useCallback(async (silent = false) => {
+        if (!effectiveBusinessId) {
+            setLoadError(null);
+            setLoading(false);
+            return;
+        }
+        if (!silent) setLoading(true);
+        setLoadError(null);
         try {
             const result = await getPromotionsAction(effectiveBusinessId);
             if (result.success) {
                 setPromotions(result.promotions || []);
+            } else {
+                const msg = typeof result.error === 'string' ? result.error : 'Could not load promotions';
+                setLoadError(msg);
+                if (!silent) toast.error(msg);
             }
         } catch (err) {
             console.error('[PromotionEngine] Load failed:', err);
+            const msg = err?.message || 'Failed to load promotions';
+            setLoadError(msg);
+            if (!silent) toast.error(msg);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     }, [effectiveBusinessId]);
 
-    useEffect(() => { loadPromotions(); }, [loadPromotions]);
+    useEffect(() => {
+        if (Array.isArray(seedPromotions)) {
+            setPromotions(seedPromotions);
+            setLoadError(null);
+        }
+    }, [seedPromotions]);
+
+    useEffect(() => {
+        if (!effectiveBusinessId) {
+            setLoading(false);
+            return;
+        }
+        const silent = Array.isArray(seedPromotions);
+        void loadPromotions(silent);
+    }, [effectiveBusinessId, seedPromotions, loadPromotions]);
 
     const filteredPromotions = useMemo(() => {
         let items = promotions;
@@ -606,24 +641,26 @@ export function PromotionEngine({ businessId, currency = 'Rs.' }) {
                 const result = await updatePromotionAction(effectiveBusinessId, editingPromo.id, data);
                 if (result.success) {
                     toast.success('Promotion updated');
-                    await loadPromotions();
+                    await loadPromotions(!!Array.isArray(seedPromotions));
+                    onHubRefresh?.();
                 } else {
-                    toast.error(result.error?.message || 'Failed to update promotion');
+                    toast.error(typeof result.error === 'string' ? result.error : result.error?.message || 'Failed to update promotion');
                 }
             } else {
                 const result = await createPromotionAction(effectiveBusinessId, data);
                 if (result.success) {
                     toast.success('Promotion created');
-                    await loadPromotions();
+                    await loadPromotions(!!Array.isArray(seedPromotions));
+                    onHubRefresh?.();
                 } else {
-                    toast.error(result.error?.message || 'Failed to create promotion');
+                    toast.error(typeof result.error === 'string' ? result.error : result.error?.message || 'Failed to create promotion');
                 }
             }
         } catch (err) {
             toast.error('An error occurred');
         }
         setEditingPromo(null);
-    }, [editingPromo, effectiveBusinessId, loadPromotions]);
+    }, [editingPromo, effectiveBusinessId, loadPromotions, seedPromotions, onHubRefresh]);
 
     const handleToggle = useCallback(async (promo) => {
         if (!effectiveBusinessId) return;
@@ -631,13 +668,14 @@ export function PromotionEngine({ businessId, currency = 'Rs.' }) {
             const result = await togglePromotionAction(effectiveBusinessId, promo.id, !promo.is_active);
             if (result.success) {
                 setPromotions(prev => prev.map(p => p.id === promo.id ? { ...p, is_active: !p.is_active } : p));
+                onHubRefresh?.();
             } else {
                 toast.error('Failed to toggle promotion');
             }
         } catch (err) {
             toast.error('An error occurred');
         }
-    }, [effectiveBusinessId]);
+    }, [effectiveBusinessId, onHubRefresh]);
 
     const handleDuplicate = useCallback(async (promo) => {
         if (!effectiveBusinessId) return;
@@ -650,14 +688,15 @@ export function PromotionEngine({ businessId, currency = 'Rs.' }) {
             });
             if (result.success) {
                 toast.success('Promotion duplicated');
-                await loadPromotions();
+                await loadPromotions(!!Array.isArray(seedPromotions));
+                onHubRefresh?.();
             } else {
                 toast.error('Failed to duplicate promotion');
             }
         } catch (err) {
             toast.error('An error occurred');
         }
-    }, [effectiveBusinessId, loadPromotions]);
+    }, [effectiveBusinessId, loadPromotions, seedPromotions, onHubRefresh]);
 
     const handleDelete = useCallback(async (promo) => {
         if (!effectiveBusinessId) return;
@@ -667,24 +706,71 @@ export function PromotionEngine({ businessId, currency = 'Rs.' }) {
             if (result.success) {
                 toast.success('Promotion deleted');
                 setPromotions(prev => prev.filter(p => p.id !== promo.id));
+                onHubRefresh?.();
             } else {
                 toast.error('Failed to delete promotion');
             }
         } catch (err) {
             toast.error('An error occurred');
         }
-    }, [effectiveBusinessId]);
+    }, [effectiveBusinessId, onHubRefresh]);
 
-    if (loading) {
+    if (loading && promotions.length === 0 && !loadError) {
         return (
-            <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary" />
+            <div className="space-y-4 py-2" aria-busy="true" aria-label="Loading promotions">
+                <div className="grid grid-cols-3 gap-3">
+                    {[1, 2, 3].map((i) => (
+                        <Card key={i} className="border-border">
+                            <CardContent className="flex items-center gap-3 p-3">
+                                <Skeleton className="h-9 w-9 shrink-0 rounded-lg" />
+                                <div className="min-w-0 flex-1 space-y-2">
+                                    <Skeleton className="h-5 w-16" />
+                                    <Skeleton className="h-3 w-28" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+                <Skeleton className="h-10 w-full max-w-xl rounded-lg" />
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <Skeleton key={i} className="h-36 rounded-xl" />
+                    ))}
+                </div>
             </div>
+        );
+    }
+
+    if (loadError && promotions.length === 0) {
+        return (
+            <Card className="border-destructive/30 bg-destructive/5">
+                <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+                    <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden />
+                    <p className="max-w-sm text-sm text-muted-foreground">{loadError}</p>
+                    <Button variant="outline" size="sm" className="rounded-lg" onClick={() => loadPromotions(false)}>
+                        Retry
+                    </Button>
+                </CardContent>
+            </Card>
         );
     }
 
     return (
         <div className="space-y-6">
+            {loadError && promotions.length > 0 && (
+                <div
+                    role="alert"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-xs text-muted-foreground"
+                >
+                    <span className="flex items-center gap-2">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" aria-hidden />
+                        {loadError}
+                    </span>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => loadPromotions(false)}>
+                        Retry sync
+                    </Button>
+                </div>
+            )}
             {/* Header Stats */}
             <div className="grid grid-cols-3 gap-4">
                 {[

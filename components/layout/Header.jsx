@@ -43,6 +43,7 @@ import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { BusinessSwitcherEnhanced } from '@/components/layout/BusinessSwitcherEnhanced';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -401,11 +402,14 @@ export function Header({ onMenuClick }) {
 
                     <div className="flex flex-col -space-y-0.5">
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] leading-none">
-                            {business?.name || business?.domain?.replace(/-/g, ' ') || 'Dashboard'}
+                            {business?.business_name || business?.name || business?.domain?.replace(/-/g, ' ') || 'Dashboard'}
                         </span>
                         <h1 className="text-sm font-black text-gray-900 tracking-tight">
                             {activeTitle}
                         </h1>
+                    </div>
+                    <div className="hidden lg:flex items-center pl-2 border-l border-gray-200/80 ml-1">
+                        <BusinessSwitcherEnhanced />
                     </div>
                 </div>
 

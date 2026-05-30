@@ -9,6 +9,7 @@ import { DataProvider } from '@/lib/context/DataContext';
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette';
 import { useBusiness } from '@/lib/context/BusinessContext';
 import { AgenticFloatingChatbot } from '@/components/layout/AgenticFloatingChatbot';
+import { SubscriptionBillingBanner } from '@/components/billing/SubscriptionBillingBanner';
 
 export default function BusinessLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,6 +40,7 @@ export default function BusinessLayout({ children }) {
                         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
                         <main className="flex-1 p-4 lg:p-6 overflow-y-auto custom-scrollbar">
+                            <SubscriptionBillingBanner />
                             {children}
                         </main>
                     </div>

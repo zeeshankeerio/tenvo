@@ -20,12 +20,21 @@ CREATE INDEX IF NOT EXISTS idx_payments_status ON payments (status);
 -- BUG-006: Fix product_stock_locations unique constraint
 -- Old constraint was missing business_id, breaking multi-tenancy.
 -- ============================================================
+-- Constraint and/or UNIQUE INDEX may already exist under this name (partial applies, or index-only unique).
 ALTER TABLE product_stock_locations
 DROP CONSTRAINT IF EXISTS unique_product_warehouse_state;
 
-ALTER TABLE product_stock_locations
-ADD CONSTRAINT unique_product_warehouse_state
-UNIQUE (business_id, product_id, warehouse_id, state);
+DROP INDEX IF EXISTS unique_product_warehouse_state;
+
+DO $$
+BEGIN
+  ALTER TABLE product_stock_locations
+    ADD CONSTRAINT unique_product_warehouse_state
+    UNIQUE (business_id, product_id, warehouse_id, state);
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN duplicate_table THEN NULL;
+END $$;
 
 -- ============================================================
 -- BUG-007: Fix invoice_approvals unique constraint
@@ -35,9 +44,21 @@ DROP INDEX IF EXISTS invoice_approvals_invoice_id_key;
 ALTER TABLE invoice_approvals
 DROP CONSTRAINT IF EXISTS invoice_approvals_invoice_id_key;
 
+-- Partial prior runs may have created the new unique under this name (42P07 if re-applied).
 ALTER TABLE invoice_approvals
-ADD CONSTRAINT invoice_approvals_invoice_id_approved_by_key
-UNIQUE (invoice_id, approved_by);
+DROP CONSTRAINT IF EXISTS invoice_approvals_invoice_id_approved_by_key;
+
+DROP INDEX IF EXISTS invoice_approvals_invoice_id_approved_by_key;
+
+DO $$
+BEGIN
+  ALTER TABLE invoice_approvals
+    ADD CONSTRAINT invoice_approvals_invoice_id_approved_by_key
+    UNIQUE (invoice_id, approved_by);
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN duplicate_table THEN NULL;
+END $$;
 
 -- ============================================================
 -- Performance indexes for payment_allocations

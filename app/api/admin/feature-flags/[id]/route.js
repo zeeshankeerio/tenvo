@@ -15,7 +15,7 @@ export async function GET(request, { params }) {
     
     try {
       const flagResult = await client.query(
-        'SELECT * FROM feature_flags WHERE id = $1',
+        'SELECT * FROM platform_feature_flags WHERE id = $1',
         [id]
       );
       
@@ -33,10 +33,10 @@ export async function GET(request, { params }) {
             WHEN fo.target_type = 'business' THEN b.business_name
             WHEN fo.target_type = 'user' THEN u.name
           END as target_name
-        FROM feature_flag_overrides fo
+        FROM platform_feature_flag_overrides fo
         LEFT JOIN businesses b ON fo.target_type = 'business' AND fo.target_id = b.id
         LEFT JOIN "user" u ON fo.target_type = 'user' AND fo.target_id = u.id
-        WHERE fo.feature_flag_id = $1
+        WHERE fo.platform_feature_flag_id = $1
         ORDER BY fo.created_at DESC
       `, [id]);
       
@@ -105,7 +105,7 @@ export async function PUT(request, { params }) {
       values.push(id);
       
       const result = await client.query(`
-        UPDATE feature_flags 
+        UPDATE platform_feature_flags 
         SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
         WHERE id = $${paramCount}
         RETURNING *
@@ -148,7 +148,7 @@ export async function DELETE(request, { params }) {
     try {
       // Check if flag exists
       const checkResult = await client.query(
-        'SELECT id FROM feature_flags WHERE id = $1',
+        'SELECT id FROM platform_feature_flags WHERE id = $1',
         [id]
       );
       
@@ -160,7 +160,7 @@ export async function DELETE(request, { params }) {
       }
       
       // Delete flag (cascade will delete overrides)
-      await client.query('DELETE FROM feature_flags WHERE id = $1', [id]);
+      await client.query('DELETE FROM platform_feature_flags WHERE id = $1', [id]);
       
       return NextResponse.json({
         success: true,

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import pool from '@/lib/db';
+import { Prisma } from '@prisma/client';
+import { prismaBase } from '@/lib/db';
 import { sendSubscriptionConfirmationEmail } from '@/lib/email/subscription-emails';
 
-// Stripe instance for webhook verification
-const stripe = process.env.STRIPE_SECRET_KEY 
+const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
   : null;
 
@@ -12,7 +12,6 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 /**
  * POST /api/webhooks/stripe
- * Handle Stripe webhook events
  */
 export async function POST(request) {
   if (!stripe || !webhookSecret) {
@@ -24,466 +23,449 @@ export async function POST(request) {
   const signature = request.headers.get('stripe-signature');
 
   let event;
-
   try {
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   } catch (err) {
     console.error('[Stripe Webhook] Signature verification failed:', err.message);
-    return NextResponse.json(
-      { error: 'Invalid signature' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
   console.log('[Stripe Webhook] Event received:', event.type);
 
+  let subscriptionDeletedEmails = null;
+
   try {
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        await handleCheckoutSessionCompleted(event.data.object);
-        break;
-      }
+    await prismaBase.$transaction(
+      async (tx) => {
+        await tx.stripe_webhook_events.create({
+          data: {
+            stripe_event_id: event.id,
+            event_type: event.type,
+            metadata: { livemode: event.livemode },
+          },
+        });
 
-      case 'invoice.payment_succeeded': {
-        await handleInvoicePaymentSucceeded(event.data.object);
-        break;
+        switch (event.type) {
+          case 'checkout.session.completed':
+            await handleCheckoutSessionCompletedTx(tx, event.data.object);
+            break;
+          case 'invoice.payment_succeeded':
+            await handleInvoicePaymentSucceededTx(tx, event.data.object);
+            break;
+          case 'invoice.payment_failed':
+            await handleInvoicePaymentFailedTx(tx, event.data.object);
+            break;
+          case 'customer.subscription.created':
+            await handleSubscriptionCreatedTx(tx, event.data.object);
+            break;
+          case 'customer.subscription.updated':
+            await handleSubscriptionUpdatedTx(tx, event.data.object);
+            break;
+          case 'customer.subscription.deleted':
+            subscriptionDeletedEmails = await handleSubscriptionDeletedTx(tx, event.data.object);
+            break;
+          case 'customer.subscription.trial_will_end':
+            await handleTrialWillEndTx(tx, event.data.object);
+            break;
+          case 'payment_intent.succeeded':
+            await handlePaymentIntentSucceededTx(tx, event.data.object);
+            break;
+          case 'payment_intent.payment_failed':
+            await handlePaymentIntentFailedTx(tx, event.data.object);
+            break;
+          case 'payment_intent.created':
+            console.log('[Stripe Webhook] Payment intent created:', event.data.object.id);
+            break;
+          case 'account.updated':
+            await handleAccountUpdatedTx(tx, event.data.object);
+            break;
+          default:
+            console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
+        }
+      },
+      {
+        maxWait: 10_000,
+        timeout: 25_000,
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
       }
+    );
 
-      case 'invoice.payment_failed': {
-        await handleInvoicePaymentFailed(event.data.object);
-        break;
+    if (subscriptionDeletedEmails?.length) {
+      const { sendSubscriptionCancelledEmail } = await import('@/lib/email/subscription-emails');
+      for (const m of subscriptionDeletedEmails) {
+        sendSubscriptionCancelledEmail({
+          to: m.to,
+          businessName: m.businessName,
+        }).catch(console.error);
       }
+    }
 
-      case 'customer.subscription.created': {
-        await handleSubscriptionCreated(event.data.object);
-        break;
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const { businessId, planTier } = session.metadata || {};
+      if (businessId && planTier) {
+        const row = await prismaBase.businesses.findUnique({
+          where: { id: businessId },
+          select: { email: true, business_name: true },
+        });
+        if (row) {
+          sendSubscriptionConfirmationEmail({
+            to: row.email,
+            businessName: row.business_name,
+            planTier,
+          }).catch(console.error);
+        }
       }
-
-      case 'customer.subscription.updated': {
-        await handleSubscriptionUpdated(event.data.object);
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        await handleSubscriptionDeleted(event.data.object);
-        break;
-      }
-
-      case 'customer.subscription.trial_will_end': {
-        await handleTrialWillEnd(event.data.object);
-        break;
-      }
-
-      // Payment Intent Events for Storefront
-      case 'payment_intent.succeeded': {
-        await handlePaymentIntentSucceeded(event.data.object);
-        break;
-      }
-
-      case 'payment_intent.payment_failed': {
-        await handlePaymentIntentFailed(event.data.object);
-        break;
-      }
-
-      case 'payment_intent.created': {
-        await handlePaymentIntentCreated(event.data.object);
-        break;
-      }
-
-      // Account Events for Stripe Connect
-      case 'account.updated': {
-        await handleAccountUpdated(event.data.object);
-        break;
-      }
-
-      default:
-        console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (error) {
+    if (error?.code === 'P2002') {
+      return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+    }
     console.error('[Stripe Webhook] Handler error:', error);
-    return NextResponse.json(
-      { error: 'Webhook handler failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 }
 
 /**
- * Handle checkout.session.completed
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.Checkout.Session} session
  */
-async function handleCheckoutSessionCompleted(session) {
+async function handleCheckoutSessionCompletedTx(tx, session) {
   const { businessId, planTier } = session.metadata || {};
-  
   if (!businessId || !planTier) {
     console.error('[Stripe Webhook] Missing metadata in checkout session');
     return;
   }
 
-  const client = await pool.connect();
+  const subscriptionId =
+    typeof session.subscription === 'string'
+      ? session.subscription
+      : session.subscription?.id || null;
 
-  try {
-    await client.query('BEGIN');
+  const customerId =
+    typeof session.customer === 'string' ? session.customer : session.customer?.id || null;
 
-    // Update business subscription
-    await client.query(
-      `UPDATE businesses 
-       SET current_plan = $1,
-           subscription_status = 'active',
-           stripe_subscription_id = $2,
-           subscription_start_date = NOW(),
-           updated_at = NOW()
-       WHERE id = $3`,
-      [planTier, session.subscription, businessId]
-    );
+  const amountMinor =
+    typeof session.amount_total === 'number' && session.amount_total != null
+      ? session.amount_total
+      : null;
 
-    // Record subscription history
-    await client.query(
-      `INSERT INTO subscription_history 
-       (business_id, plan_tier, stripe_subscription_id, status, amount_paid, currency, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-      [businessId, planTier, session.subscription, 'active', session.amount_total / 100, session.currency]
-    );
+  await tx.businesses.update({
+    where: { id: businessId },
+    data: {
+      plan_tier: planTier,
+      stripe_subscription_id: subscriptionId,
+      ...(customerId ? { stripe_customer_id: customerId } : {}),
+      stripe_subscription_status: 'active',
+      plan_expires_at: null,
+      updated_at: new Date(),
+    },
+  });
 
-    await client.query('COMMIT');
+  await tx.subscription_history.create({
+    data: {
+      business_id: businessId,
+      plan_tier: planTier,
+      status: 'active',
+      stripe_subscription_id: subscriptionId,
+      amount_minor: amountMinor,
+      currency: session.currency || null,
+      metadata: {
+        checkout_session_id: session.id,
+        customer: customerId,
+      },
+    },
+  });
 
-    // Send confirmation email
-    const businessResult = await pool.query(
-      'SELECT email, business_name FROM businesses WHERE id = $1',
-      [businessId]
-    );
-
-    if (businessResult.rows.length > 0) {
-      const business = businessResult.rows[0];
-      sendSubscriptionConfirmationEmail({
-        to: business.email,
-        businessName: business.business_name,
-        planTier,
-      }).catch(console.error);
-    }
-
-    console.log('[Stripe Webhook] Checkout completed for business:', businessId);
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+  console.log('[Stripe Webhook] Checkout completed for business:', businessId);
 }
 
 /**
- * Handle invoice.payment_succeeded
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.Invoice} invoice
  */
-async function handleInvoicePaymentSucceeded(invoice) {
-  const subscriptionId = invoice.subscription;
-  
+async function handleInvoicePaymentSucceededTx(tx, invoice) {
+  const subscriptionId =
+    typeof invoice.subscription === 'string'
+      ? invoice.subscription
+      : invoice.subscription?.id || null;
   if (!subscriptionId) return;
 
-  try {
-    await pool.query(
-      `UPDATE businesses 
-       SET subscription_status = 'active',
-           last_payment_date = NOW(),
-           updated_at = NOW()
-       WHERE stripe_subscription_id = $1`,
-      [subscriptionId]
-    );
+  await tx.businesses.updateMany({
+    where: { stripe_subscription_id: subscriptionId },
+    data: {
+      stripe_subscription_status: 'active',
+      updated_at: new Date(),
+    },
+  });
 
-    console.log('[Stripe Webhook] Payment succeeded for subscription:', subscriptionId);
-  } catch (error) {
-    console.error('[Stripe Webhook] Payment success handler error:', error);
-  }
+  console.log('[Stripe Webhook] Payment succeeded for subscription:', subscriptionId);
 }
 
 /**
- * Handle invoice.payment_failed
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.Invoice} invoice
  */
-async function handleInvoicePaymentFailed(invoice) {
-  const subscriptionId = invoice.subscription;
-  
+async function handleInvoicePaymentFailedTx(tx, invoice) {
+  const subscriptionId =
+    typeof invoice.subscription === 'string'
+      ? invoice.subscription
+      : invoice.subscription?.id || null;
   if (!subscriptionId) return;
 
-  try {
-    const result = await pool.query(
-      `UPDATE businesses 
-       SET subscription_status = 'past_due',
-           updated_at = NOW()
-       WHERE stripe_subscription_id = $1
-       RETURNING email, business_name`,
-      [subscriptionId]
-    );
+  const updated = await tx.businesses.updateMany({
+    where: { stripe_subscription_id: subscriptionId },
+    data: {
+      stripe_subscription_status: 'past_due',
+      updated_at: new Date(),
+    },
+  });
 
-    if (result.rows.length > 0) {
-      const business = result.rows[0];
-      
-      // Send payment failed notification
-      const { sendPaymentFailedEmail } = await import('@/lib/email/subscription-emails');
-      sendPaymentFailedEmail({
-        to: business.email,
-        businessName: business.business_name,
-        invoiceUrl: invoice.hosted_invoice_url,
-      }).catch(console.error);
+  if (updated.count > 0) {
+    const row = await tx.businesses.findFirst({
+      where: { stripe_subscription_id: subscriptionId },
+      select: { email: true, business_name: true },
+    });
+    if (row) {
+      void import('@/lib/email/subscription-emails').then(({ sendPaymentFailedEmail }) =>
+        sendPaymentFailedEmail({
+          to: row.email,
+          businessName: row.business_name,
+          invoiceUrl: invoice.hosted_invoice_url,
+        }).catch(console.error)
+      );
     }
-
-    console.log('[Stripe Webhook] Payment failed for subscription:', subscriptionId);
-  } catch (error) {
-    console.error('[Stripe Webhook] Payment failed handler error:', error);
   }
+
+  console.log('[Stripe Webhook] Payment failed for subscription:', subscriptionId);
 }
 
 /**
- * Handle customer.subscription.created
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.Subscription} subscription
  */
-async function handleSubscriptionCreated(subscription) {
-  console.log('[Stripe Webhook] Subscription created:', subscription.id);
-}
-
-/**
- * Handle customer.subscription.updated
- */
-async function handleSubscriptionUpdated(subscription) {
+async function handleSubscriptionCreatedTx(tx, subscription) {
   const { businessId } = subscription.metadata || {};
-  
-  if (!businessId) return;
-
-  try {
-    await pool.query(
-      `UPDATE businesses 
-       SET subscription_status = $1,
-           current_plan = $2,
-           updated_at = NOW()
-       WHERE stripe_subscription_id = $3`,
-      [subscription.status, subscription.metadata?.planTier || 'unknown', subscription.id]
-    );
-
-    console.log('[Stripe Webhook] Subscription updated:', subscription.id);
-  } catch (error) {
-    console.error('[Stripe Webhook] Subscription update handler error:', error);
+  if (!businessId) {
+    console.log('[Stripe Webhook] Subscription created (no business metadata):', subscription.id);
+    return;
   }
+
+  await tx.businesses.updateMany({
+    where: { id: businessId },
+    data: {
+      stripe_subscription_id: subscription.id,
+      stripe_subscription_status: subscription.status,
+      updated_at: new Date(),
+    },
+  });
 }
 
 /**
- * Handle customer.subscription.deleted
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.Subscription} subscription
  */
-async function handleSubscriptionDeleted(subscription) {
-  try {
-    const result = await pool.query(
-      `UPDATE businesses 
-       SET subscription_status = 'cancelled',
-           current_plan = 'free',
-           stripe_subscription_id = NULL,
-           updated_at = NOW()
-       WHERE stripe_subscription_id = $1
-       RETURNING email, business_name`,
-      [subscription.id]
-    );
-
-    if (result.rows.length > 0) {
-      const business = result.rows[0];
-      
-      // Send cancellation email
-      const { sendSubscriptionCancelledEmail } = await import('@/lib/email/subscription-emails');
-      sendSubscriptionCancelledEmail({
-        to: business.email,
-        businessName: business.business_name,
-      }).catch(console.error);
-    }
-
-    console.log('[Stripe Webhook] Subscription cancelled:', subscription.id);
-  } catch (error) {
-    console.error('[Stripe Webhook] Subscription deletion handler error:', error);
+async function handleSubscriptionUpdatedTx(tx, subscription) {
+  const planFromMeta = subscription.metadata?.planTier || subscription.metadata?.plan_tier;
+  const data = {
+    stripe_subscription_status: subscription.status,
+    updated_at: new Date(),
+  };
+  if (planFromMeta && typeof planFromMeta === 'string') {
+    data.plan_tier = planFromMeta;
   }
+
+  const res = await tx.businesses.updateMany({
+    where: { stripe_subscription_id: subscription.id },
+    data,
+  });
+
+  if (res.count === 0 && subscription.metadata?.businessId) {
+    await tx.businesses.updateMany({
+      where: { id: subscription.metadata.businessId },
+      data: {
+        stripe_subscription_id: subscription.id,
+        stripe_subscription_status: subscription.status,
+        ...(planFromMeta && typeof planFromMeta === 'string' ? { plan_tier: planFromMeta } : {}),
+        updated_at: new Date(),
+      },
+    });
+  }
+
+  console.log('[Stripe Webhook] Subscription updated:', subscription.id);
 }
 
 /**
- * Handle customer.subscription.trial_will_end
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.Subscription} subscription
+ * @returns {Promise<Array<{ to: string; businessName: string }>>}
  */
-async function handleTrialWillEnd(subscription) {
-  try {
-    const result = await pool.query(
-      `SELECT email, business_name 
-       FROM businesses 
-       WHERE stripe_subscription_id = $1`,
-      [subscription.id]
-    );
+async function handleSubscriptionDeletedTx(tx, subscription) {
+  const rows = await tx.businesses.findMany({
+    where: { stripe_subscription_id: subscription.id },
+    select: { id: true, email: true, business_name: true },
+  });
 
-    if (result.rows.length > 0) {
-      const business = result.rows[0];
-      
-      // Send trial ending reminder
-      const { sendTrialEndingEmail } = await import('@/lib/email/subscription-emails');
+  await tx.businesses.updateMany({
+    where: { stripe_subscription_id: subscription.id },
+    data: {
+      stripe_subscription_status: 'canceled',
+      plan_tier: 'free',
+      stripe_subscription_id: null,
+      plan_expires_at: null,
+      updated_at: new Date(),
+    },
+  });
+
+  for (const b of rows) {
+    await tx.subscription_history.create({
+      data: {
+        business_id: b.id,
+        plan_tier: 'free',
+        status: 'canceled',
+        stripe_subscription_id: subscription.id,
+        metadata: { source: 'customer.subscription.deleted' },
+      },
+    });
+  }
+
+  console.log('[Stripe Webhook] Subscription cancelled:', subscription.id);
+  return rows.map((b) => ({ to: b.email, businessName: b.business_name }));
+}
+
+/**
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.Subscription} subscription
+ */
+async function handleTrialWillEndTx(tx, subscription) {
+  const rows = await tx.businesses.findMany({
+    where: { stripe_subscription_id: subscription.id },
+    select: { email: true, business_name: true },
+  });
+  for (const business of rows) {
+    void import('@/lib/email/subscription-emails').then(({ sendTrialEndingEmail }) =>
       sendTrialEndingEmail({
         to: business.email,
         businessName: business.business_name,
         daysLeft: 3,
-      }).catch(console.error);
-    }
-
-    console.log('[Stripe Webhook] Trial ending soon for:', subscription.id);
-  } catch (error) {
-    console.error('[Stripe Webhook] Trial ending handler error:', error);
+      }).catch(console.error)
+    );
   }
+  console.log('[Stripe Webhook] Trial ending soon for:', subscription.id);
 }
 
 /**
- * Handle payment_intent.succeeded
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.PaymentIntent} paymentIntent
  */
-async function handlePaymentIntentSucceeded(paymentIntent) {
-  const client = await pool.connect();
-  
-  try {
-    const { orderId, businessId } = paymentIntent.metadata || {};
-    
-    if (!orderId || !businessId) {
-      console.error('[Stripe Webhook] Missing metadata in payment intent');
-      return;
-    }
+async function handlePaymentIntentSucceededTx(tx, paymentIntent) {
+  const { orderId, businessId } = paymentIntent.metadata || {};
+  if (!orderId || !businessId) {
+    console.error('[Stripe Webhook] Missing metadata in payment intent');
+    return;
+  }
 
-    await client.query('BEGIN');
+  const orderIdNum = Number.parseInt(String(orderId), 10);
+  if (Number.isNaN(orderIdNum)) {
+    console.error('[Stripe Webhook] Invalid orderId in payment intent metadata');
+    return;
+  }
 
-    // Update transaction status
-    await client.query(
-      `UPDATE payment_transactions 
-       SET status = 'completed', 
-           provider_response = $1,
-           completed_at = NOW(),
-           updated_at = NOW(),
-           card_last_four = $2,
-           card_brand = $3
-       WHERE stripe_payment_intent_id = $4`,
-      [
-        JSON.stringify(paymentIntent),
-        paymentIntent.charges?.data?.[0]?.payment_method_details?.card?.last4 || null,
-        paymentIntent.charges?.data?.[0]?.payment_method_details?.card?.brand || null,
-        paymentIntent.id,
-      ]
-    );
+  await tx.payment_transactions.updateMany({
+    where: {
+      stripe_payment_intent_id: paymentIntent.id,
+      business_id: businessId,
+    },
+    data: {
+      status: 'completed',
+      updated_at: new Date(),
+    },
+  });
 
-    // Update order status
-    await client.query(
-      `UPDATE orders 
-       SET payment_status = 'paid',
-           order_status = 'confirmed',
-           updated_at = NOW()
-       WHERE id = $1::uuid AND business_id = $2::uuid`,
-      [orderId, businessId]
-    );
+  await tx.storefront_orders.updateMany({
+    where: {
+      id: orderIdNum,
+      business_id: businessId,
+    },
+    data: {
+      payment_status: 'paid',
+      status: 'confirmed',
+      updated_at: new Date(),
+    },
+  });
 
-    await client.query('COMMIT');
+  const order = await tx.storefront_orders.findFirst({
+    where: { id: orderIdNum, business_id: businessId },
+    include: { businesses: { select: { email: true, business_name: true } } },
+  });
 
-    // Send order confirmation email
-    const orderResult = await pool.query(
-      `SELECT o.*, b.email as business_email, b.business_name 
-       FROM orders o 
-       JOIN businesses b ON o.business_id = b.id
-       WHERE o.id = $1`,
-      [orderId]
-    );
-
-    if (orderResult.rows.length > 0) {
-      const order = orderResult.rows[0];
-      const { sendOrderConfirmationEmail } = await import('@/lib/email/resend');
+  if (order?.customer_email && order.businesses) {
+    void import('@/lib/email/resend').then(({ sendOrderConfirmationEmail }) =>
       sendOrderConfirmationEmail({
         to: order.customer_email,
-        order: order,
+        order,
         business: {
-          name: order.business_name,
-          email: order.business_email,
+          name: order.businesses.business_name,
+          email: order.businesses.email,
         },
-      }).catch(console.error);
-    }
-
-    console.log('[Stripe Webhook] Payment succeeded for order:', orderId);
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('[Stripe Webhook] Payment success handler error:', error);
-  } finally {
-    client.release();
+      }).catch(console.error)
+    );
   }
+
+  console.log('[Stripe Webhook] Payment succeeded for order:', orderId);
 }
 
 /**
- * Handle payment_intent.payment_failed
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.PaymentIntent} paymentIntent
  */
-async function handlePaymentIntentFailed(paymentIntent) {
-  try {
-    const { orderId } = paymentIntent.metadata || {};
-    
-    if (!orderId) {
-      console.error('[Stripe Webhook] Missing orderId in payment intent');
-      return;
-    }
-
-    await pool.query(
-      `UPDATE payment_transactions 
-       SET status = 'failed', 
-           error_message = $1,
-           provider_response = $2,
-           updated_at = NOW()
-       WHERE stripe_payment_intent_id = $3`,
-      [
-        paymentIntent.last_payment_error?.message || 'Payment failed',
-        JSON.stringify(paymentIntent),
-        paymentIntent.id,
-      ]
-    );
-
-    // Update order status
-    await pool.query(
-      `UPDATE orders 
-       SET payment_status = 'failed',
-           updated_at = NOW()
-       WHERE id = $1::uuid`,
-      [orderId]
-    );
-
-    console.log('[Stripe Webhook] Payment failed for order:', orderId);
-
-  } catch (error) {
-    console.error('[Stripe Webhook] Payment failed handler error:', error);
+async function handlePaymentIntentFailedTx(tx, paymentIntent) {
+  const { orderId, businessId } = paymentIntent.metadata || {};
+  if (!orderId || !businessId) {
+    console.error('[Stripe Webhook] Missing orderId/businessId in payment intent');
+    return;
   }
+
+  const orderIdNum = Number.parseInt(String(orderId), 10);
+  if (Number.isNaN(orderIdNum)) return;
+
+  await tx.payment_transactions.updateMany({
+    where: {
+      stripe_payment_intent_id: paymentIntent.id,
+      business_id: businessId,
+    },
+    data: {
+      status: 'failed',
+      updated_at: new Date(),
+    },
+  });
+
+  await tx.storefront_orders.updateMany({
+    where: { id: orderIdNum, business_id: businessId },
+    data: {
+      payment_status: 'failed',
+      updated_at: new Date(),
+    },
+  });
+
+  console.log('[Stripe Webhook] Payment failed for order:', orderId);
 }
 
 /**
- * Handle payment_intent.created
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {import('stripe').Stripe.Account} account
  */
-async function handlePaymentIntentCreated(paymentIntent) {
-  console.log('[Stripe Webhook] Payment intent created:', paymentIntent.id);
-}
-
-/**
- * Handle account.updated (Stripe Connect)
- */
-async function handleAccountUpdated(account) {
-  try {
-    // Update Stripe Connect account status
-    await pool.query(
-      `UPDATE stripe_connect_accounts 
-       SET is_charges_enabled = $1,
-           is_payouts_enabled = $2,
-           requirements_due = $3,
-           card_payments_enabled = $4,
-           transfers_enabled = $5,
-           onboarding_complete = $6,
-           updated_at = NOW()
-       WHERE stripe_account_id = $7`,
-      [
-        account.charges_enabled,
-        account.payouts_enabled,
-        JSON.stringify(account.requirements?.currently_due || []),
-        account.capabilities?.card_payments === 'active',
-        account.capabilities?.transfers === 'active',
-        account.charges_enabled && account.payouts_enabled,
-        account.id,
-      ]
-    );
-
-    console.log('[Stripe Webhook] Account updated:', account.id);
-
-  } catch (error) {
-    console.error('[Stripe Webhook] Account update handler error:', error);
-  }
+async function handleAccountUpdatedTx(tx, account) {
+  await tx.stripe_connect_accounts.updateMany({
+    where: { stripe_account_id: account.id },
+    data: {
+      is_charges_enabled: account.charges_enabled,
+      is_payouts_enabled: account.payouts_enabled,
+      is_details_submitted: account.details_submitted ?? false,
+      updated_at: new Date(),
+    },
+  });
+  console.log('[Stripe Webhook] Account updated:', account.id);
 }

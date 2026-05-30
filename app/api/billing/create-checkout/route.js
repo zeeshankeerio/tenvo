@@ -1,65 +1,107 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
-import { createCheckoutSession, getPriceIdForPlan } from '@/lib/payments/stripe';
-import { auth } from '@/lib/auth';
+import { prismaBase } from '@/lib/db';
+import { createCheckoutSession, getPriceIdForPlan, createCustomer } from '@/lib/payments/stripe';
+import { getSessionUser } from '@/lib/auth/session';
+import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
+import { isManualBillingMode } from '@/lib/config/billingMode';
+import { PLAN_TIERS, resolvePlanTier } from '@/lib/config/plans';
 
 /**
  * POST /api/billing/create-checkout
- * Create a Stripe checkout session for plan upgrade
+ * Body: { business_id, planTier, currency?, returnUrl? }
  */
 export async function POST(request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const sessionWrap = await getSessionUser();
+    if (!sessionWrap?.user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized', code: 'UNAUTHENTICATED' },
         { status: 401 }
       );
     }
 
     const body = await request.json();
-    const { planTier, currency = 'pkr', returnUrl } = body;
+    const {
+      planTier,
+      currency = 'pkr',
+      returnUrl,
+      business_id: businessIdSnake,
+      businessId: businessIdCamel,
+    } = body;
+
+    const businessId = businessIdSnake || businessIdCamel;
+    if (!businessId) {
+      return NextResponse.json(
+        { error: 'business_id is required', code: 'MISSING_BUSINESS_ID' },
+        { status: 400 }
+      );
+    }
 
     if (!planTier) {
       return NextResponse.json(
-        { error: 'Plan tier is required' },
+        { error: 'Plan tier is required', code: 'MISSING_PLAN_TIER' },
         { status: 400 }
       );
     }
 
-    // Get business details
-    const businessResult = await pool.query(
-      `SELECT id, business_name, email, stripe_customer_id, current_plan
-       FROM businesses 
-       WHERE owner_id = $1 
-       LIMIT 1`,
-      [session.user.id]
-    );
-
-    if (businessResult.rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Business not found' },
-        { status: 404 }
-      );
+    const allowed = await assertUserHasBusinessAccess({
+      userId: sessionWrap.user.id,
+      businessId,
+      sessionUser: sessionWrap.user,
+    });
+    if (!allowed) {
+      return NextResponse.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
     }
 
-    const business = businessResult.rows[0];
+    const business = await prismaBase.businesses.findUnique({
+      where: { id: businessId },
+    });
+    if (!business) {
+      return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+    }
 
-    // Get Stripe price ID
+    // Dev / UAT: apply plan locally — no Stripe (set BILLING_MODE=manual in .env)
+    if (isManualBillingMode()) {
+      const tier = resolvePlanTier(planTier);
+      const plan = PLAN_TIERS[tier];
+      if (!plan) {
+        return NextResponse.json(
+          { error: 'Unknown plan tier', code: 'INVALID_PLAN' },
+          { status: 400 }
+        );
+      }
+      await prismaBase.businesses.update({
+        where: { id: businessId },
+        data: {
+          plan_tier: tier,
+          plan_seats: plan.limits.max_users,
+          max_products: plan.limits.max_products,
+          max_warehouses: plan.limits.max_warehouses,
+          stripe_subscription_status: 'manual_dev',
+          plan_expires_at: null,
+        },
+      });
+      return NextResponse.json({
+        success: true,
+        manual: true,
+        code: 'MANUAL_BILLING_PLAN_APPLIED',
+        message:
+          'Development billing: plan saved on this business. No payment processor — treat as manual/offline payment for testing.',
+        planTier: tier,
+      });
+    }
+
     const priceId = getPriceIdForPlan(planTier, currency);
-    
     if (!priceId) {
       return NextResponse.json(
-        { error: `Price ID not configured for plan: ${planTier}` },
+        { error: `Price ID not configured for plan: ${planTier}`, code: 'MISSING_PRICE_ID' },
         { status: 400 }
       );
     }
 
-    // Create or get Stripe customer
     let customerId = business.stripe_customer_id;
-    
+
     if (!customerId) {
-      const { createCustomer } = await import('@/lib/payments/stripe');
       const customerResult = await createCustomer({
         email: business.email,
         name: business.business_name,
@@ -68,24 +110,22 @@ export async function POST(request) {
           businessName: business.business_name,
         },
       });
-      
+
       if (customerResult.skipped) {
         return NextResponse.json(
-          { error: 'Payment provider not configured' },
+          { error: 'Payment provider not configured', code: 'STRIPE_NOT_CONFIGURED' },
           { status: 503 }
         );
       }
-      
+
       customerId = customerResult.id;
-      
-      // Save Stripe customer ID
-      await pool.query(
-        `UPDATE businesses SET stripe_customer_id = $1 WHERE id = $2`,
-        [customerId, business.id]
-      );
+
+      await prismaBase.businesses.update({
+        where: { id: business.id },
+        data: { stripe_customer_id: customerId },
+      });
     }
 
-    // Create checkout session
     const successUrl = `${returnUrl || process.env.NEXT_PUBLIC_APP_URL}/business/settings?payment=success&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${returnUrl || process.env.NEXT_PUBLIC_APP_URL}/pricing?payment=cancelled`;
 
@@ -103,7 +143,7 @@ export async function POST(request) {
 
     if (checkoutResult.skipped) {
       return NextResponse.json(
-        { error: 'Payment provider not configured' },
+        { error: 'Payment provider not configured', code: 'STRIPE_NOT_CONFIGURED' },
         { status: 503 }
       );
     }
@@ -113,7 +153,6 @@ export async function POST(request) {
       checkoutUrl: checkoutResult.url,
       sessionId: checkoutResult.id,
     });
-
   } catch (error) {
     console.error('[Create Checkout] Error:', error);
     return NextResponse.json(

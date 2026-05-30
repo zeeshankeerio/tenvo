@@ -79,6 +79,11 @@ import { LowStockAlerts } from './inventory/LowStockAlerts';
 import { CycleCountManager } from './inventory/CycleCountManager';
 import { exportProducts } from '@/lib/utils/export';
 import { productAPI } from '@/lib/api/product';
+import {
+  runWithConcurrency,
+  leanProductPayloadForCreate,
+  formatInventoryActionError,
+} from '@/lib/utils/productMutationPayload';
 
 import {
   DropdownMenu,
@@ -103,6 +108,22 @@ import { QuickAddTemplates } from './QuickAddTemplates';
  * A comprehensive dashboard for managing products, batches, serials, and inventory logistics.
  */
 import { getProductsAction, deleteProductAction, createProductAction, updateProductAction, seedBusinessProductsAction } from '@/lib/actions/standard/inventory/product';
+
+/** Normalize domain_data before merging — JSON strings must not be object-spread or saves corrupt */
+function parseProductDomainData(raw) {
+  if (raw == null) return {};
+  if (typeof raw === 'object' && !Array.isArray(raw)) return { ...raw };
+  if (typeof raw === 'string') {
+    const t = raw.trim();
+    if (!t || t === '[object Object]') return {};
+    try {
+      return JSON.parse(t);
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
 
 /**
  * @param {Object} props
@@ -195,15 +216,16 @@ export function InventoryManager({
 
   // Sync internal state when prop changes (from parent refresh)
   useEffect(() => {
-    if (initialProducts?.length > 0) {
-      setProducts(deduplicateProducts(initialProducts));
-    }
+    const next = deduplicateProducts(initialProducts || []);
+    queueMicrotask(() => {
+      setProducts(next);
+    });
   }, [initialProducts]);
 
   // Internal Data Fetching (Only if products not passed or empty, and not controlled by parent)
   const fetchProducts = useCallback(async () => {
     // If businessId missing OR products provided OR parent controls data refresh => SKIP
-    if (!businessId || initialProducts.length > 0 || refreshData) return;
+    if (!businessId || (initialProducts?.length > 0) || refreshData) return;
     setLoading(true);
     try {
       const res = await getProductsAction(businessId);
@@ -223,7 +245,9 @@ export function InventoryManager({
   }, [businessId, refreshData]);
 
   useEffect(() => {
-    fetchProducts();
+    queueMicrotask(() => {
+      void fetchProducts();
+    });
   }, [fetchProducts]);
 
   // Wrap internal handlers to update local state + call parent if provided
@@ -357,23 +381,26 @@ export function InventoryManager({
       });
 
       if (changedItems.length === 0) {
-        toast.info("No changes to save");
+        toast('No changes to save', { id: 'excel-no-changes', duration: 2000 });
         setShowExcelMode(false);
+        setLoading(false);
         return;
       }
 
       toast.loading(`Saving ${changedItems.length} changes...`, { id: 'excel-save' });
 
-      // Batch process with Promise.allSettled for parallel, non-blocking saves
-      const savePromises = changedItems.map(item => {
+      // Limited concurrency: unbounded parallel server actions often fail as "Failed to fetch"
+      const settled = await runWithConcurrency(changedItems, 5, async (item) => {
         const isNew = item._tempId && !item.id;
-        const action = isNew
-          ? createProductAction({ ...item, business_id: businessId })
-          : updateProductAction(item.id, businessId, item);
-        return action.then(res => ({ res, item, isNew }));
+        if (isNew) {
+          const res = await createProductAction(
+            leanProductPayloadForCreate({ ...item, business_id: businessId })
+          );
+          return { res, item, isNew };
+        }
+        const res = await updateProductAction(item.id, businessId, item);
+        return { res, item, isNew };
       });
-
-      const settled = await Promise.allSettled(savePromises);
 
       const successfulTempIds = new Set();
       const activeUpdates = [];
@@ -445,15 +472,21 @@ export function InventoryManager({
       toast.dismiss('excel-save');
 
       if (results.failed === 0) {
-        toast.success(`Excel Save Complete: ${results.updated} updated, ${results.created} created`);
+        toast.success(`Excel Save Complete: ${results.updated} updated, ${results.created} created`, {
+          id: 'excel-save-result',
+          duration: 3500,
+        });
         setShowExcelMode(false);
       } else {
-        toast.error(`Excel Save partially failed: ${results.failed} errors. ${results.updated + results.created} saved.`);
+        toast.error(
+          `Excel Save partially failed: ${results.failed} errors. ${results.updated + results.created} saved.`,
+          { id: 'excel-save-result', duration: 6000 }
+        );
       }
     } catch (err) {
       console.error(err);
       toast.dismiss('excel-save');
-      toast.error("Error during bulk save");
+      toast.error(formatInventoryActionError(err), { id: 'excel-save-result', duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -462,6 +495,10 @@ export function InventoryManager({
   // Products are filtered by the parent (DashboardTabs) based on global search
   // Here we apply additional domain-specific filters (Stock Level, Category, Brand, Price)
   const productsToDisplay = useMemo(() => {
+    const num = (v, fallback = 0) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : fallback;
+    };
     return products.filter(p => {
       // 0. Search Term Filter (Name, SKU, Barcode, Brand, Category)
       const normalizedTerm = String(searchTerm || '').trim().toLowerCase();
@@ -480,18 +517,21 @@ export function InventoryManager({
         if (!searchable.includes(normalizedTerm)) return false;
       }
 
+      const stockVal = num(p.stock, 0);
+      const priceVal = num(p.price, 0);
+
       // 1. Stock Category Filter
       if (activeDomainFilters.stock === 'low') {
-        const minStock = p.min_stock ?? p.minStock ?? 10;
-        const isLow = (p.stock || 0) <= minStock;
+        const minStock = num(p.min_stock ?? p.minStock, 10);
+        const isLow = stockVal <= minStock;
         if (!isLow) return false;
       } else if (activeDomainFilters.stock === 'normal') {
-        const minStock = p.min_stock ?? p.minStock ?? 10;
-        const isNormal = (p.stock || 0) > minStock;
+        const minStock = num(p.min_stock ?? p.minStock, 10);
+        const isNormal = stockVal > minStock;
         if (!isNormal) return false;
       } else if (activeDomainFilters.stock === 'high') {
-        const minStock = p.min_stock ?? p.minStock ?? 10;
-        const isHigh = (p.stock || 0) > (minStock * 3); // Example heuristic
+        const minStock = num(p.min_stock ?? p.minStock, 10);
+        const isHigh = stockVal > minStock * 3; // Example heuristic
         if (!isHigh) return false;
       }
 
@@ -507,10 +547,10 @@ export function InventoryManager({
 
       // 4. Price Range Filter
       if (activeDomainFilters.minPrice) {
-        if ((p.price || 0) < Number(activeDomainFilters.minPrice)) return false;
+        if (priceVal < Number(activeDomainFilters.minPrice)) return false;
       }
       if (activeDomainFilters.maxPrice) {
-        if ((p.price || 0) > Number(activeDomainFilters.maxPrice)) return false;
+        if (priceVal > Number(activeDomainFilters.maxPrice)) return false;
       }
 
       return true;
@@ -541,8 +581,8 @@ export function InventoryManager({
     
     const toastId = toast.loading(`Deleting ${toDelete.length} products...`);
     try {
-      const results = await Promise.allSettled(
-        toDelete.map(p => deleteProductAction(p.id, businessId))
+      const results = await runWithConcurrency(toDelete, 5, (p) =>
+        deleteProductAction(p.id, businessId)
       );
 
       let successCount = 0;
@@ -616,7 +656,7 @@ export function InventoryManager({
     } catch (err) {
       setProducts(old);
       console.error('Update error:', err);
-      toast.error(err.message || 'Error updating product');
+      toast.error(formatInventoryActionError(err), { id: 'inventory-product-update' });
       throw err;
     }
   };
@@ -746,18 +786,22 @@ export function InventoryManager({
   const abcAnalysis = useMemo(() => {
     const sorted = [...products].sort((a, b) => ((Number(b.price || 0) * Number(b.stock || 0)) - (Number(a.price || 0) * Number(a.stock || 0))));
     const totalValue = sorted.reduce((sum, p) => sum + (Number(p.price || 0) * Number(p.stock || 0)), 0);
-    let cumulative = 0;
 
-    return sorted.map((p) => {
-      const value = Number(p.price || 0) * Number(p.stock || 0);
-      cumulative += value;
-      const percentage = totalValue > 0 ? (cumulative / totalValue) * 100 : 0;
-      let category = 'C';
-      if (percentage <= 80) category = 'A';
-      else if (percentage <= 95) category = 'B';
-
-      return { ...p, category, value, percentage };
-    });
+    return sorted.reduce(
+      (acc, p) => {
+        const value = Number(p.price || 0) * Number(p.stock || 0);
+        const running = acc.running + value;
+        const percentage = totalValue > 0 ? (running / totalValue) * 100 : 0;
+        let category = 'C';
+        if (percentage <= 80) category = 'A';
+        else if (percentage <= 95) category = 'B';
+        return {
+          running,
+          rows: [...acc.rows, { ...p, category, value, percentage }],
+        };
+      },
+      { running: 0, rows: [] }
+    ).rows;
   }, [products]);
 
   const abcStats = useMemo(() => {
@@ -902,9 +946,11 @@ export function InventoryManager({
         size: 220,
         minSize: 180,
         cell: ({ row }) => (
-          <div className="flex flex-col py-1">
-            <span className="font-semibold text-gray-900 text-sm leading-tight line-clamp-1">{row.original.name}</span>
-            {row.original.brand && <span className="text-[11px] text-gray-500 mt-0.5">{row.original.brand}</span>}
+          <div className="flex min-w-0 flex-col gap-0 py-0 leading-tight">
+            <span className="line-clamp-1 text-xs font-semibold leading-tight text-gray-900">{row.original.name}</span>
+            {row.original.brand && (
+              <span className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">{row.original.brand}</span>
+            )}
           </div>
         ),
       },
@@ -914,7 +960,7 @@ export function InventoryManager({
         header: 'SKU',
         size: 110,
         minSize: 90,
-        cell: ({ row }) => <span className="font-mono text-xs text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-200">{row.original.sku || '-'}</span>
+        cell: ({ row }) => <span className="font-mono text-[11px] text-gray-700">{row.original.sku || '-'}</span>
       },
       {
         id: 'category',
@@ -923,7 +969,7 @@ export function InventoryManager({
         size: 130,
         minSize: 110,
         cell: ({ row }) => (
-          <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-700 border border-gray-200">
+          <span className="inline-flex max-w-full items-center rounded border border-gray-200 bg-gray-50 px-1.5 py-0 text-[9px] font-bold uppercase tracking-wide text-gray-700">
             {row.original.category}
           </span>
         )
@@ -935,22 +981,34 @@ export function InventoryManager({
         size: 90,
         minSize: 80,
         cell: ({ row }) => {
-          const stock = row.original.stock || 0;
-          const minStock = row.original.min_stock || row.original.minStock || 10;
-          const isLow = stock <= minStock;
+          const stock = Number(row.original.stock ?? 0);
+          const minStock = Number(row.original.min_stock ?? row.original.minStock ?? 10);
+          const safeStock = Number.isFinite(stock) ? stock : 0;
+          const safeMin = Number.isFinite(minStock) ? minStock : 10;
+          const isLow = safeStock <= safeMin;
 
           return (
-            <div className="flex items-center justify-end gap-2 pr-2">
-              <div className={cn(
-                "w-2 h-2 rounded-full",
-                stock <= 0 ? "bg-red-500 animate-pulse" :
-                  isLow ? "bg-amber-500" : "bg-emerald-500"
-              )} />
-              <span className={cn(
-                "font-bold text-sm tabular-nums",
-                stock <= 0 ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-700'
-              )}>{stock}</span>
-              {isLow && <Badge variant="outline" className="text-[10px] py-0 h-4 px-1 bg-amber-50 text-amber-600 border-amber-200">LOW</Badge>}
+            <div className="flex w-full min-w-0 items-center justify-end gap-1.5 pr-0.5 tabular-nums">
+              <span
+                className={cn(
+                  'inline-block h-1.5 w-1.5 shrink-0 rounded-full',
+                  safeStock <= 0 ? 'animate-pulse bg-red-500' : isLow ? 'bg-amber-500' : 'bg-emerald-500'
+                )}
+                aria-hidden
+              />
+              <span
+                className={cn(
+                  'min-w-[1.25rem] text-right text-xs font-semibold tabular-nums',
+                  safeStock <= 0 ? 'text-red-600' : isLow ? 'text-amber-700' : 'text-emerald-800'
+                )}
+              >
+                {safeStock}
+              </span>
+              {isLow && (
+                <span className="inline-flex shrink-0 items-center rounded border border-amber-200 bg-amber-50 px-1 py-0 text-[9px] font-bold uppercase leading-none text-amber-700">
+                  Low
+                </span>
+              )}
             </div>
           );
         },
@@ -1053,8 +1111,10 @@ export function InventoryManager({
           const expiry = row.original.expiry_date;
           if (!expiry) return <span className="text-gray-300">-</span>;
 
-          const isExpired = new Date(expiry) < new Date();
-          const isExpiringSoon = new Date(expiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          const now = new Date();
+          const horizonMs = now.getTime() + 30 * 24 * 60 * 60 * 1000;
+          const isExpired = new Date(expiry) < now;
+          const isExpiringSoon = new Date(expiry).getTime() < horizonMs;
 
           return (
             <span className={cn(
@@ -1145,8 +1205,11 @@ export function InventoryManager({
   // Shared Actions column for both views
   const gridColumns = useMemo(() => {
     const actionsCol = columns.find(c => c.id === 'actions');
+    const pinnedActions = actionsCol
+      ? { ...actionsCol, accessorKey: '__actions', readOnly: true }
+      : null;
     return [
-      actionsCol, // Actions column first
+      pinnedActions,
       ...getDomainTableColumns(category, standards.currencySymbol)
     ].filter(Boolean);
   }, [category, columns, standards.currencySymbol]);
@@ -1464,14 +1527,21 @@ export function InventoryManager({
                       'stock', 'price', 'cost_price', 'costPrice',
                       'minStock', 'min_stock', 'maxStock', 'max_stock',
                       'reorderPoint', 'reorder_point', 'reorderQuantity', 'reorder_quantity',
-                      'mrp', 'taxPercent', 'tax_percent'
+                      'mrp', 'taxPercent', 'tax_percent', 'unitcost'
                     ];
 
                     if (numericFields.includes(field) || field.includes('width') || field.includes('length')) {
-                      processedValue = parseFloat(value) || 0;
+                      const n = parseFloat(String(value).replace(/,/g, ''));
+                      processedValue = Number.isFinite(n) ? n : 0;
                     }
 
-                    const updatedProduct = JSON.parse(JSON.stringify(product)); // Deep clone
+                    let updatedProduct;
+                    try {
+                      updatedProduct = structuredClone(product);
+                    } catch {
+                      updatedProduct = { ...product };
+                    }
+                    updatedProduct.domain_data = parseProductDomainData(updatedProduct.domain_data);
 
                     // Handle nested keys (e.g., 'domain_data.article')
                     if (field.includes('.')) {
@@ -1487,12 +1557,17 @@ export function InventoryManager({
                       const isDomainField = domainKnowledge?.productFields?.some(f => normalizeKey(f) === field);
                       if (isDomainField) {
                         updatedProduct.domain_data = {
-                          ...(updatedProduct.domain_data || {}),
+                          ...updatedProduct.domain_data,
                           [field]: processedValue
                         };
                       } else {
                         updatedProduct[field] = processedValue;
                       }
+                    }
+
+                    if (field === 'unitcost') {
+                      const n = Number(processedValue);
+                      if (Number.isFinite(n) && n >= 0) updatedProduct.cost_price = n;
                     }
 
                     // [OK] CRITICAL: Ensure batches/serials are preserved
@@ -1511,21 +1586,48 @@ export function InventoryManager({
                     try {
                       if (onUpdate) {
                         await onUpdate(updatedProduct);
+                        toast.success(`Saved ${field}`, { id: 'inventory-busy-save', duration: 2000 });
                       } else {
                         const saveRes = await updateProductAction(updatedProduct.id, businessId, updatedProduct);
                         if (!saveRes?.success) {
                           throw new Error(saveRes?.error || 'Failed to persist update');
                         }
+                        if (saveRes.product) {
+                          setProducts(prev =>
+                            prev.map(p => {
+                              if (p.id !== product.id) return p;
+                              const srv = saveRes.product;
+                              return {
+                                ...p,
+                                ...srv,
+                                batches:
+                                  Array.isArray(srv.batches) && srv.batches.length > 0
+                                    ? srv.batches
+                                    : p.batches || [],
+                                serial_numbers:
+                                  Array.isArray(srv.serial_numbers) && srv.serial_numbers.length > 0
+                                    ? srv.serial_numbers
+                                    : p.serial_numbers || p.serialNumbers || [],
+                                variants:
+                                  Array.isArray(srv.variants) && srv.variants.length > 0
+                                    ? srv.variants
+                                    : p.variants || [],
+                              };
+                            })
+                          );
+                        }
+                        toast.success(`Saved ${field}`, { id: 'inventory-busy-save', duration: 2000 });
                       }
-                      toast.success(`Updated ${field}`, { id: `save-${field}`, position: 'bottom-right', duration: 2000 });
                     } catch (error) {
                       // [X] ROLLBACK on failure
                       setProducts(oldProducts);
-                      toast.error(`Failed to update ${field}: ${error.message || 'Unknown error'}`, {
-                        id: `error-${field}`,
-                        position: 'bottom-right',
-                        duration: 4000
-                      });
+                      toast.error(
+                        `Failed to update ${field}: ${formatInventoryActionError(error)}`,
+                        {
+                          id: 'inventory-busy-error',
+                          duration: 5000,
+                        }
+                      );
                       console.error('BusyGrid update error:', error);
                     }
                   }}

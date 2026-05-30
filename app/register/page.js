@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useBusiness } from '@/lib/context/BusinessContext';
 // Supabase removed - using Better Auth + Server Actions
-import { businessAPI } from '@/lib/api/business';
-import { createBusiness, checkDomainAvailabilityAction } from '@/lib/actions/basic/business';
+import { createBusiness, checkDomainAvailabilityAction, completeRegistrationSetupAction } from '@/lib/actions/basic/business';
 import { seedBusinessProductsAction } from '@/lib/actions/standard/inventory/product';
 import { domainKnowledge } from '@/lib/domainKnowledge';
 import { PLAN_TIERS } from '@/lib/config/plans';
@@ -455,25 +454,34 @@ export default function RegisterWizard() {
                     // 3. Seed initial products using server action
                     await seedBusinessData(bizResult.businessId, formData.category, formData.country);
 
-                    // 4. Mark setup as complete
+                    // 4. Mark setup as complete (ownership-only action — reliable right after signup)
                     try {
-                        await businessAPI.update(bizResult.businessId, {
-                            settings: { setup_completed: true, setup_at: new Date().toISOString() }
+                        const setupRes = await completeRegistrationSetupAction(bizResult.businessId, {
+                            settings: { setup_completed: true, setup_at: new Date().toISOString() },
                         });
+                        if (!setupRes.success) {
+                            console.error('Failed to mark setup complete:', setupRes.error);
+                        }
                     } catch (updateErr) {
-                        console.error("Failed to mark setup complete:", updateErr);
+                        console.error('Failed to mark setup complete:', updateErr);
                     }
 
                     // Clear registration persistence data on success
                     clearRegistrationData();
 
-                    // Update local context if needed, but router push is cleaner
-                    router.push(`/business/${formData.handle}`);
+                    const dashboardDomain = String(formData.handle || '').trim().toLowerCase();
+                    router.push(`/business/${dashboardDomain}`);
+                    router.refresh();
                 } else {
                     console.error("Business provision failed:", bizResult.error);
 
-                    // Specific Handling for Multi-Tenant Domain Collision
-                    if (bizResult.error?.includes("Domain Handle") || bizResult.error?.includes("already taken")) {
+                    if (bizResult.code === 'DATABASE_SCHEMA_OUT_OF_DATE') {
+                        toast.error(
+                            bizResult.error ||
+                                'Database needs updating. Run: bunx prisma migrate deploy',
+                            { duration: 12000 }
+                        );
+                    } else if (bizResult.error?.includes("Domain Handle") || bizResult.error?.includes("already taken")) {
                         toast.error(`The domain "${formData.handle}" is already in use. Please pick a unique handle.`, { duration: 6000 });
                     } else {
                         toast.error(bizResult.error || 'Identity created, but dashboard could not be provisioned.');

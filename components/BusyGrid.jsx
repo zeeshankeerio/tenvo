@@ -13,6 +13,15 @@ import { EmptyState } from '@/components/ui/EmptyState';
  * BusyGrid Component
  * A high-density, keyboard-navigable data grid inspired by Busy.in/Excel.
  */
+function rowStableKey(row, rowIndex) {
+    if (!row) return `__${rowIndex}`;
+    return row.id || row._tempId || `__${rowIndex}`;
+}
+
+function columnWidth(col, colIndex, columnWidths) {
+    return columnWidths[colIndex] ?? col.width ?? col.size ?? 120;
+}
+
 export function BusyGrid({
     data = [],
     columns = [],
@@ -23,13 +32,16 @@ export function BusyGrid({
     onAdvancedSettings,
     className,
     category = 'retail-shop',
-    validationErrors = {} // Added for visual feedback
+    validationErrors = {}, // Added for visual feedback
+    /** Dense spreadsheet layout: light gridlines, compact rows, stable row order (no column sort). */
+    variant = 'default',
 }) {
     const { language } = useLanguage();
     const t = translations[language];
     const colors = getDomainColors(category);
 
     const { isBusyMode } = useBusyMode();
+    const isExcel = variant === 'excel';
     const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
     const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState('');
@@ -44,10 +56,18 @@ export function BusyGrid({
     const getValue = useCallback((row, accessor) => {
         if (!accessor) return '';
         if (!row) return '';
+        let raw;
         if (accessor.includes('.')) {
-            return accessor.split('.').reduce((o, i) => (o ? o[i] : undefined), row) ?? '';
+            raw = accessor.split('.').reduce((o, i) => (o ? o[i] : undefined), row);
+        } else {
+            raw = row[accessor];
         }
-        return row[accessor] ?? '';
+        if (raw == null || raw === '') return '';
+        if (typeof raw === 'object' && typeof raw.toNumber === 'function') {
+            const n = raw.toNumber();
+            return Number.isFinite(n) ? n : '';
+        }
+        return raw;
     }, []);
 
     const getColumnLetter = (index) => {
@@ -62,6 +82,7 @@ export function BusyGrid({
     const headerLetters = useMemo(() => columns.map((_, i) => getColumnLetter(i)), [columns]);
 
     const sortedData = useMemo(() => {
+        if (variant === 'excel') return data;
         if (!sortConfig.key) return data;
         const sorted = [...data].sort((a, b) => {
             const aVal = getValue(a, sortConfig.key);
@@ -70,9 +91,10 @@ export function BusyGrid({
             return String(aVal).localeCompare(String(bVal));
         });
         return sortConfig.direction === 'asc' ? sorted : sorted.reverse();
-    }, [data, sortConfig, getValue]);
+    }, [data, sortConfig, getValue, variant]);
 
     const handleSort = (key) => {
+        if (variant === 'excel') return;
         setSortConfig(current => ({
             key,
             direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
@@ -99,7 +121,7 @@ export function BusyGrid({
     const startEditing = (initialChar = null) => {
         if (sortedData.length === 0) return;
         const colDef = columns[selectedCell.col];
-        if (colDef.readOnly) return;
+        if (colDef.readOnly || !colDef.accessorKey) return;
         const row = sortedData[selectedCell.row];
         let val = getValue(row, colDef.accessorKey);
         setEditingCell(selectedCell);
@@ -132,7 +154,7 @@ export function BusyGrid({
     const handleMouseDown = (e, colIndex) => {
         e.preventDefault();
         const startX = e.pageX;
-        const startWidth = columnWidths[colIndex] || columns[colIndex].width || 120;
+        const startWidth = columnWidths[colIndex] || columnWidth(columns[colIndex], colIndex, columnWidths);
         const handleMouseMove = (moveEvent) => {
             const newWidth = Math.max(50, startWidth + (moveEvent.pageX - startX));
             setColumnWidths(prev => ({ ...prev, [colIndex]: newWidth }));
@@ -208,7 +230,11 @@ export function BusyGrid({
 
     return (
         <div
-            className={cn("border border-gray-300 bg-white shadow-sm overflow-hidden flex flex-col h-full select-none font-mono text-sm", className)}
+            className={cn(
+                'border bg-white shadow-sm overflow-hidden flex flex-col h-full select-none font-mono',
+                isExcel ? 'border-gray-300 text-xs' : 'border-gray-300 text-sm',
+                className
+            )}
             tabIndex={0}
             ref={gridRef}
             onKeyDown={handleKeyDown}
@@ -216,7 +242,7 @@ export function BusyGrid({
         >
             {/* Liquid-Style Formula Bar (Busy Mode Only) */}
             {isBusyMode && (
-                <div className="bg-slate-50 border-b border-slate-200 p-1.5 flex items-center gap-2 h-10 shadow-inner">
+                <div className={cn('bg-slate-50 border-b border-slate-200 p-1.5 flex items-center gap-2 shadow-inner', isExcel ? 'h-8' : 'h-10')}>
                     <div className="bg-white border px-3 h-7 flex items-center font-black text-[10px] text-indigo-600 rounded shadow-sm">
                         {headerLetters[selectedCell.col]}{selectedCell.row + 1}
                     </div>
@@ -235,56 +261,155 @@ export function BusyGrid({
             )}
 
             <div ref={scrollRef} className="flex-1 overflow-auto bg-white custom-scrollbar relative">
-                <table className="w-full table-fixed border-separate border-spacing-0">
+                <table className="w-full border-separate border-spacing-0 table-fixed">
                     <thead className="sticky top-0 z-30">
-                        <tr className="bg-gray-100/95 backdrop-blur-sm shadow-sm">
-                            <th className="w-10 h-10 border-r border-b border-gray-300 bg-gray-200/50 sticky left-0 z-40 flex-shrink-0 flex items-center justify-center text-[10px] text-gray-500 font-mono">#</th>
+                        <tr
+                            className={cn(
+                                'shadow-sm',
+                                isExcel ? 'border-b border-gray-300 bg-[#eceff2]' : 'border-b border-gray-300 bg-gray-100/95 backdrop-blur-sm'
+                            )}
+                        >
+                            <th
+                                className={cn(
+                                    'sticky left-0 z-40 box-border shrink-0 border-r border-b text-center font-mono font-bold leading-none text-gray-600',
+                                    isExcel
+                                        ? 'h-7 w-8 min-w-[32px] max-w-[32px] border-gray-300 bg-[#dfe4ea] p-0 text-[9px]'
+                                        : 'h-10 w-10 border-gray-300 bg-gray-200/80 text-[10px] text-gray-500'
+                                )}
+                                style={isExcel ? { width: 32, minWidth: 32, maxWidth: 32 } : undefined}
+                            >
+                                #
+                            </th>
                             {columns.map((col, idx) => {
-                                const width = columnWidths[idx] || col.width || 120;
+                                const width = columnWidth(col, idx, columnWidths);
+                                const headerLabel = typeof col.header === 'function' ? col.header() : col.header;
                                 return (
-                                    <th key={col.accessorKey || idx} className="h-10 border-r border-b border-gray-300 p-0 text-left overflow-hidden relative group hover:bg-gray-200/80 transition-colors" style={{ width }}>
-                                        <div className="w-full h-full px-3 flex flex-col justify-center gap-0.5 cursor-pointer" onClick={() => col.accessorKey && handleSort(col.accessorKey)}>
-                                            <span className="text-[8px] font-bold text-gray-400 group-hover:text-blue-500 transition-colors">{headerLetters[idx]}</span>
-                                            <div className="flex items-center gap-2">
-                                                <span className="truncate text-[10px] font-black uppercase tracking-widest text-gray-700">{typeof col.header === 'function' ? col.header() : col.header}</span>
-                                                {sortConfig.key === col.accessorKey && (
-                                                    <span className="flex-shrink-0">
-                                                        {sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3 text-blue-600" /> : <ChevronDown className="w-3 h-3 text-blue-600" />}
-                                                    </span>
-                                                )}
+                                    <th
+                                        key={col.accessorKey || idx}
+                                        className={cn(
+                                            'relative box-border border-r border-b p-0 text-left align-middle',
+                                            isExcel
+                                                ? 'h-7 border-gray-300 bg-[#eceff2]'
+                                                : 'h-10 border-gray-300 bg-gray-100/95'
+                                        )}
+                                        style={{ width }}
+                                    >
+                                        {isExcel ? (
+                                            <div
+                                                className="flex h-full min-h-[28px] w-full min-w-0 items-center gap-1 px-1.5 py-0"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <span
+                                                    className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border border-gray-400 bg-white font-mono text-[9px] font-bold leading-none text-gray-700"
+                                                    title={`Column ${headerLetters[idx]}`}
+                                                >
+                                                    {headerLetters[idx]}
+                                                </span>
+                                                <span className="min-w-0 flex-1 truncate pr-1 text-left text-[10px] font-bold uppercase leading-tight tracking-tight text-gray-800">
+                                                    {headerLabel}
+                                                </span>
                                             </div>
-                                        </div>
-                                        <div className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-blue-400 active:bg-blue-600 z-50 transition-colors" onMouseDown={(e) => handleMouseDown(e, idx)} />
+                                        ) : (
+                                            <div
+                                                className={cn(
+                                                    'flex h-full w-full cursor-pointer flex-col justify-center gap-0.5 px-3 py-0.5',
+                                                    'group transition-colors hover:bg-gray-200/80'
+                                                )}
+                                                onClick={() => col.accessorKey && handleSort(col.accessorKey)}
+                                            >
+                                                <span className="text-[8px] font-bold text-gray-400 transition-colors group-hover:text-blue-600">
+                                                    {headerLetters[idx]}
+                                                </span>
+                                                <div className="flex min-w-0 items-center gap-2">
+                                                    <span className="truncate text-[10px] font-black uppercase tracking-widest text-gray-700">
+                                                        {headerLabel}
+                                                    </span>
+                                                    {sortConfig.key === col.accessorKey && (
+                                                        <span className="shrink-0">
+                                                            {sortConfig.direction === 'asc' ? (
+                                                                <ChevronUp className="h-3 w-3 text-blue-600" />
+                                                            ) : (
+                                                                <ChevronDown className="h-3 w-3 text-blue-600" />
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div
+                                            className="absolute bottom-0 right-0 top-0 z-20 w-1 cursor-col-resize hover:bg-blue-500/40"
+                                            onMouseDown={(e) => handleMouseDown(e, idx)}
+                                            aria-hidden
+                                        />
                                     </th>
                                 );
                             })}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody>
                         {sortedData.map((row, rowIndex) => {
                             const isSelectedRow = selectedCell.row === rowIndex;
+                            const rk = rowStableKey(row, rowIndex);
                             return (
-                                <tr key={row.id || row._tempId || rowIndex} id={`row-${rowIndex}`} onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.pageX, y: e.pageY, rowIndex }); setSelectedCell({ row: rowIndex, col: selectedCell.col }); }} className={cn("transition-colors group", isSelectedRow ? "bg-blue-50/50" : rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50/20", "hover:bg-blue-50/30")}>
-                                    <td className="w-10 text-center text-[10px] text-gray-400 font-mono bg-gray-50/50 border-r border-gray-100 sticky left-0 z-20 group-hover:text-blue-500 transition-colors">{rowIndex + 1}</td>
+                                <tr
+                                    key={rk}
+                                    id={`row-${rowIndex}`}
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        setContextMenu({ x: e.pageX, y: e.pageY, rowIndex });
+                                        setSelectedCell({ row: rowIndex, col: selectedCell.col });
+                                    }}
+                                    className={cn(
+                                        'group transition-colors',
+                                        isExcel && (rowIndex % 2 === 0 ? 'bg-white' : 'bg-[#f6f7f9]'),
+                                        !isExcel && isSelectedRow && 'bg-blue-50/50',
+                                        !isExcel && !isSelectedRow && (rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50/20'),
+                                        !isExcel && 'hover:bg-blue-50/30',
+                                        isExcel && 'hover:bg-sky-50/40'
+                                    )}
+                                >
+                                    <td
+                                        className={cn(
+                                            'sticky left-0 z-20 box-border border-r border-b text-center font-mono font-bold text-gray-600 transition-colors',
+                                            isExcel
+                                                ? 'h-[26px] min-h-[26px] max-h-[26px] w-8 min-w-[32px] max-w-[32px] border-gray-300 bg-[#dfe4ea] text-[9px] leading-none group-hover:text-blue-700'
+                                                : 'w-10 border-gray-100 bg-gray-50/50 text-[10px] text-gray-400 group-hover:text-blue-500'
+                                        )}
+                                        style={isExcel ? { width: 32, minWidth: 32, maxWidth: 32 } : undefined}
+                                    >
+                                        {rowIndex + 1}
+                                    </td>
                                     {columns.map((col, colIndex) => {
                                         const isSelected = selectedCell.row === rowIndex && selectedCell.col === colIndex;
                                         const isEditing = editingCell?.row === rowIndex && editingCell?.col === colIndex;
-                                        const width = columnWidths[colIndex] || col.width || 120;
-                                        const hasError = validationErrors[`${rowIndex}-${col.accessorKey}`];
+                                        const width = columnWidth(col, colIndex, columnWidths);
+                                        const hasError =
+                                            (col.accessorKey &&
+                                                (validationErrors[`${rk}-${col.accessorKey}`] ||
+                                                    validationErrors[`${rowIndex}-${col.accessorKey}`])) ||
+                                            false;
 
                                         return (
                                             <td
                                                 key={colIndex}
                                                 className={cn(
-                                                    "p-0 relative h-10 border-r border-gray-100 transition-all duration-200",
-                                                    isBusyMode && "h-8", // Reduced height in Busy Mode
-                                                    isSelected && !isEditing && "ring-2 ring-inset ring-indigo-500 z-10 bg-indigo-50/20",
-                                                    col.readOnly && "bg-gray-50/10",
-                                                    hasError && "bg-red-50/50 ring-1 ring-inset ring-red-300"
+                                                    'relative box-border border-r border-b p-0 align-middle transition-all duration-150',
+                                                    isExcel
+                                                        ? 'h-[26px] min-h-[26px] max-h-[26px] border-gray-300'
+                                                        : 'h-10 border-gray-100',
+                                                    !isExcel && isBusyMode && 'h-8',
+                                                    isSelected &&
+                                                        !isEditing &&
+                                                        cn(
+                                                            'z-10 ring-2 ring-inset ring-blue-500',
+                                                            isExcel ? 'bg-sky-100/85' : 'bg-indigo-50/30'
+                                                        ),
+                                                    col.readOnly && (isExcel ? 'bg-gray-50/80' : 'bg-gray-50/10'),
+                                                    hasError && 'bg-red-50/60 ring-1 ring-inset ring-red-300'
                                                 )}
                                                 style={{ width }}
                                                 onClick={() => setSelectedCell({ row: rowIndex, col: colIndex })}
-                                                onDoubleClick={() => !col.readOnly && startEditing()}
+                                                onDoubleClick={() => !col.readOnly && col.accessorKey && startEditing()}
                                             >
                                                 {/* Smart Fill Handle (Busy Mode & Selected Only) */}
                                                 {isSelected && !isEditing && isBusyMode && (
@@ -292,16 +417,42 @@ export function BusyGrid({
                                                 )}
                                                 {isEditing ? (
                                                     <div className="absolute inset-0 z-40 p-0.5">
-                                                        <input ref={inputRef} className="w-full h-full px-2.5 bg-white outline-none ring-2 ring-blue-600 shadow-xl font-medium text-gray-900 z-50 text-sm" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={(e) => saveEdit(e.target.value)} onKeyDown={(e) => {
+                                                        <input
+                                                            ref={inputRef}
+                                                            className={cn(
+                                                                'z-50 h-full w-full bg-white font-medium text-gray-900 outline-none ring-2 ring-blue-600',
+                                                                isExcel ? 'px-2 text-xs' : 'px-2.5 text-sm shadow-xl'
+                                                            )}
+                                                            value={editValue}
+                                                            onChange={(e) => setEditValue(e.target.value)}
+                                                            onBlur={(e) => saveEdit(e.target.value)}
+                                                            onKeyDown={(e) => {
                                                             if (e.key === 'Enter') { e.preventDefault(); saveEdit(e.target.value); moveSelection(0, 1); requestAnimationFrame(() => startEditing()); }
                                                             else if (e.key === 'Tab') { e.preventDefault(); saveEdit(e.target.value); moveSelection(0, e.shiftKey ? -1 : 1); requestAnimationFrame(() => startEditing()); }
                                                             else if (e.key === 'Escape') { e.preventDefault(); setEditingCell(null); }
                                                         }} autoFocus />
                                                     </div>
                                                 ) : (
-                                                    <div className={cn("px-3 py-1 text-sm truncate w-full h-full flex items-center transition-colors", col.readOnly ? "text-gray-400 font-medium italic" : "text-gray-700 font-medium", isSelected && "font-bold text-blue-700", hasError && "text-red-600")}>
-                                                        {col.cell ? col.cell({ row: { original: row }, value: getValue(row, col.accessorKey) }) : getValue(row, col.accessorKey)}
-                                                        {hasError && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-bl-sm" title={hasError} />}
+                                                    <div
+                                                        className={cn(
+                                                            'relative flex w-full min-w-0 items-center truncate transition-colors',
+                                                            isExcel
+                                                                ? 'h-[26px] max-h-[26px] px-1.5 py-0 text-[11px] leading-tight [&>div]:gap-0 [&>div]:py-0'
+                                                                : 'min-h-[inherit] px-3 py-1 text-sm',
+                                                            col.readOnly ? 'font-medium italic text-gray-400' : 'font-medium text-gray-800',
+                                                            isSelected && 'font-semibold text-blue-800',
+                                                            hasError && 'text-red-600'
+                                                        )}
+                                                    >
+                                                        {col.cell
+                                                            ? col.cell({ row: { original: row }, value: getValue(row, col.accessorKey) })
+                                                            : getValue(row, col.accessorKey)}
+                                                        {hasError && (
+                                                            <div
+                                                                className="absolute right-0 top-0 h-1.5 w-1.5 rounded-bl-sm bg-red-500"
+                                                                title={typeof hasError === 'string' ? hasError : 'Invalid'}
+                                                            />
+                                                        )}
                                                     </div>
                                                 )}
                                             </td>
@@ -317,18 +468,51 @@ export function BusyGrid({
                 )}
             </div>
 
-            <div className="bg-white border-t border-gray-200 p-0 shadow-sm h-8 flex items-center z-40 bg-slate-50">
-                <div className="flex-1 flex items-center px-4 gap-6 overflow-hidden">
-                    <div className="flex items-center gap-2"><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Items:</span><span className="text-[10px] font-black font-mono text-gray-900">{data.length}</span></div>
-                    <div className="h-3 w-[1px] bg-gray-200" />
-                    <div className="flex items-center gap-2"><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cell:</span><span className="text-[10px] font-black font-mono text-blue-600">{headerLetters[selectedCell.col]}{selectedCell.row + 1}</span></div>
+            <div
+                className={cn(
+                    'z-40 flex items-center border-t border-gray-200 bg-slate-50 p-0 shadow-sm',
+                    isExcel ? 'h-7 min-h-[28px]' : 'h-8'
+                )}
+            >
+                <div className="flex flex-1 items-center gap-4 overflow-hidden px-3 sm:px-4">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Items</span>
+                        <span className="font-mono text-[10px] font-black text-gray-900 tabular-nums">{sortedData.length}</span>
+                    </div>
+                    <div className="h-3 w-px bg-gray-200" />
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Cell</span>
+                        <span className="font-mono text-[10px] font-black text-blue-600 tabular-nums">
+                            {headerLetters[selectedCell.col]}
+                            {selectedCell.row + 1}
+                        </span>
+                    </div>
+                    {isExcel && (
+                        <>
+                            <div className="h-3 w-px bg-gray-200 hidden sm:block" />
+                            <span className="hidden text-[9px] text-gray-500 sm:inline">Sort disabled · row order = save order</span>
+                        </>
+                    )}
                     {Object.keys(validationErrors).length > 0 && (
-                        <div className="flex items-center gap-2 text-red-600 animate-pulse"><AlertCircle className="w-3.5 h-3.5" /><span className="text-[10px] font-bold uppercase">{Object.keys(validationErrors).length} Errors</span></div>
+                        <div className="flex animate-pulse items-center gap-1.5 text-red-600">
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                            <span className="text-[9px] font-bold uppercase">{Object.keys(validationErrors).length} err</span>
+                        </div>
                     )}
                 </div>
-                <div className="flex items-center px-2 gap-3 bg-gray-50 border-l h-full ml-auto">
-                    {[{ k: 'F2', l: 'Add' }, { k: 'Shift+ENT', l: 'New Row' }, { k: 'ENT', l: 'Edit' }, { k: 'ESC', l: 'Close' }].map(btn => (
-                        <div key={btn.k} className="flex items-center gap-1 opacity-60"><kbd className="bg-white border px-1 rounded text-[8px] font-bold">{btn.k}</kbd><span className="text-[8px] font-bold uppercase tracking-tight text-gray-500">{btn.l}</span></div>
+                <div className="ml-auto flex h-full items-center gap-2 border-l border-gray-200 bg-gray-50/80 px-2">
+                    {[
+                        { k: 'F2', l: 'Add row' },
+                        { k: '⇧↵', l: 'New' },
+                        { k: '↵', l: 'Edit' },
+                        { k: 'Del', l: 'Del row' },
+                    ].map((btn) => (
+                        <div key={btn.k} className="flex items-center gap-0.5 opacity-70">
+                            <kbd className="rounded border border-gray-200 bg-white px-1 font-mono text-[8px] font-bold text-gray-600">
+                                {btn.k}
+                            </kbd>
+                            <span className="text-[8px] font-bold uppercase tracking-tight text-gray-500">{btn.l}</span>
+                        </div>
                     ))}
                 </div>
             </div>

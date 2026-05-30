@@ -273,7 +273,8 @@ export default function Home() {
                   width={450}
                   height={562}
                   priority
-                  className="object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.15)]"
+                  className="h-auto w-full max-w-[450px] object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.15)]"
+                  style={{ width: 'auto', height: 'auto' }}
                 />
               </div>
 

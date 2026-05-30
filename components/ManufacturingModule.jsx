@@ -14,8 +14,17 @@ import { Combobox } from './ui/combobox';
 import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Progress } from './ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { manufacturingAPI } from '@/lib/api/manufacturing';
 import { getManufacturingConfig } from '@/lib/utils/domainHelpers';
+
+/** Unit cost from product (DB snake_case or API camelCase). */
+function getProductUnitCost(product) {
+  if (!product) return 0;
+  const raw = product.cost_price ?? product.costPrice ?? product.unit_cost ?? 0;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
 
 /**
  * @typedef {Object} ManufacturingModuleProps
@@ -224,11 +233,31 @@ export function ManufacturingModule({
     }
   };
 
-  const calculateBOMFormCost = () => {
-    return bomData.components.reduce((acc, curr) => {
+  /**
+   * Estimated material cost for one batch of the BOM (finished-product unit = 1 "recipe").
+   * Applies process wastage as consumption factor: line cost × (1 + wastage%).
+   * @param {{ includeDraftLine?: boolean }} opts - If true, includes the row not yet added via + Add (preview).
+   */
+  const calculateBOMFormCost = (opts = { includeDraftLine: true }) => {
+    const { includeDraftLine = true } = opts;
+    const wastagePct = Number(bomData.wastagePercent) || 0;
+    const consumptionFactor = 1 + wastagePct / 100;
+
+    let materials = bomData.components.reduce((acc, curr) => {
       const product = products.find(p => p.id === curr.product);
-      return acc + (Number(curr.quantity) * Number(product?.cost_price || 0));
+      const qty = Number(curr.quantity) || 0;
+      return acc + qty * getProductUnitCost(product);
     }, 0);
+
+    if (includeDraftLine) {
+      const { product: draftId, quantity: draftQty } = bomData.newComponent;
+      if (draftId && draftQty && draftId !== bomData.finishedProduct) {
+        const p = products.find(pr => pr.id === draftId);
+        materials += (Number(draftQty) || 0) * getProductUnitCost(p);
+      }
+    }
+
+    return materials * consumptionFactor;
   };
 
   const processStatusUpdate = async (orderId, status) => {
@@ -264,6 +293,19 @@ export function ManufacturingModule({
 
   // Helper to get product name
   const getProductName = (id) => products.find(p => p.id === id)?.name || 'Unknown Product';
+
+  const bomCostWithDraftPreview = calculateBOMFormCost({ includeDraftLine: true });
+  const bomCostListedOnly = calculateBOMFormCost({ includeDraftLine: false });
+  const bomCostShowsDraftPreview = bomCostWithDraftPreview - bomCostListedOnly > 0.0001;
+  const bomHasListedLines = bomData.components.length > 0;
+  const bomListedMaterialValue = bomData.components.reduce((acc, curr) => {
+    const p = products.find(pr => pr.id === curr.product);
+    return acc + (Number(curr.quantity) || 0) * getProductUnitCost(p);
+  }, 0);
+  const bomHasQtyButZeroCost =
+    bomHasListedLines &&
+    bomListedMaterialValue === 0 &&
+    bomData.components.some((c) => (Number(c.quantity) || 0) > 0);
 
   return (
     <div className="space-y-6">
@@ -549,14 +591,14 @@ export function ManufacturingModule({
                       setBomData({
                         ...bomData,
                         finishedProduct: val,
-                        wastagePercent: config.defaultLoss,
+                        wastagePercent: config.defaultLoss ?? 0,
                         components: bomData.components.filter(c => c.product !== val)
                       });
                     } else {
                       setBomData({ 
                         ...bomData, 
                         finishedProduct: val,
-                        wastagePercent: config.defaultLoss 
+                        wastagePercent: config.defaultLoss ?? 0
                       });
                     }
                   }}
@@ -608,8 +650,9 @@ export function ManufacturingModule({
                     {(() => {
                         const product = products.find(p => p.id === bomData.finishedProduct);
                         if (!product) return "Select a product to see domain recommendations.";
-                        const config = getManufacturingConfig(product.category);
-                        return `Recommended loss for ${product.category}: ${config.defaultLoss}%. Wastage tracking is ${config.trackWastage ? "REQUIRED" : "OPTIONAL"}.`;
+                        const config = getManufacturingConfig(product.category || '');
+                        const catLabel = product.category || 'this domain';
+                        return `Recommended loss for ${catLabel}: ${config.defaultLoss}%. Wastage tracking is ${config.trackWastage ? 'REQUIRED' : 'OPTIONAL'}.`;
                     })()}
                   </p>
                 </div>
@@ -675,11 +718,35 @@ export function ManufacturingModule({
                 </div>
               </div>
 
-              <div className="flex justify-between items-center py-2 px-4 bg-wine/5 rounded-lg border border-wine/10 mb-4">
-                <span className="text-sm font-medium text-wine">Estimated Production Cost:</span>
-                <span className="text-lg font-bold text-wine">
-                  ₨ {calculateBOMFormCost().toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </span>
+              <div className="space-y-1 py-2 px-4 bg-wine/5 rounded-lg border border-wine/10 mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-wine">Estimated material cost (per BOM batch)</span>
+                  <span className="text-lg font-bold text-wine">
+                    ₨ {bomCostWithDraftPreview.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-600 leading-snug">
+                  {Number(bomData.wastagePercent) > 0 && (
+                    <span className="block text-wine/80">
+                      Includes {Number(bomData.wastagePercent) || 0}% process wastage (consumption × (1 + wastage%)).
+                    </span>
+                  )}
+                  {!bomHasListedLines && bomCostWithDraftPreview === 0 && (
+                    <span className="block">
+                      Cost stays at zero until you add lines with <strong>+ Add</strong>. The row above is only a preview until then.
+                    </span>
+                  )}
+                  {bomCostShowsDraftPreview && (
+                    <span className="block text-amber-800">
+                      Figure includes your current raw-material row before you press + Add. Save still requires added lines only.
+                    </span>
+                  )}
+                  {bomHasQtyButZeroCost && (
+                    <span className="block text-amber-800">
+                      Listed materials have quantity but <strong>cost price is 0</strong> on those products — set cost price in inventory for a realistic estimate.
+                    </span>
+                  )}
+                </p>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">

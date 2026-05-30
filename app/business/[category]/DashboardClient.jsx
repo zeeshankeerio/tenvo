@@ -18,6 +18,7 @@ import { payrollAPI } from '@/lib/api/payroll';
 import { workflowAPI } from '@/lib/api/workflow';
 import { bulkDeleteAction } from '@/lib/actions/premium/automation/bulk';
 import { getTablesAction, getKitchenQueueAction } from '@/lib/actions/standard/restaurant';
+import { formatInventoryActionError } from '@/lib/utils/productMutationPayload';
 import { Button } from '@/components/ui/button';
 import { Tabs } from '@/components/ui/tabs';
 import { ProductForm } from '@/components/ProductForm';
@@ -32,6 +33,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useFilters } from '@/lib/context/FilterContext';
 import { useData } from '@/lib/context/DataContext';
 import { getDateRangeFromPreset } from '@/lib/utils/datePresets';
+import { isBatchTrackingEnabled, isSerialTrackingEnabled } from '@/lib/utils/domainHelpers';
 import { isEntitlementError, getEntitlementErrorMessage, markEntitlementErrorHandled } from '@/lib/utils/subscriptionErrors';
 import { ActionModals } from './components/ActionModals';
 import { DashboardTabs } from './components/DashboardTabs';
@@ -457,9 +459,13 @@ function BusinessDashboardContent() {
         return Number.isFinite(parsed) ? parsed : fallback;
       };
 
-      // Extract batches and serials (Send ALL to backend for reconciliation)
-      const allBatches = productData.batches || [];
-      const allSerials = productData.serialNumbers || [];
+      // Only send batch/serial payloads when the domain actually uses them — otherwise
+      // composite upsert treats any non-empty `batches` as batch-tracked and omits `stock` from UPDATE.
+      const domainCat = business?.category || 'retail-shop';
+      const allBatches = isBatchTrackingEnabled(domainCat) ? (productData.batches || []) : [];
+      const allSerials = isSerialTrackingEnabled(domainCat)
+        ? (productData.serialNumbers || productData.serial_numbers || [])
+        : [];
       const normalizedProductData = {
         ...productData,
         price: toNumber(productData.price, 0),
@@ -475,6 +481,19 @@ function BusinessDashboardContent() {
         expiry_date: productData.expiry_date || null,
         manufacturing_date: productData.manufacturing_date || null,
       };
+
+      let domainData = normalizedProductData.domain_data;
+      if (typeof domainData === 'string') {
+        try {
+          domainData = JSON.parse(domainData.trim() || '{}');
+        } catch {
+          domainData = {};
+        }
+      }
+      if (domainData == null || typeof domainData !== 'object' || Array.isArray(domainData)) {
+        domainData = {};
+      }
+      normalizedProductData.domain_data = domainData;
 
       // 🚀 ATOMIC PERSISTENCE CALL
       // This single call replaces 3+ sequential network requests with a single ACID transaction
@@ -502,7 +521,10 @@ function BusinessDashboardContent() {
       setEditingProduct(null);
     } catch (error) {
       console.error('Error saving product:', error);
-      toast.error('Failed to save product: ' + (error.message || 'Unknown error'));
+      toast.error('Failed to save product: ' + formatInventoryActionError(error), {
+        id: 'dashboard-product-save',
+        duration: 5000,
+      });
       throw error;
     }
   };
@@ -516,7 +538,10 @@ function BusinessDashboardContent() {
       toast.success('Product deleted successfully');
     } catch (error) {
       console.error('Error deleting product:', error);
-      toast.error('Failed to delete product: ' + (error.message || 'Unknown error'));
+      toast.error('Failed to delete product: ' + formatInventoryActionError(error), {
+        id: 'dashboard-product-delete',
+        duration: 5000,
+      });
     }
   };
 

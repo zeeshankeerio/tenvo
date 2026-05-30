@@ -19,8 +19,8 @@ export async function GET(request) {
           COUNT(DISTINCT fo.id) as override_count,
           COUNT(DISTINCT CASE WHEN fo.target_type = 'business' THEN fo.id END) as business_overrides,
           COUNT(DISTINCT CASE WHEN fo.target_type = 'user' THEN fo.id END) as user_overrides
-        FROM feature_flags f
-        LEFT JOIN feature_flag_overrides fo ON f.id = fo.feature_flag_id AND (fo.expires_at IS NULL OR fo.expires_at > NOW())
+        FROM platform_feature_flags f
+        LEFT JOIN platform_feature_flag_overrides fo ON f.id = fo.platform_feature_flag_id AND (fo.expires_at IS NULL OR fo.expires_at > NOW())
         GROUP BY f.id
         ORDER BY f.created_at DESC
       `);
@@ -70,7 +70,7 @@ export async function POST(request) {
     
     try {
       const result = await client.query(`
-        INSERT INTO feature_flags (key, name, description, type, default_value, rollout_percentage)
+        INSERT INTO platform_feature_flags (key, name, description, type, default_value, rollout_percentage)
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
       `, [key, name, description, type || 'boolean', JSON.stringify(default_value) || 'false', rollout_percentage || 100]);

@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getBusinessByDomain } from '@/lib/actions/storefront/business';
-import { StorefrontProvider } from '@/lib/context/StorefrontContext';
-import { CartProvider } from '@/lib/context/CartContext';
+import { StoreProviders } from '@/components/storefront/StoreProviders';
 import { StoreHeader } from '@/components/storefront/StoreHeader';
 import { StoreFooter } from '@/components/storefront/StoreFooter';
 import { LiveChat } from '@/components/storefront/LiveChat';
@@ -44,12 +43,7 @@ export default async function StoreLayout({ children, params }) {
   const { business, settings, categories } = result;
   
   return (
-    <StorefrontProvider 
-      business={business} 
-      settings={settings}
-      categories={categories}
-    >
-      <CartProvider>
+    <StoreProviders business={business} settings={settings} categories={categories}>
       <div className="min-h-screen bg-gray-50">
         <StoreHeader 
           business={business} 
@@ -71,7 +65,6 @@ export default async function StoreLayout({ children, params }) {
         <LiveChat businessId={business.id} />
         <BackToTop />
       </div>
-      </CartProvider>
-    </StorefrontProvider>
+    </StoreProviders>
   );
 }

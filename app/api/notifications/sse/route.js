@@ -20,10 +20,23 @@ export async function GET(request) {
   let lastCheck = new Date();
   let isActive = true;
 
+  /** Avoid ERR_INVALID_STATE when the client disconnects and the controller is already closed. */
+  function safeEnqueue(controllerRef, text) {
+    try {
+      controllerRef.enqueue(encoder.encode(text));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   const stream = new ReadableStream({
     start(controller) {
       // Send initial connection message
-      controller.enqueue(encoder.encode('data: {"type":"connected"}\n\n'));
+      if (!safeEnqueue(controller, 'data: {"type":"connected"}\n\n')) {
+        isActive = false;
+        return;
+      }
 
       // Check for new notifications every 3 seconds (SSE fallback)
       const interval = setInterval(async () => {
@@ -54,21 +67,38 @@ export async function GET(request) {
               
               // Send notifications to client
               for (const notification of result.rows) {
-                controller.enqueue(
-                  encoder.encode(`data: ${JSON.stringify({ type: 'notification', data: notification })}\n\n`)
-                );
+                if (
+                  !safeEnqueue(
+                    controller,
+                    `data: ${JSON.stringify({ type: 'notification', data: notification })}\n\n`
+                  )
+                ) {
+                  isActive = false;
+                  clearInterval(interval);
+                  return;
+                }
               }
             }
 
-            // Send heartbeat
-            controller.enqueue(encoder.encode('data: {"type":"heartbeat"}\n\n'));
+            if (!safeEnqueue(controller, 'data: {"type":"heartbeat"}\n\n')) {
+              isActive = false;
+              clearInterval(interval);
+            }
             
           } finally {
             client.release();
           }
         } catch (error) {
           console.error('SSE error:', error);
-          controller.enqueue(encoder.encode(`data: {"type":"error","message":"${error.message}"}\n\n`));
+          if (
+            !safeEnqueue(
+              controller,
+              `data: {"type":"error","message":"${String(error?.message || 'error').replace(/"/g, "'")}"}\n\n`
+            )
+          ) {
+            isActive = false;
+            clearInterval(interval);
+          }
         }
       }, 3000);
 
@@ -76,7 +106,11 @@ export async function GET(request) {
       request.signal.addEventListener('abort', () => {
         isActive = false;
         clearInterval(interval);
-        controller.close();
+        try {
+          controller.close();
+        } catch {
+          // already closed
+        }
       });
     },
   });

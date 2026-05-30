@@ -10,6 +10,9 @@
     "lint": "eslint .",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
+    "db:migrate": "prisma migrate deploy",
+    "db:push": "prisma db push",
+    "db:repair:failed-audit": "node scripts/repair-prisma-failed-audit.mjs",
     "audit:constraints": "tsx scripts/audit_constraints.ts"
   },
   "dependencies": {

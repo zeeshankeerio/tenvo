@@ -491,7 +491,11 @@ export function FeatureFlagManager() {
         }));
         setFlags(transformed);
       } else {
-        toast.error('Failed to load feature flags');
+        const msg =
+          result.code === 'MIGRATION_REQUIRED'
+            ? 'Database migration required for platform feature flags. Run npm run db:migrate.'
+            : 'Failed to load feature flags';
+        toast.error(msg);
       }
     } catch (error) {
       console.error('Error loading feature flags:', error);

@@ -79,7 +79,8 @@ export default function LoginPage() {
 
                     if (businesses.length === 1) {
                         // Exactly one business - go straight to its dashboard
-                        const redirectUrl = `/business/${businesses[0].domain}`;
+                        const d = String(businesses[0].domain || '').trim().toLowerCase();
+                        const redirectUrl = `/business/${d}`;
                         console.log("Redirecting to:", redirectUrl);
                         router.push(redirectUrl);
                     } else {

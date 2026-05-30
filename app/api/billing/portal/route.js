@@ -1,51 +1,76 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { prismaBase } from '@/lib/db';
 import { createBillingPortalSession } from '@/lib/payments/stripe';
-import { auth } from '@/lib/auth';
+import { getSessionUser } from '@/lib/auth/session';
+import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
+import { isManualBillingMode } from '@/lib/config/billingMode';
 
 /**
  * POST /api/billing/portal
- * Create Stripe billing portal session
+ * Body: { business_id?, businessId?, returnUrl? }
  */
 export async function POST(request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const sessionWrap = await getSessionUser();
+    if (!sessionWrap?.user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized', code: 'UNAUTHENTICATED' },
         { status: 401 }
       );
     }
 
     const body = await request.json().catch(() => ({}));
-    const { returnUrl } = body;
+    const { returnUrl, business_id: businessIdSnake, businessId: businessIdCamel } = body;
+    const businessId = businessIdSnake || businessIdCamel;
 
-    // Get business
-    const result = await pool.query(
-      `SELECT stripe_customer_id 
-       FROM businesses 
-       WHERE owner_id = $1 
-       LIMIT 1`,
-      [session.user.id]
-    );
-
-    if (result.rows.length === 0) {
+    if (!businessId) {
       return NextResponse.json(
-        { error: 'Business not found' },
-        { status: 404 }
-      );
-    }
-
-    const { stripe_customer_id: customerId } = result.rows[0];
-
-    if (!customerId) {
-      return NextResponse.json(
-        { error: 'No billing account found. Please subscribe to a plan first.' },
+        { error: 'business_id is required', code: 'MISSING_BUSINESS_ID' },
         { status: 400 }
       );
     }
 
-    const returnUrlFull = returnUrl || `${process.env.NEXT_PUBLIC_APP_URL}/business/settings/billing`;
+    const allowed = await assertUserHasBusinessAccess({
+      userId: sessionWrap.user.id,
+      businessId,
+      sessionUser: sessionWrap.user,
+    });
+    if (!allowed) {
+      return NextResponse.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
+    }
+
+    if (isManualBillingMode()) {
+      return NextResponse.json({
+        success: true,
+        manual: true,
+        code: 'MANUAL_BILLING_NO_PORTAL',
+        message:
+          'Stripe Customer Portal is disabled while BILLING_MODE=manual. Change plans via checkout (same API) — it updates the business record only.',
+      });
+    }
+
+    const business = await prismaBase.businesses.findUnique({
+      where: { id: businessId },
+      select: { stripe_customer_id: true },
+    });
+
+    if (!business) {
+      return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+    }
+
+    const customerId = business.stripe_customer_id;
+    if (!customerId) {
+      return NextResponse.json(
+        {
+          error: 'No billing account found. Please subscribe to a plan first.',
+          code: 'NO_STRIPE_CUSTOMER',
+        },
+        { status: 400 }
+      );
+    }
+
+    const returnUrlFull =
+      returnUrl || `${process.env.NEXT_PUBLIC_APP_URL}/business/settings/billing`;
 
     const portalResult = await createBillingPortalSession({
       customerId,
@@ -54,7 +79,7 @@ export async function POST(request) {
 
     if (portalResult.skipped) {
       return NextResponse.json(
-        { error: 'Payment provider not configured' },
+        { error: 'Payment provider not configured', code: 'STRIPE_NOT_CONFIGURED' },
         { status: 503 }
       );
     }
@@ -63,7 +88,6 @@ export async function POST(request) {
       success: true,
       portalUrl: portalResult.url,
     });
-
   } catch (error) {
     console.error('[Billing Portal] Error:', error);
     return NextResponse.json(

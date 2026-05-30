@@ -46,6 +46,7 @@ const LoyaltyManager = dynamic(() => import('@/components/crm/LoyaltyManager').t
 const PosRefundPanel = dynamic(() => import('@/components/pos/PosRefundPanel').then(mod => mod.PosRefundPanel));
 const AuditTrailViewer = dynamic(() => import('@/components/audit/AuditTrailViewer').then(mod => mod.AuditTrailViewer));
 const PromotionEngine = dynamic(() => import('@/components/crm/PromotionEngine').then(mod => mod.PromotionEngine));
+const CampaignsManager = dynamic(() => import('@/components/crm/CampaignsManager').then(mod => mod.CampaignsManager));
 const CustomerLoyaltyPortal = dynamic(() => import('@/components/crm/CustomerLoyaltyPortal').then(mod => mod.CustomerLoyaltyPortal));
 const AIInsightsPanel = dynamic(() => import('@/components/intelligence/AIInsightsPanel').then(mod => mod.AIInsightsPanel));
 const ReportBuilder = dynamic(() => import('@/components/reports/ReportBuilder').then(mod => mod.ReportBuilder));
@@ -696,12 +697,14 @@ export function DashboardTabs({
                 <TabsContent value="campaigns" className="space-y-6 outline-none">
                     {wrapTab(
                         <TabGuard tabKey="campaigns" role={role} planTier={planTier} domainCheck={campaignRelevant} domainTitle="Campaigns & Marketing not relevant for this domain" domainMessage="Marketing automations are enabled for customer-facing retail and service domains." requiredPlan="business" featureName="Campaigns & Marketing" onUpgrade={() => handleTabChange('settings')}>
-                            <div className="space-y-8">
-                                <PromotionEngine businessId={business?.id} currency={currency} />
-                                <div className="border-t border-gray-100 pt-8">
-                                    <AIInsightsPanel businessId={business?.id} />
-                                </div>
-                            </div>
+                            <CampaignsManager
+                                businessId={business?.id}
+                                currency={currency}
+                                customerCount={
+                                    (customers || []).filter((c) => !c.is_deleted).length || (customers || []).length
+                                }
+                                category={category}
+                            />
                         </TabGuard>
                     )}
                 </TabsContent>
