@@ -10,9 +10,10 @@ import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { toast } from 'react-hot-toast';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { formatCurrency } from '@/lib/currency';
 
 export function StoreFooter({ business, settings }) {
-  const { businessDomain } = useStorefront();
+  const { businessDomain, currency } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
   const currentYear = new Date().getFullYear();
   const [email, setEmail] = useState('');
@@ -74,7 +75,7 @@ export function StoreFooter({ business, settings }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: Truck, color: 'text-blue-400', title: 'Free Shipping', sub: `Orders over Rs. ${freeShippingThreshold.toLocaleString()}` },
+              { icon: Truck, color: 'text-blue-400', title: 'Free Shipping', sub: `Orders over ${formatCurrency(freeShippingThreshold, currency)}` },
               { icon: Shield, color: 'text-green-400', title: 'Secure Payment', sub: '256-bit SSL encryption' },
               { icon: RotateCcw, color: 'text-orange-400', title: `${returnDays}-Day Returns`, sub: 'Hassle-free returns' },
               { icon: CreditCard, color: 'text-purple-400', title: 'Multiple Payments', sub: 'Cards, COD, Wallets' },

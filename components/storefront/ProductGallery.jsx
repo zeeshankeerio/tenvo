@@ -6,14 +6,19 @@ import { ZoomIn, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
-export function ProductGallery({ images, productName }) {
+export function ProductGallery({ images, productName, placeholderUrl }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  // Ensure we have images array
-  const imageList = images?.length > 0 ? images : [{ url: null, alt: productName }];
+  // Ensure we have images array (domain placeholder when catalog has no photo)
+  const imageList =
+    images?.length > 0
+      ? images
+      : placeholderUrl
+        ? [{ url: placeholderUrl, alt: productName }]
+        : [{ url: null, alt: productName }];
   const selectedImage = imageList[selectedIndex];
   
   const handlePrev = useCallback(() => {

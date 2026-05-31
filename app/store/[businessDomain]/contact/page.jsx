@@ -37,7 +37,9 @@ export default function ContactPage() {
         </Link>
 
         <h1 className="text-3xl font-black text-gray-900 mb-2">Contact Us</h1>
-        <p className="text-gray-500 mb-10">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+        <p className="text-gray-500 mb-10">
+          We would love to hear from you. Send us a message and we will respond as soon as possible.
+        </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contact Info */}
@@ -75,7 +77,7 @@ export default function ContactPage() {
               <div className="text-center py-16">
                 <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
                 <h2 className="text-xl font-bold text-gray-900 mb-2">Message Sent!</h2>
-                <p className="text-gray-500 mb-6">Thanks for reaching out. We'll get back to you within 1–2 business days.</p>
+                <p className="text-gray-500 mb-6">Thanks for reaching out. We will get back to you within 1–2 business days.</p>
                 <button
                   onClick={() => { setSubmitted(false); setForm({ name: '', email: '', subject: '', message: '' }); }}
                   className="text-sm font-semibold" style={{ color: accent }}

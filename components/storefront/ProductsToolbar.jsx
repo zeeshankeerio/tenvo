@@ -6,6 +6,7 @@ import { X, SlidersHorizontal, ChevronDown, LayoutGrid, List, Check } from 'luci
 import { cn } from '@/lib/utils';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { formatCurrency } from '@/lib/currency';
 
 const SORT_OPTIONS = [
   { value: 'featured',   label: 'Featured' },
@@ -110,13 +111,18 @@ export function ViewToggle({ currentView = 'grid', businessDomain }) {
 export function ActiveFilters({ filters, businessDomain }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { settings, business } = useStorefront();
+  const { settings, business, categories, currency } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
 
   const activeFilters = [];
-  if (filters.category)  activeFilters.push({ key: 'category', label: `Category: ${filters.category}` });
+  if (filters.category) {
+    const catLabel = categories?.find((c) => c.slug === filters.category)?.name || filters.category;
+    activeFilters.push({ key: 'category', label: `Category: ${catLabel}` });
+  }
   if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
-    activeFilters.push({ key: 'price', label: `Price: Rs.${(filters.minPrice || 0).toLocaleString()} – Rs.${filters.maxPrice ? filters.maxPrice.toLocaleString() : '∞'}` });
+    const lo = formatCurrency(filters.minPrice || 0, currency);
+    const hi = filters.maxPrice != null ? formatCurrency(filters.maxPrice, currency) : '∞';
+    activeFilters.push({ key: 'price', label: `Price: ${lo} – ${hi}` });
   }
   if (filters.inStock)   activeFilters.push({ key: 'inStock', label: 'In Stock Only' });
   if (filters.onSale)    activeFilters.push({ key: 'onSale', label: 'On Sale' });

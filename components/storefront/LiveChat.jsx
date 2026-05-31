@@ -5,6 +5,7 @@ import { MessageCircle, X, Send, Minimize2, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { formatCurrency } from '@/lib/currency';
 
 export function LiveChat({ businessId }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,7 +16,7 @@ export function LiveChat({ businessId }) {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const { settings, business, businessDomain } = useStorefront();
+  const { settings, business, businessDomain, currency } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
   const storeName = business?.business_name || 'Support';
   const freeShipping = settings?.freeShippingThreshold || 2000;
@@ -52,7 +53,7 @@ export function LiveChat({ businessId }) {
     if (/\b(price|cost|how much|rate)\b/.test(m))
       return 'You can find prices on each product page. Use the search bar to find specific items quickly!';
     if (/\b(ship|deliver|delivery|shipping)\b/.test(m))
-      return `We offer free shipping on orders over Rs. ${freeShipping.toLocaleString()}! Standard delivery takes 3–5 business days. Express delivery is also available.`;
+      return `We offer free shipping on orders over ${formatCurrency(freeShipping, currency)}! Standard delivery takes 3–5 business days. Express delivery is also available.`;
     if (/\b(return|refund|exchange|replace)\b/.test(m))
       return `We have a ${returnDays}-day return policy. Items must be unused and in original packaging. Contact us to initiate a return.`;
     if (/\b(pay|payment|cod|card|jazzcash|easypaisa)\b/.test(m))

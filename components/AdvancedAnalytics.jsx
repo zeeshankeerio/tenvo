@@ -1,19 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { SalesChart, RevenueBarChart, CategoryPieChart, TopProductsChart, RevenueAreaChart } from './AdvancedCharts';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useState, useEffect, useCallback } from 'react';
+import { SalesChart, RevenueBarChart, CategoryPieChart, TopProductsChart } from './AdvancedCharts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Package, Users, BarChart3, RefreshCcw } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { getDomainColors } from '@/lib/domainColors';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  getSalesTrendAction,
-  getTopProductsAction,
-  getCategoryDistributionAction,
-  getKPIMetricsAction
-} from '@/lib/actions/premium/ai/analytics';
+import { getAnalyticsBundleAction } from '@/lib/actions/premium/ai/analytics';
+
+function buildDateFilter(dateRange) {
+  if (!dateRange?.from || !dateRange?.to) return {};
+  const from = dateRange.from instanceof Date ? dateRange.from.toISOString() : String(dateRange.from);
+  const to = dateRange.to instanceof Date ? dateRange.to.toISOString() : String(dateRange.to);
+  return { from, to };
+}
+
+function formatRangeLabel(dateRange) {
+  if (!dateRange?.from || !dateRange?.to) return null;
+  try {
+    const a = dateRange.from instanceof Date ? dateRange.from : new Date(dateRange.from);
+    const b = dateRange.to instanceof Date ? dateRange.to : new Date(dateRange.to);
+    if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null;
+    return `${a.toLocaleDateString(undefined, { dateStyle: 'medium' })} – ${b.toLocaleDateString(undefined, { dateStyle: 'medium' })}`;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Advanced Analytics Component
@@ -22,8 +36,9 @@ import {
  * @param {Object} props
  * @param {string} [props.businessId]
  * @param {string} [props.category]
+ * @param {{ from: Date; to: Date }} [props.dateRange] Dashboard header filter
  */
-export function AdvancedAnalytics({ businessId, category = 'retail-shop' }) {
+export function AdvancedAnalytics({ businessId, category = 'retail-shop', currency = 'PKR', dateRange }) {
   const colors = getDomainColors(category);
   const [loading, setLoading] = useState(true);
   const [salesData, setSalesData] = useState([]);
@@ -32,46 +47,44 @@ export function AdvancedAnalytics({ businessId, category = 'retail-shop' }) {
   const [kpi, setKpi] = useState({
     inventoryAsset: 0,
     growth: { value: '0%', trend: 'neutral' },
-    retention: '0%'
+    retention: '0%',
+    retentionDetail: null,
+    growthDetail: null,
   });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    if (!businessId) return;
     setLoading(true);
     try {
-      // Parallel Fetching for Performance
-      const [salesRes, productsRes, catRes, kpiRes] = await Promise.all([
-        getSalesTrendAction(businessId),
-        getTopProductsAction(businessId),
-        getCategoryDistributionAction(businessId),
-        getKPIMetricsAction(businessId)
-      ]);
-
-      if (salesRes.success) setSalesData(salesRes.data);
-      if (productsRes.success) setTopProducts(productsRes.data);
-      if (catRes.success) setCategoryData(catRes.data);
-      if (kpiRes.success) setKpi(kpiRes.data);
-
+      const filter = buildDateFilter(dateRange);
+      const bundle = await getAnalyticsBundleAction(businessId, filter);
+      if (bundle.success && bundle.data) {
+        setSalesData(bundle.data.salesTrend || []);
+        setTopProducts(bundle.data.topProducts || []);
+        setCategoryData(bundle.data.categoryData || []);
+        if (bundle.data.kpi) setKpi(bundle.data.kpi);
+      }
     } catch (err) {
       console.error("Failed to load analytics", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [businessId, dateRange]);
 
   useEffect(() => {
-    if (businessId) loadData();
-  }, [businessId]);
+    void Promise.resolve().then(() => loadData());
+  }, [loadData]);
 
   const metrics = [
     {
       label: 'Performance',
       value: kpi.growth.value,
       icon: TrendingUp,
-      color: kpi.growth.trend === 'up' ? 'text-green-600' : 'text-red-600'
+      color: kpi.growth.trend === 'up' ? 'text-green-600' : kpi.growth.trend === 'down' ? 'text-red-600' : 'text-gray-600'
     },
     {
       label: 'Inventory Asset',
-      value: formatCurrency(kpi.inventoryAsset || 0, 'PKR'), // Default currency
+      value: formatCurrency(kpi.inventoryAsset || 0, currency),
       icon: Package,
       style: { color: colors.primary }
     },
@@ -91,7 +104,7 @@ export function AdvancedAnalytics({ businessId, category = 'retail-shop' }) {
     );
   }
 
-  const hasData = salesData.some(d => d.revenue > 0) || kpi.inventoryAsset > 0;
+  const hasData = salesData.some((d) => (d.revenue > 0) || (d.profit > 0) || (d.orderCount > 0)) || kpi.inventoryAsset > 0;
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500">
@@ -100,6 +113,19 @@ export function AdvancedAnalytics({ businessId, category = 'retail-shop' }) {
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-gray-900">Intelligence Analytics</h2>
           <p className="text-xs sm:text-sm text-gray-500 font-medium mt-0.5">Real-time performance metrics derived from cloud data</p>
+          {(formatRangeLabel(dateRange) || kpi.growthDetail) && (
+            <p className="text-[10px] text-muted-foreground mt-1 max-w-2xl leading-snug">
+              {formatRangeLabel(dateRange) && (
+                <span className="font-semibold text-gray-600">Range: {formatRangeLabel(dateRange)}. </span>
+              )}
+              Performance compares combined revenue (invoices plus paid storefront orders) in this range to the immediately preceding period of the same length.
+              {kpi.growthDetail?.periodRevenue != null && (
+                <span className="block mt-0.5">
+                  This window: {formatCurrency(kpi.growthDetail.periodRevenue, currency)} · Prior window: {formatCurrency(kpi.growthDetail.priorPeriodRevenue || 0, currency)}
+                </span>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
           <Button variant="ghost" size="sm" onClick={loadData} className="h-7 text-xs">
@@ -118,6 +144,13 @@ export function AdvancedAnalytics({ businessId, category = 'retail-shop' }) {
                 <m.icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", m.color)} style={m.style || {}} />
               </div>
               <div className="text-lg sm:text-xl font-bold text-foreground">{m.value}</div>
+              {m.label === 'Active Retention' && kpi.retentionDetail != null && (
+                <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">
+                  {kpi.retentionDetail.invoicedCustomers === 0
+                    ? 'No invoices linked to customers yet — link customers to measure repeat rate.'
+                    : `${kpi.retentionDetail.repeatCustomers} repeat of ${kpi.retentionDetail.invoicedCustomers} invoiced customers`}
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -131,11 +164,11 @@ export function AdvancedAnalytics({ businessId, category = 'retail-shop' }) {
               <CardHeader className="pb-3">
                 <CardTitle className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
                   <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />
-                  Sales Trend (6 Months)
+                  Revenue &amp; profit (6 months)
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-[250px] sm:h-[300px]">
-                <SalesChart data={salesData} />
+                <SalesChart data={salesData} colors={colors} currency={currency} />
               </CardContent>
             </Card>
 
@@ -143,11 +176,11 @@ export function AdvancedAnalytics({ businessId, category = 'retail-shop' }) {
               <CardHeader className="pb-3">
                 <CardTitle className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
                   <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                  Revenue & Volume
+                  Monthly revenue vs GL profit
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-[250px] sm:h-[300px]">
-                <RevenueBarChart data={salesData} />
+                <RevenueBarChart data={salesData} colors={colors} currency={currency} />
               </CardContent>
             </Card>
           </div>
@@ -180,7 +213,7 @@ export function AdvancedAnalytics({ businessId, category = 'retail-shop' }) {
               </CardHeader>
               <CardContent className="h-[250px] sm:h-[300px]">
                 {topProducts.length > 0 ? (
-                  <TopProductsChart data={topProducts} />
+                  <TopProductsChart data={topProducts} colors={colors} currency={currency} />
                 ) : (
                   <div className="h-full flex items-center justify-center text-gray-400 text-sm">
                     No top products yet

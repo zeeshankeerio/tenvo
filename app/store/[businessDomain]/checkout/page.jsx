@@ -3,7 +3,6 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import {
   CreditCard, Truck, MapPin, Check, ChevronRight,
@@ -399,7 +398,7 @@ export default function CheckoutPage({ params }) {
                               </div>
                               {(method.fee_percentage > 0 || method.fee_fixed > 0) && (
                                 <Badge variant="secondary" className="text-xs flex-shrink-0">
-                                  +{method.fee_percentage > 0 ? `${method.fee_percentage}%` : `Rs.${method.fee_fixed}`}
+                                  +{method.fee_percentage > 0 ? `${method.fee_percentage}%` : formatCurrency(method.fee_fixed, currency)}
                                 </Badge>
                               )}
                             </label>

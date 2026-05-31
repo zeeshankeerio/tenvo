@@ -1,19 +1,150 @@
 ﻿'use client';
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BarChart3, PieChart, LineChart, Table2, FileText, Download,
-    Plus, Trash2, GripVertical, Settings, Filter, Calendar,
-    Save, Printer, Mail, ChevronDown, Layers, TrendingUp,
+    Plus, Trash2, GripVertical, Save, Layers, TrendingUp,
     DollarSign, Package, Users, ShoppingCart, Database
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { getAnalyticsBundleAction } from '@/lib/actions/premium/ai/analytics';
+import { formatCurrency } from '@/lib/currency';
+
+const REPORT_BUILDER_STORAGE_PREFIX = 'tenvo_report_builder_v1_';
+
+function buildDateFilter(dr) {
+    if (!dr?.from || !dr?.to) return {};
+    const from = dr.from instanceof Date ? dr.from.toISOString() : String(dr.from);
+    const to = dr.to instanceof Date ? dr.to.toISOString() : String(dr.to);
+    return { from, to };
+}
+
+/** @param {unknown} v @returns {string|null} */
+function isoDateOnly(v) {
+    if (v == null || v === '') return null;
+    const s = v instanceof Date ? v.toISOString() : String(v);
+    return s.slice(0, 10);
+}
+
+/** @param {string} isoYYYY-MM-DD @param {number} deltaDays */
+function addDaysUtc(isoYYYYMMdd, deltaDays) {
+    const d = new Date(`${isoYYYYMMdd}T12:00:00.000Z`);
+    d.setUTCDate(d.getUTCDate() + deltaDays);
+    return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Map report toolbar preset → { from, to } ISO strings for getAnalyticsBundleAction.
+ * Presets anchor on the dashboard header `to` date (or today).
+ * @param {{ from?: unknown; to?: unknown } | null | undefined} dashboardDateRange
+ * @param {string} reportWindow
+ */
+function mergeReportWindowFilter(dashboardDateRange, reportWindow) {
+    if (reportWindow === 'header' || reportWindow === 'custom') {
+        return buildDateFilter(dashboardDateRange);
+    }
+    const endStr = isoDateOnly(dashboardDateRange?.to) || isoDateOnly(new Date());
+    let fromStr;
+    let toStr = endStr;
+
+    switch (reportWindow) {
+        case 'today':
+            fromStr = endStr;
+            toStr = endStr;
+            break;
+        case 'yesterday': {
+            toStr = addDaysUtc(endStr, -1);
+            fromStr = toStr;
+            break;
+        }
+        case '7d':
+            fromStr = addDaysUtc(endStr, -6);
+            toStr = endStr;
+            break;
+        case '30d':
+            fromStr = addDaysUtc(endStr, -29);
+            toStr = endStr;
+            break;
+        case '90d':
+            fromStr = addDaysUtc(endStr, -89);
+            toStr = endStr;
+            break;
+        case 'mtd': {
+            const end = new Date(`${endStr}T12:00:00.000Z`);
+            fromStr = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1, 12)).toISOString().slice(0, 10);
+            toStr = endStr;
+            break;
+        }
+        case 'ytd': {
+            const end = new Date(`${endStr}T12:00:00.000Z`);
+            fromStr = new Date(Date.UTC(end.getUTCFullYear(), 0, 1, 12)).toISOString().slice(0, 10);
+            toStr = endStr;
+            break;
+        }
+        case 'last_month': {
+            const end = new Date(`${endStr}T12:00:00.000Z`);
+            const firstThis = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1, 12));
+            const lastPrev = new Date(firstThis);
+            lastPrev.setUTCDate(0);
+            const fy = lastPrev.getUTCFullYear();
+            const fm = lastPrev.getUTCMonth();
+            fromStr = new Date(Date.UTC(fy, fm, 1, 12)).toISOString().slice(0, 10);
+            toStr = lastPrev.toISOString().slice(0, 10);
+            break;
+        }
+        case 'this_quarter': {
+            const end = new Date(`${endStr}T12:00:00.000Z`);
+            const m = end.getUTCMonth();
+            const qStartMonth = Math.floor(m / 3) * 3;
+            fromStr = new Date(Date.UTC(end.getUTCFullYear(), qStartMonth, 1, 12)).toISOString().slice(0, 10);
+            toStr = endStr;
+            break;
+        }
+        default:
+            return buildDateFilter(dashboardDateRange);
+    }
+
+    if (fromStr > toStr) {
+        const t = fromStr;
+        fromStr = toStr;
+        toStr = t;
+    }
+
+    return {
+        from: `${fromStr}T00:00:00.000Z`,
+        to: `${toStr}T23:59:59.999Z`,
+    };
+}
+
+function reportStorageKey(businessId) {
+    return `${REPORT_BUILDER_STORAGE_PREFIX}${businessId || 'anon'}`;
+}
+
+function loadSavedReports(businessId) {
+    if (typeof window === 'undefined') return [];
+    try {
+        const raw = localStorage.getItem(reportStorageKey(businessId));
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function persistSavedReports(businessId, reports) {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.setItem(reportStorageKey(businessId), JSON.stringify(reports.slice(0, 20)));
+    } catch {
+        /* quota */
+    }
+}
 
 const DATA_SOURCES = [
     { id: 'sales', label: 'Sales & Revenue', icon: DollarSign, color: 'bg-emerald-500' },
@@ -171,14 +302,57 @@ function WidgetPreview({ widget, onRemove }) {
     );
 }
 
-export function ReportBuilder({ businessId, currency = 'Rs.' }) {
+export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboardDateRange }) {
     const [widgets, setWidgets] = useState(DEMO_WIDGETS);
     const [showAddWidget, setShowAddWidget] = useState(false);
     const idCounterRef = useRef(1);
     const [reportName, setReportName] = useState('My Custom Report');
-    const [dateRange, setDateRange] = useState('30d');
-    const [savedReports, setSavedReports] = useState(PRESET_TEMPLATES);
+    const [reportWindow, setReportWindow] = useState('header');
     const [selectedSource, setSelectedSource] = useState('sales');
+    const [liveSnapshot, setLiveSnapshot] = useState(null);
+    const [savedLayouts, setSavedLayouts] = useState([]);
+
+    useEffect(() => {
+        void Promise.resolve().then(() => {
+            if (businessId && typeof window !== 'undefined') {
+                setSavedLayouts(loadSavedReports(businessId));
+            }
+        });
+    }, [businessId]);
+
+    useEffect(() => {
+        let cancelled = false;
+        void (async () => {
+            if (!businessId) {
+                if (!cancelled) setLiveSnapshot(null);
+                return;
+            }
+            try {
+                const filter = mergeReportWindowFilter(dashboardDateRange, reportWindow);
+                const bundle = await getAnalyticsBundleAction(businessId, filter);
+                if (cancelled) return;
+                if (bundle.success && bundle.data) {
+                    const months = bundle.data.salesTrend || [];
+                    const trailingRevenue = months.reduce((s, m) => s + (Number(m.revenue) || 0), 0);
+                    const trailingProfit = months.reduce((s, m) => s + (Number(m.profit) || 0), 0);
+                    setLiveSnapshot({
+                        kpi: bundle.data.kpi,
+                        trailingRevenue,
+                        trailingProfit,
+                        topProducts: bundle.data.topProducts || [],
+                        appliedRange: bundle.data.range,
+                    });
+                } else if (!cancelled) {
+                    setLiveSnapshot(null);
+                }
+            } catch {
+                if (!cancelled) setLiveSnapshot(null);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [businessId, dashboardDateRange, reportWindow]);
 
     const handleAddWidget = (type) => {
         const newWidget = {
@@ -210,8 +384,139 @@ export function ReportBuilder({ businessId, currency = 'Rs.' }) {
         setReportName(template.name);
     };
 
+    const handleSaveLayout = () => {
+        if (!businessId || typeof window === 'undefined') return;
+        const trimmed = reportName.trim() || 'Untitled report';
+        const entry = {
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `r-${Date.now()}`,
+            name: trimmed,
+            widgets,
+            reportWindow,
+            updatedAt: new Date().toISOString(),
+        };
+        const list = loadSavedReports(businessId);
+        const next = [entry, ...list.filter((x) => x.name !== trimmed)].slice(0, 20);
+        persistSavedReports(businessId, next);
+        setSavedLayouts(next);
+    };
+
+    const handleLoadSaved = (e) => {
+        const id = e.target.value;
+        if (!id) return;
+        const entry = savedLayouts.find((x) => x.id === id);
+        if (!entry) return;
+        setWidgets(entry.widgets || []);
+        setReportName(entry.name || 'My Custom Report');
+        if (entry.reportWindow) setReportWindow(entry.reportWindow);
+        e.target.value = '';
+    };
+
+    const handleExportJson = () => {
+        if (typeof window === 'undefined') return;
+        const payload = {
+            reportName,
+            reportWindow,
+            widgets,
+            businessId,
+            exportedAt: new Date().toISOString(),
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${(reportName || 'report').replace(/\s+/g, '_')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleExportTopProductsCsv = () => {
+        if (typeof window === 'undefined' || !liveSnapshot?.topProducts?.length) return;
+        const rows = [['Product', 'Revenue', 'Units'], ...liveSnapshot.topProducts.map((p) => [p.name || '', p.value ?? '', p.volume ?? ''])];
+        const esc = (c) => `"${String(c).replace(/"/g, '""')}"`;
+        const csv = rows.map((r) => r.map(esc).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${(reportName || 'top-products').replace(/\s+/g, '_')}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="space-y-6">
+            {businessId && liveSnapshot?.kpi && (
+                <Card className="border-emerald-100 bg-gradient-to-r from-emerald-50/80 to-white shadow-sm">
+                    <CardHeader className="py-3 px-4">
+                        <CardTitle className="text-xs font-black uppercase tracking-wider text-emerald-800">
+                            Live business snapshot (same data as Analytics tab)
+                        </CardTitle>
+                        {liveSnapshot.appliedRange?.from && liveSnapshot.appliedRange?.to && (
+                            <p className="text-[10px] text-emerald-700/80 mt-1 font-medium">
+                                Range: {liveSnapshot.appliedRange.from} → {liveSnapshot.appliedRange.to}
+                                {reportWindow !== 'header' && reportWindow !== 'custom' ? ' (report preset)' : ''}
+                            </p>
+                        )}
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 pb-4">
+                        <div className="rounded-xl bg-white/80 border border-emerald-100 p-3">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase">Inventory asset</p>
+                            <p className="text-sm font-black text-gray-900">{formatCurrency(liveSnapshot.kpi.inventoryAsset || 0, currency)}</p>
+                        </div>
+                        <div className="rounded-xl bg-white/80 border border-emerald-100 p-3">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase">Growth (range vs prior)</p>
+                            <p className="text-sm font-black text-gray-900">{liveSnapshot.kpi.growth?.value ?? '—'}</p>
+                        </div>
+                        <div className="rounded-xl bg-white/80 border border-emerald-100 p-3">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase">Repeat customers</p>
+                            <p className="text-sm font-black text-gray-900">{liveSnapshot.kpi.retention ?? '—'}</p>
+                            {liveSnapshot.kpi.retentionDetail && (
+                                <p className="text-[9px] text-gray-500 mt-0.5">
+                                    {liveSnapshot.kpi.retentionDetail.repeatCustomers} / {liveSnapshot.kpi.retentionDetail.invoicedCustomers} invoiced
+                                </p>
+                            )}
+                        </div>
+                        <div className="rounded-xl bg-white/80 border border-emerald-100 p-3">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase">6-mo revenue (invoices + storefront)</p>
+                            <p className="text-sm font-black text-gray-900">{formatCurrency(liveSnapshot.trailingRevenue || 0, currency)}</p>
+                            <p className="text-[9px] text-gray-500 mt-0.5">GL profit (6 mo): {formatCurrency(liveSnapshot.trailingProfit || 0, currency)}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {businessId && (
+                <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-muted/30 p-3">
+                    <Button type="button" variant="outline" size="sm" className="h-9 text-xs font-bold" onClick={handleSaveLayout}>
+                        Save layout
+                    </Button>
+                    <select
+                        className="h-9 min-w-[140px] rounded-lg border border-input bg-background px-2 text-xs font-semibold"
+                        defaultValue=""
+                        onChange={handleLoadSaved}
+                        aria-label="Load saved report layout"
+                    >
+                        <option value="">Load saved…</option>
+                        {savedLayouts.map((s) => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                    </select>
+                    <Button type="button" variant="outline" size="sm" className="h-9 text-xs font-bold" onClick={handleExportJson}>
+                        Export JSON
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-9 text-xs font-bold"
+                        disabled={!liveSnapshot?.topProducts?.length}
+                        onClick={handleExportTopProductsCsv}
+                    >
+                        Top products CSV
+                    </Button>
+                </div>
+            )}
+
             {/* Toolbar */}
             <div className="flex flex-wrap items-center gap-3">
                 <Input
@@ -221,10 +526,11 @@ export function ReportBuilder({ businessId, currency = 'Rs.' }) {
                 />
 
                 <select
-                    value={dateRange}
-                    onChange={(e) => setDateRange(e.target.value)}
+                    value={reportWindow}
+                    onChange={(e) => setReportWindow(e.target.value)}
                     className="h-10 text-sm rounded-xl border-2 border-gray-200 px-3 font-medium"
                 >
+                    <option value="header">Match header</option>
                     <option value="today">Today</option>
                     <option value="yesterday">Yesterday</option>
                     <option value="7d">Last 7 Days</option>

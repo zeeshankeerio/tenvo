@@ -5,6 +5,7 @@
 
 ## Learned Workspace Facts
 
+- In Next.js App Router, a file with top-level **`'use server'`** must only export **async** Server Actions. Move shared sync helpers (e.g. date normalization) into **`lib/utils/*`** and import them into action modules—see `lib/utils/analyticsRange.js` used by `lib/actions/premium/ai/analytics.js`.
 - Legacy `invoice_payments` rows may omit columns the app expects (`payment_method`, `received_by`, earlier `business_id` / soft-delete fields). Prefer Prisma **`20260606_invoice_payments_record_payment_columns`** and **`20260607_invoice_payments_received_by`**, or the idempotent SQL under `lib/db/migrations/038_invoice_payments_record_payment_columns.sql` and `039_invoice_payments_received_by.sql`, per **`docs/DATABASE_MIGRATIONS.md`**. Prisma maps `invoice_payments.received_by` / `deleted_by` as plain strings so values stay compatible with **`user`.id** (text).
 - Dashboard inventory saves that use **`productAPI.upsertIntegrated`** (`upsertIntegratedProductAction` in `lib/actions/premium/automation/inventory_composite.js`) can skip headline `products.stock` when batch/serial tracking is active; placeholder serial rows must not force that mode, and explicit headline `stock` is reconciled after batch/serial handling so inline grid edits persist.
 - Tenant-style isolation in this app is `business_id` scoped to `businesses`; there is no separate `tenant_id` column family across the main schema.

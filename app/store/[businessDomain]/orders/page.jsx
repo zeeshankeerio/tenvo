@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, use, useEffect } from 'react';
+import { useState, use, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
@@ -45,32 +45,37 @@ export default function OrderHistoryPage({ params }) {
   const { business, settings, currency: ctxCurrency } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
 
+  const searchParams = useSearchParams();
+  const emailFromUrl = searchParams.get('email')?.trim() ?? '';
+
   const [tab, setTab] = useState('email'); // 'email' | 'number'
-  const [emailInput, setEmailInput] = useState('');
+  const [emailInput, setEmailInput] = useState(emailFromUrl);
   const [orderNumInput, setOrderNumInput] = useState('');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
-  const searchParams = useSearchParams();
+  const autoFetchedEmailRef = useRef(false);
 
   const currency = ctxCurrency || 'PKR';
 
   // Auto-search when redirected from checkout with ?email=
   useEffect(() => {
-    const emailParam = searchParams.get('email');
-    if (!emailParam || !business?.id || searched) return;
-    setEmailInput(emailParam);
-    setTab('email');
+    const emailParam = searchParams.get('email')?.trim();
+    if (!emailParam || !business?.id || autoFetchedEmailRef.current) return;
+    autoFetchedEmailRef.current = true;
     setLoading(true);
     getStorefrontOrders(business.id, { customerEmail: emailParam, limit: 50 })
-      .then(result => {
+      .then((result) => {
         setOrders(result?.success ? (result.orders || []) : []);
       })
       .catch(() => setOrders([]))
-      .finally(() => { setLoading(false); setSearched(true); });
-  }, [business?.id, searchParams, searched]);
+      .finally(() => {
+        setLoading(false);
+        setSearched(true);
+      });
+  }, [business?.id, searchParams]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -90,7 +95,7 @@ export default function OrderHistoryPage({ params }) {
         setOrders([]);
         setError('Unable to load orders. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setOrders([]);
       setError('Unable to load orders. Please try again.');
     } finally {

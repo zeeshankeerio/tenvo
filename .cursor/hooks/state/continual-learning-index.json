@@ -3,13 +3,41 @@
     "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\055db940-1046-41d4-8ed5-ecc86c8f8a6f\\055db940-1046-41d4-8ed5-ecc86c8f8a6f.jsonl",
     "mtimeMs": 1780142039388.5369
   },
+  "055db940-1046-41d4-8ed5-ecc86c8f8a6f-sub-0ca7787e-63a9-4a67-9a48-9842aa507082": {
+    "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\055db940-1046-41d4-8ed5-ecc86c8f8a6f\\subagents\\0ca7787e-63a9-4a67-9a48-9842aa507082.jsonl",
+    "mtimeMs": 1780127770362.4883
+  },
+  "055db940-1046-41d4-8ed5-ecc86c8f8a6f-sub-ab270be8-7675-442d-846d-f9c44c565554": {
+    "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\055db940-1046-41d4-8ed5-ecc86c8f8a6f\\subagents\\ab270be8-7675-442d-846d-f9c44c565554.jsonl",
+    "mtimeMs": 1780133078821.7268
+  },
   "2c7e5150-7ef7-40d5-855f-28f0da84f0f4": {
     "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\2c7e5150-7ef7-40d5-855f-28f0da84f0f4\\2c7e5150-7ef7-40d5-855f-28f0da84f0f4.jsonl",
     "mtimeMs": 1780142184328.6768
   },
+  "2c7e5150-7ef7-40d5-855f-28f0da84f0f4-sub-a3626e7d-760e-4122-9697-5fee69c4ab07": {
+    "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\2c7e5150-7ef7-40d5-855f-28f0da84f0f4\\subagents\\a3626e7d-760e-4122-9697-5fee69c4ab07.jsonl",
+    "mtimeMs": 1780142177997.095
+  },
+  "2c7e5150-7ef7-40d5-855f-28f0da84f0f4-sub-d7c80605-7fda-4844-a991-5fd7ad3a9cdd": {
+    "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\2c7e5150-7ef7-40d5-855f-28f0da84f0f4\\subagents\\d7c80605-7fda-4844-a991-5fd7ad3a9cdd.jsonl",
+    "mtimeMs": 1780134081093.3606
+  },
   "9062de19-fa25-48e3-8f86-c6ba0151a8d2": {
     "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\9062de19-fa25-48e3-8f86-c6ba0151a8d2\\9062de19-fa25-48e3-8f86-c6ba0151a8d2.jsonl",
     "mtimeMs": 1780234780522.0303
+  },
+  "9062de19-fa25-48e3-8f86-c6ba0151a8d2-sub-9634a061-cfed-4b9d-94e9-73a0a02a2edd": {
+    "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\9062de19-fa25-48e3-8f86-c6ba0151a8d2\\subagents\\9634a061-cfed-4b9d-94e9-73a0a02a2edd.jsonl",
+    "mtimeMs": 1780230357962.56
+  },
+  "9062de19-fa25-48e3-8f86-c6ba0151a8d2-sub-b10442a9-ef5c-4852-a79a-be83d8fa3737": {
+    "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\9062de19-fa25-48e3-8f86-c6ba0151a8d2\\subagents\\b10442a9-ef5c-4852-a79a-be83d8fa3737.jsonl",
+    "mtimeMs": 1780143613216.0552
+  },
+  "9062de19-fa25-48e3-8f86-c6ba0151a8d2-sub-ee180683-226b-4354-80e0-94741b338a60": {
+    "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\9062de19-fa25-48e3-8f86-c6ba0151a8d2\\subagents\\ee180683-226b-4354-80e0-94741b338a60.jsonl",
+    "mtimeMs": 1780216869786.2783
   },
   "9634a061-cfed-4b9d-94e9-73a0a02a2edd": {
     "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\9634a061-cfed-4b9d-94e9-73a0a02a2edd\\9634a061-cfed-4b9d-94e9-73a0a02a2edd.jsonl",
@@ -21,7 +49,15 @@
   },
   "ca727d15-15e3-449e-932c-66d6ef103d02": {
     "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\ca727d15-15e3-449e-932c-66d6ef103d02\\ca727d15-15e3-449e-932c-66d6ef103d02.jsonl",
-    "mtimeMs": 1780241185016.0347
+    "mtimeMs": 1780249454924.6506
+  },
+  "ca727d15-15e3-449e-932c-66d6ef103d02-sub-a0b40183-695b-4c0f-9ce0-b24309803c55": {
+    "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\ca727d15-15e3-449e-932c-66d6ef103d02\\subagents\\a0b40183-695b-4c0f-9ce0-b24309803c55.jsonl",
+    "mtimeMs": 1780238321687.8782
+  },
+  "ca727d15-15e3-449e-932c-66d6ef103d02-sub-c492320a-1fdc-404f-8996-d2e458b24939": {
+    "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\ca727d15-15e3-449e-932c-66d6ef103d02\\subagents\\c492320a-1fdc-404f-8996-d2e458b24939.jsonl",
+    "mtimeMs": 1780249473510.3713
   },
   "d7c80605-7fda-4844-a991-5fd7ad3a9cdd": {
     "path": "C:\\Users\\romio\\.cursor\\projects\\e-tenvo-main\\agent-transcripts\\d7c80605-7fda-4844-a991-5fd7ad3a9cdd\\d7c80605-7fda-4844-a991-5fd7ad3a9cdd.jsonl",

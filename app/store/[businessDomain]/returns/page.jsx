@@ -43,7 +43,7 @@ export default async function ReturnsPage({ params }) {
         </Link>
 
         <h1 className="text-3xl font-black text-gray-900 mb-2">Returns & Exchanges</h1>
-        <p className="text-gray-500 mb-10">We want you to be 100% happy. Here's how our returns process works.</p>
+        <p className="text-gray-500 mb-10">We want you to be 100% happy. Here is how our returns process works.</p>
 
         {/* Return window banner */}
         <div className="rounded-2xl p-6 mb-6 text-white flex items-center gap-4" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}>
@@ -117,7 +117,7 @@ export default async function ReturnsPage({ params }) {
               <Package className="w-5 h-5" style={{ color: accent }} /> Exchanges
             </h2>
             <p className="text-gray-600 text-sm">
-              Want a different size or colour? We're happy to exchange eligible items. Simply follow the return process above and mention you'd like an exchange. Subject to stock availability.
+              Want a different size or colour? We are happy to exchange eligible items. Follow the return process above and mention you would like an exchange. Subject to stock availability.
             </p>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Truck, RotateCcw, Shield } from 'lucide-react';
+import { formatCurrency } from '@/lib/currency';
 
 const TABS = [
   { key: 'description', label: 'Description' },
@@ -9,7 +10,7 @@ const TABS = [
   { key: 'shipping', label: 'Shipping & Returns' },
 ];
 
-export function ProductTabs({ product }) {
+export function ProductTabs({ product, freeShippingThreshold = 2000, returnPolicyDays = 7, currency = 'PKR' }) {
   const [activeTab, setActiveTab] = useState('description');
 
   return (
@@ -71,7 +72,7 @@ export function ProductTabs({ product }) {
               <h4 className="font-semibold text-gray-900 mb-1">Shipping</h4>
               <p className="text-sm text-gray-600">
                 Standard delivery: 3–5 business days. Express delivery: 1–2 business days.
-                Free shipping on orders over Rs. 2,000.
+                Free shipping on orders over {formatCurrency(freeShippingThreshold, currency)}.
               </p>
             </div>
           </div>
@@ -83,7 +84,7 @@ export function ProductTabs({ product }) {
             <div>
               <h4 className="font-semibold text-gray-900 mb-1">Returns</h4>
               <p className="text-sm text-gray-600">
-                We accept returns within 7 days of delivery. Items must be unused and in original packaging.
+                We accept returns within {returnPolicyDays} days of delivery. Items must be unused and in original packaging.
                 Contact us to initiate a return.
               </p>
             </div>

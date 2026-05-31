@@ -59,6 +59,8 @@ export function StoreHeader({ business, categories, settings }) {
 
   const pathname = usePathname();
   const isActive = (href) => pathname === href || pathname.startsWith(href + '?');
+  const storeRoot = `/store/${businessDomain}`;
+  const isHome = pathname === storeRoot || pathname === `${storeRoot}/`;
 
   const visibleCategories = categories?.slice(0, 5) || [];
   const extraCategories = categories?.slice(5) || [];
@@ -162,6 +164,16 @@ export function StoreHeader({ business, categories, settings }) {
 
             {/* ── Desktop Category Nav ──────────────────────────────────── */}
             <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+              <Link
+                href={storeRoot}
+                className={cn(
+                  'px-3 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap',
+                  isHome ? 'text-white' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                )}
+                style={isHome ? { backgroundColor: accent } : {}}
+              >
+                Home
+              </Link>
               <Link
                 href={`/store/${businessDomain}/products`}
                 className={cn(

@@ -6,7 +6,7 @@ import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, ArrowRight, ArrowLeft, Trash2, Plus, Minus,
-  AlertCircle, Truck, Percent, Package, Tag
+  AlertCircle, Truck, Package, Tag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -99,7 +99,7 @@ export default function CartPage({ params }) {
           </div>
           <h1 className="text-2xl font-black text-gray-900 mb-2">Your cart is empty</h1>
           <p className="text-gray-500 mb-8">
-            Looks like you haven't added anything yet. Start shopping!
+            Looks like you have not added anything yet. Start shopping!
           </p>
           <Button
             size="lg"

@@ -189,7 +189,7 @@ export function SalesManager({
                         <Activity className="w-4 h-4 text-gray-300" />
                     </div>
                     <div className="p-4 h-[280px]">
-                        <SalesChart data={chartData} colors={colors} />
+                        <SalesChart data={chartData} colors={colors} currency={currency} />
                     </div>
                 </div>
 
@@ -228,7 +228,7 @@ export function SalesManager({
                         <p className="text-xs text-gray-400">By month — sales vs revenue</p>
                     </div>
                     <div className="p-4 h-[260px]">
-                        <RevenueBarChart data={chartData} colors={colors} />
+                        <RevenueBarChart data={chartData} colors={colors} currency={currency} />
                     </div>
                 </div>
 

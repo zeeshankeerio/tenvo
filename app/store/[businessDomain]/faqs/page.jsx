@@ -47,7 +47,7 @@ const FAQS = [
   },
 ];
 
-function FaqItem({ q, a, accent }) {
+function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-gray-100 last:border-0">
@@ -89,7 +89,10 @@ export default function FaqsPage({ params }) {
         </Link>
 
         <h1 className="text-3xl font-black text-gray-900 mb-2">Frequently Asked Questions</h1>
-        <p className="text-gray-500 mb-8">Can't find what you're looking for? <Link href={`/store/${businessDomain}/contact`} className="text-blue-600 hover:underline">Contact us</Link></p>
+        <p className="text-gray-500 mb-8">
+          {"Can't find what you're looking for? "}
+          <Link href={`/store/${businessDomain}/contact`} className="text-blue-600 hover:underline">Contact us</Link>
+        </p>
 
         {/* Search */}
         <div className="relative mb-8">

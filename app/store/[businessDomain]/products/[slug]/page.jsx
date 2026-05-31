@@ -10,6 +10,9 @@ import { ProductReviews } from '@/components/storefront/ProductReviews';
 import { ProductBreadcrumbs } from '@/components/storefront/ProductBreadcrumbs';
 import { ProductTabs } from '@/components/storefront/ProductTabs';
 import { Truck, Shield, RotateCcw } from 'lucide-react';
+import { formatCurrency } from '@/lib/currency';
+import { getStorefrontProductPlaceholder } from '@/lib/config/storefrontDomains';
+import { buildProductJsonLd } from '@/lib/storefront/jsonLd';
 
 export async function generateMetadata({ params }) {
   const { businessDomain, slug } = await params;
@@ -26,28 +29,37 @@ export async function generateMetadata({ params }) {
   }
   
   const { product } = productResult;
-  
+  const placeholder = getStorefrontProductPlaceholder(result.business.category);
+
   // Only pass absolute https:// URLs to OG — data: URIs cause Server Component crashes
-  const ogImage = product.image_url && product.image_url.startsWith('https://')
-    ? [{ url: product.image_url, width: 800, height: 800, alt: product.name }]
-    : result.business.logo_url && result.business.logo_url.startsWith('https://')
-      ? [{ url: result.business.logo_url }]
-      : [];
+  const ogImage =
+    product.image_url && product.image_url.startsWith('https://')
+      ? [{ url: product.image_url, width: 800, height: 800, alt: product.name }]
+      : placeholder && placeholder.startsWith('https://')
+        ? [{ url: placeholder, width: 800, height: 800, alt: product.name }]
+        : result.business.logo_url && result.business.logo_url.startsWith('https://')
+          ? [{ url: result.business.logo_url }]
+          : [];
+
+  const desc =
+    typeof product.description === 'string'
+      ? product.description.replace(/<[^>]+>/g, '').trim().slice(0, 160)
+      : '';
 
   return {
-    title: `${product.name} - ${result.business.business_name}`,
-    description: product.description?.substring(0, 160) || `Buy ${product.name}`,
+    title: `${product.name} | ${result.business.business_name}`,
+    description: desc || `Buy ${product.name} at ${result.business.business_name}`,
     openGraph: {
       title: product.name,
-      description: product.description?.substring(0, 160) || `Buy ${product.name}`,
+      description: desc || `Buy ${product.name}`,
       images: ogImage,
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: product.name,
-      description: product.description?.substring(0, 160) || `Buy ${product.name}`,
-      images: ogImage.map(i => i.url),
+      description: desc || `Buy ${product.name}`,
+      ...(ogImage.length ? { images: ogImage.map((i) => i.url) } : {}),
     },
   };
 }
@@ -82,12 +94,22 @@ export default async function ProductDetailPage({ params }) {
         relatedProducts={relatedProducts}
         businessDomain={businessDomain}
         settings={settings}
+        business={business}
       />
     </div>
   );
 }
 
-function ProductContent({ product, relatedProducts, businessDomain, settings }) {
+function ProductContent({ product, relatedProducts, businessDomain, settings, business }) {
+  const storeCurrency = settings?.currency || 'PKR';
+  const placeholderUrl = getStorefrontProductPlaceholder(business.category);
+  const productLd = buildProductJsonLd({
+    business,
+    businessDomain,
+    product,
+    currency: storeCurrency,
+  });
+
   // Prepare images array
   const images = product.images?.length > 0 
     ? product.images 
@@ -95,8 +117,17 @@ function ProductContent({ product, relatedProducts, businessDomain, settings }) 
       ? [{ url: product.image_url, alt: product.name }]
       : [];
   
+  const threshold = settings?.freeShippingThreshold || 2000;
+  const returnDays = settings?.returnPolicyDays || 7;
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {productLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+        />
+      ) : null}
       {/* Breadcrumbs */}
       <ProductBreadcrumbs 
         businessDomain={businessDomain}
@@ -110,7 +141,7 @@ function ProductContent({ product, relatedProducts, businessDomain, settings }) 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
           {/* Product Gallery */}
           <div className="space-y-4">
-            <ProductGallery images={images} productName={product.name} />
+            <ProductGallery images={images} productName={product.name} placeholderUrl={placeholderUrl} />
           </div>
           
           {/* Product Info */}
@@ -135,48 +166,47 @@ function ProductContent({ product, relatedProducts, businessDomain, settings }) 
             />
             
             {/* Trust Badges — dynamic from store settings */}
-            {(() => {
-              const threshold = settings?.freeShippingThreshold || 2000;
-              const returnDays = settings?.returnPolicyDays || 7;
-              return (
-                <div className="grid grid-cols-3 gap-4 pt-6 border-t">
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Truck className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-xs text-gray-900">Free Shipping</p>
-                      <p className="text-xs text-gray-500">Over Rs. {Number(threshold).toLocaleString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Shield className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-xs text-gray-900">Secure Payment</p>
-                      <p className="text-xs text-gray-500">100% safe</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <RotateCcw className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-xs text-gray-900">Easy Returns</p>
-                      <p className="text-xs text-gray-500">{returnDays}-day policy</p>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Truck className="w-5 h-5 text-blue-600" />
                 </div>
-              );
-            })()}
+                <div>
+                  <p className="font-semibold text-xs text-gray-900">Free Shipping</p>
+                  <p className="text-xs text-gray-500">Over {formatCurrency(Number(threshold), storeCurrency)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-xs text-gray-900">Secure Payment</p>
+                  <p className="text-xs text-gray-500">100% safe</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <RotateCcw className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-xs text-gray-900">Easy Returns</p>
+                  <p className="text-xs text-gray-500">{returnDays}-day policy</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       
       {/* Product Details Tabs — client component with real interactivity */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-12">
-        <ProductTabs product={product} />
+        <ProductTabs
+          product={product}
+          freeShippingThreshold={threshold}
+          returnPolicyDays={returnDays}
+          currency={storeCurrency}
+        />
       </div>
       
       {/* Reviews Section */}

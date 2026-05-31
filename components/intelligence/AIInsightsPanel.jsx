@@ -10,21 +10,24 @@ import {
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
 import {
-    getSalesTrendAction,
-    getTopProductsAction,
-    getCategoryDistributionAction,
-    getKPIMetricsAction,
+    getAnalyticsBundleAction,
     getDemandForecastAction,
-    getExpenseBreakdownAction,
     getPromotionRecommendationsAction
 } from '@/lib/actions/premium/ai/analytics';
 import { getAiRestockSuggestionsAction } from '@/lib/actions/premium/ai/ai';
+
+function buildDateFilter(dateRange) {
+    if (!dateRange?.from || !dateRange?.to) return {};
+    const from = dateRange.from instanceof Date ? dateRange.from.toISOString() : String(dateRange.from);
+    const to = dateRange.to instanceof Date ? dateRange.to.toISOString() : String(dateRange.to);
+    return { from, to };
+}
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // METRIC CARD
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-function MetricCard({ label, value, trend, trendValue, icon: Icon, color }) {
+function MetricCard({ label, value, trend, trendValue, icon: Icon, color, hint }) {
     const colors = {
         indigo: 'from-indigo-500 to-indigo-600',
         emerald: 'from-emerald-500 to-emerald-600',
@@ -52,13 +55,16 @@ function MetricCard({ label, value, trend, trendValue, icon: Icon, color }) {
             </div>
             <p className="text-xl font-black text-gray-900 tracking-tight">{value}</p>
             <p className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">{label}</p>
+            {hint ? (
+                <p className="text-[9px] text-gray-500 mt-1 leading-tight font-medium normal-case">{hint}</p>
+            ) : null}
         </div>
     );
 }
 
 // FORECAST ITEM ROW
 
-function ForecastRow({ item, currency }) {
+function ForecastRow({ item }) {
     return (
         <div className={cn(
             'flex items-center gap-3 p-3 rounded-xl border transition-all',
@@ -148,7 +154,7 @@ function MiniBarChart({ data, valueKey = 'revenue', labelKey = 'date' }) {
 // MAIN AI INSIGHTS PANEL
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-export function AIInsightsPanel({ businessId }) {
+export function AIInsightsPanel({ businessId, dateRange }) {
     const { business, currencySymbol } = useBusiness();
     const effectiveBusinessId = businessId || business?.id;
     const currency = currencySymbol || 'Rs.';
@@ -175,23 +181,23 @@ export function AIInsightsPanel({ businessId }) {
         setPromos([]);
         setRestockSuggestions([]);
         try {
-            const [salesRes, prodRes, catRes, kpiRes, forecastRes, expRes, promoRes, restockRes] = await Promise.allSettled([
-                getSalesTrendAction(effectiveBusinessId),
-                getTopProductsAction(effectiveBusinessId, 5),
-                getCategoryDistributionAction(effectiveBusinessId),
-                getKPIMetricsAction(effectiveBusinessId),
-                getDemandForecastAction(effectiveBusinessId),
-                getExpenseBreakdownAction(effectiveBusinessId),
+            const filter = buildDateFilter(dateRange);
+            const [bundleRes, forecastRes, promoRes, restockRes] = await Promise.allSettled([
+                getAnalyticsBundleAction(effectiveBusinessId, filter),
+                getDemandForecastAction(effectiveBusinessId, {}, true, filter),
                 getPromotionRecommendationsAction(effectiveBusinessId),
                 getAiRestockSuggestionsAction(effectiveBusinessId),
             ]);
 
-            if (salesRes.status === 'fulfilled' && salesRes.value?.success) setSalesTrend(salesRes.value.data || []);
-            if (prodRes.status === 'fulfilled' && prodRes.value?.success) setTopProducts(prodRes.value.data || []);
-            if (catRes.status === 'fulfilled' && catRes.value?.success) setCategories(catRes.value.data || []);
-            if (kpiRes.status === 'fulfilled' && kpiRes.value?.success) setKpiData(kpiRes.value.data);
+            if (bundleRes.status === 'fulfilled' && bundleRes.value?.success && bundleRes.value.data) {
+                const d = bundleRes.value.data;
+                setSalesTrend(d.salesTrend || []);
+                setTopProducts(d.topProducts || []);
+                setCategories(d.categoryData || []);
+                setKpiData(d.kpi || null);
+                setExpenseBreakdown(d.expenseBreakdown || []);
+            }
             if (forecastRes.status === 'fulfilled' && forecastRes.value?.success) setForecastData(forecastRes.value.data || []);
-            if (expRes.status === 'fulfilled' && expRes.value?.success) setExpenseBreakdown(expRes.value.data || []);
             if (promoRes.status === 'fulfilled' && promoRes.value?.success) setPromos(promoRes.value.data?.recommendations || []);
             if (restockRes.status === 'fulfilled' && restockRes.value?.success) setRestockSuggestions(restockRes.value.suggestions || []);
         } catch (err) {
@@ -199,9 +205,11 @@ export function AIInsightsPanel({ businessId }) {
         } finally {
             setLoading(false);
         }
-    }, [effectiveBusinessId]);
+    }, [effectiveBusinessId, dateRange]);
 
-    useEffect(() => { loadAll(); }, [loadAll]);
+    useEffect(() => {
+        void Promise.resolve().then(() => loadAll());
+    }, [loadAll]);
 
     if (loading) {
         return (
@@ -236,7 +244,19 @@ export function AIInsightsPanel({ businessId }) {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     <MetricCard label="Inventory Asset" value={`${currency} ${(kpiData.inventoryAsset || 0).toLocaleString()}`} icon={Package} color="indigo" />
                     <MetricCard label="Growth" value={kpiData.growth?.value || '0%'} trend={kpiData.growth?.trend} trendValue={kpiData.growth?.value} icon={TrendingUp} color="emerald" />
-                    <MetricCard label="Retention" value={kpiData.retention || '0%'} icon={Target} color="amber" />
+                    <MetricCard
+                        label="Retention"
+                        value={kpiData.retention || '0%'}
+                        icon={Target}
+                        color="amber"
+                        hint={
+                            kpiData.retentionDetail
+                                ? kpiData.retentionDetail.invoicedCustomers === 0
+                                    ? 'Link customers on invoices to measure repeat rate'
+                                    : `${kpiData.retentionDetail.repeatCustomers} repeat of ${kpiData.retentionDetail.invoicedCustomers} invoiced customers`
+                                : undefined
+                        }
+                    />
                     <MetricCard label="Products" value={topProducts.length || '0'} icon={ShoppingCart} color="purple" />
                     <MetricCard label="Categories" value={categories.length || '0'} icon={PieChart} color="blue" />
                     <MetricCard label="Restock Alerts" value={restockSuggestions.length} trend={restockSuggestions.length > 0 ? 'down' : 'up'} trendValue={`${restockSuggestions.length}`} icon={AlertTriangle} color="rose" />
@@ -301,7 +321,7 @@ export function AIInsightsPanel({ businessId }) {
                     </div>
                     <div className="space-y-2">
                         {forecastData.slice(0, 5).map(item => (
-                            <ForecastRow key={item.id} item={item} currency={currency} />
+                            <ForecastRow key={item.id} item={item} />
                         ))}
                     </div>
                 </div>
@@ -313,7 +333,7 @@ export function AIInsightsPanel({ businessId }) {
                 <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <PieChart className="w-4 h-4 text-rose-500" />
-                        <h3 className="text-sm font-black text-gray-800">Expense Breakdown (MTD)</h3>
+                        <h3 className="text-sm font-black text-gray-800">Expense breakdown (selected range)</h3>
                     </div>
                     <div className="space-y-2">
                         {expenseBreakdown.map((exp, idx) => {

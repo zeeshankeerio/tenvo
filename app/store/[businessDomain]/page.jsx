@@ -11,7 +11,7 @@ import { getDomainConfig, getStoreAccentColor, getStorefrontProductPlaceholder }
 import {
   Truck, Shield, RotateCcw, Star, Zap, Leaf, Clock, Gift,
   Lock, Tag, ArrowRight, ChevronRight, Package, Sparkles,
-  ShoppingBag, TrendingUp, Heart, BadgePercent
+  ShoppingBag, TrendingUp, BadgePercent
 } from 'lucide-react';
 
 export async function generateMetadata({ params }) {
@@ -276,7 +276,7 @@ export default async function StoreHomePage({ params }) {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-black text-gray-900">Shop by Category</h2>
-              <p className="text-gray-500 text-sm mt-1">Find exactly what you're looking for</p>
+              <p className="text-gray-500 text-sm mt-1">Find exactly what you are looking for</p>
             </div>
             <Link
               href={`/store/${businessDomain}/products`}
@@ -427,7 +427,7 @@ export default async function StoreHomePage({ params }) {
               </div>
               <div>
                 <h2 className="text-2xl font-black text-gray-900">On Sale</h2>
-                <p className="text-gray-500 text-sm">Limited time deals — grab them before they're gone</p>
+                <p className="text-gray-500 text-sm">Limited time deals — grab them before they are gone</p>
               </div>
             </div>
             <Link
@@ -443,55 +443,6 @@ export default async function StoreHomePage({ params }) {
           </Suspense>
         </section>
       )}
-
-      {/* ── Why Shop With Us ─────────────────────────────────────────────────── */}
-      <section className="bg-white border-t border-b py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-gray-900 mb-3">Why Shop With Us?</h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
-              We're committed to giving you the best shopping experience possible.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                icon: Shield,
-                title: 'Secure Shopping',
-                desc: 'Your data and payments are always protected with bank-level encryption.',
-                color: 'bg-blue-50 text-blue-600',
-              },
-              {
-                icon: Truck,
-                title: 'Fast Delivery',
-                desc: `Free shipping on orders over ${formatCurrency(freeShippingThreshold, storeCurrency)}. Express options available.`,
-                color: 'bg-green-50 text-green-600',
-              },
-              {
-                icon: RotateCcw,
-                title: `${returnDays}-Day Returns`,
-                desc: 'Not satisfied? Return it within the return window, no questions asked.',
-                color: 'bg-orange-50 text-orange-600',
-              },
-              {
-                icon: Heart,
-                title: 'Customer First',
-                desc: 'Our support team is available to help you with any questions or concerns.',
-                color: 'bg-pink-50 text-pink-600',
-              },
-            ].map((item, i) => (
-              <div key={i} className="text-center group">
-                <div className={`w-16 h-16 rounded-3xl ${item.color} flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110`}>
-                  <item.icon className="w-8 h-8" />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ── Store Info Strip ─────────────────────────────────────────────────── */}
       {(business.phone || business.email || business.city) && (
