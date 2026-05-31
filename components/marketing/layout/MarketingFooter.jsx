@@ -94,6 +94,7 @@ export default function MarketingFooter({ variant = 'default' }) {
           <div>
             <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-8">Platform</h4>
             <ul className="space-y-4 text-sm text-gray-500 font-bold">
+              <li><a href="/why-tenvo" className="hover:text-brand-primary-dark transition-colors">Why TENVO</a></li>
               <li><a href="/features" className="hover:text-brand-primary-dark transition-colors">Core Features</a></li>
               <li><a href="/features#integrations" className="hover:text-brand-primary-dark transition-colors">Integrations</a></li>
               <li><a href="/features#compliance" className="hover:text-brand-primary-dark transition-colors">Compliance</a></li>

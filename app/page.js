@@ -41,9 +41,10 @@ import {
   Server,
   BadgeCheck,
   Star,
-  Quote
 } from 'lucide-react';
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
+import CommerceAndIntelligenceSection from '@/components/marketing/sections/CommerceAndIntelligenceSection';
+import CompetitorComparisonSection from '@/components/marketing/sections/CompetitorComparisonSection';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/context/AuthContext';
 
@@ -218,7 +219,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* 1. HERO SECTION - Zoho Inventory Accurate Clone with Zeeshan Keerio & Styled CSS Boxes */}
+      {/* 1. HERO — value prop & social proof visuals */}
       <section className="bg-brand-50 pt-16 pb-12 lg:pt-20 lg:pb-16 overflow-hidden relative border-b border-neutral-200/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
@@ -235,7 +236,7 @@ export default function Home() {
                   Run Your Entire Business From One <span className="text-brand-primary">Intelligent Dashboard</span>
                 </h1>
                 <p className="max-w-xl text-lg sm:text-xl font-medium leading-relaxed text-neutral-600">
-                  From sales to HR, accounts to inventory, Tenvo is your all‑in‑one ERP and POS platform. Manage multiple domains and tenants seamlessly, track stock in real time, sync with online stores and couriers, and stay compliant with FBR regulations, without the chaos of spreadsheets.
+                  Run your brand store, checkout floors, warehouses, and books in one place. TENVO keeps stock, orders, and tax aligned—so you are not stitching spreadsheets, plugins, and separate apps the way generic global platforms expect you to.
                 </p>
               </div>
 
@@ -369,25 +370,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. CHANNELS & LOGISTICS PARTNERS BAR - Pure Light Theme */}
-      <section className="bg-white border-b border-neutral-200/80 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          <p className="text-center text-xs font-black uppercase tracking-[0.25em] text-neutral-400 mb-6">
-            Natively Integrated channels & Local shipping carriers
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-12">
-            {partners.map((partner, idx) => (
-              <div key={idx} className="flex items-center gap-2 px-4 py-2 border border-neutral-200/80 bg-neutral-50 rounded-2xl shadow-sm">
-                <span className="font-black text-sm text-neutral-800">{partner.name}</span>
-                <span className="text-[8px] font-black uppercase tracking-wider text-brand-primary px-1.5 py-0.5 bg-brand-50 rounded">
-                  {partner.category}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* 2.5 CUSTOMER LOGO CAROUSEL - Social Proof Marquee */}
       <section className="bg-white border-b border-neutral-200/80 py-12 lg:py-16 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
@@ -485,6 +467,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <CommerceAndIntelligenceSection />
+
+      <CompetitorComparisonSection />
 
       {/* 3. INTERACTIVE MODULE HUB (ZOHO INVENTORY CORE CLONE) */}
       <section className="bg-white py-20 lg:py-28 border-b border-neutral-200/80">
@@ -1501,12 +1487,12 @@ export default function Home() {
               </div>
               <h4 className="font-black text-lg text-neutral-900">Retail & E-commerce</h4>
               <p className="text-xs text-neutral-500 font-semibold leading-relaxed">
-                Connect Shopify/Daraz directly. Sync inventory counts automatically, print professional barcodes, run quick POS terminals offline, and fulfill orders with automatic TCS/Leopards parcel bookings.
+                Your own branded storefront plus POS and marketplaces—one stock picture. Sync Daraz and other channels, print barcodes, run checkout offline when the line is long, and ship with TCS, Leopards, and partners you already use.
               </p>
               <ul className="space-y-2 text-[11px] font-bold text-neutral-600">
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-brand-primary" /> Real-time Shopify/Daraz API</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-brand-primary" /> Instant Barcode printing</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-brand-primary" /> Offline retail terminal support</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-brand-primary" /> Branded web store + channel sync</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-brand-primary" /> Barcodes & fast retail checkout</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-brand-primary" /> Courier-ready fulfilment</li>
               </ul>
             </div>
 
@@ -1603,7 +1589,11 @@ export default function Home() {
 
           {/* Comparison Table: Traditional vs Basic vs Tenvo */}
           <div className="bg-white border border-neutral-200/80 rounded-[2.5rem] p-6 lg:p-10 overflow-x-auto shadow-sm">
-            <h4 className="font-black text-neutral-900 text-xl mb-6">Detailed Platform Comparison</h4>
+            <h4 className="font-black text-neutral-900 text-xl mb-2">Operating model comparison</h4>
+            <p className="text-xs text-neutral-500 font-semibold mb-6 max-w-2xl">
+              For a buyer-style view versus typical storefront-first or multi-app suites, see{' '}
+              <Link href="/why-tenvo" className="text-brand-primary font-black hover:underline">Why TENVO</Link>.
+            </p>
 
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
@@ -1615,6 +1605,20 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
+
+                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
+                  <td className="p-4 font-bold text-neutral-900">Branded store + POS + warehouse in one rhythm</td>
+                  <td className="p-4 text-neutral-400">Heavy customization</td>
+                  <td className="p-4 text-neutral-400">Manual links</td>
+                  <td className="p-4 text-brand-primary font-bold">Designed together</td>
+                </tr>
+
+                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
+                  <td className="p-4 font-bold text-neutral-900">Web orders in the same queue as counter & B2B</td>
+                  <td className="p-4 text-neutral-400">Often separate modules</td>
+                  <td className="p-4 text-neutral-400">Fragmented tabs</td>
+                  <td className="p-4 text-brand-primary font-bold">Single order hub</td>
+                </tr>
 
                 <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
                   <td className="p-4 font-bold text-neutral-900">Implementation Time</td>
@@ -1760,107 +1764,54 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. SOCIAL PROOF / OPERATOR TESTIMONIALS - Enhanced with Founder */}
-      <section className="bg-white border-b border-neutral-200/80 py-20 lg:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+      {/* Social proof → lives on /about#voices */}
+      <section className="border-b border-neutral-200/80 bg-white py-10">
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-12">
+          <p className="text-sm font-bold text-neutral-800">Trusted by operators across Pakistan.</p>
+          <p className="mt-1 text-xs font-medium text-neutral-500">
+            Read the founder note and customer stories on our About page.
+          </p>
+          <Link
+            href="/about#voices"
+            className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-brand-primary hover:underline"
+          >
+            People &amp; proof <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
 
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.25em]">Social Proof</h2>
-            <h3 className="text-3xl sm:text-4xl font-black text-neutral-900 tracking-tight">
-              Loved by business operators nationwide.
-            </h3>
-            <p className="text-sm text-neutral-500 font-semibold leading-relaxed">
-              See how wholesale managers, distributors, and e-commerce founders consolidated their messy spreadsheets into TENVO.
-            </p>
+      {/* Integrations strip — compact infinite marquee (before FAQ) */}
+      <section className="bg-white border-b border-neutral-200/70 py-5 sm:py-6 overflow-hidden">
+        <p className="text-center text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-neutral-400 mb-3 px-4">
+          Natively integrated channels &amp; local shipping carriers
+        </p>
+        <div
+          className="relative integration-marquee-fade"
+          aria-label="Integration partners"
+        >
+          <div className="flex w-max animate-marquee-partners motion-reduce:animate-none hover:[animation-play-state:paused]">
+            {[0, 1].map((set) => (
+              <div
+                key={set}
+                className="flex items-center gap-2.5 sm:gap-3 pr-6 sm:pr-10 shrink-0"
+                aria-hidden={set === 1}
+              >
+                {partners.map((partner, idx) => (
+                  <div
+                    key={`${set}-${partner.name}-${idx}`}
+                    className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-neutral-200/90 bg-neutral-50/95 shadow-sm shrink-0"
+                  >
+                    <span className="font-bold text-[11px] sm:text-xs text-neutral-800 whitespace-nowrap">
+                      {partner.name}
+                    </span>
+                    <span className="text-[6px] sm:text-[7px] font-black uppercase tracking-wide text-brand-primary px-1 py-px bg-brand-50 rounded-sm whitespace-nowrap">
+                      {partner.category}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
-
-          {/* Featured Founder Testimonial */}
-          <div className="bg-gradient-to-br from-brand-50 to-white border border-brand-100 rounded-3xl p-8 lg:p-12 mb-12 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="grid lg:grid-cols-12 gap-8 items-center relative z-10">
-              <div className="lg:col-span-4">
-                <div className="relative w-48 h-48 mx-auto lg:mx-0">
-                  <Image
-                    src="/zeeshan_keerio.png"
-                    alt="Zeeshan Keerio - Founder & CEO"
-                    fill
-                    className="object-contain rounded-2xl"
-                  />
-                </div>
-              </div>
-              <div className="lg:col-span-8 space-y-4">
-                <Quote className="w-10 h-10 text-brand-primary/30" />
-                <p className="text-lg lg:text-xl font-medium text-neutral-700 leading-relaxed">
-                  &ldquo;I built TENVO because I saw Pakistani businesses struggling with outdated tools that don&apos;t understand local needs. From FBR compliance to Urdu language support, every feature solves a real problem I witnessed firsthand. Our mission is to give every business in Pakistan access to enterprise-grade operations software.&rdquo;
-                </p>
-                <div className="pt-4 border-t border-brand-100">
-                  <h4 className="font-black text-lg text-neutral-900">Zeeshan Keerio</h4>
-                  <p className="text-sm text-brand-primary font-semibold">Founder & CEO, TENVO</p>
-                  <p className="text-xs text-neutral-500 mt-1">AI Engineer | Former Big Data Administrator | Financial Data Analyst</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Testimonial Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-
-            <div className="bg-neutral-50 border border-neutral-200/85 p-6 rounded-3xl space-y-4 hover:border-brand-primary/30 hover:shadow-md transition-all">
-              <div className="flex items-center gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4" fill="currentColor" />)}
-              </div>
-              <p className="text-sm font-medium text-neutral-600 leading-relaxed">
-                &ldquo;Moving from 4 different spreadsheets to TENVO saved our wholesale pharmacy hours. The Urdu UI toggle was a game-changer for our loaders, and we haven&apos;t had a single batch expire unnoticed since we migrated.&rdquo;
-              </p>
-              <div className="flex items-center gap-3 pt-2">
-                <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-primary font-bold">MS</div>
-                <div>
-                  <h5 className="font-bold text-sm text-neutral-900">Muhammad Ali Sheikh</h5>
-                  <p className="text-[10px] text-neutral-400 font-semibold">Director, Sheikh Medical Distribution (Lahore)</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-neutral-50 border border-neutral-200/85 p-6 rounded-3xl space-y-4 hover:border-brand-primary/30 hover:shadow-md transition-all">
-              <div className="flex items-center gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4" fill="currentColor" />)}
-              </div>
-              <p className="text-sm font-medium text-neutral-600 leading-relaxed">
-                &ldquo;We used to suffer constant Shopify-Daraz inventory drifts, leading to terrible merchant penalties. TENVO's real-time multichannel sync solved this completely. We drag-and-dropped our product Excel files and went live in 2 days.&rdquo;
-              </p>
-              <div className="flex items-center gap-3 pt-2">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold">AR</div>
-                <div>
-                  <h5 className="font-bold text-sm text-neutral-900">Aisha Rehman</h5>
-                  <p className="text-[10px] text-neutral-400 font-semibold">Founder, Modest Threads E-commerce (Karachi)</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-neutral-50 border border-neutral-200/85 p-6 rounded-3xl space-y-4 hover:border-brand-primary/30 hover:shadow-md transition-all">
-              <div className="flex items-center gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4" fill="currentColor" />)}
-              </div>
-              <p className="text-sm font-medium text-neutral-600 leading-relaxed">
-                &ldquo;The FBR integration alone saved us countless hours of manual tax calculations. Our accountant was amazed at how seamlessly TENVO handles GST reporting. Best investment for our textile business.&rdquo;
-              </p>
-              <div className="flex items-center gap-3 pt-2">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">FA</div>
-                <div>
-                  <h5 className="font-bold text-sm text-neutral-900">Faisal Ahmed</h5>
-                  <p className="text-[10px] text-neutral-400 font-semibold">CEO, Ahmed Textiles (Faisalabad)</p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <div className="text-center">
-            <Link href="/case-studies" className="inline-flex items-center gap-2 px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-black rounded-xl transition-all text-sm uppercase tracking-wider">
-              Read All Case Studies <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
         </div>
       </section>
 

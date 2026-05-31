@@ -15,7 +15,7 @@ import * as LucideIcons from 'lucide-react';
  * @param {string} props.subtitle - Section subtitle
  * @param {Array} props.features - Array of feature objects
  * @param {number} props.columns - Number of columns on desktop (2, 3, or 4)
- * @param {string} props.variant - Layout variant: 'cards' | 'list'
+ * @param {string} props.variant - Layout variant: 'cards' | 'list' | 'grid' (alias of cards)
  */
 export default function FeaturesGrid({
   title,
@@ -40,8 +40,8 @@ export default function FeaturesGrid({
     return columnMap[columns] || columnMap[3];
   };
 
-  // Card variant
-  if (variant === 'cards') {
+  // Card variant ('grid' is treated as the same responsive card grid)
+  if (variant === 'cards' || variant === 'grid') {
     return (
       <section className="py-16 lg:py-24 bg-neutral-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

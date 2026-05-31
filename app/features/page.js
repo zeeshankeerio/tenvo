@@ -1,10 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
 import Hero from '@/components/marketing/sections/Hero';
 import FeaturesGrid from '@/components/marketing/sections/FeaturesGrid';
 import OperationsFlow from '@/components/marketing/sections/OperationsFlow';
+import CommerceAndIntelligenceSection from '@/components/marketing/sections/CommerceAndIntelligenceSection';
 import CTASection from '@/components/marketing/sections/CTASection';
+import { marketingContent } from '@/lib/marketing/content';
 
 export default function FeaturesPage() {
   return (
@@ -19,14 +22,14 @@ export default function FeaturesPage() {
             <span className="text-brand-primary">Run Your Business</span>
           </>
         }
-        subtitle="From inventory management to financial compliance, TENVO provides a complete suite of enterprise-grade tools designed for Pakistani businesses."
+        subtitle="Storefront, POS, warehouses, accounting, and Pakistan-ready compliance in one platform—so operators are not paying for a patchwork of global apps that were never designed together."
         primaryCTA={{
           text: 'Start Free Trial',
           href: '/register'
         }}
         secondaryCTA={{
-          text: 'Schedule Demo',
-          href: '/demo'
+          text: 'Why TENVO vs others',
+          href: '/why-tenvo'
         }}
       />
 
@@ -35,10 +38,13 @@ export default function FeaturesPage() {
         variant="grid"
         title="Core ERP Capabilities"
         subtitle="Integrated modules that work together seamlessly"
+        features={marketingContent.features}
       />
 
       {/* Operations Flow */}
       <OperationsFlow />
+
+      <CommerceAndIntelligenceSection variant="compact" />
 
       {/* Advanced Features */}
       <section className="py-24 bg-white">
@@ -96,7 +102,33 @@ export default function FeaturesPage() {
                 'Audit trail for tax authorities'
               ]}
             />
+            <FeatureDetail
+              title="Branded storefront & checkout"
+              description="Launch a customer-facing shop that reflects your brand, with catalog, cart, checkout, and post-purchase pages aligned to your live stock and fulfilment rules."
+              features={[
+                'Domain-ready brand presence',
+                'Same stock as POS and wholesale',
+                'Order flow into one operations hub',
+                'Customer-friendly policies & FAQs',
+                'Designed for Pakistan-first journeys'
+              ]}
+            />
+            <FeatureDetail
+              title="POS, tables & kitchen coordination"
+              description="Serve walk-in retail alongside cafés and dining—roles, permissions, and selling surfaces tuned for how mixed-format businesses actually operate."
+              features={[
+                'Fast in-store checkout',
+                'Table-service and hospitality roles',
+                'Kitchen and service handoffs',
+                'Returns and voids with audit context',
+                'Offline-friendly retail patterns'
+              ]}
+            />
           </div>
+          <p className="text-center mt-12 text-sm text-gray-500 font-medium max-w-2xl mx-auto">
+            See how TENVO compares to stitched storefront and suite stacks for business buyers on{' '}
+            <Link href="/why-tenvo" className="text-brand-primary font-black hover:underline">Why TENVO</Link>.
+          </p>
         </div>
       </section>
 

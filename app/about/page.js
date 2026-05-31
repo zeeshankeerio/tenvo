@@ -6,6 +6,7 @@ import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
 import Hero from '@/components/marketing/sections/Hero';
 import StatsBar from '@/components/marketing/sections/StatsBar';
 import CTASection from '@/components/marketing/sections/CTASection';
+import AboutVoicesSection from '@/components/marketing/sections/AboutVoicesSection';
 import { Button } from '@/components/ui/button';
 import { 
   Building2, 
@@ -330,6 +331,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <AboutVoicesSection />
 
       {/* Certifications & Compliance */}
       <section className="py-24 bg-gray-50">

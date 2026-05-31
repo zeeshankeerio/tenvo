@@ -27,11 +27,16 @@ export function TenvoTextLogo({
       </div>
 
       {!compact && (
-        <div className="flex flex-col -space-y-0.5">
+        <div className="flex flex-col justify-center gap-0.5 leading-none">
           <span className={cn('font-black text-gray-900 text-xl tracking-tight uppercase', textClassName)}>
             TENVO
           </span>
-          <span className={cn('text-[9px] font-bold text-gray-400 uppercase tracking-[0.15em]', taglineClassName)}>
+          <span
+            className={cn(
+              'text-[10px] font-semibold text-gray-400 uppercase tracking-[0.22em]',
+              taglineClassName
+            )}
+          >
             {tagline}
           </span>
         </div>
