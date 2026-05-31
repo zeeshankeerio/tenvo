@@ -10,7 +10,7 @@ import { formatCurrency } from '@/lib/currency';
 import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
 import { useStorefront } from '@/lib/context/StorefrontContext';
-import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { getStoreAccentColor, getStorefrontProductPlaceholder } from '@/lib/config/storefrontDomains';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
@@ -23,6 +23,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
   const { currency, settings, business } = useStorefront();
 
   const accent = getStoreAccentColor(settings, business?.category);
+  const placeholderImage = getStorefrontProductPlaceholder(business?.category);
   const inWishlist = isInWishlist(product.id);
 
   // Correct out-of-stock logic: null stock = unlimited (always available)
@@ -87,9 +88,9 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
       >
         {/* Clickable image */}
         <Link href={productHref} className="absolute inset-0" tabIndex={-1} aria-label={product.name}>
-          {product.image_url ? (
+          {product.image_url || placeholderImage ? (
             <SmartProductImage
-              src={product.image_url}
+              src={product.image_url || placeholderImage}
               alt={product.name}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"

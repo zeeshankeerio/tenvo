@@ -1,13 +1,13 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import { getProducts, getCategories } from '@/lib/actions/storefront/products';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { ProductsSkeleton } from '@/components/storefront/LoadingSkeletons';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
-import { getDomainConfig, getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { formatCurrency } from '@/lib/currency';
+import { getDomainConfig, getStoreAccentColor, getStorefrontProductPlaceholder } from '@/lib/config/storefrontDomains';
 import {
   Truck, Shield, RotateCcw, Star, Zap, Leaf, Clock, Gift,
   Lock, Tag, ArrowRight, ChevronRight, Package, Sparkles,
@@ -46,20 +46,8 @@ export default async function StoreHomePage({ params }) {
   if (!businessResult.success) notFound();
 
   const { business, settings } = businessResult;
-
-  if (businessResult.settings?.is_storefront_enabled === false) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Package className="w-8 h-8 text-gray-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Store Temporarily Unavailable</h1>
-          <p className="text-gray-500">This store is currently not accepting orders. Please check back later.</p>
-        </div>
-      </div>
-    );
-  }
+  const storeCurrency = settings?.currency || 'PKR';
+  const productPlaceholder = getStorefrontProductPlaceholder(business.category);
 
   const domainCfg = getDomainConfig(business.category);
   const accent = getStoreAccentColor(settings, business.category);
@@ -72,7 +60,7 @@ export default async function StoreHomePage({ params }) {
     getProducts(business.id, { limit: 8, sort: 'newest' }),
     getCategories(business.id),
     getProducts(business.id, { limit: 4, onSale: true }),
-    getProducts(business.id, { limit: 4, sort: 'popularity' }),
+    getProducts(business.id, { limit: 12, sort: 'popularity' }),
   ]);
 
   const featuredProducts = featuredResult.success ? featuredResult.products : [];
@@ -80,6 +68,10 @@ export default async function StoreHomePage({ params }) {
   const categories = categoriesResult.success ? categoriesResult.categories : [];
   const onSaleProducts = onSaleResult.success ? onSaleResult.products : [];
   const popularProducts = popularResult.success ? popularResult.products : [];
+  const onSaleIds = new Set(onSaleProducts.map((p) => p.id));
+  const popularProductsDeduped = popularProducts
+    .filter((p) => !onSaleIds.has(p.id))
+    .slice(0, 4);
 
   const heroImage = business.cover_image_url || domainCfg.heroImage;
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
@@ -167,7 +159,10 @@ export default async function StoreHomePage({ params }) {
             <div className="flex flex-wrap gap-6 mt-10">
               {[
                 { label: `${featuredResult.total || featuredProducts.length}+ Products`, icon: Package },
-                { label: `Free Shipping over Rs. ${freeShippingThreshold.toLocaleString()}`, icon: Truck },
+                {
+                  label: `Free shipping over ${formatCurrency(freeShippingThreshold, storeCurrency)}`,
+                  icon: Truck,
+                },
                 { label: `${returnDays}-Day Returns`, icon: RotateCcw },
               ].map((stat) => (
                 <div key={stat.label} className="flex items-center gap-2 text-white/80 text-sm">
@@ -189,8 +184,13 @@ export default async function StoreHomePage({ params }) {
                 className="flex items-center gap-3 bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 w-64"
               >
                 <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
-                  {product.image_url ? (
-                    <SmartProductImage src={product.image_url} alt={product.name} fill className="object-cover" />
+                  {product.image_url || productPlaceholder ? (
+                    <SmartProductImage
+                      src={product.image_url || productPlaceholder}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Package className="w-6 h-6 text-gray-400" />
@@ -200,7 +200,7 @@ export default async function StoreHomePage({ params }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
                   <p className="text-sm font-bold" style={{ color: accent }}>
-                    Rs. {Number(product.price).toLocaleString()}
+                    {formatCurrency(Number(product.price), storeCurrency)}
                   </p>
                 </div>
               </Link>
@@ -371,7 +371,7 @@ export default async function StoreHomePage({ params }) {
                 <span className="text-white text-sm font-bold">Special Offer</span>
               </div>
               <h3 className="text-2xl sm:text-3xl font-black text-white mb-2">
-                Free Shipping on Orders Over Rs. {freeShippingThreshold.toLocaleString()}
+                Free shipping on orders over {formatCurrency(freeShippingThreshold, storeCurrency)}
               </h3>
               <p className="text-white/80">
                 Shop more, save more. No promo code needed.
@@ -465,7 +465,7 @@ export default async function StoreHomePage({ params }) {
               {
                 icon: Truck,
                 title: 'Fast Delivery',
-                desc: `Free shipping on orders over Rs. ${freeShippingThreshold.toLocaleString()}. Express options available.`,
+                desc: `Free shipping on orders over ${formatCurrency(freeShippingThreshold, storeCurrency)}. Express options available.`,
                 color: 'bg-green-50 text-green-600',
               },
               {
@@ -542,7 +542,7 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {/* ── Best Sellers ─────────────────────────────────────────────────────── */}
-      {popularProducts.length > 0 && onSaleProducts.length === 0 && (
+      {popularProductsDeduped.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -563,13 +563,13 @@ export default async function StoreHomePage({ params }) {
             </Link>
           </div>
           <Suspense fallback={<ProductsSkeleton count={4} />}>
-            <ProductGrid products={popularProducts} businessDomain={businessDomain} />
+            <ProductGrid products={popularProductsDeduped} businessDomain={businessDomain} />
           </Suspense>
         </section>
       )}
 
       {/* ── Empty State ──────────────────────────────────────────────────────── */}
-      {featuredProducts.length === 0 && newArrivals.length === 0 && popularProducts.length === 0 && (
+      {featuredProducts.length === 0 && newArrivals.length === 0 && popularProductsDeduped.length === 0 && onSaleProducts.length === 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
           <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: accentLight }}>
             <Package className="w-12 h-12" style={{ color: accent }} />

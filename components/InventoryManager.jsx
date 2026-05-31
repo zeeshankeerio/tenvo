@@ -2276,6 +2276,8 @@ export function InventoryManager({
           <SmartRestockEngine
             products={products}
             invoices={invoices}
+            vendors={vendors}
+            locations={locations}
             category={category}
             domainKnowledge={domainKnowledge}
             businessId={businessId}
