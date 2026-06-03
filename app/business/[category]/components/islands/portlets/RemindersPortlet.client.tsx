@@ -47,7 +47,8 @@ export const RemindersPortlet = memo(function RemindersPortlet({
             id: 'pending-orders',
             label: 'Pending Orders',
             count: data.pendingOrders || 0,
-            actionTab: 'purchases',
+            /** Matches invoice `pending` / `processing` counts from the dashboard, not purchase orders. */
+            actionTab: 'invoices',
             icon: ShoppingCart,
             color: 'text-emerald-700',
             bgColor: 'bg-emerald-50',

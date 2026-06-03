@@ -18,3 +18,4 @@
 - `lib/db.js` documents TLS behavior for the pool via `.env.example` (`DATABASE_SSL_INSECURE`, `DATABASE_SSL_CA_PATH`, `DATABASE_SSL_DISABLE`, hosted-host heuristics).
 - Platform owner detection is driven by env allowlists (`PLATFORM_OWNER_EMAILS`, plus legacy merge vars); environments must set these after moving off any in-repo defaults.
 - Internal wiring notes for pool vs `prismaBase` vs `db` and related risks live in `docs/AUDIT_SCHEMA_AND_INTEGRATIONS.md`.
+- Business hub **Pending Orders** in `RemindersPortlet` matches **invoice** pending/processing counts from the domain dashboard; its navigation must stay on the **`invoices`** tab (not **`purchases`**). Role-based dashboard templates emit many **`view-*`** quick-action ids; **`DashboardClient.handleQuickAction`** should map them to real hub tabs (e.g. `QUICK_VIEW_ACTION_TO_TAB`) so they do not fall through to the default **`dashboard`** tab.

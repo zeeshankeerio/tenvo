@@ -264,6 +264,13 @@ export function DomainDashboard({
                 return status.includes('return') || status.includes('refund') || status.includes('credit');
             }).length;
 
+        const previousReturnInvoices = validInvoices
+            .filter(inv => inRange(inv?.date, prevFrom, prevTo))
+            .filter(inv => {
+                const status = String(inv?.status || '').toLowerCase();
+                return status.includes('return') || status.includes('refund') || status.includes('credit');
+            }).length;
+
         const pendingReturns = validInvoices
             .filter(inv => inRange(inv?.date, currentFrom, currentTo))
             .filter(inv => String(inv?.status || '').toLowerCase().includes('return-pending')).length;
@@ -279,6 +286,7 @@ export function DomainDashboard({
             previousCustomers,
             soldUnits,
             returnInvoices,
+            previousReturnInvoices,
             pendingReturns
         };
     }, [dateRange, invoices, expenses]);
@@ -302,6 +310,8 @@ export function DomainDashboard({
         const activeCustomers = dashboardMetrics?.customers?.active ?? periodMetrics.currentCustomers;
         const avgOrderValueKpi = periodMetrics.currentRevenue / Math.max(periodMetrics.currentOrders, 1);
         const returnRateKpi = (periodMetrics.returnInvoices / Math.max(periodMetrics.currentOrders, 1)) * 100;
+        /** Return-doc volume vs prior window (negated so growth in returns reads as risk/down). */
+        const returnVolumeTrend = calcGrowth(periodMetrics.returnInvoices, periodMetrics.previousReturnInvoices);
 
         return [
             {
@@ -336,7 +346,7 @@ export function DomainDashboard({
                 label: 'Return Rate',
                 value: `${returnRateKpi.toFixed(1)}%`,
                 subValue: `${periodMetrics.returnInvoices} return docs`,
-                trend: Number((-returnRateKpi).toFixed(1)),
+                trend: Number((-returnVolumeTrend).toFixed(1)),
                 icon: RotateCcw,
                 color: 'bg-rose-700'
             }
@@ -499,25 +509,25 @@ export function DomainDashboard({
     const stockCheckRecencyDisplay = `${stockCheckRecencyValue}d`;
     const stockCheckRecencyDetail = stockCheckRecency === null ? 'No stock touch timestamps yet' : 'Since last stock touch';
 
-    /** Compact header strip: operational risk + throughput (return rate stays in KPI row below to avoid duplication). */
+    /** Compact header strip: cash + throughput (low stock stays in reminders + KPI row to avoid duplication). */
     const dashboardHeaderHighlights = useMemo(
         () => [
             {
-                label: 'At-Risk SKUs',
-                value: remindersData.lowStock || 0,
-                tone: remindersData.lowStock > 0 ? 'text-rose-600' : 'text-emerald-600',
-                icon: Package,
+                label: 'Open Invoices',
+                value: openInvoicesCount,
+                tone: openInvoicesCount > 0 ? 'text-amber-600' : 'text-slate-800',
+                icon: FileText,
             },
             {
                 label: 'Pending Orders',
                 value: remindersData.pendingOrders || 0,
-                tone: remindersData.pendingOrders > 0 ? 'text-amber-600' : 'text-emerald-600',
+                tone: remindersData.pendingOrders > 0 ? 'text-amber-600' : 'text-slate-800',
                 icon: ShoppingCart,
             },
             {
                 label: 'Overdue Invoices',
                 value: remindersData.overdueInvoices || 0,
-                tone: remindersData.overdueInvoices > 0 ? 'text-rose-600' : 'text-emerald-600',
+                tone: remindersData.overdueInvoices > 0 ? 'text-rose-600' : 'text-slate-800',
                 icon: Clock,
             },
             {
@@ -527,7 +537,7 @@ export function DomainDashboard({
                 icon: BarChart3,
             },
         ],
-        [remindersData, periodMetrics.soldUnits]
+        [remindersData, periodMetrics.soldUnits, openInvoicesCount]
     );
 
     const hasCoreData = (products.length + invoices.length + customers.length) > 0;
@@ -686,7 +696,7 @@ export function DomainDashboard({
             });
         }
 
-        return insights.slice(0, 2);
+        return insights;
     }, [remindersData, campaignEnabled, revenueTrendSigned, periodMetrics.currentExpenses, expenseTrend]);
 
     if (isLoading) {
@@ -748,7 +758,7 @@ export function DomainDashboard({
         const easySmartInsights = intelligentInsights.filter(
             (insight) => !(remindersData.lowStock > 0 && insight.title === 'Predictive Restock')
         );
-        const easyInsightsToRender = easySmartInsights.length > 0 ? easySmartInsights : intelligentInsights;
+        const easyInsightsToRender = (easySmartInsights.length > 0 ? easySmartInsights : intelligentInsights).slice(0, 3);
 
         const easyKpis = [
             {
@@ -852,6 +862,44 @@ export function DomainDashboard({
         const recentInvoices = [...invoices]
             .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
             .slice(0, 5);
+
+        /** Same-length window immediately before the selected range (matches `periodMetrics` logic). */
+        const priorWindowLabel = (() => {
+            const from = new Date(dateRange.from);
+            const to = new Date(dateRange.to);
+            const len = Math.max(1, to.getTime() - from.getTime());
+            const priorEnd = new Date(from.getTime());
+            const priorStart = new Date(from.getTime() - len);
+            const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+            return `${priorStart.toLocaleDateString(undefined, opts)} – ${priorEnd.toLocaleDateString(undefined, opts)}`;
+        })();
+
+        const deltaVisual = (pct: number, mode: 'growth' | 'expense') => {
+            const p = Number(pct);
+            if (!Number.isFinite(p)) {
+                return { text: '—', className: 'text-slate-400 font-semibold tabular-nums' };
+            }
+            const r = Math.round(p * 10) / 10;
+            if (Math.abs(r) < 0.05) {
+                return { text: '0%', className: 'text-slate-400 font-semibold tabular-nums' };
+            }
+            const sign = r > 0 ? '+' : '';
+            const text = `${sign}${r}%`;
+            if (mode === 'expense') {
+                if (r > 10) return { text, className: 'text-amber-700 font-extrabold tabular-nums' };
+                if (r < -0.05) return { text, className: 'text-emerald-700 font-extrabold tabular-nums' };
+                return { text, className: 'text-slate-700 font-semibold tabular-nums' };
+            }
+            return {
+                text,
+                className: r >= 0 ? 'text-emerald-700 font-extrabold tabular-nums' : 'text-rose-700 font-extrabold tabular-nums',
+            };
+        };
+
+        const revDelta = deltaVisual(Number(revenueTrendSigned), 'growth');
+        const ordDelta = deltaVisual(Number(ordersTrend), 'growth');
+        const custDelta = deltaVisual(Number(customerTrend), 'growth');
+        const expDelta = deltaVisual(Number(expenseTrend), 'expense');
 
         return (
             <div className="space-y-4 w-full text-slate-700 bg-[#f4f7f9] p-1">
@@ -1007,6 +1055,53 @@ export function DomainDashboard({
                             </Card>
                         );
                     })}
+                </div>
+
+                <div
+                    role="region"
+                    aria-label={`Change versus prior period ${priorWindowLabel}`}
+                    title={`Compared to the previous window of equal length ending just before your range: ${priorWindowLabel}`}
+                    className="rounded-lg border border-slate-200 bg-white shadow-sm px-3 py-2.5 sm:px-4"
+                >
+                    <div className="flex flex-col gap-2.5">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 shrink-0">
+                                Vs prior period
+                            </p>
+                            <p className="sr-only">
+                                Percentages compare {periodLabel} to the immediately preceding period of the same length ({priorWindowLabel}).
+                            </p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-slate-700 min-w-0">
+                                <span className="inline-flex items-center gap-1.5">
+                                    <span className="text-slate-500 font-semibold">Revenue</span>
+                                    <span className={revDelta.className}>{revDelta.text}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <span className="text-slate-500 font-semibold">Orders</span>
+                                    <span className={ordDelta.className}>{ordDelta.text}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <span className="text-slate-500 font-semibold">Customers</span>
+                                    <span className={custDelta.className}>{custDelta.text}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <span className="text-slate-500 font-semibold">Spend</span>
+                                    <span className={expDelta.className}>{expDelta.text}</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex justify-end border-t border-slate-100 pt-2.5">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-[11px] font-bold border-slate-200 text-slate-700 hover:bg-slate-50"
+                                onClick={() => onQuickAction?.('reports')}
+                            >
+                                Open charts & reports
+                            </Button>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 xl:items-stretch">
@@ -1296,53 +1391,58 @@ export function DomainDashboard({
 
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-2.5 xl:items-stretch">
                     <Card className="xl:col-span-8 border border-slate-200 shadow-sm bg-white">
-                        <CardContent className="p-3.5 md:p-4">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dashboard Overview</p>
-                                    <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight mt-1">Business Overview</h2>
-                                    <p className="text-[11px] text-slate-500 font-semibold mt-1">
-                                        {new Date(dateRange.from).toLocaleDateString()} — {new Date(dateRange.to).toLocaleDateString()}
-                                    </p>
-                                    <p className="text-[10px] text-slate-400 mt-1 max-w-md">
-                                        This period drives KPIs, reminders, analytics, and AI projections on this tab (same range as the workspace filter).
-                                    </p>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-2 shrink-0">
-                                    <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50">
-                                        <TrendingUp className="w-4 h-4 text-emerald-600" />
-                                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">Realtime KPI Sync</span>
-                                    </div>
-                                    <div
-                                        className="flex flex-col items-stretch sm:items-end gap-0.5 text-left sm:text-right max-w-full sm:max-w-xs rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-2"
-                                        role="status"
-                                        aria-live="polite"
-                                    >
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Active period</p>
-                                        <p className="text-sm font-black text-slate-900 tabular-nums">{activePresetDisplayLabel}</p>
-                                        <p className="text-[10px] text-slate-500 leading-snug">
-                                            Change the date range in the top bar to refresh KPIs, analytics, and projections.
+                        <CardContent className="p-3 md:p-3.5">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                            Dashboard overview
                                         </p>
+                                        <span
+                                            className="inline-flex items-center gap-1 rounded border border-emerald-200/70 bg-emerald-50/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-800"
+                                            title="Figures refresh when workspace data or the date filter changes"
+                                        >
+                                            <TrendingUp className="h-3 w-3 shrink-0" aria-hidden />
+                                            Live
+                                        </span>
                                     </div>
+                                    <h2 className="text-lg font-black tracking-tight text-slate-900 md:text-xl">Business overview</h2>
+                                    <p className="mt-1 text-[11px] leading-snug text-slate-600">
+                                        <span className="font-semibold tabular-nums text-slate-800">
+                                            {new Date(dateRange.from).toLocaleDateString()} —{' '}
+                                            {new Date(dateRange.to).toLocaleDateString()}
+                                        </span>
+                                        <span className="text-slate-300"> · </span>
+                                        <span className="font-semibold text-slate-700">{activePresetDisplayLabel}</span>
+                                    </p>
+                                    <p className="mt-1 max-w-2xl text-[10px] leading-snug text-slate-500">
+                                        All metrics in this column use the workspace date range above.
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                            <div
+                                className="mt-2.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4 md:gap-2"
+                                role="group"
+                                aria-label="Period snapshot"
+                            >
                                 {dashboardHeaderHighlights.map((item) => {
                                     const Hi = item.icon;
                                     return (
                                         <div
                                             key={item.label}
-                                            className="rounded-xl border border-slate-100 bg-slate-50/70 px-2.5 py-2 flex gap-2 items-start"
+                                            className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/60 px-2 py-1.5"
                                         >
-                                            <div className="mt-0.5 rounded-md bg-white p-1.5 border border-slate-100 text-slate-500">
-                                                <Hi className="w-3.5 h-3.5" aria-hidden />
+                                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-100 bg-white text-slate-500">
+                                                <Hi className="h-3 w-3" aria-hidden />
                                             </div>
-                                            <div className="min-w-0">
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-tight">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-[8px] font-black uppercase leading-tight tracking-wider text-slate-400">
                                                     {item.label}
                                                 </p>
-                                                <p className={cn('text-base font-black mt-0.5 tabular-nums', item.tone)}>{item.value}</p>
+                                                <p className={cn('text-sm font-black tabular-nums leading-tight', item.tone)}>
+                                                    {item.value}
+                                                </p>
                                             </div>
                                         </div>
                                     );
@@ -1501,7 +1601,7 @@ export function DomainDashboard({
                         />
                     </div>
                     <div className="lg:col-span-4">
-                        <AgenticAuditPortlet businessId={activeBusinessId!} />
+                        <AgenticAuditPortlet businessId={activeBusinessId} />
                     </div>
                 </div>
             </div>
@@ -1515,7 +1615,7 @@ export function DomainDashboard({
                         <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
                         <h3 className="text-sm font-black text-gray-900">Intelligent Insights</h3>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-h-72 overflow-y-auto overscroll-y-contain pr-0.5">
                         {intelligentInsights.map((insight, idx) => (
                             <button
                                 key={`${insight.title}-${idx}`}

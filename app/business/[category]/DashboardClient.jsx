@@ -43,6 +43,45 @@ import { getDomainConfig } from '@/lib/config/domains';
 import { QUICK_ACTION_IDS } from '@/lib/config/quickActions';
 import { normalizeDashboardTab, resolveDashboardTab } from '@/lib/config/tabs';
 
+/**
+ * Role-based / vertical dashboard templates emit string action ids (`view-*`, etc.).
+ * When those surfaces are mounted, route to a real hub tab instead of falling through to `dashboard`.
+ */
+const QUICK_VIEW_ACTION_TO_TAB = {
+  'view-approval-queue': 'approvals',
+  'view-low-stock': 'inventory',
+  'view-expiring-batches': 'batches',
+  'view-warranty-expiring': 'batches',
+  'view-sales-reports': 'reports',
+  'view-sales-report': 'reports',
+  'view-commission-history': 'finance',
+  'view-all-customers': 'customers',
+  'search-customer': 'customers',
+  'view-team-details': 'payroll',
+  'view-profit-loss': 'finance',
+  'view-balance-sheet': 'finance',
+  'view-category-expenses': 'expenses',
+  'view-all-expenses': 'expenses',
+  'view-all-accounts': 'accounting',
+  'reconcile-now': 'accounting',
+  'view-system-logs': 'audit',
+  'view-orders': 'orders',
+  'view-inventory': 'inventory',
+  'view-sales': 'reports',
+  'view-payments': 'payments',
+  'view-top-products': 'reports',
+  'view-categories': 'inventory',
+  'view-matrix': 'inventory',
+  'view-collections': 'inventory',
+  'view-location-stock': 'warehouses',
+  'view-all-reorder-alerts': 'inventory',
+  'view-all-cycle-counts': 'inventory',
+  'view-all-receipts': 'purchases',
+  'quick-receive': 'purchases',
+  'stock-adjustment': 'inventory',
+  'stock-transfer': 'warehouses',
+};
+
 function BusinessDashboardContent() {
   const params = useParams();
   const router = useRouter();
@@ -93,7 +132,29 @@ function BusinessDashboardContent() {
   const [viewingType, setViewingType] = useState(null);
 
   const handleQuickAction = useCallback((actionId) => {
-    switch (actionId) {
+    if (actionId == null) return;
+    const id = String(actionId).trim();
+    if (!id) return;
+
+    const routedTab = QUICK_VIEW_ACTION_TO_TAB[id];
+    if (routedTab) {
+      handleTabChange(routedTab);
+      return;
+    }
+    if (id.startsWith('view-customer')) {
+      handleTabChange('customers');
+      return;
+    }
+    if (id.startsWith('reconcile-account')) {
+      handleTabChange('accounting');
+      return;
+    }
+    if (id.startsWith('create-purchase-order') || id.startsWith('receive-goods') || id.startsWith('start-cycle-count')) {
+      handleTabChange('purchases');
+      return;
+    }
+
+    switch (id) {
       case QUICK_ACTION_IDS.OPEN_QUICK_ACTION:
         setShowQuickAction(true);
         break;
@@ -107,8 +168,37 @@ function BusinessDashboardContent() {
       case 'customers':
         handleTabChange('customers');
         break;
+      case 'reports':
       case 'analytics':
         handleTabChange('reports');
+        break;
+      case 'campaigns':
+        handleTabChange('campaigns');
+        break;
+      case 'expenses':
+        handleTabChange('expenses');
+        break;
+      case 'finance':
+        handleTabChange('finance');
+        break;
+      case 'payments':
+        handleTabChange('payments');
+        break;
+      case 'vendors':
+        handleTabChange('vendors');
+        break;
+      case 'purchases':
+        handleTabChange('purchases');
+        break;
+      case 'warehouses':
+        handleTabChange('warehouses');
+        break;
+      case 'loyalty':
+        handleTabChange('loyalty');
+        break;
+      case 'audit':
+      case 'audit-trail':
+        handleTabChange('audit');
         break;
       case 'manufacturing':
       case 'new-production':
@@ -162,11 +252,14 @@ function BusinessDashboardContent() {
         handleTabChange('inventory');
         toast.success("Excel Mode active in Inventory", { icon: '[CHART]' });
         break;
-      default:
-        if (resolveDashboardTab(normalizeDashboardTab(actionId)) !== 'dashboard' || normalizeDashboardTab(actionId) === 'dashboard') {
-          handleTabChange(normalizeDashboardTab(actionId));
+      default: {
+        const normalized = normalizeDashboardTab(id);
+        const resolved = resolveDashboardTab(normalized);
+        if (resolved !== 'dashboard' || normalized === 'dashboard') {
+          handleTabChange(resolved);
         }
         break;
+      }
     }
   }, [handleTabChange]);
 

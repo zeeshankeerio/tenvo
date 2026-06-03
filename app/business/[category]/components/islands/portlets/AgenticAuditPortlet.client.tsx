@@ -20,11 +20,12 @@ interface AuditResult {
     timestamp: string;
 }
 
-export const AgenticAuditPortlet = memo(function AgenticAuditPortlet({ businessId }: { businessId: string }) {
+export const AgenticAuditPortlet = memo(function AgenticAuditPortlet({ businessId }: { businessId?: string }) {
     const [result, setResult] = useState<AuditResult | null>(null);
     const [scanning, setScanning] = useState(false);
 
     const runAudit = async () => {
+        if (!businessId) return;
         setScanning(true);
         const res = await runSystemAuditAction(businessId);
         if (res.success) {
@@ -46,7 +47,7 @@ export const AgenticAuditPortlet = memo(function AgenticAuditPortlet({ businessI
                     size="icon" 
                     className="h-6 w-6" 
                     onClick={runAudit}
-                    disabled={scanning}
+                    disabled={scanning || !businessId}
                 >
                     <RefreshCw className={cn("w-3.5 h-3.5 text-gray-400", scanning && "animate-spin")} />
                 </Button>
@@ -55,11 +56,14 @@ export const AgenticAuditPortlet = memo(function AgenticAuditPortlet({ businessI
             {!result && !scanning && (
                 <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
                     <ShieldCheck className="w-10 h-10 text-gray-100 mb-3" />
-                    <p className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-tighter">System Integrity Scan Ready</p>
+                    <p className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-tighter">
+                        {businessId ? 'System Integrity Scan Ready' : 'Select a workspace to run audit'}
+                    </p>
                     <Button 
                         size="sm" 
                         onClick={runAudit}
-                        className="bg-gray-900 text-white hover:bg-black font-black text-[10px] uppercase tracking-widest h-8 px-6 rounded-full"
+                        disabled={!businessId}
+                        className="bg-gray-900 text-white hover:bg-black font-black text-[10px] uppercase tracking-widest h-8 px-6 rounded-full disabled:opacity-50"
                     >
                         Run Deep Audit
                     </Button>
