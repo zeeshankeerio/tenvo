@@ -20,6 +20,8 @@ The Prisma schema in this repo must match your Postgres database. If you see err
 
 **`column "received_by" of relation "invoice_payments" does not exist`:** Some tables omit `received_by` (user who recorded the payment). Apply Prisma migration **`20260607_invoice_payments_received_by`** (`bun run db:migrate`) or run **`lib/db/migrations/039_invoice_payments_received_by.sql`**. Prisma maps `received_by` / `deleted_by` as plain strings so the column stays compatible with **`user`.id** (text).
 
+**`invoice_payments.deleted_by` type (UUID vs text):** If `20260604` created `deleted_by` as UUID on an older DB, apply **`20260608_invoice_payments_deleted_by_text`** (`bun run db:migrate`) so the column is **TEXT** and matches Better Auth user ids and Prisma `String`.
+
 **Low-stock alerts (`42P01` / `low_stock_alerts` does not exist):** Apply Prisma migration **`20260514_inventory_reorder_cycle_counts`** via `bun run db:migrate`, or run the idempotent script **`lib/db/migrations/035_low_stock_alerts_reorder_points.sql`** in the SQL editor (creates `reorder_points` and `low_stock_alerts`).
 
 **Windows PowerShell:** use separate lines or `;` between commands — **`&&` is not valid** on older PowerShell. From repo root: `Set-Location E:\path\to\tenvo-main` then run the `bunx` / `bun` commands below.

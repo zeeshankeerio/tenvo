@@ -1358,6 +1358,13 @@ export function DomainDashboard({
         <NetsuiteDashboard>
             {/* Main Area (9/12) */}
             <div className="space-y-3 order-1 lg:order-1 lg:col-span-9">
+                <QuickActionTiles
+                    layout="toolbar"
+                    onAction={onQuickAction}
+                    campaignEnabled={campaignEnabled}
+                    multiLocationEnabled={multiLocationEnabled}
+                />
+
                 {!hasCoreData && (
                     <Card className="border border-brand-100 bg-brand-50/40 shadow-sm">
                         <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -1482,12 +1489,6 @@ export function DomainDashboard({
                         </Card>
                     </div>
                 </div>
-
-                <QuickActionTiles
-                    onAction={onQuickAction}
-                    campaignEnabled={campaignEnabled}
-                    multiLocationEnabled={multiLocationEnabled}
-                />
 
                 {/* Domain Specialized KPI Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">

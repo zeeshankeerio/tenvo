@@ -14,6 +14,7 @@ import {
   planAtLeast,
   MODULE_LABELS,
   TENVO_ADVANTAGES,
+  getPlanTierQuotaUpdateData,
 } from '@/lib/config/plans';
 
 import {
@@ -76,6 +77,26 @@ describe('Subscription & plan integration', () => {
     it('handles invalid tiers safely', () => {
       expect(planHasFeature('invalid', 'invoicing')).toBe(true);
       expect(planHasFeature(undefined, 'invoicing')).toBe(true);
+    });
+  });
+
+  describe('getPlanTierQuotaUpdateData', () => {
+    it('returns quota fields aligned with PLAN_TIERS', () => {
+      const starter = getPlanTierQuotaUpdateData('starter');
+      expect(starter).toMatchObject({
+        plan_tier: 'starter',
+        plan_seats: PLAN_TIERS.starter.limits.max_users,
+        max_products: PLAN_TIERS.starter.limits.max_products,
+        max_warehouses: PLAN_TIERS.starter.limits.max_warehouses,
+      });
+      const business = getPlanTierQuotaUpdateData('business');
+      expect(business?.plan_tier).toBe('business');
+      expect(business?.plan_seats).toBe(PLAN_TIERS.business.limits.max_users);
+    });
+
+    it('resolves aliases before quotas', () => {
+      const q = getPlanTierQuotaUpdateData('standard');
+      expect(q?.plan_tier).toBe('starter');
     });
   });
 

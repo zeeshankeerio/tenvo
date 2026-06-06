@@ -11,6 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -18,6 +19,8 @@ import {
     listAllUsers,
     getBusinessDetails,
     updateBusinessPlan,
+    recordManualSubscriptionPayment,
+    updateBusinessPackaging,
     changeUserRole,
     deactivateBusinessUser,
     getSubscriptionStats,
@@ -342,6 +345,71 @@ function BusinessesPanel() {
 function BusinessDetailModal({ details, onClose, onRefresh }) {
     const { business, members } = details;
 
+    const [manualDays, setManualDays] = useState('30');
+    const [manualRef, setManualRef] = useState('');
+    const [manualNotes, setManualNotes] = useState('');
+    const [manualAmount, setManualAmount] = useState('');
+    const [manualTier, setManualTier] = useState('__current__');
+    const [manualSaving, setManualSaving] = useState(false);
+
+    const paidTierKeys = Object.keys(PLAN_TIERS).filter((k) => k !== 'free');
+
+    const handleManualPayment = async () => {
+        const tierArg = manualTier === '__current__' ? null : manualTier;
+        if (!tierArg && business.plan_tier === 'free') {
+            toast.error('Select a paid plan tier, or set plan from the list first.');
+            return;
+        }
+        setManualSaving(true);
+        try {
+            const res = await recordManualSubscriptionPayment({
+                businessId: business.id,
+                planTier: tierArg,
+                extendDays: parseInt(manualDays, 10) || 30,
+                amountMinor: manualAmount.trim() ? parseInt(manualAmount, 10) : null,
+                currency: 'PKR',
+                paymentReference: manualRef.trim(),
+                notes: manualNotes.trim(),
+            });
+            if (res.success) {
+                toast.success(
+                    `Manual payment recorded. Access through ${new Date(res.planExpiresAt).toLocaleDateString()}`
+                );
+                setManualRef('');
+                setManualNotes('');
+                setManualAmount('');
+                onRefresh();
+            } else {
+                toast.error(res.error || 'Failed to record payment');
+            }
+        } finally {
+            setManualSaving(false);
+        }
+    };
+
+    const bizSettings = React.useMemo(() => {
+        const s = business?.settings;
+        if (!s) return {};
+        if (typeof s === 'string') {
+            try {
+                return JSON.parse(s);
+            } catch {
+                return {};
+            }
+        }
+        return typeof s === 'object' && !Array.isArray(s) ? s : {};
+    }, [business?.settings]);
+
+    const handleResetPackaging = async () => {
+        const res = await updateBusinessPackaging(business.id, { mode: 'tier' });
+        if (res.success) {
+            toast.success('Packaging reset to plan tier defaults');
+            onRefresh();
+        } else {
+            toast.error(res.error || 'Failed to update packaging');
+        }
+    };
+
     const handleChangeRole = async (userId, newRole) => {
         const res = await changeUserRole(userId, business.id, newRole);
         if (res.success) {
@@ -381,6 +449,12 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                         <div><span className="text-gray-500">Owner:</span> <span className="font-semibold">{business.owner_name || business.owner_email}</span></div>
                         <div><span className="text-gray-500">Email:</span> <span className="font-semibold">{business.email}</span></div>
                         <div><span className="text-gray-500">Created:</span> <span className="font-semibold">{new Date(business.created_at).toLocaleDateString()}</span></div>
+                        {business.stripe_subscription_status && (
+                            <div className="col-span-2">
+                                <span className="text-gray-500">Billing status (sync):</span>{' '}
+                                <span className="font-semibold font-mono text-xs">{business.stripe_subscription_status}</span>
+                            </div>
+                        )}
                         {business.plan_expires_at && (
                             <div className="col-span-2">
                                 <span className="text-gray-500">Plan Expires:</span>{' '}
@@ -390,6 +464,91 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                                 </span>
                             </div>
                         )}
+                    </div>
+
+                    {bizSettings?.packaging?.mode === 'custom' && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50/90 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <p className="text-xs text-amber-950">
+                                <span className="font-bold">Custom packaging</span> — per-feature overrides are active on this business. Reset to use only the subscription tier flags.
+                            </p>
+                            <Button type="button" size="sm" variant="outline" className="shrink-0 border-amber-300" onClick={() => void handleResetPackaging()}>
+                                Reset to tier defaults
+                            </Button>
+                        </div>
+                    )}
+
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-3 space-y-3">
+                        <div>
+                            <h4 className="font-bold text-sm text-emerald-950">Manual payment &amp; renewal</h4>
+                            <p className="text-xs text-emerald-900/80 mt-1">
+                                Record Easypaisa, JazzCash, bank transfer, or other offline payments. Extends access from today or current expiry, writes audit history, sets status to <code className="text-[10px] bg-white/60 px-1 rounded">manual_payment_active</code>.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                                <Label className="text-xs">Plan tier</Label>
+                                <Select value={manualTier} onValueChange={setManualTier}>
+                                    <SelectTrigger className="h-8 text-xs bg-white">
+                                        <SelectValue placeholder="Tier" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__current__">Keep / apply current tier</SelectItem>
+                                        {paidTierKeys.map((tier) => (
+                                            <SelectItem key={tier} value={tier}>
+                                                {PLAN_TIERS[tier]?.name || tier}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-xs">Extend (days)</Label>
+                                <Input
+                                    className="h-8 text-xs bg-white"
+                                    type="number"
+                                    min={1}
+                                    value={manualDays}
+                                    onChange={(e) => setManualDays(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1 sm:col-span-2">
+                                <Label className="text-xs">Payment reference (txn ID)</Label>
+                                <Input
+                                    className="h-8 text-xs bg-white"
+                                    value={manualRef}
+                                    onChange={(e) => setManualRef(e.target.value)}
+                                    placeholder="e.g. wallet / bank reference"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-xs">Amount (minor units, optional)</Label>
+                                <Input
+                                    className="h-8 text-xs bg-white"
+                                    type="number"
+                                    value={manualAmount}
+                                    onChange={(e) => setManualAmount(e.target.value)}
+                                    placeholder="e.g. paisa"
+                                />
+                            </div>
+                            <div className="space-y-1 sm:col-span-2">
+                                <Label className="text-xs">Notes (optional)</Label>
+                                <Textarea
+                                    className="text-xs bg-white min-h-[52px]"
+                                    value={manualNotes}
+                                    onChange={(e) => setManualNotes(e.target.value)}
+                                    placeholder="Internal note"
+                                />
+                            </div>
+                        </div>
+                        <Button
+                            type="button"
+                            size="sm"
+                            className="w-full sm:w-auto bg-emerald-800 hover:bg-emerald-900 text-white"
+                            disabled={manualSaving}
+                            onClick={() => void handleManualPayment()}
+                        >
+                            {manualSaving ? 'Saving…' : 'Record manual payment & extend access'}
+                        </Button>
                     </div>
 
                     {/* Team Members */}

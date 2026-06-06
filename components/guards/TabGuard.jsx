@@ -4,8 +4,9 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, ShieldAlert } from 'lucide-react';
 import { UpgradePrompt } from '@/components/subscription/UpgradePrompt';
-import { planHasFeature, resolvePlanTier } from '@/lib/config/plans';
+import { FEATURE_MIN_PLAN } from '@/lib/config/plans';
 import { hasPermission, NAV_PERMISSION_MAP } from '@/lib/rbac/permissions';
+import { planHasFeatureWithPackaging } from '@/lib/subscription/effectivePlanAccess';
 import { useBusiness } from '@/lib/context/BusinessContext';
 
 /**
@@ -37,7 +38,8 @@ export function TabGuard({
     onUpgrade,
     children,
 }) {
-    const { isPlatformOwner } = useBusiness();
+    const { isPlatformOwner, business } = useBusiness();
+    const businessSettings = business?.settings;
     const effectiveRole = role || 'viewer';
 
     // Platform owner bypasses ALL gates -- full access to everything
@@ -76,11 +78,13 @@ export function TabGuard({
     }
 
     // -- Gate 3: Subscription Plan -------------------------------------------
-    if (featureKey && !planHasFeature(planTier, featureKey)) {
+    if (featureKey && !planHasFeatureWithPackaging(planTier, featureKey, businessSettings)) {
+        const resolvedRequired =
+            requiredPlanOverride || (featureKey ? FEATURE_MIN_PLAN[featureKey] : null) || 'starter';
         return (
             <UpgradePrompt
                 currentPlan={planTier}
-                requiredPlan={requiredPlanOverride || 'starter'}
+                requiredPlan={resolvedRequired}
                 featureName={featureName || tabKey || 'This feature'}
                 onUpgrade={onUpgrade}
             />

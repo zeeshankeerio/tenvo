@@ -56,6 +56,20 @@ export const CURRENCY_CONFIG = {
     locale: 'ar-SA',
     name: 'Saudi Riyal',
   },
+  CAD: {
+    code: 'CAD',
+    symbol: '$',
+    decimal: 2,
+    locale: 'en-CA',
+    name: 'Canadian Dollar',
+  },
+  AUD: {
+    code: 'AUD',
+    symbol: '$',
+    decimal: 2,
+    locale: 'en-AU',
+    name: 'Australian Dollar',
+  },
 } as const;
 
 export type CurrencyCode = keyof typeof CURRENCY_CONFIG;

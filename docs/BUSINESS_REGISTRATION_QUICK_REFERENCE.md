@@ -9,11 +9,13 @@
 
 ### Q: How do I register a new business?
 **A**: User goes through 3-step wizard:
-1. `app/register/page.js` → Collect identity (name, email, domain)
+1. `app/register/page.js` → Identity: legal name, URL handle (maps to `businesses.domain` and public store at `{NEXT_PUBLIC_APP_URL}/store/{handle}`), region, optional phone / operating currency / tax ID, optional storefront tagline, email/password (or logged-in user)
 2. User selects domain category from 55+ options
-3. System calls `createBusiness()` server action
-4. Business seeded with products + COA
+3. Plan tier + final confirmation; `createBusiness()` seeds `businesses` (currency, timezone, NTN, description), `business_settings` (default `storefront` JSON, storefront enabled), COA, owner membership
+4. Sample products seeded from vertical template
 5. User redirected to `/business/{domain}`
+
+**Branding:** Support email and store base URL use `getPublicSupportEmail()` / `getPublicStoreUrl()` from `lib/marketing/site-url.js` (`NEXT_PUBLIC_SUPPORT_EMAIL`, `NEXT_PUBLIC_APP_URL`).
 
 ### Q: How do I get business context in a component?
 **A**: Use the hook:

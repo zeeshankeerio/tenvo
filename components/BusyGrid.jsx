@@ -52,6 +52,8 @@ export function BusyGrid({
     const gridRef = useRef(null);
     const inputRef = useRef(null);
     const scrollRef = useRef(null);
+    /** Enter/Tab already committed — ignore the blur that follows so we do not double-fire `onCellEdit`. */
+    const skipNextBlurSaveRef = useRef(false);
 
     const getValue = useCallback((row, accessor) => {
         if (!accessor) return '';
@@ -226,6 +228,24 @@ export function BusyGrid({
         const finalValue = forcedValue !== undefined ? forcedValue : editValue;
         onCellEdit?.(row, colDef.accessorKey, finalValue);
         setEditingCell(null);
+    };
+
+    const commitEditFromInput = (rawValue, { moveAfter } = {}) => {
+        skipNextBlurSaveRef.current = true;
+        saveEdit(rawValue);
+        if (moveAfter === 'tab') {
+            moveSelection(0, 1);
+            requestAnimationFrame(() => startEditing());
+        } else if (moveAfter === 'tab-back') {
+            moveSelection(0, -1);
+            requestAnimationFrame(() => startEditing());
+        } else if (moveAfter === 'enter') {
+            moveSelection(0, 1);
+            requestAnimationFrame(() => startEditing());
+        }
+        queueMicrotask(() => {
+            skipNextBlurSaveRef.current = false;
+        });
     };
 
     return (
@@ -425,11 +445,18 @@ export function BusyGrid({
                                                             )}
                                                             value={editValue}
                                                             onChange={(e) => setEditValue(e.target.value)}
-                                                            onBlur={(e) => saveEdit(e.target.value)}
+                                                            onBlur={() => {
+                                                                if (skipNextBlurSaveRef.current) return;
+                                                                saveEdit();
+                                                            }}
                                                             onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') { e.preventDefault(); saveEdit(e.target.value); moveSelection(0, 1); requestAnimationFrame(() => startEditing()); }
-                                                            else if (e.key === 'Tab') { e.preventDefault(); saveEdit(e.target.value); moveSelection(0, e.shiftKey ? -1 : 1); requestAnimationFrame(() => startEditing()); }
-                                                            else if (e.key === 'Escape') { e.preventDefault(); setEditingCell(null); }
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                commitEditFromInput(e.currentTarget.value, { moveAfter: 'enter' });
+                                                            } else if (e.key === 'Tab') {
+                                                                e.preventDefault();
+                                                                commitEditFromInput(e.currentTarget.value, { moveAfter: e.shiftKey ? 'tab-back' : 'tab' });
+                                                            } else if (e.key === 'Escape') { e.preventDefault(); setEditingCell(null); }
                                                         }} autoFocus />
                                                     </div>
                                                 ) : (

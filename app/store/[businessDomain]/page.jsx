@@ -8,6 +8,7 @@ import { ProductsSkeleton } from '@/components/storefront/LoadingSkeletons';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { formatCurrency } from '@/lib/currency';
 import { getDomainConfig, getStoreAccentColor, getStorefrontProductPlaceholder } from '@/lib/config/storefrontDomains';
+import { getMergedStorefrontHero } from '@/lib/storefront/mergeHero';
 import {
   Truck, Shield, RotateCcw, Star, Zap, Leaf, Clock, Gift,
   Lock, Tag, ArrowRight, ChevronRight, Package, Sparkles,
@@ -53,6 +54,7 @@ export default async function StoreHomePage({ params }) {
   const accent = getStoreAccentColor(settings, business.category);
   const accentDark = domainCfg.accentDark;
   const accentLight = domainCfg.accentLight;
+  const hero = getMergedStorefrontHero({ settings, domainCfg, business });
 
   // Fetch data in parallel — no hard inStock filter so all inventory items show
   const [featuredResult, newArrivalsResult, categoriesResult, onSaleResult, popularResult] = await Promise.all([
@@ -78,19 +80,21 @@ export default async function StoreHomePage({ params }) {
   const returnDays = settings?.returnPolicyDays || 7;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 antialiased text-slate-900 selection:bg-slate-200">
 
       {/* ── Announcement Banner ─────────────────────────────────────────────── */}
-      <div
-        className="text-white text-center py-2.5 px-4 text-sm font-medium"
-        style={{ backgroundColor: accent }}
-      >
-        <span className="inline-flex items-center gap-2">
-          <Zap className="w-4 h-4" />
-          {settings?.announcement || domainCfg.bannerText}
-          <Zap className="w-4 h-4" />
-        </span>
-      </div>
+      {hero.banner ? (
+        <div
+          className="text-white text-center py-2.5 px-4 text-sm font-medium"
+          style={{ backgroundColor: accent }}
+        >
+          <span className="inline-flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            {hero.banner}
+            <Zap className="w-4 h-4" />
+          </span>
+        </div>
+      ) : null}
 
       {/* ── Hero Section ────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ minHeight: '520px' }}>
@@ -128,11 +132,11 @@ export default async function StoreHomePage({ params }) {
               )}
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4">
-              {settings?.heroTitle || domainCfg.heroTagline}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4 tracking-tight">
+              {hero.title}
             </h1>
-            <p className="text-lg sm:text-xl text-white/80 mb-8 leading-relaxed">
-              {business.description || domainCfg.heroSubtitle}
+            <p className="text-lg sm:text-xl text-white/85 mb-8 leading-relaxed max-w-xl">
+              {hero.subtitle}
             </p>
 
             <div className="flex flex-wrap gap-3">

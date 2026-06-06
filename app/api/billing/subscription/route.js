@@ -70,15 +70,35 @@ export async function GET(request) {
       business.stripe_subscription_status ||
       (business.plan_tier === 'free' ? 'inactive' : 'unknown');
 
+    /** Stripe dunning / incomplete payment — keep access like typical SaaS grace until hard cancel. */
+    const graceWhilePaidTier =
+      business.plan_tier &&
+      business.plan_tier !== 'free' &&
+      ['past_due', 'unpaid', 'incomplete'].includes(status);
+
+    const needsBillingAttention = [
+      'past_due',
+      'unpaid',
+      'incomplete',
+      'incomplete_expired',
+      'cancellation_scheduled',
+    ].includes(status);
+
+    const isActive =
+      status === 'active' ||
+      status === 'trialing' ||
+      status === 'manual_dev' ||
+      status === 'manual_payment_active' ||
+      status === 'cancellation_scheduled' ||
+      graceWhilePaidTier;
+
     return NextResponse.json({
       billingMode: isManualBillingMode() ? 'manual' : 'stripe',
       subscription: {
         planTier: business.plan_tier,
         status,
-        isActive:
-          status === 'active' ||
-          status === 'trialing' ||
-          status === 'manual_dev',
+        isActive,
+        needsBillingAttention,
         isTrial: status === 'trialing',
         startDate: business.created_at,
         endDate: business.plan_expires_at,

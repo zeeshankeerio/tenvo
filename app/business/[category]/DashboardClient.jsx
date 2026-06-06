@@ -101,7 +101,22 @@ function BusinessDashboardContent() {
   const category = business?.category || 'retail-shop';
 
   const normalizedUrlTab = normalizeDashboardTab(searchParams.get('tab') || 'dashboard');
-  const activeTab = resolveDashboardTab(normalizedUrlTab);
+  const resolvedUrlTab = resolveDashboardTab(normalizedUrlTab);
+  /**
+   * Radix Tabs are controlled by `activeTab` from the URL. `router.push` updates
+   * `searchParams` one frame later, so the first click used to leave `value` on
+   * the old tab until a second interaction. Optimistic tab bridges that gap.
+   */
+  const [optimisticTab, setOptimisticTab] = useState(null);
+  const activeTab = optimisticTab ?? resolvedUrlTab;
+
+  useEffect(() => {
+    if (optimisticTab == null || optimisticTab !== resolvedUrlTab) return;
+    // Defer clear so we do not synchronously setState in the effect body (react-hooks/set-state-in-effect).
+    queueMicrotask(() => {
+      setOptimisticTab(null);
+    });
+  }, [optimisticTab, resolvedUrlTab]);
 
   // Sync URL when state changes (e.g. valid tab click)
   const handleTabChange = useCallback((val) => {
@@ -113,6 +128,7 @@ function BusinessDashboardContent() {
     }
 
     const targetTab = resolveDashboardTab(normalizedTab);
+    setOptimisticTab(targetTab);
     router.push(`/business/${currentDomain}?tab=${targetTab}`, { scroll: false });
   }, [currentDomain, router]);
 
@@ -373,19 +389,25 @@ function BusinessDashboardContent() {
     let timer;
 
     if (authLoading || businessLoading) {
-      setShowSetupWizard(false);
+      queueMicrotask(() => {
+        setShowSetupWizard(false);
+      });
       return;
     }
 
     if (business?.id) {
       sessionStorage.removeItem(suppressKey);
-      setShowSetupWizard(false);
+      queueMicrotask(() => {
+        setShowSetupWizard(false);
+      });
       return;
     }
 
     const isSuppressed = sessionStorage.getItem(suppressKey) === '1';
     if (!user || isSuppressed) {
-      setShowSetupWizard(false);
+      queueMicrotask(() => {
+        setShowSetupWizard(false);
+      });
       return;
     }
 
@@ -538,7 +560,13 @@ function BusinessDashboardContent() {
     return Math.max(0, outputTax - inputTax);
   }, [invoices, purchaseOrders]);
 
-  const handleSaveProduct = async (productData) => {
+  /**
+   * @param {object} productData
+   * @param {{ skipFullWorkspaceRefresh?: boolean }} [options] — Busy grid / inline edits:
+   *   refresh products only so optimistic UI is not overwritten by a concurrent full refetch.
+   */
+  const handleSaveProduct = async (productData, options = {}) => {
+    const { skipFullWorkspaceRefresh = false } = options;
     if (!business?.id) {
       toast.error('System is initializing. Please try again in 2 seconds.');
       throw new Error('Business context not ready');
@@ -607,8 +635,12 @@ function BusinessDashboardContent() {
 
       toast.success(isEditing ? 'Product updated' : 'Product created');
 
-      // 🔄 AUTHORITATIVE SYNC: Refresh all data to ensure frontend and backend are perfectly aligned
-      await refreshAllData();
+      if (skipFullWorkspaceRefresh) {
+        await fetchInventory();
+      } else {
+        // Full workspace sync (forms, cross-module aggregates)
+        await refreshAllData();
+      }
 
       setShowProductForm(false);
       setEditingProduct(null);
@@ -1481,6 +1513,7 @@ function BusinessDashboardContent() {
               handleCreateBOM,
               handleCreateProductionOrder,
               refreshAllData,
+              fetchInventory,
               setShowInvoiceBuilder,
               setShowProductForm,
               setShowCustomerForm,

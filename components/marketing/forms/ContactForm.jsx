@@ -34,6 +34,38 @@ export function ContactForm({ onSuccess, className = '' }) {
     nameInputRef.current?.focus();
   }, []);
 
+  // Pre-fill from /contact?topic=…&planTier=… (e.g. pricing → logged-in upgrade path)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const topic = params.get('topic');
+      const planTier = params.get('planTier');
+      if (!topic && !planTier) return;
+      setFormData((prev) => {
+        if ((prev.subject && prev.subject.trim()) || (prev.message && prev.message.trim().length > 20)) {
+          return prev;
+        }
+        const subject =
+          topic === 'subscription'
+            ? 'Subscription / plan upgrade'
+            : topic
+              ? `Inquiry: ${topic}`
+              : 'Sales';
+        const lines = ['(Submitted from tenvo.com contact form)'];
+        if (planTier) lines.push(`Interested plan: ${planTier}`);
+        lines.push('Please reach out about TENVO plans, billing options, or a demo.');
+        return {
+          ...prev,
+          subject,
+          message: lines.join('\n'),
+        };
+      });
+    } catch {
+      /* noop */
+    }
+  }, []);
+
   const validationRules = {
     name: [
       { type: 'required', fieldName: 'Name' },

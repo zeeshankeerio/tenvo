@@ -30,7 +30,14 @@ export function SubscriptionBillingBanner() {
         if (!res.ok) return;
         const data = await res.json();
         if (!cancelled) {
-          setStatus(data.subscription?.status || null);
+          const sub = data.subscription;
+          const attention =
+            sub?.needsBillingAttention === true ||
+            (sub?.needsBillingAttention == null &&
+              ['past_due', 'unpaid', 'incomplete', 'incomplete_expired', 'cancellation_scheduled'].includes(
+                sub?.status || ''
+              ));
+          setStatus(attention ? sub?.status || null : null);
         }
       } catch {
         if (!cancelled) setStatus(null);

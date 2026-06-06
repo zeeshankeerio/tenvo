@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   ShoppingBag, Search, Menu, User, Heart,
-  Phone, MapPin, X, ChevronDown
+  Phone, MapPin, X, ChevronDown,
+  Truck, Shield, RotateCcw, HelpCircle, Mail,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
 import { getDomainConfig, getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { formatCurrency } from '@/lib/currency';
 
 export function StoreHeader({ business, categories, settings }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -26,7 +28,7 @@ export function StoreHeader({ business, categories, settings }) {
 
   const { cart } = useCart();
   const { wishlistCount } = useWishlist();
-  const { businessDomain } = useStorefront();
+  const { businessDomain, currency } = useStorefront();
 
   const cartItemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
@@ -36,9 +38,12 @@ export function StoreHeader({ business, categories, settings }) {
 
   // Top bar settings
   const topBarEnabled = settings?.storefront?.showTopBar !== false;
+  const showServiceStrip = settings?.storefront?.showServiceStrip !== false;
   const announcement = settings?.announcement || domainCfg.bannerText;
   const contactPhone = settings?.contact?.phone || business?.phone;
   const contactCity = settings?.contact?.address || business?.city;
+  const freeShip = settings?.freeShippingThreshold;
+  const returnDays = settings?.returnPolicyDays;
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 40);
@@ -296,6 +301,67 @@ export function StoreHeader({ business, categories, settings }) {
           </div>
         </div>
       </div>
+
+      {/* ── Service strip (desktop): shipping, returns, help, contact ─── */}
+      {showServiceStrip && (
+        <div className="hidden md:block bg-slate-50/95 border-b border-slate-200/90">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <nav
+              className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1.5 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-slate-600"
+              aria-label="Store policies and help"
+            >
+              <Link
+                href={`${storeRoot}/shipping`}
+                className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors"
+              >
+                <Truck className="w-3.5 h-3.5" style={{ color: accent }} aria-hidden />
+                {typeof freeShip === 'number' && freeShip > 0
+                  ? `Free over ${formatCurrency(freeShip, currency || 'PKR', { maximumFractionDigits: 0 })}`
+                  : 'Shipping'}
+              </Link>
+              <span className="text-slate-300 select-none" aria-hidden>
+                |
+              </span>
+              <Link
+                href={`${storeRoot}/returns`}
+                className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" style={{ color: accent }} aria-hidden />
+                {typeof returnDays === 'number' && returnDays > 0
+                  ? `${returnDays}-day returns`
+                  : 'Returns'}
+              </Link>
+              <span className="text-slate-300 select-none" aria-hidden>
+                |
+              </span>
+              <Link
+                href={`${storeRoot}/faqs`}
+                className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors"
+              >
+                <HelpCircle className="w-3.5 h-3.5" style={{ color: accent }} aria-hidden />
+                FAQs
+              </Link>
+              <span className="text-slate-300 select-none" aria-hidden>
+                |
+              </span>
+              <Link
+                href={`${storeRoot}/contact`}
+                className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors"
+              >
+                <Mail className="w-3.5 h-3.5" style={{ color: accent }} aria-hidden />
+                Contact
+              </Link>
+              <span className="text-slate-300 select-none" aria-hidden>
+                |
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-slate-500 normal-case font-medium tracking-normal">
+                <Shield className="w-3.5 h-3.5" style={{ color: accent }} aria-hidden />
+                Secure checkout
+              </span>
+            </nav>
+          </div>
+        </div>
+      )}
 
       {/* ── Search Overlay ─────────────────────────────────────────────── */}
       {isSearchOpen && (

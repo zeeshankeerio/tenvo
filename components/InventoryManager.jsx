@@ -159,6 +159,16 @@ function busyFieldValueUnchanged(prevVal, nextVal) {
   return String(prevVal ?? '') === String(nextVal ?? '');
 }
 
+/** Merge server payload without letting `undefined` wipe existing client fields. */
+function mergeInventoryServerRow(prev, srv) {
+  if (!srv || typeof srv !== 'object') return prev;
+  const out = { ...prev };
+  for (const [k, v] of Object.entries(srv)) {
+    if (v !== undefined) out[k] = v;
+  }
+  return out;
+}
+
 /**
  * @param {Object} props
  * @param {any[]} [props.products]
@@ -1655,9 +1665,9 @@ export function InventoryManager({
                             prev.map((p) => {
                               if (!rowsMatchInventoryRow(p, product)) return p;
                               const srv = saveRes.product;
+                              const merged = mergeInventoryServerRow(p, srv);
                               return {
-                                ...p,
-                                ...srv,
+                                ...merged,
                                 batches:
                                   Array.isArray(srv.batches) && srv.batches.length > 0
                                     ? srv.batches

@@ -310,7 +310,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
     }
 
     // RBAC + Subscription check via the permissions system
-    return getNavItemAccess(item.key, effectiveRole, planTier);
+    return getNavItemAccess(item.key, effectiveRole, planTier, business?.settings);
   };
 
   return (

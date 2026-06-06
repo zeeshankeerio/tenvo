@@ -9,9 +9,17 @@ import { useBusiness } from '@/lib/context/BusinessContext';
 import { createBusiness, checkDomainAvailabilityAction, completeRegistrationSetupAction } from '@/lib/actions/basic/business';
 import { seedBusinessProductsAction } from '@/lib/actions/standard/inventory/product';
 import { domainKnowledge } from '@/lib/domainKnowledge';
-import { PLAN_TIERS } from '@/lib/config/plans';
+import { PLAN_TIERS, PLAN_ORDER, resolvePlanTier } from '@/lib/config/plans';
 import { suggestPlanTier } from '@/lib/config/domains';
-import { getRegionalStandards } from '@/lib/utils/regionalHelpers';
+import {
+    getRegionalStandards,
+    coerceRegistrationCountryValue,
+    DEFAULT_REGISTRATION_COUNTRY_ISO,
+    getRegistrationCountryOptions,
+    getRegistrationCurrencyOptions,
+    getPlanDisplayForRegion,
+} from '@/lib/utils/regionalHelpers';
+import { formatCurrency, isValidCurrency } from '@/lib/currency';
 import { authClient } from '@/lib/auth-client';
 import { useRegistrationPersistence, clearRegistrationData } from '@/lib/hooks/useRegistrationPersistence';
 import { DataRecoveryDialog } from '@/components/registration/DataRecoveryDialog';
@@ -81,6 +89,8 @@ import { useLanguage } from '@/lib/context/LanguageContext';
 import { translations } from '@/lib/translations';
 import * as LucideIcons from 'lucide-react';
 import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
+import { getPublicSupportEmail, getPublicStoreUrl } from '@/lib/marketing/site-url';
+import { Textarea } from '@/components/ui/textarea';
 
 const DOMAIN_CATEGORY_BLUEPRINTS = [
     {
@@ -125,16 +135,44 @@ const DOMAIN_CATEGORIES = DOMAIN_CATEGORY_BLUEPRINTS.map(group => {
     };
 });
 
-const PLAN_HIGHLIGHTS = {
-    basic: ['Core inventory + invoicing', '2 users', 'Domain-tailored setup'],
-    standard: ['POS + loyalty + warehouses', '5 users', 'Storefront operations'],
-    premium: ['Manufacturing + payroll + AI', '15 users', 'Campaigns + automations'],
-    enterprise: ['Multi-domain + API + white-label', 'Unlimited users', 'Advanced governance'],
-};
-
-const PLAN_ORDER = { basic: 0, standard: 1, premium: 2, enterprise: 3 };
 function recommendedPlanForDomain(domainKey) {
     return suggestPlanTier(domainKey, domainKnowledge[domainKey]);
+}
+
+/** Short bullets for plan comparison on step 3 (aligned with PLAN_TIERS keys). */
+function planCardBullets(tier) {
+    const cfg = PLAN_TIERS[tier];
+    if (!cfg) return [];
+    const users =
+        cfg.limits?.max_users === -1 ? 'Unlimited users' : `Up to ${cfg.limits?.max_users} users`;
+    const products =
+        cfg.limits?.max_products === -1
+            ? 'Unlimited products'
+            : `Up to ${cfg.limits?.max_products} products`;
+    return [users, products, cfg.tagline].filter(Boolean);
+}
+
+function buildRegistrationFormState(persisted) {
+    const countryIso = coerceRegistrationCountryValue(persisted?.country) || DEFAULT_REGISTRATION_COUNTRY_ISO;
+    const regional = getRegionalStandards(countryIso);
+    const currency =
+        typeof persisted?.currency === 'string' && isValidCurrency(persisted.currency)
+            ? persisted.currency
+            : regional.currency;
+    return {
+        businessName: persisted?.businessName || '',
+        email: persisted?.email || '',
+        password: persisted?.password || '',
+        phone: persisted?.phone || '',
+        country: countryIso,
+        handle: persisted?.handle || '',
+        category: persisted?.category || '',
+        planTier: persisted?.planTier || 'free',
+        logo: persisted?.logo || '',
+        currency,
+        ntn: persisted?.ntn || '',
+        storeTagline: persisted?.storeTagline || '',
+    };
 }
 
 export default function RegisterWizard() {
@@ -166,17 +204,21 @@ export default function RegisterWizard() {
     const [newUser, setNewUser] = useState(null);
     
     // Form data with persistence
-    const [formData, setFormData] = useState({
-        businessName: persistedFormData.businessName || '',
-        email: persistedFormData.email || '',
-        password: persistedFormData.password || '',
-        phone: persistedFormData.phone || '',
-        country: persistedFormData.country || 'Pakistan',
-        handle: persistedFormData.handle || '',
-        category: persistedFormData.category || '',
-        planTier: persistedFormData.planTier || 'free',
-        logo: persistedFormData.logo || ''
-    });
+    const [formData, setFormData] = useState(() => buildRegistrationFormState(persistedFormData));
+
+    const prevCountryRef = React.useRef(null);
+    useEffect(() => {
+        if (prevCountryRef.current === null) {
+            prevCountryRef.current = formData.country;
+            return;
+        }
+        if (prevCountryRef.current === formData.country) return;
+        prevCountryRef.current = formData.country;
+        const regional = getRegionalStandards(formData.country);
+        setFormData((prev) => ({ ...prev, currency: regional.currency }));
+    }, [formData.country]);
+
+    const regionalForWizard = getRegionalStandards(formData.country);
 
     // Sync step with persistence
     useEffect(() => {
@@ -213,18 +255,31 @@ export default function RegisterWizard() {
     }, [newUser, step]);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search);
+        setFormData((prev) => {
+            let next = { ...prev };
             const domainParam = params.get('domain');
             if (domainParam && domainKnowledge[domainParam]) {
                 const recommendedPlan = recommendedPlanForDomain(domainParam);
-                setFormData(prev => ({
-                    ...prev,
+                next = {
+                    ...next,
                     category: domainParam,
-                    planTier: PLAN_ORDER[prev.planTier] >= PLAN_ORDER[recommendedPlan] ? prev.planTier : recommendedPlan,
-                }));
+                    planTier:
+                        PLAN_ORDER[next.planTier] >= PLAN_ORDER[recommendedPlan]
+                            ? next.planTier
+                            : recommendedPlan,
+                };
             }
-        }
+            const planParam = params.get('planTier') || params.get('plan');
+            if (planParam) {
+                const resolved = resolvePlanTier(planParam);
+                if (PLAN_TIERS[resolved]) {
+                    next = { ...next, planTier: resolved };
+                }
+            }
+            return next;
+        });
     }, []);
 
     // Slug generation helper
@@ -446,10 +501,13 @@ export default function RegisterWizard() {
                     domain: formData.handle, // Use the unique handle as 'domain'
                     category: formData.category || 'retail-shop',
                     planTier: formData.planTier || 'free',
+                    currency: formData.currency,
+                    ntn: formData.ntn,
+                    description: formData.storeTagline || null,
                 });
 
                 if (bizResult.success) {
-                    toast.success('Registration successful! Welcome to the hub.');
+                    toast.success('Registration successful! Welcome to Tenvo.');
 
                     // 3. Seed initial products using server action
                     await seedBusinessData(bizResult.businessId, formData.category, formData.country);
@@ -558,7 +616,7 @@ export default function RegisterWizard() {
                                     "Final Configuration"}
                         </h1>
                         <p className="text-gray-500 font-medium text-lg">
-                            {step === 1 ? "Define your basic business credentials." :
+                            {step === 1 ? "Define your business identity, compliance region, and public store defaults." :
                                 step === 2 ? "Tailor the ERP to your industry needs." :
                                     "Setting up your localized compliance rules."}
                         </p>
@@ -629,29 +687,93 @@ export default function RegisterWizard() {
                                                             value={formData.handle}
                                                             onChange={e => setFormData({ ...formData, handle: generateSlug(e.target.value) })}
                                                             className={cn(
-                                                                "h-12 rounded-2xl border-gray-100 focus:ring-wine/20 pr-32",
+                                                                "h-12 rounded-2xl border-gray-100 focus:ring-wine/20 pr-16 sm:pr-20",
                                                                 !handleStatus.available && formData.handle && "border-rose-200 bg-rose-50/30"
                                                             )}
                                                         />
-                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 pointer-events-none">
-                                                            .financial-hub.com
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 pointer-events-none">
+                                                            /store
                                                         </div>
                                                     </div>
+                                                    <p className="text-[11px] text-gray-500 font-medium leading-snug">
+                                                        Your public storefront:{' '}
+                                                        <span className="font-mono text-wine/90 break-all">
+                                                            {getPublicStoreUrl(formData.handle || 'your-handle')}
+                                                        </span>
+                                                    </p>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Business Region</Label>
-                                                    <Select value={formData.country} onValueChange={v => setFormData({ ...formData, country: v })}>
+                                                    <Select value={formData.country} onValueChange={(v) => setFormData({ ...formData, country: v })}>
                                                         <SelectTrigger className="h-12 rounded-2xl border-gray-100">
                                                             <SelectValue />
                                                         </SelectTrigger>
-                                                        <SelectContent className="rounded-2xl border-gray-100">
-                                                            <SelectItem value="Pakistan">Pakistan (Localized)</SelectItem>
-                                                            <SelectItem value="UAE">UAE (VAT Compliant)</SelectItem>
-                                                            <SelectItem value="Saudi Arabia">Saudi Arabia (ZATCA Compliant)</SelectItem>
-                                                            <SelectItem value="USA">USA (Sales Tax)</SelectItem>
+                                                        <SelectContent className="rounded-2xl border-gray-100 max-h-[min(24rem,70vh)]">
+                                                            {getRegistrationCountryOptions().map((opt) => (
+                                                                <SelectItem key={opt.value} value={opt.value}>
+                                                                    {`${opt.label} — ${opt.detail}`}
+                                                                </SelectItem>
+                                                            ))}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Business phone (optional)</Label>
+                                                    <Input
+                                                        type="tel"
+                                                        placeholder={`${regionalForWizard.phoneCode} · local number`}
+                                                        value={formData.phone}
+                                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                                        className="h-12 rounded-2xl border-gray-100 focus:ring-wine/20"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Operating currency</Label>
+                                                    <Select
+                                                        value={formData.currency}
+                                                        onValueChange={(v) => setFormData({ ...formData, currency: v })}
+                                                    >
+                                                        <SelectTrigger className="h-12 rounded-2xl border-gray-100">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="rounded-2xl border-gray-100 max-h-[min(24rem,70vh)]">
+                                                            {getRegistrationCurrencyOptions(formData.country).map((row) => (
+                                                                <SelectItem key={row.code} value={row.code}>
+                                                                    {row.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <p className="text-[10px] text-gray-400 font-medium">Used for invoices, POS, and your public store prices.</p>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">
+                                                        {regionalForWizard.taxIdLabel} (optional)
+                                                    </Label>
+                                                    <Input
+                                                        placeholder={`Registered ${regionalForWizard.taxIdLabel}`}
+                                                        value={formData.ntn}
+                                                        onChange={e => setFormData({ ...formData, ntn: e.target.value })}
+                                                        className="h-12 rounded-2xl border-gray-100 focus:ring-wine/20"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">
+                                                    Public storefront tagline (optional)
+                                                </Label>
+                                                <Textarea
+                                                    placeholder="Fresh groceries, same-day delivery in Karachi."
+                                                    value={formData.storeTagline}
+                                                    onChange={e => setFormData({ ...formData, storeTagline: e.target.value })}
+                                                    maxLength={240}
+                                                    rows={2}
+                                                    className="rounded-2xl border-gray-100 focus:ring-wine/20 resize-none text-sm"
+                                                />
+                                                <p className="text-[10px] text-gray-400 font-medium">
+                                                    Shown on your customer-facing store — you can refine this anytime in Store settings.
+                                                </p>
                                             </div>
 
                                             {!user && (
@@ -766,7 +888,8 @@ export default function RegisterWizard() {
                                                 <div className="space-y-2">
                                                     <h3 className="text-2xl font-black text-gray-900 tracking-tight">Enterprise Infrastructure Ready</h3>
                                                     <p className="text-gray-500 font-medium max-w-md">
-                                                        We&apos;ve calibrated the dashboard for <span className="text-wine font-black uppercase tracking-tight">{translations[language]?.domains?.[formData.category] || formData.category?.replace('-', ' ')}</span> with Pakistani tax compliance.
+                                                        We&apos;ve calibrated the dashboard for <span className="text-wine font-black uppercase tracking-tight">{translations[language]?.domains?.[formData.category] || formData.category?.replace('-', ' ')}</span>
+                                                        {' '}with {regionalForWizard.taxLabel} expectations for {regionalForWizard.countryName} ({regionalForWizard.currency}). Adjust tax rates in settings as your adviser recommends.
                                                     </p>
                                                 </div>
 
@@ -804,6 +927,11 @@ export default function RegisterWizard() {
                                                     {Object.entries(PLAN_TIERS).map(([tier, config]) => {
                                                         const isSelected = formData.planTier === tier;
                                                         const isRecommended = recommendedPlanForDomain(formData.category) === tier;
+                                                        const { amount, currency, footnote } = getPlanDisplayForRegion(
+                                                            config.price_pkr,
+                                                            config.price_usd,
+                                                            regionalForWizard
+                                                        );
                                                         return (
                                                             <button
                                                                 key={tier}
@@ -819,10 +947,15 @@ export default function RegisterWizard() {
                                                                     {isRecommended && <span className="text-[10px] font-black uppercase text-emerald-600">Recommended</span>}
                                                                 </div>
                                                                 <p className="text-xs text-gray-500 font-medium">{config.tagline}</p>
-                                                                <p className="text-xs font-black text-wine mt-2">PKR {config.price_pkr} / mo</p>
+                                                                <p className="text-xs font-black text-wine mt-2">
+                                                                    {formatCurrency(amount, currency)} / mo
+                                                                </p>
+                                                                {footnote ? (
+                                                                    <p className="text-[10px] text-gray-400 mt-1 leading-snug">{footnote}</p>
+                                                                ) : null}
                                                                 <ul className="mt-2 space-y-1">
-                                                                    {(PLAN_HIGHLIGHTS[tier] || []).map(item => (
-                                                                        <li key={item} className="text-[11px] text-gray-600">* {item}</li>
+                                                                    {planCardBullets(tier).map((item, idx) => (
+                                                                        <li key={`${tier}-${idx}`} className="text-[11px] text-gray-600">• {item}</li>
                                                                     ))}
                                                                 </ul>
                                                             </button>
@@ -877,7 +1010,7 @@ export default function RegisterWizard() {
 
                                     <div className="rounded-2xl bg-white border border-gray-100 p-4">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Need onboarding help?</p>
-                                        <p className="text-sm font-bold text-gray-900">support@financial-hub.com</p>
+                                        <p className="text-sm font-bold text-gray-900">{getPublicSupportEmail()}</p>
                                         <p className="text-xs text-gray-500 font-medium mt-1">Average response time under 15 minutes.</p>
                                     </div>
                                 </div>

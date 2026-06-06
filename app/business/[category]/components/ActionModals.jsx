@@ -106,7 +106,7 @@ export function ActionModals({
     const posRelevant = isPosRelevant(category, domainKnowledge);
 
     const canOpenTab = (tabKey) => {
-        const access = getNavItemAccess(tabKey, role, planTier);
+        const access = getNavItemAccess(tabKey, role, planTier, business?.settings);
         if (!access.visible) return false;
         if (access.locked) {
             toast.error(`Requires ${access.requiredPlan || 'higher'} plan`);

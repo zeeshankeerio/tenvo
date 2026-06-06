@@ -4,7 +4,7 @@ import { createCheckoutSession, getPriceIdForPlan, createCustomer } from '@/lib/
 import { getSessionUser } from '@/lib/auth/session';
 import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
 import { isManualBillingMode } from '@/lib/config/billingMode';
-import { PLAN_TIERS, resolvePlanTier } from '@/lib/config/plans';
+import { getPlanTierQuotaUpdateData, resolvePlanTier } from '@/lib/config/plans';
 
 /**
  * POST /api/billing/create-checkout
@@ -63,8 +63,8 @@ export async function POST(request) {
     // Dev / UAT: apply plan locally — no Stripe (set BILLING_MODE=manual in .env)
     if (isManualBillingMode()) {
       const tier = resolvePlanTier(planTier);
-      const plan = PLAN_TIERS[tier];
-      if (!plan) {
+      const quota = getPlanTierQuotaUpdateData(tier);
+      if (!quota) {
         return NextResponse.json(
           { error: 'Unknown plan tier', code: 'INVALID_PLAN' },
           { status: 400 }
@@ -73,10 +73,7 @@ export async function POST(request) {
       await prismaBase.businesses.update({
         where: { id: businessId },
         data: {
-          plan_tier: tier,
-          plan_seats: plan.limits.max_users,
-          max_products: plan.limits.max_products,
-          max_warehouses: plan.limits.max_warehouses,
+          ...quota,
           stripe_subscription_status: 'manual_dev',
           plan_expires_at: null,
         },

@@ -351,18 +351,26 @@ export function DashboardTabs({
                                     setShowProductForm(true);
                                 }}
                                 onUpdate={async (product) => {
-                                    // [OK] CRITICAL FIX: Preserve batch/serial data during inline edits
-                                    // BusyGrid sends partial product data, we must fetch full data to preserve batches
+                                    // Busy grid: avoid refreshAllData — it races the grid's optimistic row and can
+                                    // briefly restore stale server rows after Enter/blur.
                                     const fullProduct = products.find(p => p.id === product.id);
 
-                                    await handleSaveProduct({
-                                        ...product,  // Include all edited fields
-                                        batches: fullProduct?.batches || product.batches || [],
-                                        serialNumbers: fullProduct?.serial_numbers || fullProduct?.serialNumbers || product.serialNumbers || product.serial_numbers || [],
-                                        business_id: business.id,
-                                        isUpdate: true,
-                                        productId: product.id
-                                    });
+                                    await handleSaveProduct(
+                                        {
+                                            ...product,
+                                            batches: fullProduct?.batches || product.batches || [],
+                                            serialNumbers:
+                                                fullProduct?.serial_numbers ||
+                                                fullProduct?.serialNumbers ||
+                                                product.serialNumbers ||
+                                                product.serial_numbers ||
+                                                [],
+                                            business_id: business.id,
+                                            isUpdate: true,
+                                            productId: product.id,
+                                        },
+                                        { skipFullWorkspaceRefresh: true }
+                                    );
                                 }}
                                 onLocationAdd={handleLocationAdd}
                                 onLocationUpdate={handleLocationUpdate}
@@ -664,7 +672,7 @@ export function DashboardTabs({
 
                 <TabsContent value="reports" className="space-y-6 outline-none">
                     {wrapTab(
-                        <TabGuard tabKey="reports" role={role} planTier={planTier} requiredPlan="business" featureName="Analytics & AI" onUpgrade={() => handleTabChange('settings')}>
+                        <TabGuard tabKey="reports" role={role} planTier={planTier} featureName="Analytics & AI" onUpgrade={() => handleTabChange('settings')}>
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Analytics & Reports</h2>

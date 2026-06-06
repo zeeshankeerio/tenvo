@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { Prisma } from '@prisma/client';
 import { prismaBase } from '@/lib/db';
 import { sendSubscriptionConfirmationEmail } from '@/lib/email/subscription-emails';
+import { getPlanTierQuotaUpdateData, resolvePlanTier } from '@/lib/config/plans';
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
@@ -152,10 +153,16 @@ async function handleCheckoutSessionCompletedTx(tx, session) {
       ? session.amount_total
       : null;
 
+  const quota = getPlanTierQuotaUpdateData(planTier);
+  if (!quota) {
+    console.error('[Stripe Webhook] Invalid plan tier in checkout metadata:', planTier);
+    return;
+  }
+
   await tx.businesses.update({
     where: { id: businessId },
     data: {
-      plan_tier: planTier,
+      ...quota,
       stripe_subscription_id: subscriptionId,
       ...(customerId ? { stripe_customer_id: customerId } : {}),
       stripe_subscription_status: 'active',
@@ -167,7 +174,7 @@ async function handleCheckoutSessionCompletedTx(tx, session) {
   await tx.subscription_history.create({
     data: {
       business_id: businessId,
-      plan_tier: planTier,
+      plan_tier: quota.plan_tier,
       status: 'active',
       stripe_subscription_id: subscriptionId,
       amount_minor: amountMinor,
@@ -269,12 +276,16 @@ async function handleSubscriptionCreatedTx(tx, subscription) {
  */
 async function handleSubscriptionUpdatedTx(tx, subscription) {
   const planFromMeta = subscription.metadata?.planTier || subscription.metadata?.plan_tier;
+  const quotaPatch =
+    planFromMeta && typeof planFromMeta === 'string' ? getPlanTierQuotaUpdateData(planFromMeta) : null;
   const data = {
     stripe_subscription_status: subscription.status,
     updated_at: new Date(),
   };
-  if (planFromMeta && typeof planFromMeta === 'string') {
-    data.plan_tier = planFromMeta;
+  if (quotaPatch) {
+    Object.assign(data, quotaPatch);
+  } else if (planFromMeta && typeof planFromMeta === 'string') {
+    data.plan_tier = resolvePlanTier(planFromMeta);
   }
 
   const res = await tx.businesses.updateMany({
@@ -283,14 +294,19 @@ async function handleSubscriptionUpdatedTx(tx, subscription) {
   });
 
   if (res.count === 0 && subscription.metadata?.businessId) {
+    const fallbackData = {
+      stripe_subscription_id: subscription.id,
+      stripe_subscription_status: subscription.status,
+      updated_at: new Date(),
+    };
+    if (quotaPatch) {
+      Object.assign(fallbackData, quotaPatch);
+    } else if (planFromMeta && typeof planFromMeta === 'string') {
+      fallbackData.plan_tier = resolvePlanTier(planFromMeta);
+    }
     await tx.businesses.updateMany({
       where: { id: subscription.metadata.businessId },
-      data: {
-        stripe_subscription_id: subscription.id,
-        stripe_subscription_status: subscription.status,
-        ...(planFromMeta && typeof planFromMeta === 'string' ? { plan_tier: planFromMeta } : {}),
-        updated_at: new Date(),
-      },
+      data: fallbackData,
     });
   }
 
