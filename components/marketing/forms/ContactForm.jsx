@@ -27,14 +27,16 @@ export function ContactForm({ onSuccess, className = '' }) {
   const nameInputRef = useRef(null);
   const textareaRef = useRef(null);
 
-  const MAX_MESSAGE_LENGTH = 1000;
+  /** Aligned with /api/marketing/contact message clip (1200). */
+  const MAX_MESSAGE_LENGTH = 1200;
 
   // Auto-focus on first field
   useEffect(() => {
     nameInputRef.current?.focus();
   }, []);
 
-  // Pre-fill from /contact?topic=…&planTier=… (e.g. pricing → logged-in upgrade path)
+  // Pre-fill from /contact?topic=…&planTier=… (e.g. pricing → logged-in upgrade path).
+  // Subject must stay one of the API-allowed select values (see /api/marketing/contact).
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -46,14 +48,16 @@ export function ContactForm({ onSuccess, className = '' }) {
         if ((prev.subject && prev.subject.trim()) || (prev.message && prev.message.trim().length > 20)) {
           return prev;
         }
-        const subject =
-          topic === 'subscription'
-            ? 'Subscription / plan upgrade'
-            : topic
-              ? `Inquiry: ${topic}`
-              : 'Sales';
-        const lines = ['(Submitted from tenvo.com contact form)'];
-        if (planTier) lines.push(`Interested plan: ${planTier}`);
+        let subject = 'general';
+        if (topic === 'subscription' || planTier) subject = 'sales';
+        else if (topic === 'support' || topic === 'technical') subject = 'support';
+        else if (topic === 'billing') subject = 'billing';
+        else if (topic === 'partnership') subject = 'partnership';
+        else if (topic === 'feedback') subject = 'feedback';
+
+        const lines = ['(Submitted from TENVO contact page)'];
+        if (topic) lines.push(`Visitor topic: ${topic}`);
+        if (planTier) lines.push(`Interested plan tier: ${planTier}`);
         lines.push('Please reach out about TENVO plans, billing options, or a demo.');
         return {
           ...prev,
@@ -138,6 +142,26 @@ export function ContactForm({ onSuccess, className = '' }) {
     setIsSubmitting(true);
     setErrors({});
 
+    let messageBody = formData.message;
+    if (typeof window !== 'undefined') {
+      try {
+        const p = new URLSearchParams(window.location.search);
+        const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid'];
+        const parts = utmKeys.map((k) => {
+          const v = p.get(k);
+          return v ? `${k}=${v}` : null;
+        }).filter(Boolean);
+        if (parts.length && !messageBody.includes('\n---\nAttribution:')) {
+          messageBody = `${messageBody}\n\n---\nAttribution: ${parts.join(' | ')}`;
+        }
+      } catch {
+        /* noop */
+      }
+      if (messageBody.length > 1200) {
+        messageBody = messageBody.slice(0, 1200);
+      }
+    }
+
     try {
       const response = await fetch('/api/marketing/contact', {
         method: 'POST',
@@ -149,7 +173,7 @@ export function ContactForm({ onSuccess, className = '' }) {
           email: formData.email,
           phone: formData.phone,
           subject: formData.subject,
-          message: formData.message
+          message: messageBody
         }),
       });
 
@@ -197,8 +221,9 @@ export function ContactForm({ onSuccess, className = '' }) {
   };
 
   return (
-    <form 
-      onSubmit={handleSubmit} 
+    <form
+      data-testid="marketing-contact-form"
+      onSubmit={handleSubmit}
       className={`space-y-6 ${className}`}
       noValidate
     >

@@ -1,14 +1,16 @@
+'use client';
+
 /**
  * Form Error Handler Utility
- * 
+ *
  * Provides centralized error handling for server action results in forms.
  * Maps action failure codes to user-friendly messages with appropriate
  * upgrade prompts and contextual information.
- * 
+ *
  * Usage:
  * ```javascript
  * import { parseActionError, showActionError } from '@/lib/utils/formErrorHandler';
- * 
+ *
  * const result = await someAction(data);
  * if (!result.success) {
  *   const errorInfo = parseActionError(result);
@@ -17,6 +19,8 @@
  *   showActionError(result);
  * }
  * ```
+ *
+ * See also: **`docs/DATA_INTEGRITY_AND_FORMS.md`** (tenant + mutations) and **`docs/MARKET_READINESS.md`** (launch checklist + form wiring expectations).
  */
 
 import toast from 'react-hot-toast';
@@ -177,7 +181,7 @@ const ERROR_MESSAGES = {
 
 /**
  * Parse action result and return structured error information
- * 
+ *
  * @param {Object} result - Action result object with { success, code, error, details }
  * @returns {Object} Structured error information
  */
@@ -214,14 +218,14 @@ export function parseActionError(result) {
 
 /**
  * Show error toast with appropriate message and action
- * 
+ *
  * @param {Object} result - Action result object
  * @param {Object} options - Toast options
  * @returns {void}
  */
 export function showActionError(result, options = {}) {
   const errorInfo = parseActionError(result);
-  
+
   if (!errorInfo) {
     return;
   }
@@ -245,7 +249,7 @@ export function showActionError(result, options = {}) {
 
 /**
  * Format validation errors from result.details into field-level errors
- * 
+ *
  * @param {Object} result - Action result with validation errors in details
  * @returns {Object} Field-level error object { fieldName: errorMessage }
  */
@@ -262,7 +266,7 @@ export function formatValidationErrors(result) {
   // If details is an array (Zod error format), convert to flat object
   if (Array.isArray(result.details)) {
     const errors = {};
-    result.details.forEach(error => {
+    result.details.forEach((error) => {
       const field = error.path?.join('.') || '_general';
       errors[field] = error.message;
     });
@@ -274,7 +278,7 @@ export function formatValidationErrors(result) {
 
 /**
  * Check if error requires plan upgrade
- * 
+ *
  * @param {Object} result - Action result object
  * @returns {boolean}
  */
@@ -294,7 +298,7 @@ export function isUpgradeRequired(result) {
 
 /**
  * Check if error is a permission error
- * 
+ *
  * @param {Object} result - Action result object
  * @returns {boolean}
  */
@@ -315,7 +319,7 @@ export function isPermissionError(result) {
 
 /**
  * Check if error is a validation error
- * 
+ *
  * @param {Object} result - Action result object
  * @returns {boolean}
  */
@@ -329,7 +333,7 @@ export function isValidationError(result) {
 
 /**
  * Get upgrade URL based on current plan
- * 
+ *
  * @returns {string} URL to upgrade page
  */
 export function getUpgradeUrl() {
@@ -338,13 +342,13 @@ export function getUpgradeUrl() {
 
 /**
  * Show upgrade prompt with action button
- * 
+ *
  * @param {Object} result - Action result object
  * @returns {void}
  */
 export function showUpgradePrompt(result) {
   const errorInfo = parseActionError(result);
-  
+
   if (!errorInfo || errorInfo.type !== 'upgrade') {
     return;
   }
@@ -355,6 +359,7 @@ export function showUpgradePrompt(result) {
         <p className="font-medium">{errorInfo.message}</p>
         {errorInfo.action && <p className="text-sm">{errorInfo.action}</p>}
         <button
+          type="button"
           onClick={() => {
             toast.dismiss(t.id);
             window.location.href = getUpgradeUrl();

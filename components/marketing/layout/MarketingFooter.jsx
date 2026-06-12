@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { trackEvent, EVENTS } from '@/lib/analytics/tracking';
 import { validateEmail } from '@/lib/marketing/validation';
 import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
+import { SupportWhatsAppLink } from '@/components/marketing/SupportWhatsAppLink';
 import { cn } from '@/lib/utils';
 
 const FOOTER_LINK = 'text-sm font-medium text-neutral-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 rounded-sm';
@@ -85,6 +86,7 @@ export default function MarketingFooter({ variant = 'default' }) {
             <Link href="/contact" className="text-neutral-500 transition-colors hover:text-white">
               Contact
             </Link>
+            <SupportWhatsAppLink variant="footerMuted" className="text-[10px] font-semibold" />
           </nav>
         </div>
       </footer>
@@ -112,6 +114,9 @@ export default function MarketingFooter({ variant = 'default' }) {
             <p className="mt-6 max-w-sm text-sm font-medium leading-relaxed text-neutral-400">
               One connected workspace for inventory, commerce, finance, and growth
               scaling globally. A Mindscape Analytics LLC product (Sheridan, WY, USA).
+            </p>
+            <p className="mt-4 text-sm">
+              <SupportWhatsAppLink variant="dark" className="text-sm font-semibold" iconClassName="h-4 w-4" />
             </p>
             <div className="mt-8 flex flex-wrap gap-2.5">
               <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-200/95">
@@ -228,6 +233,12 @@ export default function MarketingFooter({ variant = 'default' }) {
                 </Link>
               </li>
               <li>
+                <SupportWhatsAppLink
+                  variant="dark"
+                  className="text-sm font-medium text-neutral-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 rounded-sm"
+                />
+              </li>
+              <li>
                 <Link href="/help" className={FOOTER_LINK}>
                   Help center
                 </Link>
@@ -327,6 +338,7 @@ export default function MarketingFooter({ variant = 'default' }) {
             >
               Mindscape contact
             </a>
+            <SupportWhatsAppLink variant="footerMuted" className="text-[10px] font-semibold" />
           </div>
         </div>
       </div>

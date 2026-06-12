@@ -9,6 +9,7 @@ import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { formatCurrency } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
@@ -21,6 +22,7 @@ function ProductListItem({ product, businessDomain }) {
   const { currency, settings, business } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
   const inWishlist = isInWishlist(product.id);
+  const listImage = getEffectiveProductImageUrl(product, business?.category);
   const isOutOfStock = product.stock !== null && product.stock !== undefined && product.stock <= 0;
   const discount = product.compare_price && Number(product.compare_price) > Number(product.price)
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100) : 0;
@@ -42,8 +44,8 @@ function ProductListItem({ product, businessDomain }) {
     <div className="flex gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow group">
       <Link href={`/store/${businessDomain}/products/${product.slug || product.id}`} className="flex-shrink-0">
         <div className="w-28 h-28 sm:w-36 sm:h-36 bg-gray-50 rounded-xl overflow-hidden">
-          {product.image_url ? (
-            <SmartProductImage src={product.image_url} alt={product.name} width={144} height={144} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          {listImage ? (
+            <SmartProductImage src={listImage} alt={product.name} width={144} height={144} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><Package className="w-8 h-8 text-gray-200" /></div>
           )}

@@ -5,14 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Landmark, BookOpen, Receipt, FileCheck, Calendar, RefreshCcw,
     Globe, CreditCard, TrendingUp, TrendingDown, DollarSign,
-    BarChart3, ChevronRight, Loader2, AlertTriangle
+    BarChart3, ChevronRight, Loader2, FileText, Scale,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useBusiness } from '@/lib/context/BusinessContext';
-import { usePermissions, FeatureGate } from '@/lib/hooks/usePermissions';
-import { getGLAccountsAction, getTrialBalanceAction } from '@/lib/actions/basic/accounting';
-import { getExpensesAction, getExpenseSummaryAction } from '@/lib/actions/basic/expense';
+import { usePermissions } from '@/lib/hooks/usePermissions';
+import { getGLAccountsAction } from '@/lib/actions/basic/accounting';
+import { setExchangeRateAction } from '@/lib/actions/basic/exchangeRate';
+import { getExpensesAction } from '@/lib/actions/basic/expense';
 import { getCreditNotesAction, createCreditNoteAction } from '@/lib/actions/basic/creditNote';
 import { getFiscalPeriodsAction } from '@/lib/actions/basic/fiscal';
 import { getExchangeRatesAction } from '@/lib/actions/basic/exchangeRate';
@@ -28,11 +29,15 @@ import { getVendorsAction } from '@/lib/actions/basic/vendor';
 import { getInvoicesAction } from '@/lib/actions/basic/invoice';
 import { paymentAPI } from '@/lib/api/payments';
 import { toast } from 'react-hot-toast';
+import FinancialReports from '@/components/FinancialReports';
+import TrialBalanceView from '@/components/TrialBalanceView';
 
 // --- Sub-Tab Definitions -----------------------------------------------------
 
 const FINANCE_TABS = [
     { key: 'overview', label: 'Overview', icon: BarChart3, permission: 'finance.view_reports', feature: null },
+    { key: 'statements', label: 'Statements', icon: FileText, permission: 'finance.view_reports', feature: 'basic_reports' },
+    { key: 'trial-balance', label: 'Trial Balance', icon: Scale, permission: 'finance.view_reports', feature: 'basic_reports' },
     { key: 'accounts', label: 'Chart of Accounts', icon: BookOpen, permission: 'finance.view_gl', feature: 'basic_accounting' },
     { key: 'journal', label: 'Journal Entries', icon: Landmark, permission: 'finance.view_gl', feature: 'basic_accounting' },
     { key: 'reconciliation', label: 'Reconciliation', icon: BarChart3, permission: 'finance.view_gl', feature: 'basic_accounting' },
@@ -310,130 +315,44 @@ function CreditNotesPanel({ businessId, creditNotes, currency, onRefresh }) {
     );
 }
 
-// --- Fiscal Periods Panel ----------------------------------------------------
-
-function FiscalPeriodsPanel({ businessId, periods, currency, onRefresh }) {
-    const [showForm, setShowForm] = useState(false);
-    const [name, setName] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-
-    const STATUS_STYLES = {
-        open: 'bg-emerald-100 text-emerald-700',
-        closed: 'bg-gray-100 text-gray-600',
-        locked: 'bg-red-100 text-red-600',
-    };
-
-    const handleSubmit = async () => {
-        if (!name || !startDate || !endDate) return;
-        setSubmitting(true);
-        try {
-            // Mocking for now as the create fiscal period action is missing or complex
-            toast.success("Fiscal period created successfully");
-            setShowForm(false);
-            setName(''); setStartDate(''); setEndDate('');
-            onRefresh?.();
-        } catch (err) {
-            toast.error("Failed to create period");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    return (
-        <div className="space-y-3">
-            <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-gray-800">Fiscal Periods</h3>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400 font-semibold">{periods.length} periods</span>
-                    <Button 
-                        onClick={() => setShowForm(true)}
-                        className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl font-bold text-xs px-4 h-8"
-                    >
-                        New Period
-                    </Button>
-                </div>
-            </div>
-
-            {showForm && (
-                <div className="bg-white rounded-xl border border-brand-100 p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-black text-gray-900">Define Fiscal Period</h4>
-                        <button onClick={() => setShowForm(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                            <label className="text-xs font-bold text-gray-600">Period Name</label>
-                            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. FY 2026" className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400" />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-600">Start Date</label>
-                            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400" />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-600">End Date</label>
-                            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400" />
-                        </div>
-                    </div>
-                    <div className="flex justify-end">
-                        <Button onClick={handleSubmit} disabled={submitting || !name || !startDate || !endDate} className="rounded-xl font-bold h-9 px-6 bg-emerald-600 hover:bg-emerald-700 text-white">
-                            {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : 'Save Period'}
-                        </Button>
-                    </div>
-                </div>
-            )}
-
-            {periods.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
-                    <Calendar className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm font-semibold">No fiscal periods defined</p>
-                    <p className="text-xs">Set up your fiscal year structure to control GL posting</p>
-                </div>
-            ) : (
-                <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
-                    {periods.map(p => (
-                        <div key={p.id} className="flex items-center gap-3 px-4 py-3">
-                            <Calendar className="w-4 h-4 text-gray-300 shrink-0" />
-                            <div className="flex-1 min-w-0">
-                                <span className="text-sm font-bold text-gray-800">{p.name}</span>
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                    {new Date(p.start_date).toLocaleDateString()} -- {new Date(p.end_date).toLocaleDateString()}
-                                </p>
-                            </div>
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${STATUS_STYLES[p.status] || STATUS_STYLES.open}`}>
-                                {p.status?.toUpperCase()}
-                            </span>
-                            {p.closed_by && (
-                                <span className="text-[9px] text-gray-400">by {p.closed_by}</span>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-}
-
 // --- Exchange Rates Panel ----------------------------------------------------
 
-function ExchangeRatesPanel({ businessId, rates, currency, onRefresh }) {
+function ExchangeRatesPanel({ businessId, rates, baseCurrencyCode, onRefresh }) {
     const [showForm, setShowForm] = useState(false);
-    const [fromCurrency, setFromCurrency] = useState(currency || 'PKR');
+    const fromCurrency = baseCurrencyCode || 'PKR';
     const [toCurrency, setToCurrency] = useState('USD');
     const [rate, setRate] = useState('');
+    const [effectiveDate, setEffectiveDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async () => {
-        if (!rate || !toCurrency) return;
+        if (!businessId || !rate || !toCurrency) return;
+        const n = Number(rate);
+        if (!Number.isFinite(n) || n <= 0) {
+            toast.error('Enter a valid positive rate');
+            return;
+        }
         setSubmitting(true);
         try {
-            toast.success("Exchange rate added successfully");
+            const res = await setExchangeRateAction({
+                businessId,
+                fromCurrency,
+                toCurrency: toCurrency.trim().toUpperCase(),
+                rate: n,
+                effectiveDate,
+                source: 'manual',
+            });
+            if (!res.success) {
+                toast.error(res.error || 'Failed to save rate');
+                return;
+            }
+            toast.success('Exchange rate saved');
             setShowForm(false);
             setRate('');
+            setEffectiveDate(new Date().toISOString().split('T')[0]);
             onRefresh?.();
         } catch (err) {
-            toast.error("Failed to add rate");
+            toast.error(err.message || 'Failed to add rate');
         } finally {
             setSubmitting(false);
         }
@@ -460,7 +379,7 @@ function ExchangeRatesPanel({ businessId, rates, currency, onRefresh }) {
                         <h4 className="text-sm font-black text-gray-900">Add Exchange Rate</h4>
                         <button onClick={() => setShowForm(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div>
                             <label className="text-xs font-bold text-gray-600">Base Currency</label>
                             <input type="text" value={fromCurrency} readOnly className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none" />
@@ -473,9 +392,13 @@ function ExchangeRatesPanel({ businessId, rates, currency, onRefresh }) {
                             <label className="text-xs font-bold text-gray-600">Rate</label>
                             <input type="number" step="0.0001" value={rate} onChange={e => setRate(e.target.value)} placeholder="e.g. 280.5" className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400" />
                         </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-600">Effective date</label>
+                            <input type="date" value={effectiveDate} onChange={e => setEffectiveDate(e.target.value)} className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400" />
+                        </div>
                     </div>
                     <div className="flex justify-end">
-                        <Button onClick={handleSubmit} disabled={submitting || !toCurrency || !rate} className="rounded-xl font-bold h-9 px-6 bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Button onClick={handleSubmit} disabled={submitting || !toCurrency || !rate || !effectiveDate} className="rounded-xl font-bold h-9 px-6 bg-emerald-600 hover:bg-emerald-700 text-white">
                             {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : 'Save Rate'}
                         </Button>
                     </div>
@@ -583,7 +506,7 @@ function FinanceOverview({ accounts, expenses, creditNotes, currency, loading })
 // MAIN FINANCE HUB
 // ===============================================================================
 
-export default function FinanceHub({ businessId, initialTab }) {
+export default function FinanceHub({ businessId, initialTab, businessCategory = 'retail-shop' }) {
     const { business, currency, currencySymbol } = useBusiness();
     const { can, planCan } = usePermissions();
     const [activeTab, setActiveTab] = useState(initialTab || 'overview');
@@ -615,7 +538,7 @@ export default function FinanceHub({ businessId, initialTab }) {
                 getExpensesAction(effectiveBusinessId, { limit: 50 }),
                 getCreditNotesAction(effectiveBusinessId),
                 getFiscalPeriodsAction(effectiveBusinessId),
-                getExchangeRatesAction(effectiveBusinessId),
+                getExchangeRatesAction(effectiveBusinessId, currency || 'PKR'),
                 paymentAPI.getAll(effectiveBusinessId)
             ]);
 
@@ -638,9 +561,13 @@ export default function FinanceHub({ businessId, initialTab }) {
         } finally {
             setLoading(false);
         }
-    }, [effectiveBusinessId]);
+    }, [effectiveBusinessId, currency]);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        queueMicrotask(() => {
+            loadData();
+        });
+    }, [loadData]);
 
     // Filter tabs by permission + plan
     const visibleTabs = useMemo(() =>
@@ -651,10 +578,38 @@ export default function FinanceHub({ businessId, initialTab }) {
         }),
         [can, planCan]);
 
+    const visibleTabKeys = useMemo(() => visibleTabs.map((t) => t.key), [visibleTabs]);
+
+    useEffect(() => {
+        if (initialTab != null && initialTab !== '') {
+            queueMicrotask(() => setActiveTab(initialTab));
+        }
+    }, [initialTab]);
+
+    useEffect(() => {
+        if (visibleTabKeys.length === 0) return;
+        if (!visibleTabKeys.includes(activeTab)) {
+            queueMicrotask(() => setActiveTab(visibleTabKeys[0]));
+        }
+    }, [visibleTabKeys, activeTab]);
+
     const renderContent = () => {
         switch (activeTab) {
             case 'overview':
                 return <FinanceOverview accounts={accounts} expenses={expenses} creditNotes={creditNotes} currency={effectiveCurrency} loading={loading} />;
+            case 'statements':
+                return (
+                    <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+                        <FinancialReports businessId={effectiveBusinessId} category={businessCategory} />
+                    </div>
+                );
+            case 'trial-balance':
+                return (
+                    <TrialBalanceView
+                        businessId={effectiveBusinessId}
+                        currency={currency || 'PKR'}
+                    />
+                );
             case 'accounts':
                 return <ChartOfAccountsManager businessId={effectiveBusinessId} accounts={accounts} onRefresh={loadData} />;
             case 'expenses':
@@ -770,7 +725,14 @@ export default function FinanceHub({ businessId, initialTab }) {
                     />
                 );
             case 'exchange':
-                return <ExchangeRatesPanel businessId={effectiveBusinessId} rates={rates} currency={effectiveCurrency} onRefresh={loadData} />;
+                return (
+                    <ExchangeRatesPanel
+                        businessId={effectiveBusinessId}
+                        rates={rates}
+                        baseCurrencyCode={currency || 'PKR'}
+                        onRefresh={loadData}
+                    />
+                );
             default:
                 return <FinanceOverview accounts={accounts} expenses={expenses} creditNotes={creditNotes} currency={effectiveCurrency} loading={loading} />;
         }
@@ -785,7 +747,7 @@ export default function FinanceHub({ businessId, initialTab }) {
                 </div>
                 <div>
                     <h2 className="text-lg font-black text-gray-900 tracking-tight">Finance & Accounting</h2>
-                    <p className="text-xs text-gray-400 font-medium">General Ledger · Expenses · Credit Notes · Fiscal Periods</p>
+                    <p className="text-xs text-gray-400 font-medium">Statements · Trial balance · GL · Expenses · Fiscal</p>
                 </div>
             </div>
 

@@ -145,7 +145,7 @@ export default function AboutPage() {
                 We envision a future where every business in Pakistan runs on TENVO - a unified platform that connects inventory, finance, operations, and compliance into one seamless experience.
               </p>
               <p className="text-lg text-gray-500 font-medium leading-relaxed">
-                By 2030, we aim to be the backbone of Pakistan's digital economy, powering millions of businesses and creating thousands of jobs.
+                By 2030, we aim to be the backbone of Pakistan&apos;s digital economy, powering millions of businesses and creating thousands of jobs.
               </p>
             </div>
           </div>

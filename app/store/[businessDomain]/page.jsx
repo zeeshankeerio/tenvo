@@ -7,7 +7,8 @@ import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { ProductsSkeleton } from '@/components/storefront/LoadingSkeletons';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { formatCurrency } from '@/lib/currency';
-import { getDomainConfig, getStoreAccentColor, getStorefrontProductPlaceholder } from '@/lib/config/storefrontDomains';
+import { getDomainConfig, getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { getMergedStorefrontHero } from '@/lib/storefront/mergeHero';
 import {
   Truck, Shield, RotateCcw, Star, Zap, Leaf, Clock, Gift,
@@ -48,8 +49,6 @@ export default async function StoreHomePage({ params }) {
 
   const { business, settings } = businessResult;
   const storeCurrency = settings?.currency || 'PKR';
-  const productPlaceholder = getStorefrontProductPlaceholder(business.category);
-
   const domainCfg = getDomainConfig(business.category);
   const accent = getStoreAccentColor(settings, business.category);
   const accentDark = domainCfg.accentDark;
@@ -66,14 +65,18 @@ export default async function StoreHomePage({ params }) {
   ]);
 
   const featuredProducts = featuredResult.success ? featuredResult.products : [];
-  const newArrivals = newArrivalsResult.success ? newArrivalsResult.products : [];
+  const newArrivalsRaw = newArrivalsResult.success ? newArrivalsResult.products : [];
   const categories = categoriesResult.success ? categoriesResult.categories : [];
-  const onSaleProducts = onSaleResult.success ? onSaleResult.products : [];
+  const onSaleProductsRaw = onSaleResult.success ? onSaleResult.products : [];
   const popularProducts = popularResult.success ? popularResult.products : [];
+
+  const featuredIds = new Set(featuredProducts.map((p) => p.id));
+  const newArrivals = newArrivalsRaw.filter((p) => !featuredIds.has(p.id));
+  const homepagePriorIds = new Set([...featuredIds, ...newArrivals.map((p) => p.id)]);
+  const onSaleProducts = onSaleProductsRaw.filter((p) => !homepagePriorIds.has(p.id)).slice(0, 8);
   const onSaleIds = new Set(onSaleProducts.map((p) => p.id));
-  const popularProductsDeduped = popularProducts
-    .filter((p) => !onSaleIds.has(p.id))
-    .slice(0, 4);
+  const homepageSeen = new Set([...homepagePriorIds, ...onSaleIds]);
+  const popularProductsDeduped = popularProducts.filter((p) => !homepageSeen.has(p.id)).slice(0, 4);
 
   const heroImage = business.cover_image_url || domainCfg.heroImage;
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
@@ -181,16 +184,18 @@ export default async function StoreHomePage({ params }) {
         {/* Floating product preview cards (desktop only) */}
         {featuredProducts.length >= 2 && (
           <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-3">
-            {featuredProducts.slice(0, 2).map((product) => (
+            {featuredProducts.slice(0, 2).map((product) => {
+              const previewSrc = getEffectiveProductImageUrl(product, business.category);
+              return (
               <Link
                 key={product.id}
                 href={`/store/${businessDomain}/products/${product.slug || product.id}`}
                 className="flex items-center gap-3 bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 w-64"
               >
                 <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
-                  {product.image_url || productPlaceholder ? (
+                  {previewSrc ? (
                     <SmartProductImage
-                      src={product.image_url || productPlaceholder}
+                      src={previewSrc}
                       alt={product.name}
                       fill
                       className="object-cover"
@@ -208,7 +213,8 @@ export default async function StoreHomePage({ params }) {
                   </p>
                 </div>
               </Link>
-            ))}
+            );
+            })}
           </div>
         )}
       </section>
@@ -524,7 +530,10 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {/* ── Empty State ──────────────────────────────────────────────────────── */}
-      {featuredProducts.length === 0 && newArrivals.length === 0 && popularProductsDeduped.length === 0 && onSaleProducts.length === 0 && (
+      {featuredProducts.length === 0 &&
+        newArrivals.length === 0 &&
+        popularProductsDeduped.length === 0 &&
+        onSaleProducts.length === 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
           <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: accentLight }}>
             <Package className="w-12 h-12" style={{ color: accent }} />

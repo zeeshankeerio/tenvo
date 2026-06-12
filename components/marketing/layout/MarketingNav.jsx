@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { trackNavMenuOpen, trackCTAClick } from '@/lib/analytics/tracking';
 import { useAuth } from '@/lib/context/AuthContext';
 import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
+import { SupportWhatsAppLink } from '@/components/marketing/SupportWhatsAppLink';
 import { cn } from '@/lib/utils';
 
 /**
@@ -38,8 +39,10 @@ export default function MarketingNav({
 
   // Close mobile menu on route change
   useEffect(() => {
-    setMobileMenuOpen(false);
-    setExpandedMenu(null);
+    queueMicrotask(() => {
+      setMobileMenuOpen(false);
+      setExpandedMenu(null);
+    });
   }, [currentPage]);
 
   const toggleMenu = (menu) => {
@@ -203,6 +206,11 @@ export default function MarketingNav({
 
             {/* Utilities + auth: fixed cluster so links never push CTAs to a new row */}
             <div className="flex shrink-0 items-center gap-2 border-l border-neutral-200/90 pl-3 sm:gap-3 sm:pl-4 xl:pl-5">
+              <SupportWhatsAppLink
+                variant="light"
+                className="hidden h-10 items-center lg:inline-flex shrink-0 px-1.5 text-[11px] xl:px-2"
+                iconClassName="h-3.5 w-3.5"
+              />
               <div className="relative group">
                 <button
                   type="button"
@@ -329,6 +337,9 @@ export default function MarketingNav({
             >
               Contact
             </button>
+            <div className="px-2 py-2">
+              <SupportWhatsAppLink variant="light" className="text-sm" iconClassName="h-4 w-4" />
+            </div>
           </div>
 
           {showAuthButtons && (

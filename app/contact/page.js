@@ -4,29 +4,34 @@ import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
 import Hero from '@/components/marketing/sections/Hero';
 import { ContactForm } from '@/components/marketing/forms/ContactForm';
 import FAQSection from '@/components/marketing/sections/FAQSection';
-import { Mail, Phone, MapPin, Clock, Building2, ExternalLink, MessageCircle } from 'lucide-react';
+import { Mail, MapPin, Clock, Building2, ExternalLink } from 'lucide-react';
 import { TENVO_PARENT_COMPANY } from '@/lib/marketing/tenvo-assistant-knowledge';
+import { SupportWhatsAppLink, SupportWhatsAppIcon } from '@/components/marketing/SupportWhatsAppLink';
+import { getPublicSupportEmail } from '@/lib/marketing/site-url';
+import { CONTACT_PAGE_FAQS } from '@/lib/marketing/structured-data';
+
+const SUPPORT_EMAIL = getPublicSupportEmail();
 
 export default function ContactPage() {
   return (
     <MarketingLayout>
-      {/* Hero Section */}
+      {/* Hero Section — intent-led copy for SEO + lead gen */}
       <Hero 
         variant="centered"
-        badge="Get in Touch"
+        badge="Contact TENVO"
         title={
           <>
-            We're Here to <br />
-            <span className="text-brand-primary">Help You Succeed</span>
+            Sales, support & <br />
+            <span className="text-brand-primary">partnership inquiries</span>
           </>
         }
-        subtitle="Have questions about TENVO? Our team is ready to help you find the right solution for your business."
+        subtitle="Ask about inventory, POS, storefront checkout, warehouses, accounting, or Pakistan tax positioning. We route demos, billing, and technical threads to the right pod — typical first reply within one business day."
         primaryCTA={{
-          text: 'Schedule Demo',
+          text: 'Book a demo',
           href: '/demo'
         }}
         secondaryCTA={{
-          text: 'View Pricing',
+          text: 'View pricing',
           href: '/pricing'
         }}
       />
@@ -38,10 +43,13 @@ export default function ContactPage() {
             {/* Contact Form */}
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Send Us a Message
+                Send us a message
               </h2>
               <p className="text-gray-600 mb-8">
-                Fill out the form below and we'll get back to you within 24 hours.
+                Include your use case (retail, hospitality, wholesale, online store) and timeline. For plan-specific questions, start from{' '}
+                <a href="/pricing" className="text-brand-primary font-medium hover:underline">Pricing</a>
+                {' '}or open a thread with context from{' '}
+                <a href="/register" className="text-brand-primary font-medium hover:underline">Register</a>.
               </p>
               <ContactForm />
             </div>
@@ -102,17 +110,13 @@ export default function ContactPage() {
                     </a>{' '}
                     · {TENVO_PARENT_COMPANY.hq}
                   </li>
-                  <li>
-                    <a
-                      href={TENVO_PARENT_COMPANY.whatsappUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 font-semibold text-brand-primary hover:underline"
-                    >
-                      <MessageCircle className="h-3.5 w-3.5" aria-hidden />
-                      WhatsApp {TENVO_PARENT_COMPANY.phone}
-                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                    </a>
+                  <li className="flex flex-wrap items-center gap-1.5">
+                    <SupportWhatsAppLink
+                      variant="light"
+                      className="inline-flex font-semibold text-brand-primary hover:text-brand-primary-dark"
+                      iconClassName="h-4 w-4"
+                    />
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0 text-brand-primary/70" aria-hidden />
                   </li>
                 </ul>
               </div>
@@ -121,14 +125,15 @@ export default function ContactPage() {
                 <ContactInfoCard
                   icon={<Mail className="w-6 h-6" />}
                   title="Email"
-                  content="support@tenvo.pk"
-                  link="mailto:support@tenvo.pk"
+                  content={SUPPORT_EMAIL}
+                  link={`mailto:${SUPPORT_EMAIL}`}
                 />
                 <ContactInfoCard
-                  icon={<Phone className="w-6 h-6" />}
-                  title="Phone"
-                  content="+92 300 1234567"
-                  link="tel:+923001234567"
+                  icon={<SupportWhatsAppIcon className="h-6 w-6 text-[#25D366]" />}
+                  title="WhatsApp support"
+                  content={TENVO_PARENT_COMPANY.phone}
+                  link={TENVO_PARENT_COMPANY.whatsappUrl}
+                  external
                 />
                 <ContactInfoCard
                   icon={<MapPin className="w-6 h-6" />}
@@ -153,7 +158,7 @@ export default function ContactPage() {
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     <span className="text-gray-700">
-                      Check our <a href="#faq" className="text-brand-primary hover:underline">FAQ section</a> for quick answers
+                      Check the <a href="#faq" className="text-brand-primary hover:underline">FAQ below</a> for response times, demos, and Mindscape corporate contact
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
@@ -161,7 +166,8 @@ export default function ContactPage() {
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     <span className="text-gray-700">
-                      Browse our documentation and guides
+                      Read <a href="/help" className="text-brand-primary hover:underline">Help</a>
+                      {' '}and <a href="/docs" className="text-brand-primary hover:underline">Docs</a> for self-serve setup
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
@@ -179,18 +185,50 @@ export default function ContactPage() {
         </div>
       </section>
 
+      <section className="py-12 bg-neutral-50 border-y border-neutral-200" aria-labelledby="contact-legal-heading">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-neutral-700 leading-relaxed">
+          <h2 id="contact-legal-heading" className="text-lg font-bold text-neutral-900 mb-3">
+            Intellectual property &amp; confidentiality
+          </h2>
+          <p className="mb-3">
+            TENVO, related marks, documentation, user interface, and this website are proprietary to{' '}
+            <strong>Mindscape Analytics LLC</strong> and its licensors. All rights reserved. Unauthorised copying,
+            redistribution, or derivative use of our software, designs, or marketing materials may violate applicable law
+            and our{' '}
+            <a href="/terms" className="text-brand-primary font-medium hover:underline">Terms of Service</a>.
+            Nothing on this page grants a licence to our source code, trade secrets, or product roadmap.
+          </p>
+          <p>
+            Enterprise AI and systems architecture by{' '}
+            <a
+              href={TENVO_PARENT_COMPANY.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-primary font-medium hover:underline"
+            >
+              Mindscape Analytics
+            </a>
+            {' '}(Sheridan, WY, USA). Privacy practices:{' '}
+            <a href="/privacy" className="text-brand-primary font-medium hover:underline">Privacy Policy</a>.
+          </p>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section id="faq" className="py-16 bg-gray-50">
         <FAQSection 
-          title="Frequently Asked Questions"
-          subtitle="Find answers to common questions about TENVO"
+          title="Frequently asked questions"
+          subtitle="Contact, demos, Mindscape corporate channels, and how we handle your information"
+          faqs={CONTACT_PAGE_FAQS}
+          showSearch
+          showCategories
         />
       </section>
     </MarketingLayout>
   );
 }
 
-function ContactInfoCard({ icon, title, content, link }) {
+function ContactInfoCard({ icon, title, content, link, external }) {
   const CardContent = (
     <div className="group flex items-start gap-4 p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-xl hover:shadow-brand-primary/10 hover:border-brand-primary/20 transition-all duration-300 hover:-translate-y-1">
       <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-brand-50 to-brand-100 shadow-md group-hover:shadow-lg group-hover:from-brand-100 group-hover:to-brand-200 transition-all duration-300 flex-shrink-0">
@@ -207,7 +245,11 @@ function ContactInfoCard({ icon, title, content, link }) {
 
   if (link) {
     return (
-      <a href={link} className="block">
+      <a
+        href={link}
+        className="block"
+        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      >
         {CardContent}
       </a>
     );

@@ -491,12 +491,14 @@ function BusinessDashboardContent() {
     hydrateActivePosSession();
   }, [business?.id]);
 
-  // Load business if not in context but id exists in localStorage or searchParams
+  // Require auth — only after auth + business sync settle (avoids bouncing to /login
+  // right after registration while session/context hydrate).
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (authLoading || businessLoading) return;
+    if (!user) {
       router.push('/login');
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, businessLoading, router]);
 
   // Domain Validation & Auto-Switching
   useEffect(() => {

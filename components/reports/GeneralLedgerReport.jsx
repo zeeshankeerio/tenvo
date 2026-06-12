@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 // import { supabase } from '@/lib/supabase/client'; // Removed
 import { getGLEntriesAction, getGLAccountsAction } from '@/lib/actions/basic/accounting';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -70,28 +70,69 @@ export function GeneralLedgerReport({ businessId }) {
     };
 
     useEffect(() => {
-        if (businessId) fetchLedger();
+        if (!businessId) return;
+        queueMicrotask(() => {
+            fetchLedger();
+        });
+        // Period range is applied explicitly via "Filter"; avoid refetch on every date keystroke.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [businessId, selectedAccount]);
 
-    // Calculation Helper for Running Balance
-    let currentBalance = Math.round(Number(openingBalance || 0) * 100) / 100;
-    const entriesWithBalance = entries.map(entry => {
-        const debit = Math.round(Number(entry.debit || 0) * 100) / 100;
-        const credit = Math.round(Number(entry.credit || 0) * 100) / 100;
-        const type = entry.account?.type?.toLowerCase() || 'asset';
+    // Running balance per row (immutable fold)
+    const entriesWithBalance = entries.reduce(
+        (acc, entry) => {
+            const debit = Math.round(Number(entry.debit || 0) * 100) / 100;
+            const credit = Math.round(Number(entry.credit || 0) * 100) / 100;
+            const type = entry.account?.type?.toLowerCase() || 'asset';
+            let next = acc.balance;
+            if (['asset', 'expense'].includes(type)) {
+                next += (debit - credit);
+            } else {
+                next += (credit - debit);
+            }
+            next = Math.round(next * 100) / 100;
+            acc.rows.push({ ...entry, runningBalance: next });
+            return { balance: next, rows: acc.rows };
+        },
+        { balance: Math.round(Number(openingBalance || 0) * 100) / 100, rows: [] }
+    ).rows;
 
-        // Asset/Expense: Bal increases with Debit
-        // Liability/Equity/Income: Bal increases with Credit
-        if (['asset', 'expense'].includes(type)) {
-            currentBalance += (debit - credit);
-        } else {
-            currentBalance += (credit - debit);
+    const isSingleAccount = selectedAccount !== 'all';
+
+    const escapeCsvCell = (v) => {
+        const s = String(v ?? '');
+        if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+        return s;
+    };
+
+    const handleExportCsv = useCallback(() => {
+        const headers = isSingleAccount
+            ? ['date', 'account_code', 'account_name', 'description', 'reference_type', 'reference_id', 'debit', 'credit', 'running_balance']
+            : ['date', 'account_code', 'account_name', 'description', 'reference_type', 'reference_id', 'debit', 'credit'];
+        const lines = [headers.join(',')];
+        for (const entry of entriesWithBalance) {
+            const row = [
+                format(new Date(entry.transaction_date), 'yyyy-MM-dd'),
+                entry.account?.code || '',
+                entry.account?.name || '',
+                entry.description || '',
+                entry.reference_type || '',
+                entry.reference_id || '',
+                Number(entry.debit || 0),
+                Number(entry.credit || 0),
+            ];
+            if (isSingleAccount) row.push(entry.runningBalance);
+            lines.push(row.map(escapeCsvCell).join(','));
         }
-
-        currentBalance = Math.round(currentBalance * 100) / 100;
-
-        return { ...entry, runningBalance: currentBalance };
-    });
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const accLabel = isSingleAccount ? selectedAccount.slice(0, 8) : 'all-accounts';
+        a.download = `general-ledger_${accLabel}_${startDate}_to_${endDate}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [entriesWithBalance, isSingleAccount, startDate, endDate, selectedAccount]);
 
     const getReferenceLink = (type, id) => {
         if (!type || !id) return null;
@@ -102,8 +143,6 @@ export function GeneralLedgerReport({ businessId }) {
             default: return null;
         }
     };
-
-    const isSingleAccount = selectedAccount !== 'all';
 
     return (
         <Card className="w-full shadow-sm">
@@ -116,8 +155,8 @@ export function GeneralLedgerReport({ businessId }) {
                         </CardTitle>
                         <CardDescription>Double-entry accounting records with full audit trail</CardDescription>
                     </div>
-                    <Button variant="outline" className="gap-2">
-                        <Download className="w-4 h-4" /> Export
+                    <Button type="button" variant="outline" className="gap-2" onClick={handleExportCsv} disabled={entries.length === 0}>
+                        <Download className="w-4 h-4" /> Export CSV
                     </Button>
                 </div>
 

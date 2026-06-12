@@ -23,6 +23,7 @@ import { formatCurrency, isValidCurrency } from '@/lib/currency';
 import { authClient } from '@/lib/auth-client';
 import { useRegistrationPersistence, clearRegistrationData } from '@/lib/hooks/useRegistrationPersistence';
 import { DataRecoveryDialog } from '@/components/registration/DataRecoveryDialog';
+import { SupportWhatsAppLink } from '@/components/marketing/SupportWhatsAppLink';
 import { sendVerificationEmail, resendVerificationEmail, isEmailVerified } from '@/lib/actions/auth/verification';
 import { toast } from 'react-hot-toast';
 import {
@@ -97,7 +98,7 @@ const DOMAIN_CATEGORY_BLUEPRINTS = [
         id: 'retail',
         name: 'Retail & Shops',
         icon: Store,
-        domains: ['retail-shop', 'textile-wholesale', 'grocery', 'fmcg', 'ecommerce', 'garments', 'mobile', 'electronics-goods', 'boutique-fashion', 'leather-footwear', 'bookshop-stationery', 'supermarket']
+        domains: ['retail-shop', 'textile-wholesale', 'grocery', 'fmcg', 'ecommerce', 'garments', 'mobile', 'mobile-repairing', 'electronics-goods', 'boutique-fashion', 'leather-footwear', 'bookshop-stationery', 'supermarket']
     },
     {
         id: 'hospitality',
@@ -115,13 +116,13 @@ const DOMAIN_CATEGORY_BLUEPRINTS = [
         id: 'services',
         name: 'Services',
         icon: HeartPulse,
-        domains: ['travel', 'auto-workshop', 'diagnostic-lab', 'gym-fitness', 'event-management', 'rent-a-car', 'school-library', 'clinics-healthcare', 'logistics-transport', 'salon-spa', 'dental-clinic', 'veterinary-clinic']
+        domains: ['travel', 'auto-workshop', 'diagnostic-lab', 'gym-fitness', 'event-management', 'rent-a-car', 'school-education', 'school-library', 'clinics-healthcare', 'logistics-transport', 'salon-spa', 'dental-clinic', 'veterinary-clinic']
     },
     {
         id: 'specialized',
         name: 'Specialized',
         icon: Crown,
-        domains: ['auto-parts', 'pharmacy', 'computer-hardware', 'electrical', 'agriculture', 'gems-jewellery', 'real-estate', 'hardware-sanitary', 'poultry-farm', 'solar-energy', 'courier-logistics', 'wholesale-distribution', 'petrol-pump', 'cold-storage', 'book-publishing', 'steel-iron', 'construction-material', 'dairy-farm']
+        domains: ['auto-parts', 'pharmacy', 'computer-hardware', 'electrical', 'agriculture', 'livestock-cattle', 'gems-jewellery', 'real-estate', 'hardware-sanitary', 'poultry-farm', 'solar-energy', 'courier-logistics', 'wholesale-distribution', 'petrol-pump', 'cold-storage', 'book-publishing', 'steel-iron', 'construction-material', 'dairy-farm']
     }
 ];
 
@@ -340,7 +341,7 @@ export default function RegisterWizard() {
     const DomainButton = ({ domainKey }) => {
         const knowledge = domainKnowledge[domainKey] || {};
         const IconComponent = LucideIcons[knowledge.icon] || Rocket;
-        const domainName = translations[language]?.domains?.[domainKey] || domainKey.replace('-', ' ');
+        const domainName = translations[language]?.domains?.[domainKey] || domainKey.replace(/-/g, ' ');
 
         return (
             <button
@@ -471,6 +472,13 @@ export default function RegisterWizard() {
                         setIsLoading(false);
                         return;
                     }
+                    if (authError.code === 'INVALID_USERNAME') {
+                        toast.error(
+                            'Your store handle can only use letters, numbers, and hyphens (3–63 characters), and cannot be a reserved name. Adjust the handle field and try again.'
+                        );
+                        setIsLoading(false);
+                        return;
+                    }
                     throw authError;
                 }
                 newUser = authData?.user;
@@ -528,8 +536,15 @@ export default function RegisterWizard() {
                     clearRegistrationData();
 
                     const dashboardDomain = String(formData.handle || '').trim().toLowerCase();
-                    router.push(`/business/${dashboardDomain}`);
-                    router.refresh();
+                    const dashboardPath = `/business/${encodeURIComponent(dashboardDomain)}?tab=dashboard`;
+                    // Full page navigation: avoids a race where client `useSession`/AuthContext lags
+                    // behind the new cookie and `/business/...` briefly renders with `user === null`
+                    // and redirects to `/login`.
+                    if (typeof window !== 'undefined') {
+                        window.location.assign(dashboardPath);
+                    } else {
+                        router.replace(dashboardPath);
+                    }
                 } else {
                     console.error("Business provision failed:", bizResult.error);
 
@@ -588,9 +603,9 @@ export default function RegisterWizard() {
                             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Secure Setup</p>
                             <p className="text-xs font-bold text-gray-900">ISO-grade encrypted workspace</p>
                         </div>
-                        <div className="flex flex-col items-end">
+                        <div className="flex flex-col items-end gap-0.5">
                             <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Support</span>
-                            <span className="text-sm font-bold text-gray-900">+92 300 1234567</span>
+                            <SupportWhatsAppLink variant="light" className="text-sm font-bold text-gray-900" iconClassName="h-4 w-4" />
                         </div>
                         <Button variant="outline" onClick={() => router.push('/login')} className="rounded-xl border-gray-200 font-bold hover:bg-white hover:border-wine/30">
                             Log In
@@ -711,7 +726,7 @@ export default function RegisterWizard() {
                                                         <SelectContent className="rounded-2xl border-gray-100 max-h-[min(24rem,70vh)]">
                                                             {getRegistrationCountryOptions().map((opt) => (
                                                                 <SelectItem key={opt.value} value={opt.value}>
-                                                                    {`${opt.label} — ${opt.detail}`}
+                                                                    {`${opt.label} - ${opt.detail}`}
                                                                 </SelectItem>
                                                             ))}
                                                         </SelectContent>
@@ -721,7 +736,7 @@ export default function RegisterWizard() {
                                                     <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Business phone (optional)</Label>
                                                     <Input
                                                         type="tel"
-                                                        placeholder={`${regionalForWizard.phoneCode} · local number`}
+                                                        placeholder={`${regionalForWizard.phoneCode} - local number`}
                                                         value={formData.phone}
                                                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                                         className="h-12 rounded-2xl border-gray-100 focus:ring-wine/20"
@@ -772,7 +787,7 @@ export default function RegisterWizard() {
                                                     className="rounded-2xl border-gray-100 focus:ring-wine/20 resize-none text-sm"
                                                 />
                                                 <p className="text-[10px] text-gray-400 font-medium">
-                                                    Shown on your customer-facing store — you can refine this anytime in Store settings.
+                                                    Shown on your customer-facing store - you can refine this anytime in Store settings.
                                                 </p>
                                             </div>
 
@@ -859,10 +874,19 @@ export default function RegisterWizard() {
                                             ) : (
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-2 pb-4">
                                                     {Object.keys(domainKnowledge)
-                                                        .filter(domain => {
-                                                            const nameEn = domain.replace('-', ' ').toLowerCase();
-                                                            const nameUr = translations['ur']?.domains?.[domain]?.toLowerCase() || '';
-                                                            return nameEn.includes(searchTerm.toLowerCase()) || nameUr.includes(searchTerm.toLowerCase());
+                                                        .filter((domain) => {
+                                                            const q = searchTerm.toLowerCase().trim();
+                                                            if (!q) return true;
+                                                            const slugSpaced = domain.replace(/-/g, ' ').toLowerCase();
+                                                            const nameEn =
+                                                                translations.en?.domains?.[domain]?.toLowerCase() || slugSpaced;
+                                                            const nameUr = translations.ur?.domains?.[domain]?.toLowerCase() || '';
+                                                            return (
+                                                                domain.toLowerCase().includes(q) ||
+                                                                slugSpaced.includes(q) ||
+                                                                nameEn.includes(q) ||
+                                                                nameUr.includes(q)
+                                                            );
                                                         })
                                                         .map(domain => (
                                                             <DomainButton key={domain} domainKey={domain} />
@@ -888,7 +912,7 @@ export default function RegisterWizard() {
                                                 <div className="space-y-2">
                                                     <h3 className="text-2xl font-black text-gray-900 tracking-tight">Enterprise Infrastructure Ready</h3>
                                                     <p className="text-gray-500 font-medium max-w-md">
-                                                        We&apos;ve calibrated the dashboard for <span className="text-wine font-black uppercase tracking-tight">{translations[language]?.domains?.[formData.category] || formData.category?.replace('-', ' ')}</span>
+                                                        We&apos;ve calibrated the dashboard for <span className="text-wine font-black uppercase tracking-tight">{translations[language]?.domains?.[formData.category] || formData.category?.replace(/-/g, ' ')}</span>
                                                         {' '}with {regionalForWizard.taxLabel} expectations for {regionalForWizard.countryName} ({regionalForWizard.currency}). Adjust tax rates in settings as your adviser recommends.
                                                     </p>
                                                 </div>
@@ -916,7 +940,7 @@ export default function RegisterWizard() {
                                                     </div>
                                                     <div className="p-4 bg-white rounded-2xl shadow-sm border border-gray-100/50">
                                                         <span className="text-[10px] font-black text-gray-400 uppercase block mb-1">Vertical</span>
-                                                        <span className="font-bold text-wine capitalize">{formData.category.replace('-', ' ')}</span>
+                                                        <span className="font-bold text-wine capitalize">{formData.category.replace(/-/g, ' ')}</span>
                                                     </div>
                                                 </div>
                                             </div>

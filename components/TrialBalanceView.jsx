@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Download, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
@@ -11,14 +11,14 @@ import toast from 'react-hot-toast';
 /**
  * @param {Object} props
  * @param {string} props.businessId
- * @param {any} [props.colors]
  */
-export default function TrialBalanceView({ businessId, colors }) {
+export default function TrialBalanceView({ businessId, currency = 'PKR' }) {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({ trialBalance: [], totals: { debit: 0, credit: 0, balanced: false } });
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
-    const fetchReport = async () => {
+    const fetchReport = useCallback(async () => {
+        if (!businessId) return;
         try {
             setLoading(true);
             const res = await accountingAPI.getTrialBalance(businessId, date);
@@ -33,11 +33,13 @@ export default function TrialBalanceView({ businessId, colors }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [businessId, date]);
 
     useEffect(() => {
-        if (businessId) fetchReport();
-    }, [businessId, date]);
+        queueMicrotask(() => {
+            fetchReport();
+        });
+    }, [fetchReport]);
 
     const handlePrint = () => {
         window.print();
@@ -89,10 +91,10 @@ export default function TrialBalanceView({ businessId, colors }) {
                                     <td className="px-6 py-3 font-medium text-gray-900">{row.name}</td>
                                     <td className="px-6 py-3 text-xs uppercase tracking-wide text-gray-500">{row.type}</td>
                                     <td className="px-6 py-3 text-right font-mono text-gray-700">
-                                        {Number(row.total_debit) > 0 ? formatCurrency(Number(row.total_debit), 'PKR') : '-'}
+                                        {Number(row.total_debit) > 0 ? formatCurrency(Number(row.total_debit), currency) : '-'}
                                     </td>
                                     <td className="px-6 py-3 text-right font-mono text-gray-700">
-                                        {Number(row.total_credit) > 0 ? formatCurrency(Number(row.total_credit), 'PKR') : '-'}
+                                        {Number(row.total_credit) > 0 ? formatCurrency(Number(row.total_credit), currency) : '-'}
                                     </td>
                                 </tr>
                             ))}
@@ -103,10 +105,10 @@ export default function TrialBalanceView({ businessId, colors }) {
                                     Total
                                 </td>
                                 <td className="px-6 py-4 text-right text-base text-gray-900">
-                                    {formatCurrency(Number(data.totals.debit), 'PKR')}
+                                    {formatCurrency(Number(data.totals.debit), currency)}
                                 </td>
                                 <td className="px-6 py-4 text-right text-base text-gray-900">
-                                    {formatCurrency(Number(data.totals.credit), 'PKR')}
+                                    {formatCurrency(Number(data.totals.credit), currency)}
                                 </td>
                             </tr>
                         </tfoot>
@@ -119,7 +121,7 @@ export default function TrialBalanceView({ businessId, colors }) {
                         {data.totals.balanced ? <CheckCircle2 className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
                         <div>
                             <h4 className="font-bold">{data.totals.balanced ? 'Trial Balance is Balanced' : 'Trial Balance is Unbalanced'}</h4>
-                            {!data.totals.balanced && <p className="text-sm mt-1">Difference: {formatCurrency(Math.abs(data.totals.credit - data.totals.debit), 'PKR')}</p>}
+                            {!data.totals.balanced && <p className="text-sm mt-1">Difference: {formatCurrency(Math.abs(data.totals.credit - data.totals.debit), currency)}</p>}
                         </div>
                     </div>
                 </div>

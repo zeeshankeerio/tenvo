@@ -53,7 +53,7 @@ Created 6 production-grade service modules (2,100+ lines of code) implementing a
 - `selectBatchesForSale(productId, quantity, businessId, options)` - FIFO batch selection
 - `getExpiringBatches(businessId, daysThreshold)` - Find soon-to-expire
 - `getExpiredBatches(businessId)` - Find already expired
-- `validateBatchForSale(batchId, quantity, sellDate)` - Pre-sale validation
+- `validateBatchForSale(batchId, quantity, sellDate, businessId)` - Pre-sale validation (business-scoped)
 - `createBatchStockMovement(data)` - Link batch to stock movement
 
 **Key Features**:

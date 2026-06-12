@@ -30,7 +30,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return PATHS.map((path) => ({
     url: `${base}${path}`,
     lastModified: last,
-    changeFrequency: path === '' ? 'weekly' : 'monthly',
-    priority: path === '' ? 1 : 0.8,
+    changeFrequency:
+      path === '' || path === '/contact' || path === '/pricing' || path === '/demo'
+        ? 'weekly'
+        : 'monthly',
+    priority:
+      path === ''
+        ? 1
+        : path === '/contact' || path === '/pricing' || path === '/register'
+          ? 0.9
+          : 0.8,
   }));
 }

@@ -18,6 +18,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import {
   PLAN_TIERS,
   FEATURE_LABELS,
+  PRICING_PAGE_MARKETING_FEATURE_ORDER,
   getPlanListPrice,
   getOrderedPlanTierKeys,
 } from '@/lib/config/plans';
@@ -26,32 +27,43 @@ import { cn } from '@/lib/utils';
 
 const TIER_KEYS = getOrderedPlanTierKeys();
 
-/** Short bullets derived from limits + a few headline features (aligned with PLAN_TIERS). */
+/** Limit lines + every enabled feature in `PRICING_PAGE_MARKETING_FEATURE_ORDER` (aligned with PLAN_TIERS). */
 function marketingBulletsForTier(tierKey) {
   const t = PLAN_TIERS[tierKey];
   if (!t) return [];
   const L = t.limits;
+  const userLine =
+    L.max_users === -1
+      ? 'Unlimited user seats'
+      : `${L.max_users} user seat${L.max_users === 1 ? '' : 's'}`;
   const base = [
-    `${L.max_users === -1 ? 'Unlimited' : L.max_users} user seats`,
+    userLine,
     `${L.max_products === -1 ? 'Unlimited' : L.max_products.toLocaleString()} products`,
     `${L.max_warehouses === -1 ? 'Unlimited' : L.max_warehouses} warehouse location${L.max_warehouses === 1 ? '' : 's'}`,
-    `${L.max_invoices_per_month === -1 ? 'Unlimited' : L.max_invoices_per_month} invoices / month`,
+    `${L.max_invoices_per_month === -1 ? 'Unlimited' : L.max_invoices_per_month} invoices per month`,
   ];
-  const extras = ['pos', 'multi_warehouse', 'manufacturing', 'ai_analytics', 'approval_workflows', 'api_access']
-    .filter((k) => t.features[k])
+  const extras = PRICING_PAGE_MARKETING_FEATURE_ORDER.filter((k) => t.features[k])
     .map((k) => FEATURE_LABELS[k])
     .filter(Boolean);
-  return [...base, ...extras.slice(0, 4)];
+  return [...base, ...extras];
 }
 
 const MATRIX_FEATURES = [
   { label: 'Point of Sale', key: 'pos' },
+  { label: 'Restaurant POS', key: 'restaurant_pos' },
   { label: 'Multi-warehouse', key: 'multi_warehouse' },
-  { label: 'Batch & expiry tracking', key: 'batch_tracking' },
+  { label: 'Batch & serial tracking', key: 'batch_tracking' },
   { label: 'Manufacturing / BOM', key: 'manufacturing' },
   { label: 'Tax / GST compliance', key: 'tax_compliance' },
-  { label: 'AI analytics', key: 'ai_analytics' },
+  { label: 'Fiscal periods', key: 'fiscal_periods' },
+  { label: 'Multi-currency & FX', key: 'exchange_rates' },
+  { label: 'Loyalty & promotions (CRM)', key: 'loyalty_programs' },
+  { label: 'Campaigns & marketing', key: 'campaigns' },
+  { label: 'Payroll & HR', key: 'payroll' },
+  { label: 'Advanced reports', key: 'advanced_reports' },
+  { label: 'AI Analytics', key: 'ai_analytics' },
   { label: 'Approval workflows', key: 'approval_workflows' },
+  { label: 'Audit trail', key: 'audit_logs' },
   { label: 'API access', key: 'api_access' },
 ];
 
@@ -72,7 +84,7 @@ function tierCtaHref({ user, tierKey }) {
 
 function tierCtaLabel(tierKey) {
   if (tierKey === 'free') return 'Get started';
-  if (tierKey === 'enterprise') return 'Book enterprise demo';
+  if (tierKey === 'enterprise') return 'Book demo';
   return 'Choose plan';
 }
 
@@ -228,85 +240,114 @@ export default function PricingPage() {
       </section>
 
       <section className="bg-neutral-50 py-16 lg:py-24 border-b border-neutral-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-stretch">
+        {/* Wider than max-w-7xl so five columns stay one row from lg (1024px) without wrapping */}
+        <div className="w-full max-w-[min(100%,92rem)] mx-auto px-4 sm:px-5 lg:px-8 xl:px-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 items-stretch gap-3 sm:gap-4">
             {TIER_KEYS.map((tierKey) => {
               const tier = PLAN_TIERS[tierKey];
               const prices = getPlanListPrice(tierKey, { interval: billingInterval });
               const isPopular = tierKey === 'professional';
               const href = tierCtaHref({ user, tierKey });
+              const ctaLabel = tierCtaLabel(tierKey);
 
               return (
                 <div
                   key={tierKey}
                   className={cn(
-                    'relative rounded-3xl p-6 flex flex-col justify-between border bg-white shadow-sm transition-all',
-                    isPopular ? 'border-2 border-brand-primary ring-2 ring-brand-primary/20 scale-[1.02] z-10' : 'border-neutral-200/80 hover:border-neutral-300'
+                    'relative min-w-0 rounded-2xl lg:rounded-3xl p-4 sm:p-5 lg:p-4 xl:p-5 flex flex-col h-full border bg-white shadow-sm transition-colors',
+                    isPopular
+                      ? 'border-2 border-brand-primary ring-2 ring-brand-primary/20 z-10'
+                      : 'border-neutral-200/80 hover:border-neutral-300'
                   )}
                 >
-                  {isPopular && (
-                    <div className="absolute top-0 right-4 xl:right-[10%] -translate-y-1/2 bg-gradient-to-r from-brand-primary to-brand-primary-dark text-white font-black text-[9px] uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
-                      Most popular
-                    </div>
-                  )}
-                  <div className="space-y-4 relative">
-                    <div>
-                      <h4 className="font-black text-neutral-900 text-xs uppercase tracking-widest">{tier.name}</h4>
-                      <p className="text-xs text-neutral-500 font-semibold mt-1">{tier.tagline}</p>
-                    </div>
-                    <div className="py-2 border-b border-neutral-100">
-                      {tierKey === 'free' ? (
-                        <>
-                          <span className="text-3xl font-black text-neutral-900">
-                            {currency === 'pkr' ? formatCurrency(0, 'PKR') : formatCurrency(0, 'USD')}
-                          </span>
-                          <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mt-1">
-                            Forever free
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-2xl sm:text-3xl font-black text-neutral-900 block leading-tight">
-                            {currency === 'pkr'
-                              ? formatCurrency(prices.pkr, 'PKR')
-                              : formatCurrency(prices.usd, 'USD')}
-                          </span>
-                          <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mt-1">
-                            / month {billingInterval === 'yearly' ? '(billed annually, −15%)' : ''}
-                          </span>
-                          <span className="text-[10px] text-neutral-400 block mt-1">
-                            {currency === 'pkr'
-                              ? `≈ ${formatCurrency(prices.usd, 'USD')} USD`
-                              : `≈ ${formatCurrency(prices.pkr, 'PKR')} PKR`}
-                          </span>
-                          {tierKey === 'enterprise' && (
-                            <span className="text-[10px] text-amber-700 font-bold block mt-2">
-                              Volume, SLA, and white-label — final quote after scoping.
+                  <div className="h-6 shrink-0 flex justify-center mb-1" aria-hidden={!isPopular}>
+                    {isPopular ? (
+                      <div className="bg-gradient-to-r from-brand-primary to-brand-primary-dark text-white font-bold text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full shadow-md whitespace-nowrap">
+                        Most popular
+                      </div>
+                    ) : (
+                      <span className="block h-6 w-px opacity-0 pointer-events-none" aria-hidden />
+                    )}
+                  </div>
+
+                  <div className="flex flex-col flex-1 min-h-0 gap-3">
+                    <div className="space-y-3 shrink-0">
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-neutral-900 text-[11px] uppercase tracking-wide">
+                          {tier.name}
+                        </h4>
+                        <p className="text-[11px] text-neutral-500 font-medium mt-1 leading-snug hyphens-auto">
+                          {tier.tagline}
+                        </p>
+                      </div>
+                      <div className="py-2 border-b border-neutral-100 min-w-0">
+                        {tierKey === 'free' ? (
+                          <>
+                            <span className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight tabular-nums">
+                              {currency === 'pkr' ? formatCurrency(0, 'PKR') : formatCurrency(0, 'USD')}
                             </span>
-                          )}
-                        </>
-                      )}
+                            <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wide block mt-1">
+                              Forever free
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-xl sm:text-2xl lg:text-xl xl:text-2xl font-black text-neutral-900 block leading-tight tracking-tight tabular-nums break-words">
+                              {currency === 'pkr'
+                                ? formatCurrency(prices.pkr, 'PKR')
+                                : formatCurrency(prices.usd, 'USD')}
+                            </span>
+                            <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wide block mt-1">
+                              / month{billingInterval === 'yearly' ? ' (billed annually, −15%)' : ''}
+                            </span>
+                            <span className="text-[10px] text-neutral-500 block mt-1 tabular-nums">
+                              {currency === 'pkr'
+                                ? `≈ ${formatCurrency(prices.usd, 'USD')} USD`
+                                : `≈ ${formatCurrency(prices.pkr, 'PKR')} PKR`}
+                            </span>
+                            {tierKey === 'enterprise' && (
+                              <span className="text-[10px] text-amber-800 font-semibold block mt-2 leading-snug">
+                                Volume, SLA, and white-label — final quote after scoping.
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <ul className="space-y-2.5 pt-2">
+
+                    <ul className="space-y-2 pt-0.5 flex-1 min-h-[1rem] min-w-0" role="list">
                       {marketingBulletsForTier(tierKey).map((feat, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-[11px] text-neutral-600 font-semibold leading-tight">
-                          <Check className="w-3.5 h-3.5 text-brand-primary flex-shrink-0 mt-0.5" />
-                          <span>{feat}</span>
+                        <li
+                          key={idx}
+                          className="flex items-start gap-1.5 text-[10px] lg:text-[11px] text-neutral-600 font-medium leading-snug"
+                        >
+                          <Check
+                            className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-brand-primary flex-shrink-0 mt-0.5"
+                            aria-hidden
+                          />
+                          <span className="min-w-0">{feat}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
-                  <div className="pt-8">
+
+                  <div className="pt-4 mt-auto shrink-0 w-full">
                     <Button
                       asChild
                       className={cn(
-                        'w-full font-black rounded-xl h-11 text-xs uppercase tracking-wider',
-                        isPopular ? 'bg-brand-primary hover:bg-brand-primary-dark text-white' : 'bg-neutral-900 hover:bg-neutral-800 text-white'
+                        'w-full font-bold rounded-lg lg:rounded-xl min-h-10 lg:min-h-11 h-auto py-2 text-[10px] lg:text-[11px] uppercase tracking-wide whitespace-normal leading-tight px-2',
+                        isPopular
+                          ? 'bg-brand-primary hover:bg-brand-primary-dark text-white'
+                          : 'bg-neutral-900 hover:bg-neutral-800 text-white'
                       )}
                     >
-                      <Link href={href} className="flex items-center justify-center gap-2">
-                        {tierCtaLabel(tierKey)}
-                        {tierKey !== 'free' && <ArrowRight className="w-4 h-4" />}
+                      <Link
+                        href={href}
+                        className="flex items-center justify-center gap-1.5 text-center"
+                        aria-label={tierKey === 'enterprise' ? 'Book enterprise demo' : `${ctaLabel} — ${tier.name}`}
+                      >
+                        {ctaLabel}
+                        {tierKey !== 'free' && <ArrowRight className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />}
                       </Link>
                     </Button>
                   </div>

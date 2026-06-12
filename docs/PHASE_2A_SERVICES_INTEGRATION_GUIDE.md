@@ -51,7 +51,7 @@ console.log(`Low stock: ${health.lowStock.length}`);
 - `selectBatchesForSale(productId, quantity, businessId, options)` - FIFO allocation
 - `getExpiringBatches(businessId, daysThreshold)` - Find soon-to-expire
 - `getExpiredBatches(businessId)` - Find already expired
-- `validateBatchForSale(batchId, quantity)` - Pre-sale validation
+- `validateBatchForSale(batchId, quantity, sellDate, businessId)` - Pre-sale validation
 - `createBatchStockMovement(data)` - Link batch to movement
 
 **Integration Points**:

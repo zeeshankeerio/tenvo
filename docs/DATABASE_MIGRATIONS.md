@@ -4,6 +4,8 @@ The Prisma schema in this repo must match your Postgres database. If you see err
 
 **Connection URL:** `prisma.config.ts` loads **`.env`** first, then **`.env.local`** (overrides), then uses **`DIRECT_URL` or `DATABASE_URL`** for the migration datasource. Run CLI commands from the **repository root**.
 
+**`gl_accounts.sub_type` / `gl_accounts.updated_at`:** Server actions and the chart-of-accounts UI expect these columns. Apply Prisma migration **`20260609_gl_accounts_sub_type_updated_at`** (`bun run db:migrate`) so inserts/updates and Prisma stay aligned.
+
 **Supabase:** Prefer a **direct** Postgres URL on port **5432** for `DIRECT_URL` when applying migrations; `DATABASE_URL` may use the **6543** pooler for the app. Both must point to a reachable host or you will see **P1001**.
 
 **Legacy SQL** under `scripts/migrations/` is **not** applied by `prisma migrate deploy`. See **`scripts/migrations/README.md`** for how it relates to `prisma/migrations/` and recovery steps. For inventory / manufacturing / RBAC drift and duplicate-path notes, see **`docs/AUDIT_INVENTORY_MANUFACTURING_RBAC_2026.md`**. For a local **validate** checklist (schema, migrate, build, tests), see **`docs/VALIDATION.md`**.

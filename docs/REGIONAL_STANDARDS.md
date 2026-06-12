@@ -11,7 +11,7 @@ Business registration and `createBusiness` resolve **country → currency, time 
 ## Adding a new country
 
 1. Ensure the **operating currency** exists in `lib/currency/index.ts` (`CURRENCY_CONFIG`). Add the currency first if needed.
-2. Add a row to **`REGIONAL_REGISTRY`** in `regionalHelpers.ts` with accurate `timeZone` (IANA), `defaultTaxRate` (indicative only — not legal advice), and `taxIdLabel`.
+2. Add a row to **`REGIONAL_REGISTRY`** in `regionalHelpers.ts` with accurate `timeZone` (IANA), `defaultTaxRate` (indicative only - not legal advice), and `taxIdLabel`.
 3. Add any **aliases** (full country name, major cities) to **`ALIAS_TO_ISO`** so free-text and legacy data resolve correctly.
 
 `getRegistrationCountryOptions()` is derived from the registry, so the register wizard updates automatically.

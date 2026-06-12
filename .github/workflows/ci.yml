@@ -23,6 +23,9 @@ jobs:
         env:
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/ci?schema=public
 
+      - name: Verify domain wiring
+        run: bun run verify:domains
+
       - name: Lint
         run: bun run lint
 

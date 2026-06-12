@@ -306,7 +306,7 @@ export function getRegistrationCountryOptions(): Array<{
   const rows = Object.values(REGIONAL_REGISTRY).map((r) => ({
     value: r.countryCode as keyof typeof REGIONAL_REGISTRY,
     label: r.countryName,
-    detail: `${r.currency} · ${r.taxLabel}`,
+    detail: `${r.currency} - ${r.taxLabel}`,
   }));
   return rows.sort((a, b) => {
     if (a.value === DEFAULT_REGISTRATION_COUNTRY_ISO) return -1;
@@ -344,7 +344,7 @@ export function getRegistrationCurrencyOptions(iso: string): Array<{ code: Curre
 
   return ordered.map((code) => ({
     code,
-    label: `${code} — ${CURRENCY_CONFIG[code]?.name ?? code}`,
+    label: `${code} - ${CURRENCY_CONFIG[code]?.name ?? code}`,
   }));
 }
 

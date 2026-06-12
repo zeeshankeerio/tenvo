@@ -6,13 +6,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { createGLAccountAction, updateGLAccountAction, deleteGLAccountAction } from '@/lib/actions/basic/accounting';
+import { createGLAccountAction, updateGLAccountAction, deleteGLAccountAction, initializeCOAAction } from '@/lib/actions/basic/accounting';
 import toast from 'react-hot-toast';
 
 export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
     const [isEditing, setIsEditing] = useState(false);
     const [currentAccount, setCurrentAccount] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [seeding, setSeeding] = useState(false);
 
     const initialForm = {
         code: '',
@@ -93,6 +94,25 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
         }
     };
 
+    const handleInitializeStandardCoa = async () => {
+        if (!businessId) return;
+        if (!confirm('Add the standard chart of accounts for this business? Existing codes are skipped.')) return;
+        setSeeding(true);
+        try {
+            const res = await initializeCOAAction(businessId);
+            if (res.success) {
+                toast.success(res.message || 'Chart of accounts initialized');
+                onRefresh?.();
+            } else {
+                toast.error(res.error || 'Failed to initialize');
+            }
+        } catch (e) {
+            toast.error(e.message || 'Failed to initialize');
+        } finally {
+            setSeeding(false);
+        }
+    };
+
     // Grouping for Display
     const grouped = { asset: [], liability: [], equity: [], income: [], expense: [] };
     accounts.forEach(acc => {
@@ -104,10 +124,31 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-gray-800">Chart of Accounts Management</h3>
-                <Button onClick={handleAddNew} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-8 px-4 font-bold text-xs shadow-lg shadow-emerald-500/20">
-                    <Plus className="w-3.5 h-3.5 mr-1" /> Add Account
-                </Button>
+                <div className="flex items-center gap-2">
+                    {accounts.length === 0 && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={seeding}
+                            onClick={handleInitializeStandardCoa}
+                            className="rounded-xl h-8 px-3 font-bold text-xs border-brand-200 text-brand-primary"
+                        >
+                            {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BookOpen className="w-3.5 h-3.5 mr-1" />}
+                            Standard COA
+                        </Button>
+                    )}
+                    <Button onClick={handleAddNew} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-8 px-4 font-bold text-xs shadow-lg shadow-emerald-500/20">
+                        <Plus className="w-3.5 h-3.5 mr-1" /> Add Account
+                    </Button>
+                </div>
             </div>
+
+            {accounts.length === 0 && !isEditing && (
+                <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-3 text-sm text-amber-900">
+                    <span className="font-bold">No GL accounts yet.</span>{' '}
+                    Use <strong>Standard COA</strong> to load the default chart, or add accounts manually.
+                </div>
+            )}
 
             {isEditing && (
                 <Card className="border border-emerald-100 shadow-md">

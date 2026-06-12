@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Download, RefreshCw, Calendar, TrendingUp, TrendingDown, Scale, ArrowDownLeft, ArrowUpRight, Banknote } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { accountingAPI } from '@/lib/api/accounting';
-import { getDomainColors } from '@/lib/domainColors';
+import { useBusiness } from '@/lib/context/BusinessContext';
 import toast from 'react-hot-toast';
 
 // Helper for row rendering
@@ -34,10 +34,11 @@ const SectionHeader = ({ title, icon: Icon, color }) => (
 /**
  * @param {Object} props
  * @param {string} props.businessId
- * @param {string} [props.category]
+ * @param {string} [props.category] optional — reserved for future domain-specific report chrome
  */
-export default function FinancialReports({ businessId, category = 'retail-shop' }) {
-    const colors = getDomainColors(category);
+export default function FinancialReports({ businessId }) {
+    const { business, currency: businessCurrencyCode } = useBusiness();
+    const reportCurrency = businessCurrencyCode || 'PKR';
     const [activeTab, setActiveTab] = useState('pl');
     const [loading, setLoading] = useState(false);
 
@@ -59,7 +60,7 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
             const res = await accountingAPI.getProfitLoss(businessId, startDate, endDate);
             if (res.success) setPlData(res.statement);
             else toast.error(res.error || 'Failed to load P&L');
-        } catch (e) { toast.error('Error loading P&L'); }
+        } catch { toast.error('Error loading P&L'); }
         finally { setLoading(false); }
     };
 
@@ -69,7 +70,7 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
             const res = await accountingAPI.getBalanceSheet(businessId, asOfDate);
             if (res.success) setBsData(res.statement);
             else toast.error(res.error || 'Failed to load Balance Sheet');
-        } catch (e) { toast.error('Error loading Balance Sheet'); }
+        } catch { toast.error('Error loading Balance Sheet'); }
         finally { setLoading(false); }
     };
 
@@ -157,16 +158,19 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                 cashStart,
                 cashEnd,
             });
-        } catch (e) { toast.error('Error loading Cash Flow'); }
+        } catch { toast.error('Error loading Cash Flow'); }
         finally { setLoading(false); }
     };
 
     useEffect(() => {
-        if (businessId) {
-            if (activeTab === 'pl') fetchPL();
-            else if (activeTab === 'bs') fetchBS();
-            else if (activeTab === 'cf') fetchCashFlow();
-        }
+        if (!businessId) return;
+        queueMicrotask(() => {
+            if (activeTab === 'pl') void fetchPL();
+            else if (activeTab === 'bs') void fetchBS();
+            else if (activeTab === 'cf') void fetchCashFlow();
+        });
+        // Fetches close over date state; ranges refresh via explicit Refresh buttons.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [businessId, activeTab]);
 
     const handlePrint = () => window.print();
@@ -239,6 +243,14 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                             <CardContent className="p-8">
                                 <div className="text-center mb-8 border-b pb-4">
                                     <h2 className="text-2xl font-bold text-gray-900 uppercase">Profit & Loss Statement</h2>
+                                    {business?.business_name && (
+                                        <p className="text-gray-800 font-semibold text-base mt-2">{business.business_name}</p>
+                                    )}
+                                    {(business?.ntn || business?.address) && (
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            {[business.ntn ? `NTN: ${business.ntn}` : null, business.address].filter(Boolean).join(' · ')}
+                                        </p>
+                                    )}
                                     <p className="text-gray-500 text-sm mt-1">
                                         For the period {new Date(startDate).toLocaleDateString()} to {new Date(endDate).toLocaleDateString()}
                                     </p>
@@ -254,12 +266,12 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                             <div className="space-y-1">
                                                 {plData.income.length > 0 ? (
                                                     plData.income.map(acc => (
-                                                        <ReportRow key={acc.id} label={acc.name} amount={acc.amount} />
+                                                        <ReportRow currency={reportCurrency} key={acc.id} label={acc.name} amount={acc.amount} />
                                                     ))
                                                 ) : (
                                                     <div className="text-gray-400 italic py-2 px-4">No income recorded</div>
                                                 )}
-                                                <ReportRow label="Total Income" amount={plData.totalIncome} type="total" />
+                                                <ReportRow currency={reportCurrency} label="Total Income" amount={plData.totalIncome} type="total" />
                                             </div>
                                         </section>
 
@@ -269,12 +281,12 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                             <div className="space-y-1">
                                                 {plData.cogs.length > 0 ? (
                                                     plData.cogs.map(acc => (
-                                                        <ReportRow key={acc.id} label={acc.name} amount={acc.amount} />
+                                                        <ReportRow currency={reportCurrency} key={acc.id} label={acc.name} amount={acc.amount} />
                                                     ))
                                                 ) : (
                                                     <div className="text-gray-400 italic py-2 px-4">No COGS recorded</div>
                                                 )}
-                                                <ReportRow label="Total COGS" amount={plData.totalCOGS} type="total" />
+                                                <ReportRow currency={reportCurrency} label="Total COGS" amount={plData.totalCOGS} type="total" />
                                             </div>
                                         </section>
 
@@ -286,7 +298,7 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                             </div>
                                             <div className="text-right">
                                                 <div className={`text-xl font-bold ${Number(plData.grossProfit) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                                    {formatCurrency(Number(plData.grossProfit), 'PKR')}
+                                                    {formatCurrency(Number(plData.grossProfit), reportCurrency)}
                                                 </div>
                                                 <div className="text-[10px] font-bold text-green-600 uppercase tracking-wider">
                                                     {Number(plData.totalIncome) > 0 ? Math.round((Number(plData.grossProfit) / Number(plData.totalIncome)) * 100) : 0}% Margin
@@ -300,12 +312,12 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                             <div className="space-y-1">
                                                 {plData.otherExpenses.length > 0 ? (
                                                     plData.otherExpenses.map(acc => (
-                                                        <ReportRow key={acc.id} label={acc.name} amount={acc.amount} />
+                                                        <ReportRow currency={reportCurrency} key={acc.id} label={acc.name} amount={acc.amount} />
                                                     ))
                                                 ) : (
                                                     <div className="text-gray-400 italic py-2 px-4">No other expenses recorded</div>
                                                 )}
-                                                <ReportRow label="Total Operating Expenses" amount={plData.totalExpense - plData.totalCOGS} type="total" />
+                                                <ReportRow currency={reportCurrency} label="Total Operating Expenses" amount={plData.totalExpense - plData.totalCOGS} type="total" />
                                             </div>
                                         </section>
 
@@ -317,7 +329,7 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                             </div>
                                             <div className="text-right">
                                                 <div className={`text-2xl font-bold ${Number(plData.netIncome) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                    {formatCurrency(Number(plData.netIncome), 'PKR')}
+                                                    {formatCurrency(Number(plData.netIncome), reportCurrency)}
                                                 </div>
                                             </div>
                                         </section>
@@ -335,6 +347,14 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                             <CardContent className="p-8">
                                 <div className="text-center mb-8 border-b pb-4">
                                     <h2 className="text-2xl font-bold text-gray-900 uppercase">Balance Sheet</h2>
+                                    {business?.business_name && (
+                                        <p className="text-gray-800 font-semibold text-base mt-2">{business.business_name}</p>
+                                    )}
+                                    {(business?.ntn || business?.address) && (
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            {[business.ntn ? `NTN: ${business.ntn}` : null, business.address].filter(Boolean).join(' · ')}
+                                        </p>
+                                    )}
                                     <p className="text-gray-500 text-sm mt-1">
                                         As of {new Date(asOfDate).toLocaleDateString()}
                                     </p>
@@ -350,10 +370,10 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                                 <SectionHeader title="Assets" icon={TrendingUp} color="bg-blue-500" />
                                                 <div className="space-y-1">
                                                     {bsData.assets.map(acc => (
-                                                        <ReportRow key={acc.id} label={acc.name} amount={acc.balance} />
+                                                        <ReportRow currency={reportCurrency} key={acc.id} label={acc.name} amount={acc.balance} />
                                                     ))}
                                                     <div className="mt-4 pt-2 border-t-2 border-gray-900">
-                                                        <ReportRow label="Total Assets" amount={bsData.totalAssets} type="total" />
+                                                        <ReportRow currency={reportCurrency} label="Total Assets" amount={bsData.totalAssets} type="total" />
                                                     </div>
                                                 </div>
                                             </section>
@@ -365,9 +385,9 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                                 <SectionHeader title="Liabilities" icon={TrendingDown} color="bg-orange-500" />
                                                 <div className="space-y-1">
                                                     {bsData.liabilities.map(acc => (
-                                                        <ReportRow key={acc.id} label={acc.name} amount={acc.balance} />
+                                                        <ReportRow currency={reportCurrency} key={acc.id} label={acc.name} amount={acc.balance} />
                                                     ))}
-                                                    <ReportRow label="Total Liabilities" amount={bsData.totalLiabilities} type="total" />
+                                                    <ReportRow currency={reportCurrency} label="Total Liabilities" amount={bsData.totalLiabilities} type="total" />
                                                 </div>
                                             </section>
 
@@ -375,21 +395,21 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                                 <SectionHeader title="Equity" icon={Scale} color="bg-wine-500" />
                                                 <div className="space-y-1">
                                                     {bsData.equity.map(acc => (
-                                                        <ReportRow key={acc.id} label={acc.name} amount={acc.balance} />
+                                                        <ReportRow currency={reportCurrency} key={acc.id} label={acc.name} amount={acc.balance} />
                                                     ))}
-                                                    <ReportRow label="Net Income (Retained)" amount={bsData.retainedEarnings} indent />
-                                                    <ReportRow label="Total Equity" amount={bsData.totalEquity} type="total" />
+                                                    <ReportRow currency={reportCurrency} label="Net Income (Retained)" amount={bsData.retainedEarnings} indent />
+                                                    <ReportRow currency={reportCurrency} label="Total Equity" amount={bsData.totalEquity} type="total" />
                                                 </div>
                                             </section>
 
                                             <div className="pt-4 mt-4 border-t-2 border-gray-900 bg-gray-50 p-2 rounded">
                                                 <div className="flex justify-between items-center font-bold text-gray-900">
                                                     <span>Total Liabilities & Equity</span>
-                                                    <span>{formatCurrency(bsData.totalLiabilitiesAndEquity, 'PKR')}</span>
+                                                    <span>{formatCurrency(bsData.totalLiabilitiesAndEquity, reportCurrency)}</span>
                                                 </div>
                                                 {!bsData.isBalanced && (
                                                     <div className="text-xs text-red-500 mt-1 font-medium bg-red-50 p-1 rounded">
-                                                        Unbalanced: {formatCurrency(Math.abs(bsData.totalAssets - bsData.totalLiabilitiesAndEquity), 'PKR')} difference
+                                                        Unbalanced: {formatCurrency(Math.abs(bsData.totalAssets - bsData.totalLiabilitiesAndEquity), reportCurrency)} difference
                                                     </div>
                                                 )}
                                             </div>
@@ -408,6 +428,14 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                             <CardContent className="p-8">
                                 <div className="text-center mb-8 border-b pb-4">
                                     <h2 className="text-2xl font-bold text-gray-900 uppercase">Cash Flow Statement</h2>
+                                    {business?.business_name && (
+                                        <p className="text-gray-800 font-semibold text-base mt-2">{business.business_name}</p>
+                                    )}
+                                    {(business?.ntn || business?.address) && (
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            {[business.ntn ? `NTN: ${business.ntn}` : null, business.address].filter(Boolean).join(' · ')}
+                                        </p>
+                                    )}
                                     <p className="text-gray-500 text-sm mt-1">
                                         For the period {new Date(cfStartDate).toLocaleDateString()} to {new Date(cfEndDate).toLocaleDateString()} (Indirect Method)
                                     </p>
@@ -422,9 +450,9 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                             <SectionHeader title="Cash from Operating Activities" icon={Banknote} color="bg-green-500" />
                                             <div className="space-y-1">
                                                 {cfData.operatingItems.map((item, idx) => (
-                                                    <ReportRow key={idx} label={item.label} amount={item.amount} indent={idx > 0} />
+                                                    <ReportRow currency={reportCurrency} key={idx} label={item.label} amount={item.amount} indent={idx > 0} />
                                                 ))}
-                                                <ReportRow label="Net Cash from Operations" amount={cfData.operatingTotal} type="total" />
+                                                <ReportRow currency={reportCurrency} label="Net Cash from Operations" amount={cfData.operatingTotal} type="total" />
                                             </div>
                                         </section>
 
@@ -433,9 +461,9 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                             <SectionHeader title="Cash from Investing Activities" icon={ArrowDownLeft} color="bg-blue-500" />
                                             <div className="space-y-1">
                                                 {cfData.investingItems.map((item, idx) => (
-                                                    <ReportRow key={idx} label={item.label} amount={item.amount} />
+                                                    <ReportRow currency={reportCurrency} key={idx} label={item.label} amount={item.amount} />
                                                 ))}
-                                                <ReportRow label="Net Cash from Investing" amount={cfData.investingTotal} type="total" />
+                                                <ReportRow currency={reportCurrency} label="Net Cash from Investing" amount={cfData.investingTotal} type="total" />
                                             </div>
                                         </section>
 
@@ -444,9 +472,9 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                             <SectionHeader title="Cash from Financing Activities" icon={ArrowUpRight} color="bg-wine-500" />
                                             <div className="space-y-1">
                                                 {cfData.financingItems.map((item, idx) => (
-                                                    <ReportRow key={idx} label={item.label} amount={item.amount} />
+                                                    <ReportRow currency={reportCurrency} key={idx} label={item.label} amount={item.amount} />
                                                 ))}
-                                                <ReportRow label="Net Cash from Financing" amount={cfData.financingTotal} type="total" />
+                                                <ReportRow currency={reportCurrency} label="Net Cash from Financing" amount={cfData.financingTotal} type="total" />
                                             </div>
                                         </section>
 
@@ -458,16 +486,16 @@ export default function FinancialReports({ businessId, category = 'retail-shop' 
                                                     <p className="text-gray-400 text-sm">Operating + Investing + Financing</p>
                                                 </div>
                                                 <div className={`text-2xl font-bold ${cfData.netChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                    {formatCurrency(cfData.netChange, 'PKR')}
+                                                    {formatCurrency(cfData.netChange, reportCurrency)}
                                                 </div>
                                             </div>
                                             <div className="border-t border-gray-700 pt-3 flex justify-between text-sm">
                                                 <span className="text-gray-400">Beginning Cash Balance</span>
-                                                <span className="font-mono text-gray-300">{formatCurrency(cfData.cashStart, 'PKR')}</span>
+                                                <span className="font-mono text-gray-300">{formatCurrency(cfData.cashStart, reportCurrency)}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-400">Ending Cash Balance</span>
-                                                <span className="font-mono text-white font-bold">{formatCurrency(cfData.cashEnd, 'PKR')}</span>
+                                                <span className="font-mono text-white font-bold">{formatCurrency(cfData.cashEnd, reportCurrency)}</span>
                                             </div>
                                         </section>
                                     </div>

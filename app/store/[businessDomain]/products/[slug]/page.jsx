@@ -11,7 +11,7 @@ import { ProductBreadcrumbs } from '@/components/storefront/ProductBreadcrumbs';
 import { ProductTabs } from '@/components/storefront/ProductTabs';
 import { Truck, Shield, RotateCcw } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
-import { getStorefrontProductPlaceholder } from '@/lib/config/storefrontDomains';
+import { getOpenGraphProductImageUrl, getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { buildProductJsonLd } from '@/lib/storefront/jsonLd';
 
 export async function generateMetadata({ params }) {
@@ -29,17 +29,13 @@ export async function generateMetadata({ params }) {
   }
   
   const { product } = productResult;
-  const placeholder = getStorefrontProductPlaceholder(result.business.category);
+  const ogPrimary = getOpenGraphProductImageUrl(product, result.business.category);
 
-  // Only pass absolute https:// URLs to OG — data: URIs cause Server Component crashes
-  const ogImage =
-    product.image_url && product.image_url.startsWith('https://')
-      ? [{ url: product.image_url, width: 800, height: 800, alt: product.name }]
-      : placeholder && placeholder.startsWith('https://')
-        ? [{ url: placeholder, width: 800, height: 800, alt: product.name }]
-        : result.business.logo_url && result.business.logo_url.startsWith('https://')
-          ? [{ url: result.business.logo_url }]
-          : [];
+  const ogImage = ogPrimary
+    ? [{ url: ogPrimary, width: 800, height: 800, alt: product.name }]
+    : result.business.logo_url && result.business.logo_url.startsWith('https://')
+      ? [{ url: result.business.logo_url }]
+      : [];
 
   const desc =
     typeof product.description === 'string'
@@ -102,7 +98,7 @@ export default async function ProductDetailPage({ params }) {
 
 function ProductContent({ product, relatedProducts, businessDomain, settings, business }) {
   const storeCurrency = settings?.currency || 'PKR';
-  const placeholderUrl = getStorefrontProductPlaceholder(business.category);
+  const catalogImage = getEffectiveProductImageUrl(product, business.category);
   const productLd = buildProductJsonLd({
     business,
     businessDomain,
@@ -110,12 +106,15 @@ function ProductContent({ product, relatedProducts, businessDomain, settings, bu
     currency: storeCurrency,
   });
 
-  // Prepare images array
-  const images = product.images?.length > 0 
-    ? product.images 
-    : product.image_url 
-      ? [{ url: product.image_url, alt: product.name }]
-      : [];
+  // Prepare images array — merchant uploads first; else name-aware catalog fallback
+  const images =
+    product.images?.length > 0
+      ? product.images
+      : product.image_url?.trim()
+        ? [{ url: product.image_url.trim(), alt: product.name }]
+        : catalogImage
+          ? [{ url: catalogImage, alt: product.name }]
+          : [];
   
   const threshold = settings?.freeShippingThreshold || 2000;
   const returnDays = settings?.returnPolicyDays || 7;
@@ -141,7 +140,7 @@ function ProductContent({ product, relatedProducts, businessDomain, settings, bu
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
           {/* Product Gallery */}
           <div className="space-y-4">
-            <ProductGallery images={images} productName={product.name} placeholderUrl={placeholderUrl} />
+            <ProductGallery images={images} productName={product.name} placeholderUrl={catalogImage} />
           </div>
           
           {/* Product Info */}

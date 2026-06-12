@@ -21,9 +21,6 @@ const PaymentManager = dynamic(() => import('@/components/payment/PaymentManager
 const QuotationOrderChallanManager = dynamic(() => import('@/components/QuotationOrderChallanManager').then(mod => mod.QuotationOrderChallanManager));
 const AdvancedAnalytics = dynamic(() => import('@/components/AdvancedAnalytics').then(mod => mod.AdvancedAnalytics));
 const DemandForecast = dynamic(() => import('@/components/DemandForecast').then(mod => mod.DemandForecast));
-const JournalEntryManager = dynamic(() => import('@/components/JournalEntryManager'));
-const TrialBalanceView = dynamic(() => import('@/components/TrialBalanceView'));
-const FinancialReports = dynamic(() => import('@/components/FinancialReports'));
 const FinancialOverview = dynamic(() => import('@/components/dashboard/FinancialOverview').then(mod => mod.FinancialOverview));
 const TaxComplianceManager = dynamic(() => import('@/components/TaxComplianceManager').then(mod => mod.TaxComplianceManager));
 const SettingsManager = dynamic(() => import('@/components/SettingsManager').then(mod => mod.SettingsManager));
@@ -665,7 +662,7 @@ export function DashboardTabs({
                 <TabsContent value="finance" className="space-y-6 outline-none">
                     {wrapTab(
                         <TabGuard tabKey="finance" role={role} planTier={planTier} featureName="Finance" onUpgrade={() => handleTabChange('settings')}>
-                            <FinanceHub businessId={business?.id} />
+                            <FinanceHub businessId={business?.id} businessCategory={category} />
                         </TabGuard>
                     )}
                 </TabsContent>
@@ -896,7 +893,7 @@ export function DashboardTabs({
                                 />
 
                                 <div className="border-t border-gray-100 pt-6">
-                                    <FinanceHub businessId={business?.id} initialTab="expenses" />
+                                    <FinanceHub businessId={business?.id} businessCategory={category} initialTab="expenses" />
                                 </div>
                             </div>
                         </TabGuard>
@@ -1058,7 +1055,7 @@ export function DashboardTabs({
                 <TabsContent value="credit-notes" className="space-y-6 outline-none">
                     {wrapTab(
                         <TabGuard tabKey="credit-notes" role={role} planTier={planTier} featureName="Credit Notes" onUpgrade={() => handleTabChange('settings')}>
-                            <FinanceHub businessId={business?.id} initialTab="credit-notes" />
+                            <FinanceHub businessId={business?.id} businessCategory={category} initialTab="credit-notes" />
                         </TabGuard>
                     )}
                 </TabsContent>
@@ -1066,7 +1063,7 @@ export function DashboardTabs({
                 <TabsContent value="fiscal" className="space-y-6 outline-none">
                     {wrapTab(
                         <TabGuard tabKey="fiscal" role={role} planTier={planTier} requiredPlan="starter" featureName="Fiscal Periods" onUpgrade={() => handleTabChange('settings')}>
-                            <FinanceHub businessId={business?.id} initialTab="fiscal" />
+                            <FinanceHub businessId={business?.id} businessCategory={category} initialTab="fiscal" />
                         </TabGuard>
                     )}
                 </TabsContent>
@@ -1074,7 +1071,7 @@ export function DashboardTabs({
                 <TabsContent value="exchange-rates" className="space-y-6 outline-none">
                     {wrapTab(
                         <TabGuard tabKey="exchange-rates" role={role} planTier={planTier} requiredPlan="professional" featureName="Exchange Rates" onUpgrade={() => handleTabChange('settings')}>
-                            <FinanceHub businessId={business?.id} initialTab="exchange" />
+                            <FinanceHub businessId={business?.id} businessCategory={category} initialTab="exchange" />
                         </TabGuard>
                     )}
                 </TabsContent>
