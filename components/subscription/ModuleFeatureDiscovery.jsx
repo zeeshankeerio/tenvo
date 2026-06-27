@@ -23,7 +23,8 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useBusiness } from '@/lib/context/BusinessContext';
-import { planHasFeature, getNextTier, getUpgradeBenefits, FEATURE_LABELS, PLAN_TIERS } from '@/lib/config/plans';
+import { planHasFeatureWithPackaging } from '@/lib/subscription/effectivePlanAccess';
+import { getNextTier, getUpgradeBenefits, FEATURE_LABELS, PLAN_TIERS } from '@/lib/config/plans';
 import { MODULE_PACKAGES } from '@/lib/config/plans';
 import { cn } from '@/lib/utils';
 
@@ -51,8 +52,10 @@ export function FeatureDiscoveryCard({
   onUpgrade,
   className 
 }) {
-  const { planTier } = useBusiness();
-  const hasAccess = planHasFeature(planTier, featureKey);
+  const { planTier, business } = useBusiness();
+  const businessSettings = business?.settings;
+  const platformOverrides = business?.platformFeatureOverrides;
+  const hasAccess = planHasFeatureWithPackaging(planTier, featureKey, businessSettings, platformOverrides);
   
   if (hasAccess) return null;
   

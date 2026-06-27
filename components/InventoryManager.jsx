@@ -36,7 +36,7 @@ import { DataTable } from './DataTable';
 import { getDomainColors } from '@/lib/domainColors';
 import { cn } from '@/lib/utils';
 import { BusyGrid } from './BusyGrid';
-import { getDomainTableColumns, normalizeKey } from '@/lib/utils/domainHelpers';
+import { getDomainTableColumns, normalizeKey, resolveDomainFieldKey, readDomainFieldValue } from '@/lib/utils/domainHelpers';
 import { ShortcutsHelp } from './inventory/ShortcutsHelp';
 import { AdvancedSearch } from './AdvancedSearch';
 import { SmartRestockEngine } from './SmartRestockEngine';
@@ -117,7 +117,7 @@ import { QuickAddTemplates } from './QuickAddTemplates';
  */
 import { getProductsAction, deleteProductAction, createProductAction, updateProductAction, seedBusinessProductsAction, toggleProductActiveAction } from '@/lib/actions/standard/inventory/product';
 
-/** Normalize domain_data before merging — JSON strings must not be object-spread or saves corrupt */
+/** Normalize domain_data before merging, JSON strings must not be object-spread or saves corrupt */
 function parseProductDomainData(raw) {
   if (raw == null) return {};
   if (typeof raw === 'object' && !Array.isArray(raw)) return { ...raw };
@@ -145,7 +145,7 @@ function rowsMatchInventoryRow(p, row) {
   return false;
 }
 
-function readInventoryFieldValue(row, field, domainKnowledge) {
+function readInventoryFieldValue(row, field, domainKnowledge, category) {
   if (!row) return undefined;
   if (field.includes('.')) {
     const parts = field.split('.');
@@ -156,8 +156,12 @@ function readInventoryFieldValue(row, field, domainKnowledge) {
     }
     return cur;
   }
-  const isDomainField = domainKnowledge?.productFields?.some((f) => normalizeKey(f) === field);
-  if (isDomainField) return row.domain_data?.[field];
+  const isDomainField = domainKnowledge?.productFields?.some(
+    (f) => resolveDomainFieldKey(f, category) === field || normalizeKey(f) === field
+  );
+  if (isDomainField) {
+    return readDomainFieldValue(row.domain_data, field, category);
+  }
   return row[field];
 }
 
@@ -235,13 +239,13 @@ export function InventoryManager({
   onGeneratePO,
   refreshData
 }) {
-  const { regionalStandards, currency, business } = useBusiness();
+  const { regionalStandards, currency, currencySymbol, regionalPack, business } = useBusiness();
   const standards = regionalStandards || {
-    currencySymbol: 'Rs',
-    currency: 'PKR',
-    taxLabel: 'Sales Tax',
-    taxIdLabel: 'NTN',
-    countryCode: 'PK'
+    currencySymbol: currencySymbol || '₨',
+    currency: currency || 'PKR',
+    taxLabel: regionalPack?.taxLabel || 'Sales Tax',
+    taxIdLabel: regionalPack?.taxIdLabel || 'NTN',
+    countryCode: regionalPack?.countryIso || 'PK',
   };
 
   const colors = getDomainColors(category);
@@ -414,7 +418,7 @@ export function InventoryManager({
   // Excel Import Handler
   const handleExcelImport = async (importPayload) => {
     // ExcelImportModal sends { rows: validatedRows[], file, selectedSheet }
-    // File objects cannot cross the server-action boundary — always use the
+    // File objects cannot cross the server-action boundary, always use the
     // already-parsed/validated rows directly.
     const importedRows = Array.isArray(importPayload) ? importPayload : (importPayload?.rows || []);
 
@@ -1157,7 +1161,7 @@ export function InventoryManager({
                 </div>
               </div>
               {p.is_active === false && (
-                <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
                   Inactive
                 </span>
               )}
@@ -1180,7 +1184,7 @@ export function InventoryManager({
         size: 130,
         minSize: 110,
         cell: ({ row }) => (
-          <span className="block max-w-full truncate whitespace-nowrap rounded border border-gray-200 bg-gray-50 px-1.5 py-0 text-[9px] font-bold uppercase tracking-wide text-gray-700">
+          <span className="block max-w-full truncate whitespace-nowrap rounded border border-gray-200 bg-gray-50 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-gray-700">
             {row.original.category}
           </span>
         )
@@ -1216,7 +1220,7 @@ export function InventoryManager({
                 {safeStock}
               </span>
               {isLow && (
-                <span className="inline-flex shrink-0 items-center rounded border border-amber-200 bg-amber-50 px-1 py-0 text-[9px] font-bold uppercase leading-none text-amber-700">
+                <span className="inline-flex shrink-0 items-center rounded border border-amber-200 bg-amber-50 px-1 py-0 text-[10px] font-bold uppercase leading-none text-amber-700">
                   Low
                 </span>
               )}
@@ -1346,7 +1350,7 @@ export function InventoryManager({
       const standardFields = ['name', 'price', 'stock', 'category', 'sku', 'barcode', 'expiry_date', 'batch_number', 'manufacturing_date', 'brand', 'images'];
 
       domainKnowledge.productFields.forEach(field => {
-        const attrKey = normalizeKey(field);
+        const attrKey = resolveDomainFieldKey(field, category);
         if (standardFields.includes(attrKey)) return;
 
         baseCols.push({
@@ -1356,20 +1360,7 @@ export function InventoryManager({
           size: 120,
           minSize: 100,
           cell: ({ row }) => {
-            // Robust data retrieval strategy
-            const normalized = normalizeKey(field);
-            const snakeCase = field.toLowerCase().replace(/\s+/g, '_');
-            const raw = field;
-
-            const val =
-              row.original.domain_data?.[normalized] ||
-              row.original.domain_data?.[snakeCase] ||
-              row.original.domain_data?.[raw] ||
-              row.original[normalized] ||
-              row.original[snakeCase] ||
-              row.original.attributes?.[normalized] ||
-              '-';
-
+            const val = readDomainFieldValue(row.original.domain_data, field, category) ?? '-';
             return <span className="text-xs text-gray-600 line-clamp-1">{String(val)}</span>;
           }
         });
@@ -1498,7 +1489,7 @@ export function InventoryManager({
           efficiencyClass:
             abcAnalysis.length > 0
               ? `Class ${abcStats.A.count >= abcStats.B.count && abcStats.A.count >= abcStats.C.count ? 'A' : abcStats.B.count >= abcStats.C.count ? 'B' : 'C'}`
-              : '—',
+              : ', ',
         }}
       />
 
@@ -1545,7 +1536,7 @@ export function InventoryManager({
         <TabsContent value="products" className="space-y-6">
 
           {/* Alerts and Stats - Compact Premium KPI Cards */}
-          {/* KPI cards — desktop only (mobile hub shows mini KPIs) */}
+          {/* KPI cards, desktop only (mobile hub shows mini KPIs) */}
           <div className="hidden lg:grid grid-cols-2 lg:grid-cols-4 gap-3.5">
             {/* Total Products */}
             <div className="group bg-white p-3 rounded-xl border border-gray-150 shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden flex items-center justify-between min-h-[72px]">
@@ -1554,12 +1545,12 @@ export function InventoryManager({
                   <Package className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Total Products</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Products</p>
                   <p className="text-xl font-bold text-gray-900 mt-0.5 leading-none">{products.length}</p>
                 </div>
               </div>
               <div className="relative z-10 shrink-0 text-right">
-                <span className="text-[8px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">Units</span>
+                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">Units</span>
               </div>
             </div>
 
@@ -1570,12 +1561,12 @@ export function InventoryManager({
                   <AlertTriangle className="w-4 h-4 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Stock Alerts</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Stock Alerts</p>
                   <p className="text-xl font-bold text-red-600 mt-0.5 leading-none">{lowStockItems.length}</p>
                 </div>
               </div>
               <div className="relative z-10 shrink-0 text-right">
-                <span className="text-[8px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md">Replenish</span>
+                <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md">Replenish</span>
               </div>
             </div>
 
@@ -1586,7 +1577,7 @@ export function InventoryManager({
                   <TrendingUp className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Inventory Value</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inventory Value</p>
                   <p className="text-base font-bold text-gray-900 mt-0.5 leading-none">
                     {formatCurrency(products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0), standards.currency)}
                   </p>
@@ -1601,16 +1592,16 @@ export function InventoryManager({
                   <BarChart3 className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Efficiency Class</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Efficiency Class</p>
                   <p className="text-lg font-bold text-gray-900 mt-0.5 leading-none uppercase">
                     {abcAnalysis.length > 0
                       ? `Class ${abcStats.A.count >= abcStats.B.count && abcStats.A.count >= abcStats.C.count ? 'A' : abcStats.B.count >= abcStats.C.count ? 'B' : 'C'}`
-                      : 'Class —'}
+                      : 'Class, '}
                   </p>
                 </div>
               </div>
               <div className="relative z-10 shrink-0 text-right">
-                <span className="text-[8px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Optimized</span>
+                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Optimized</span>
               </div>
             </div>
           </div>
@@ -1700,7 +1691,7 @@ export function InventoryManager({
                       processedValue = Number.isFinite(n) ? n : 0;
                     }
 
-                    const prevFieldVal = readInventoryFieldValue(product, field, domainKnowledge);
+                    const prevFieldVal = readInventoryFieldValue(product, field, domainKnowledge, category);
                     if (busyFieldValueUnchanged(prevFieldVal, processedValue)) {
                       return;
                     }
@@ -1724,12 +1715,23 @@ export function InventoryManager({
                       current[parts[parts.length - 1]] = processedValue;
                     } else {
                       // Check if it's a domain field that should be in domain_data
-                      const isDomainField = domainKnowledge?.productFields?.some(f => normalizeKey(f) === field);
+                      const isDomainField = domainKnowledge?.productFields?.some(
+                        (f) => resolveDomainFieldKey(f, category) === field || normalizeKey(f) === field
+                      );
                       if (isDomainField) {
+                        const domainKey = resolveDomainFieldKey(
+                          domainKnowledge.productFields.find(
+                            (f) => resolveDomainFieldKey(f, category) === field || normalizeKey(f) === field
+                          ) || field,
+                          category
+                        );
                         updatedProduct.domain_data = {
                           ...updatedProduct.domain_data,
-                          [field]: processedValue
+                          [domainKey]: processedValue,
                         };
+                        if (domainKey === 'vehiclemake') {
+                          updatedProduct.brand = processedValue;
+                        }
                       } else {
                         updatedProduct[field] = processedValue;
                       }
@@ -1740,7 +1742,7 @@ export function InventoryManager({
                       if (Number.isFinite(n) && n >= 0) updatedProduct.cost_price = n;
                     }
 
-                    // [OK] CRITICAL: Only meaningful batch/serial rows — placeholders must not block headline stock saves
+                    // [OK] CRITICAL: Only meaningful batch/serial rows, placeholders must not block headline stock saves
                     const originalProduct = products.find((p) => rowsMatchInventoryRow(p, product));
                     const meaningfulBatches = isBatchTrackingEnabled(category)
                       ? filterMeaningfulBatches(originalProduct?.batches || updatedProduct.batches || [])
@@ -1757,7 +1759,7 @@ export function InventoryManager({
                     updatedProduct.batches = meaningfulBatches;
                     updatedProduct.serial_numbers = meaningfulSerials;
 
-                    // Draft rows (no persisted id): local state only — never call updateProductAction
+                    // Draft rows (no persisted id): local state only, never call updateProductAction
                     if (!updatedProduct?.id) {
                       setProducts((prev) =>
                         prev.map((p) => (rowsMatchInventoryRow(p, product) ? updatedProduct : p))
@@ -1926,7 +1928,7 @@ export function InventoryManager({
                 <h3 className="text-lg font-bold text-gray-900 tracking-tight">ABC Inventory Matrix</h3>
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-0.5">Strategic Stock Optimization Engine</p>
               </div>
-              <div className="self-start sm:self-center flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider shadow-sm">
+              <div className="self-start sm:self-center flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm">
                 <BarChart3 className="w-3 h-3 text-blue-400" />
                 Live Distribution
               </div>
@@ -1938,14 +1940,14 @@ export function InventoryManager({
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-9 h-9 rounded-lg bg-red-100/70 flex items-center justify-center font-bold text-lg text-red-600 shadow-sm group-hover:scale-105 transition-transform">A</div>
-                    <Badge className="bg-red-500 hover:bg-red-600 text-white border-none font-bold text-[8px] uppercase tracking-wider px-2 py-0.5 h-5">Critical Hub</Badge>
+                    <Badge className="bg-red-500 hover:bg-red-600 text-white border-none font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 h-5">Critical Hub</Badge>
                   </div>
                   <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider leading-snug">High Value Assets</h4>
                   <p className="text-[10px] text-gray-400 font-medium">Top 80% Cumulative Value</p>
                 </div>
                 
                 <div className="my-3">
-                  <div className="flex justify-between text-[9px] font-bold text-red-600/90 mb-1">
+                  <div className="flex justify-between text-[10px] font-bold text-red-600/90 mb-1">
                     <span>Value Share</span>
                     <span>{abcStats.A.valPct}%</span>
                   </div>
@@ -1957,9 +1959,9 @@ export function InventoryManager({
                 <div className="flex items-end justify-between pt-2 border-t border-gray-100/40">
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-bold text-gray-900 leading-none">{abcStats.A.count}</span>
-                    <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">SKUs</span>
+                    <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">SKUs</span>
                   </div>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{abcStats.A.pct}% of catalog</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{abcStats.A.pct}% of catalog</span>
                 </div>
               </div>
 
@@ -1968,14 +1970,14 @@ export function InventoryManager({
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-9 h-9 rounded-lg bg-orange-100/70 flex items-center justify-center font-bold text-lg text-orange-600 shadow-sm group-hover:scale-105 transition-transform">B</div>
-                    <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-none font-bold text-[8px] uppercase tracking-wider px-2 py-0.5 h-5">Normal Flow</Badge>
+                    <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-none font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 h-5">Normal Flow</Badge>
                   </div>
                   <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider leading-snug">Medium Value Assets</h4>
                   <p className="text-[10px] text-gray-400 font-medium">Next 15% Cumulative Value</p>
                 </div>
                 
                 <div className="my-3">
-                  <div className="flex justify-between text-[9px] font-bold text-orange-600/90 mb-1">
+                  <div className="flex justify-between text-[10px] font-bold text-orange-600/90 mb-1">
                     <span>Value Share</span>
                     <span>{abcStats.B.valPct}%</span>
                   </div>
@@ -1987,9 +1989,9 @@ export function InventoryManager({
                 <div className="flex items-end justify-between pt-2 border-t border-gray-100/40">
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-bold text-gray-900 leading-none">{abcStats.B.count}</span>
-                    <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">SKUs</span>
+                    <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">SKUs</span>
                   </div>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{abcStats.B.pct}% of catalog</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{abcStats.B.pct}% of catalog</span>
                 </div>
               </div>
 
@@ -1998,14 +2000,14 @@ export function InventoryManager({
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-9 h-9 rounded-lg bg-green-100/70 flex items-center justify-center font-bold text-lg text-green-600 shadow-sm group-hover:scale-105 transition-transform">C</div>
-                    <Badge className="bg-green-500 hover:bg-green-600 text-white border-none font-bold text-[8px] uppercase tracking-wider px-2 py-0.5 h-5">Bulk Layer</Badge>
+                    <Badge className="bg-green-500 hover:bg-green-600 text-white border-none font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 h-5">Bulk Layer</Badge>
                   </div>
                   <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider leading-snug">Low Value Assets</h4>
                   <p className="text-[10px] text-gray-400 font-medium">Bottom 5% Cumulative Value</p>
                 </div>
                 
                 <div className="my-3">
-                  <div className="flex justify-between text-[9px] font-bold text-green-600/90 mb-1">
+                  <div className="flex justify-between text-[10px] font-bold text-green-600/90 mb-1">
                     <span>Value Share</span>
                     <span>{abcStats.C.valPct}%</span>
                   </div>
@@ -2017,9 +2019,9 @@ export function InventoryManager({
                 <div className="flex items-end justify-between pt-2 border-t border-gray-100/40">
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-bold text-gray-900 leading-none">{abcStats.C.count}</span>
-                    <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">SKUs</span>
+                    <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">SKUs</span>
                   </div>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{abcStats.C.pct}% of catalog</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{abcStats.C.pct}% of catalog</span>
                 </div>
               </div>
             </div>
@@ -2039,7 +2041,7 @@ export function InventoryManager({
                   <div className="flex items-center gap-3">
                     <Package className="w-4 h-4 text-blue-500 shrink-0" />
                     <div>
-                      <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Managing Variants For</p>
+                      <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest">Managing Variants For</p>
                       <p className="text-sm font-bold text-blue-900">{selectedProduct.name}</p>
                     </div>
                   </div>
@@ -2075,7 +2077,7 @@ export function InventoryManager({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-black text-gray-900">Select a Product</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Select a Product</h3>
                     <p className="text-xs text-gray-500 mt-0.5">Choose a product below to manage its size/color variants</p>
                   </div>
                   <Badge variant="outline" className="bg-gray-50 text-gray-500 font-mono text-xs">
@@ -2124,7 +2126,7 @@ export function InventoryManager({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <Card className="overflow-hidden rounded-2xl border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5">
-                <CardTitle className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg">Global Price Lists</CardTitle>
+                <CardTitle className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Global Price Lists</CardTitle>
                 <CardDescription className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:text-[11px] sm:tracking-[0.16em]">Multi-tier pricing architecture</CardDescription>
               </CardHeader>
               <CardContent className="p-3 sm:p-4 sm:pt-3">
@@ -2144,7 +2146,7 @@ export function InventoryManager({
 
             <Card className="overflow-hidden rounded-2xl border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5">
-                <CardTitle className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg">Discount Schemes</CardTitle>
+                <CardTitle className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Discount Schemes</CardTitle>
                 <CardDescription className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:text-[11px] sm:tracking-[0.16em]">Promotional logic and campaigns</CardDescription>
               </CardHeader>
               <CardContent className="p-3 sm:p-4 sm:pt-3">
@@ -2235,9 +2237,9 @@ export function InventoryManager({
                 <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm shadow-blue-100">
                   <Package className="w-6 h-6 text-blue-600" />
                 </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Total SKU Profile</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em]">Total SKU Profile</p>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-4xl font-black text-gray-900 tracking-tighter">{products.length}</p>
+                  <p className="text-4xl font-semibold text-gray-900 tracking-tighter">{products.length}</p>
                   <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2.5 py-1 rounded-full italic">Catalog Scope</span>
                 </div>
               </div>
@@ -2251,9 +2253,9 @@ export function InventoryManager({
                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm shadow-emerald-100">
                   <TrendingUp className="w-6 h-6 text-emerald-600" />
                 </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Asset Valuation</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em]">Asset Valuation</p>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-3xl font-black text-gray-900 tracking-tighter">
+                  <p className="text-3xl font-semibold text-gray-900 tracking-tighter">
                     {formatCurrency(products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0), standards.currency)}
                   </p>
                 </div>
@@ -2268,9 +2270,9 @@ export function InventoryManager({
                 <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm shadow-amber-100">
                   <AlertCircle className="w-6 h-6 text-amber-600" />
                 </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Safety & Risk</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em]">Safety & Risk</p>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-4xl font-black text-amber-600 tracking-tighter">
+                  <p className="text-4xl font-semibold text-amber-600 tracking-tighter">
                     {isExpiryEnabled ? expiringCount : lowStockItems.length}
                   </p>
                   <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-2.5 py-1 rounded-full italic">
@@ -2288,9 +2290,9 @@ export function InventoryManager({
                 <div className="w-12 h-12 rounded-2xl bg-wine-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm shadow-wine-100">
                   <Repeat className="w-6 h-6 text-wine-600" />
                 </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Efficiency Velocity</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em]">Efficiency Velocity</p>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-4xl font-black text-gray-900 tracking-tighter italic">{turnoverRate}x</p>
+                  <p className="text-4xl font-semibold text-gray-900 tracking-tighter italic">{turnoverRate}x</p>
                   <span className="text-[10px] font-bold text-wine-500 bg-wine-50 px-2.5 py-1 rounded-full italic">MoM Yield</span>
                 </div>
               </div>
@@ -2432,7 +2434,7 @@ export function InventoryManager({
           {/* AI Demand / Restock Engine -- inside Reports */}
           <Card className="rounded-[32px] border-gray-100 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500">
             <CardHeader className="bg-slate-50/50 pb-6 border-b border-gray-50">
-              <CardTitle className="text-xl font-black text-gray-900 tracking-tight">Auto-Reorder Engine</CardTitle>
+              <CardTitle className="text-xl font-semibold text-gray-900 tracking-tight">Auto-Reorder Engine</CardTitle>
               <CardDescription className="text-xs font-bold uppercase tracking-widest text-gray-500 opacity-70">Algorithmic replenishment manager</CardDescription>
             </CardHeader>
             <CardContent className="p-0 pt-0">
@@ -2666,7 +2668,7 @@ export function InventoryManager({
       <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-red-600 font-black uppercase tracking-tighter">
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600 font-semibold uppercase tracking-tighter">
               <Archive className="w-5 h-5" />
               Confirm bulk archive
             </AlertDialogTitle>

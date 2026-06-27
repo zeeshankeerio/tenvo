@@ -4,8 +4,8 @@ import { withApiAuth } from '@/lib/api/_shared/middleware';
 import { apiSuccess, apiError } from '@/lib/api/_shared/response';
 
 /**
- * GET  /api/v1/inventory/cycle-counts  — List cycle counts
- * POST /api/v1/inventory/cycle-counts  — Create new cycle count
+ * GET  /api/v1/inventory/cycle-counts, List cycle counts
+ * POST /api/v1/inventory/cycle-counts, Create new cycle count
  *
  * Authentication: Required (withApiAuth middleware)
  */

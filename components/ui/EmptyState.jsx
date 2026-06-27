@@ -180,7 +180,7 @@ export function EmptyState({
                 </div>
             </div>
 
-            <h3 className="mt-6 text-xl font-black text-gray-900">{displayTitle}</h3>
+            <h3 className="mt-6 text-xl font-semibold text-gray-900">{displayTitle}</h3>
             <p className="mt-2 text-sm text-gray-500 max-w-md leading-relaxed">{displayDesc}</p>
 
             {displayAction && onAction && (

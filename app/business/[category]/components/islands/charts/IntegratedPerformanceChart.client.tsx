@@ -13,6 +13,7 @@ import {
     Legend,
     ResponsiveContainer,
 } from 'recharts';
+import { BRAND_PRIMARY } from '@/lib/theme/brandTokens';
 
 interface IntegratedPerformanceChartProps {
     revenueData: any[]; // Historical Actuals (expected { date: string, revenue: number })
@@ -25,7 +26,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-white/95 backdrop-blur-sm border border-slate-200 p-3 rounded-xl shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in duration-200">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 border-b border-slate-100 pb-1">{label}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2 border-b border-slate-100 pb-1">{label}</p>
                 <div className="space-y-2">
                     {payload.map((entry: any, index: number) => (
                         <div key={index} className="flex items-center justify-between gap-8">
@@ -33,7 +34,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
                                 <span className="text-[11px] font-bold text-slate-600">{entry.name}</span>
                             </div>
-                            <span className="text-[11px] font-black text-slate-900">
+                            <span className="text-[11px] font-semibold text-slate-900">
                                 PKR {entry.value?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </span>
                         </div>
@@ -41,7 +42,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 </div>
                 {payload.length > 1 && (
                     <div className="mt-2 pt-2 border-t border-slate-100">
-                        <div className="flex items-center justify-between text-[9px] font-black text-wine uppercase tracking-tight">
+                        <div className="flex items-center justify-between text-[10px] font-semibold text-wine uppercase tracking-tight">
                             <span>AI Confidence</span>
                             <span>High (94%)</span>
                         </div>
@@ -64,7 +65,7 @@ export const IntegratedPerformanceChart = memo(function IntegratedPerformanceCha
     colors
 }: IntegratedPerformanceChartProps) {
 
-    const primaryColor = colors?.primary || '#e34242';
+    const primaryColor = colors?.primary || BRAND_PRIMARY;
 
     const chartData = useMemo(() => {
         // Deterministic Fallback Logic:
@@ -216,7 +217,7 @@ export const IntegratedPerformanceChart = memo(function IntegratedPerformanceCha
                         strokeWidth={2}
                         strokeDasharray="6 4"
                         dot={{ r: 4, fill: '#fff', strokeWidth: 2, stroke: '#94a3b8' }}
-                        activeDot={{ r: 6, strokeWidth: 0, fill: '#e34242' }}
+                        activeDot={{ r: 6, strokeWidth: 0, fill: BRAND_PRIMARY }}
                         animationDuration={2000}
                     />
                 </ComposedChart>

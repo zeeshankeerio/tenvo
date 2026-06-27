@@ -585,7 +585,7 @@ export function DashboardTabs({
                                             </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="text-2xl font-black text-gray-900">
+                                            <div className="text-2xl font-semibold text-gray-900">
                                                 {formatCurrency(accountingSummary?.accountsReceivable || 0, currency)}
                                             </div>
                                             <div className="flex items-center mt-1 text-xs font-medium text-brand-primary bg-brand-50 w-fit px-2 py-0.5 rounded-full">
@@ -604,7 +604,7 @@ export function DashboardTabs({
                                             </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="text-2xl font-black text-gray-900">
+                                            <div className="text-2xl font-semibold text-gray-900">
                                                 {formatCurrency(accountingSummary?.accountsPayable || 0, currency)}
                                             </div>
                                             <div className="flex items-center mt-1 text-xs font-medium text-red-600 bg-red-50 w-fit px-2 py-0.5 rounded-full">
@@ -624,7 +624,7 @@ export function DashboardTabs({
                                             </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="text-2xl font-black text-gray-900">
+                                            <div className="text-2xl font-semibold text-gray-900">
                                                 {formatCurrency(accountingSummary?.inventoryValue || 0, currency)}
                                             </div>
                                             <div className="mt-1 text-xs font-medium text-gray-500">
@@ -643,7 +643,7 @@ export function DashboardTabs({
                                             </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <div className={`text-2xl font-black ${(accountingSummary?.grossProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            <div className={`text-2xl font-semibold ${(accountingSummary?.grossProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                 {formatCurrency(accountingSummary?.grossProfit || 0, currency)}
                                             </div>
                                             <div className="flex items-center mt-1 text-xs font-medium text-green-600 bg-green-50 w-fit px-2 py-0.5 rounded-full">
@@ -686,7 +686,7 @@ export function DashboardTabs({
                         <TabGuard tabKey="reports" role={role} planTier={planTier} featureName="Analytics & AI" onUpgrade={() => handleTabChange('settings')}>
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Analytics & Reports</h2>
+                                    <h2 className="text-xl font-semibold text-gray-900 uppercase tracking-tight">Analytics & Reports</h2>
                                     <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
                                         {[
                                             { key: 'analytics', label: 'Analytics' },
@@ -742,7 +742,7 @@ export function DashboardTabs({
 
                 {/* --- Phase 3+5+6: New Module Tabs ---------------------------- */}
 
-                <TabsContent value="pos" className="space-y-6 outline-none">
+                <TabsContent value="pos" className="outline-none mt-0 pt-2 lg:pt-3">
                     {wrapTab(
                         <TabGuard
                             tabKey="pos"
@@ -769,6 +769,7 @@ export function DashboardTabs({
                             ) : ['supermarket', 'grocery', 'wholesale-distribution', 'bakery-confectionery'].includes(category) ? (
                                 <SuperStorePOS
                                     businessId={business?.id}
+                                    category={category}
                                     products={filteredProducts}
                                     customers={filteredCustomers}
                                     onStartSession={handleStartPosSession}
@@ -829,7 +830,7 @@ export function DashboardTabs({
                             <StorefrontTabShell activeTab="restaurant">
                             <div className="space-y-4 lg:space-y-6">
                                 <div className="hidden items-center justify-between lg:flex">
-                                    <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">Restaurant Operations</h2>
+                                    <h2 className="text-xl font-semibold uppercase tracking-tight text-gray-900">Restaurant Operations</h2>
                                     <div className="flex items-center gap-1 rounded-xl bg-gray-100 p-1">
                                         {[
                                             { key: 'manager', label: 'Manager' },
@@ -943,7 +944,7 @@ export function DashboardTabs({
                         <TabGuard tabKey="payroll" role={role} planTier={planTier} requiredPlan="business" featureName="HR & Payroll" onUpgrade={() => handleTabChange('settings')}>
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">HR & Payroll</h2>
+                                    <h2 className="text-xl font-semibold text-gray-900 uppercase tracking-tight">HR & Payroll</h2>
                                     <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
                                         {[
                                             { key: 'payroll', label: 'Payroll' },
@@ -1005,7 +1006,7 @@ export function DashboardTabs({
                         <TabGuard tabKey="approvals" role={role} planTier={planTier} requiredPlan="business" featureName="Approval Workflows" onUpgrade={() => handleTabChange('settings')}>
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Approvals & Workflows</h2>
+                                    <h2 className="text-xl font-semibold text-gray-900 uppercase tracking-tight">Approvals & Workflows</h2>
                                     <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
                                         {[
                                             { key: 'inbox', label: 'Approval Inbox' },

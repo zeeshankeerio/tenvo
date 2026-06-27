@@ -8,7 +8,7 @@ Public marketing must stay aligned with **what ships** in the product. This doc 
 |-------|---------|
 | **Available** | In production; usable when plan/env allows |
 | **Partial** | Usable with caveats (config, plan gate, or incomplete depth) |
-| **Roadmap** | Planned or scaffold only — do not badge as Live |
+| **Roadmap** | Planned or scaffold only - do not badge as Live |
 
 ## Shipped today (high confidence)
 
@@ -23,13 +23,13 @@ Public marketing must stay aligned with **what ships** in the product. This doc 
 
 ## Partial (say it plainly)
 
-- **Pakistani tax**: configuration + summaries + exports — **not** live FBR IRIS filing
-- **JazzCash / EasyPaisa**: checkout labels — **not** built-in wallet capture
+- **Pakistani tax**: configuration + summaries + exports - **not** live FBR IRIS filing
+- **JazzCash / EasyPaisa**: checkout labels - **not** built-in wallet capture
 - **Storefront stock**: shared catalog; multi-location businesses should validate stock rules
-- **Manufacturing**: BOM + production orders — not full MES
+- **Manufacturing**: BOM + production orders - not full MES
 - **HR**: payroll backend on Business+; attendance/shift UIs are early
-- **Urdu**: toggle + partial strings — not 100% localized UI
-- **Barcode**: SKU lookup — camera decode not production-grade
+- **Urdu**: toggle + partial strings - not 100% localized UI
+- **Barcode**: SKU lookup - camera decode not production-grade
 
 ## Roadmap (never “Live” on /integrations)
 
@@ -41,11 +41,11 @@ Public marketing must stay aligned with **what ships** in the product. This doc 
 
 ## Pages updated from this map
 
-- `/integrations` — honest status grid
-- `/features` — advanced section bullets
-- Solutions mega-menu — `capabilities.js` descriptions
-- `/industries` — 62 presets, not “automatic compliance”
-- `/why-tenvo`, `/solutions/marketing-crm` — tier and scope fixes
+- `/integrations` - honest status grid
+- `/features` - advanced section bullets
+- Solutions mega-menu - `capabilities.js` descriptions
+- `/industries` - 62 presets, not “automatic compliance”
+- `/why-tenvo`, `/solutions/marketing-crm` - tier and scope fixes
 - `lib/marketing/content.js`, `lib/marketing/faqs.js`, `TENVO_ADVANTAGES`
 
 ## When product changes

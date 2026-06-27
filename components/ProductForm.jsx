@@ -35,7 +35,13 @@ import {
     getDomainUnits,
     getDomainDefaultTax,
     getDomainKnowledge,
+    resolveDomainFieldKey,
 } from '@/lib/utils/domainHelpers';
+import {
+    isVehicleListingVertical,
+    vehicleCategoryFromCondition,
+    getVehicleListingCategories,
+} from '@/lib/utils/vehicleListingHelpers';
 import { validateDomainProduct as validateDomainRegex } from '@/lib/utils/domainValidation';
 import { TaxCategorySelector } from '@/components/domain/TaxCategorySelector';
 import { formatCurrency } from '@/lib/utils/formatting';
@@ -50,7 +56,8 @@ import { CustomParametersManager } from './inventory/CustomParametersManager';
 import { useSafeSmartDefaults, mergeFormDefaults, getCurrentDate } from '@/lib/hooks/useSafeSmartDefaults';
 import { useAppMode } from '@/lib/context/BusyModeContext';
 import { useAutosave, AutosaveIndicator } from '@/hooks/useAutosave';
-import { useBusiness } from '@/lib/context/BusinessContext';
+import { useFormRegionalContext } from '@/lib/hooks/useFormRegionalContext';
+import { getRegionalStandards } from '@/lib/utils/regionalHelpers';
 import { getCurrentSeason, getSeasonalDiscount, applySeasonalPricing } from '@/lib/domainData/pakistaniSeasons';
 import { hasSeasonalPricing } from '@/lib/utils/pakistaniFeatures';
 import { pakistaniSizes, pakistaniColors } from '@/lib/domainData/pakistaniRetailData';
@@ -75,18 +82,20 @@ export function ProductForm({
     category = 'retail-shop',
     onSave,
     onCancel,
-    currency = 'PKR',
+    currency: currencyProp,
 }) {
-    const { regionalStandards } = useBusiness();
+    const {
+        currency: ctxCurrency,
+        registry: regionalStandards,
+        countryIso,
+        defaultTaxRate,
+        domainKnowledge: ctxDomainKnowledge,
+        business,
+    } = useFormRegionalContext(category);
+    const currency = currencyProp || ctxCurrency;
+    const standards = regionalStandards || getRegionalStandards(countryIso);
+    const domainTaxOptions = { countryIso };
     const { isEasyMode } = useAppMode();
-    const standards = regionalStandards || {
-        currencySymbol: '₨',
-        currency: 'PKR',
-        taxLabel: 'Sales Tax',
-        taxIdLabel: 'NTN',
-        countryCode: 'PK'
-    };
-
     const [activeTab, setActiveTab] = useState('basic');
 
     // Keep a stable ref to handleSubmit so the keyboard effect never stale-closes
@@ -186,7 +195,7 @@ export function ProductForm({
             reorderQuantity: Number(product.reorder_quantity) || 0,
             hsnCode: product.hsn_code || '',
             sacCode: product.sac_code || '',
-            taxPercent: product.tax_percent || getDomainDefaultTax(category),
+            taxPercent: product.tax_percent || getDomainDefaultTax(category, domainTaxOptions),
             image_url: product.image_url || '',
             isActive: product.is_active !== false,
             slug: product.slug || '',
@@ -216,6 +225,8 @@ export function ProductForm({
     );
 
     const domainFields = getDomainProductFields(category);
+    const vehicleListing = isVehicleListingVertical(category);
+    const vehicleCategories = vehicleListing ? getVehicleListingCategories(category) : [];
     const hasBatchTracking = isBatchTrackingEnabled(category);
     const hasSerialTracking = isSerialTrackingEnabled(category);
 
@@ -286,17 +297,29 @@ export function ProductForm({
     };
 
     const fillDemoData = () => {
-        const knowledge = getDomainKnowledge(category, { countryIso: standards?.countryCode || 'PK' });
+        const knowledge = getDomainKnowledge(category, { countryIso });
         const suggestions = knowledge?.setupTemplate?.suggestedProducts || [];
         const domainFieldsList = getDomainProductFields(category);
         const domainDataObj = {};
 
         // 1. Domain-Specific Intelligence Generation
         domainFieldsList.forEach(f => {
-            const key = f.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const key = resolveDomainFieldKey(f, category);
             const lowerField = f.toLowerCase();
 
-            if (lowerField.includes('article')) domainDataObj[key] = `ART-${Math.floor(Math.random() * 900) + 100}`;
+            if (vehicleListing && key === 'vehiclemake') {
+                domainDataObj[key] = ['Toyota', 'Honda', 'BYD', 'BMW'][Math.floor(Math.random() * 4)];
+            } else if (vehicleListing && key === 'vehiclemodel') {
+                domainDataObj[key] = 'Demo Model';
+            } else if (vehicleListing && key === 'modelyear') {
+                domainDataObj[key] = '2025';
+            } else if (vehicleListing && key === 'mileage') {
+                domainDataObj[key] = String(Math.floor(Math.random() * 80000));
+            } else if (vehicleListing && key === 'condition') {
+                domainDataObj[key] = 'pre-owned';
+            } else if (vehicleListing && key === 'fueltype') {
+                domainDataObj[key] = 'Hybrid';
+            } else if (lowerField.includes('article')) domainDataObj[key] = `ART-${Math.floor(Math.random() * 900) + 100}`;
             else if (lowerField.includes('design')) domainDataObj[key] = `D-${Math.floor(Math.random() * 9000) + 1000}`;
             else if (lowerField.includes('width')) domainDataObj[key] = category === 'textile-wholesale' ? '44' : 'Standard';
             else if (lowerField.includes('length')) domainDataObj[key] = category === 'textile-wholesale' ? '40' : '100';
@@ -361,7 +384,7 @@ export function ProductForm({
             reorderQuantity: 0,
             hsnCode: '',
             sacCode: '',
-            taxPercent: getDomainDefaultTax(category),
+            taxPercent: getDomainDefaultTax(category, domainTaxOptions),
             image_url: '',
             isActive: true,
             slug: '',
@@ -439,7 +462,7 @@ export function ProductForm({
             }));
 
             // Smart Tab Switching: If errors exist on 'domain' tab but not 'basic', switch to domain
-            const domainFields = getDomainProductFields(category).map(f => f.toLowerCase().replace(/[^a-z0-9]/g, ''));
+            const domainFields = getDomainProductFields(category).map(f => resolveDomainFieldKey(f, category));
             const hasDomainErrors = Object.keys(combinedErrors).some(k => domainFields.includes(k));
 
             if (hasDomainErrors && activeTab !== 'domain') {
@@ -462,7 +485,7 @@ export function ProductForm({
             // 3. Construct Payload
             // Separate standard fields from domain-specific fields
             const domainFieldKeys = getDomainProductFields(category)
-                .map(f => f.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                .map(f => resolveDomainFieldKey(f, category));
 
             const domainData = {};
             domainFieldKeys.forEach(key => {
@@ -472,6 +495,10 @@ export function ProductForm({
             });
 
             // Map camelCase form fields to snake_case schema fields
+            const resolvedBrand =
+                formData.brand ||
+                (vehicleListing && domainData.vehiclemake ? String(domainData.vehiclemake) : null);
+
             const payload = {
                 name: formData.name,
                 sku: formData.sku || (() => {
@@ -482,7 +509,7 @@ export function ProductForm({
                     return `${prefix}-${ts}-${rand}`;
                 })(),
                 barcode: formData.barcode || null,
-                brand: formData.brand || null,
+                brand: resolvedBrand || null,
                 description: formData.description || null,
                 category: formData.category || null,
                 unit: formData.unit,
@@ -580,20 +607,20 @@ export function ProductForm({
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                         <div className="hidden md:flex flex-col items-end mr-4">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Compliance Status</span>
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Compliance Status</span>
                             <div className="flex items-center gap-2">
                                 {Object.keys(errors).length === 0 ? (
-                                    <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 px-3 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1">
+                                    <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 px-3 py-1 rounded-full text-[10px] font-semibold uppercase flex items-center gap-1">
                                         <CheckCircle2 className="w-3 h-3" /> System Ready
                                     </Badge>
                                 ) : (
-                                    <Badge className="bg-red-50 text-red-600 border-red-100 px-3 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1">
+                                    <Badge className="bg-red-50 text-red-600 border-red-100 px-3 py-1 rounded-full text-[10px] font-semibold uppercase flex items-center gap-1">
                                         <AlertCircle className="w-3 h-3" /> {Object.keys(errors).length} Gaps
                                     </Badge>
                                 )}
                             </div>
                         </div>
-                        <Badge variant="outline" className="hidden rounded-full border-wine-100 bg-wine-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-wine-600 sm:flex sm:px-4 sm:py-1.5 sm:text-[10px]">
+                        <Badge variant="outline" className="hidden rounded-full border-wine-100 bg-wine-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-wine-600 sm:flex sm:px-4 sm:py-1.5 sm:text-[10px]">
                             <div className="mr-1.5 hidden h-2 w-2 animate-pulse rounded-full bg-wine-600 sm:block" />
                             {category.replace('-', ' ')}
                         </Badge>
@@ -609,7 +636,7 @@ export function ProductForm({
                                         <BrainCircuit className="w-6 h-6" />
                                     </div>
                                     <div className="space-y-1">
-                                        <h4 className="text-xl font-black text-gray-900 leading-tight">Domain Intelligence Active</h4>
+                                        <h4 className="text-xl font-semibold text-gray-900 leading-tight">Domain Intelligence Active</h4>
                                         <p className="text-sm text-gray-500 max-w-sm">
                                             System is optimizing inventory for <span className="font-bold text-wine-600">{category.replace(/-/g, ' ')}</span> standards including reorder automation and specialized property tracking.
                                         </p>
@@ -688,11 +715,11 @@ export function ProductForm({
                                 <div className="p-6 bg-wine/5 rounded-3xl border border-wine/10 space-y-4">
                                     <div className="flex items-center gap-2 mb-2">
                                         <BrainCircuit className="w-4 h-4 text-wine" />
-                                        <span className="text-[10px] font-black uppercase text-wine tracking-widest">Primary Identifiers</span>
+                                        <span className="text-[10px] font-semibold uppercase text-wine tracking-widest">Primary Identifiers</span>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {domainFields.slice(0, 2).map((field) => {
-                                            const key = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                            const key = resolveDomainFieldKey(field, category);
                                             return (
                                                 <div key={field} className="space-y-2">
                                                     <DomainFieldRenderer
@@ -800,13 +827,28 @@ export function ProductForm({
                                         value={formData.brand}
                                         onChange={(val) => updateField('brand', val)}
                                         domain={category}
-                                        countryIso={standards?.countryCode || 'PK'}
+                                        countryIso={countryIso}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="productCategory" className="text-[11px] font-semibold text-slate-600">Category</Label>
-                                    <Input id="productCategory" value={formData.category ?? ''} onChange={(e) => updateField('category', e.target.value)} placeholder="e.g. Electronics, Spares" className="h-9 rounded-md" selectOnFocus />
+                                    <Input
+                                        id="productCategory"
+                                        list={vehicleListing ? 'vehicle-listing-categories' : undefined}
+                                        value={formData.category ?? ''}
+                                        onChange={(e) => updateField('category', e.target.value)}
+                                        placeholder={vehicleListing ? 'e.g. New Cars, Used Cars' : 'e.g. Electronics, Spares'}
+                                        className="h-9 rounded-md"
+                                        selectOnFocus
+                                    />
+                                    {vehicleListing && vehicleCategories.length > 0 ? (
+                                        <datalist id="vehicle-listing-categories">
+                                            {vehicleCategories.map((c) => (
+                                                <option key={c} value={c} />
+                                            ))}
+                                        </datalist>
+                                    ) : null}
                                     {renderError('category')}
                                 </div>
 
@@ -821,7 +863,7 @@ export function ProductForm({
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white text-[10px] font-black uppercase">
+                                                    <Badge className="bg-gradient-to-r from-orange-500 to-pink-500 text-white text-[10px] font-semibold uppercase">
                                                         [CELEBRATION] {currentSeason.name.en}
                                                     </Badge>
                                                     <span className="text-xs font-bold text-orange-600">
@@ -833,19 +875,19 @@ export function ProductForm({
                                                 </p>
                                                 <div className="grid grid-cols-3 gap-4">
                                                     <div>
-                                                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-1">Original Price</p>
+                                                        <p className="text-[10px] font-semibold uppercase text-gray-400 tracking-wider mb-1">Original Price</p>
                                                         <p className="text-lg font-bold text-gray-500 line-through">
                                                             {formatCurrency(seasonalPricing.original, standards.currency)}
                                                         </p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-1">Seasonal Price</p>
-                                                        <p className="text-2xl font-black text-orange-600">
+                                                        <p className="text-[10px] font-semibold uppercase text-orange-600 tracking-wider mb-1">Seasonal Price</p>
+                                                        <p className="text-2xl font-semibold text-orange-600">
                                                             {formatCurrency(seasonalPricing.discounted, standards.currency)}
                                                         </p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-black uppercase text-green-600 tracking-wider mb-1">Customer Saves</p>
+                                                        <p className="text-[10px] font-semibold uppercase text-green-600 tracking-wider mb-1">Customer Saves</p>
                                                         <p className="text-lg font-bold text-green-600">
                                                             {formatCurrency(seasonalPricing.savings, standards.currency)}
                                                         </p>
@@ -864,29 +906,29 @@ export function ProductForm({
                                 </div>
                                 <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-6">
                                     <div>
-                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Gross Margin</p>
+                                        <p className="text-[10px] font-semibold uppercase text-slate-400 tracking-widest mb-1">Gross Margin</p>
                                         <p className={cn(
-                                            "text-2xl font-black",
+                                            "text-2xl font-semibold",
                                             (Number(formData.price) || 0) > 0 && ((Number(formData.price) || 0) - (Number(formData.costPrice) || 0)) / (Number(formData.price) || 0) > 0.15 ? "text-emerald-400" : "text-amber-400"
                                         )}>
                                             {(Number(formData.price) || 0) > 0 ? (((Number(formData.price) || 0) - (Number(formData.costPrice) || 0)) / (Number(formData.price) || 0) * 100).toFixed(1) : '0.0'}%
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Profit/Unit</p>
-                                        <p className="text-2xl font-black text-white">
+                                        <p className="text-[10px] font-semibold uppercase text-slate-400 tracking-widest mb-1">Profit/Unit</p>
+                                        <p className="text-2xl font-semibold text-white">
                                             {formatCurrency((Number(formData.price) || 0) - (Number(formData.costPrice) || 0), standards.currency)}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Markup</p>
-                                        <p className="text-2xl font-black text-slate-300">
+                                        <p className="text-[10px] font-semibold uppercase text-slate-400 tracking-widest mb-1">Markup</p>
+                                        <p className="text-2xl font-semibold text-slate-300">
                                             {(Number(formData.costPrice) || 0) > 0 ? (((Number(formData.price) || 0) - (Number(formData.costPrice) || 0)) / (Number(formData.costPrice) || 0) * 100).toFixed(1) : '0.0'}%
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Valuation</p>
-                                        <p className="text-2xl font-black text-blue-400">
+                                        <p className="text-[10px] font-semibold uppercase text-slate-400 tracking-widest mb-1">Valuation</p>
+                                        <p className="text-2xl font-semibold text-blue-400">
                                             {formatCurrency((Number(formData.stock) || 0) * (Number(formData.price) || 0), standards.currency)}
                                         </p>
                                     </div>
@@ -912,6 +954,7 @@ export function ProductForm({
                                         onChange={(url) => updateField('image_url', url)}
                                         productName={formData.name || ''}
                                         category={category}
+                                        businessId={product?.business_id || smartDefaults?.businessId || business?.id || ''}
                                     />
                                 </div>
 
@@ -961,7 +1004,7 @@ export function ProductForm({
                                     <div className="mb-6 p-5 bg-white/70 rounded-2xl border border-dashed border-gray-300">
                                         <div className="flex items-center gap-2 mb-4">
                                             <Layers className="w-4 h-4 text-wine" />
-                                            <span className="text-xs font-black uppercase text-wine tracking-widest">Size / Color Matrix</span>
+                                            <span className="text-xs font-semibold uppercase text-wine tracking-widest">Size / Color Matrix</span>
                                             <Badge variant="outline" className="text-[10px] ml-auto">Variant Stock Entry</Badge>
                                         </div>
                                         <p className="text-xs text-gray-500 mb-4">
@@ -1023,16 +1066,36 @@ export function ProductForm({
                                     </div>
                                 )}
 
+                                {vehicleListing && (
+                                    <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-blue-900">
+                                        <p className="font-semibold">Vehicle listing</p>
+                                        <p className="mt-1 text-blue-800/90">
+                                            Set stock to <strong>1</strong> per unit listed. Make, model, year, and condition power your storefront search filters.
+                                        </p>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 bg-white/50 p-6 rounded-2xl border border-dashed border-gray-200">
                                     {domainFields.map((field) => {
-                                        const key = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                        const key = resolveDomainFieldKey(field, category);
                                         return (
                                             <div key={field} className="space-y-2">
                                                 <DomainFieldRenderer
                                                     field={field}
                                                     category={category}
                                                     value={formData[key]}
-                                                    onChange={(val) => updateField(key, val)}
+                                                    onChange={(val) => {
+                                                        updateField(key, val);
+                                                        if (vehicleListing && key === 'vehiclemake' && val) {
+                                                            updateField('brand', val);
+                                                        }
+                                                        if (vehicleListing && key === 'condition' && val) {
+                                                            const cat = vehicleCategoryFromCondition(val, category);
+                                                            if (cat && (!formData.category || vehicleCategories.includes(formData.category))) {
+                                                                updateField('category', cat);
+                                                            }
+                                                        }
+                                                    }}
                                                     error={errors[key]}
                                                     selectOnFocus
                                                 />
@@ -1100,11 +1163,11 @@ export function ProductForm({
                                 <div className="p-6 rounded-3xl bg-blue-50/50 border border-blue-100/50 space-y-4">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Layers className="w-4 h-4 text-blue-600" />
-                                        <span className="text-[10px] font-black uppercase text-blue-600 tracking-widest">Specialist Parameters</span>
+                                        <span className="text-[10px] font-semibold uppercase text-blue-600 tracking-widest">Specialist Parameters</span>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {['Thaan Length', 'Suit Cutting'].map((field) => {
-                                            const key = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                            const key = resolveDomainFieldKey(field, category);
                                             return (
                                                 <div key={field} className="space-y-2">
                                                     <Label className="text-[11px] font-semibold text-slate-600">{field}</Label>
@@ -1131,8 +1194,8 @@ export function ProductForm({
                                 <div className="space-y-6 pt-8 mt-8 border-t border-gray-100">
                                     <div className="flex items-center gap-3">
                                         <Layers className="w-5 h-5 text-gray-400" />
-                                        <h3 className="text-lg font-black text-gray-900 tracking-tight">Traceability & Control</h3>
-                                        <Badge className="bg-emerald-500 text-white border-0 text-[10px] font-black uppercase">Active</Badge>
+                                        <h3 className="text-lg font-semibold text-gray-900 tracking-tight">Traceability & Control</h3>
+                                        <Badge className="bg-emerald-500 text-white border-0 text-[10px] font-semibold uppercase">Active</Badge>
                                     </div>
                                     {hasBatchTracking && (
                                         <div className="animate-in zoom-in-95 duration-300">
@@ -1190,8 +1253,8 @@ export function ProductForm({
                                 <div className="space-y-2 col-span-2 md:col-span-1">
                                     <TaxCategorySelector
                                         category={category}
-                                        countryIso={standards?.countryCode || 'PK'}
-                                        value={formData.taxCategory || (getDomainDefaultTax(category, { countryIso: standards?.countryCode }) ? `${standards?.taxLabel || 'Tax'} ${getDomainDefaultTax(category, { countryIso: standards?.countryCode })}%` : '')}
+                                        countryIso={countryIso}
+                                        value={formData.taxCategory || (getDomainDefaultTax(category, domainTaxOptions) ? `${standards?.taxLabel || 'Tax'} ${getDomainDefaultTax(category, domainTaxOptions)}%` : '')}
                                         onChange={(cat, rate) => {
                                             updateField('taxCategory', cat);
                                             updateField('taxPercent', rate);

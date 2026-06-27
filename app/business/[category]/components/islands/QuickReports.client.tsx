@@ -43,7 +43,7 @@ export function QuickReports({ onNavigate }: QuickReportsProps) {
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full mt-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors"
+                    className="w-full mt-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-primary transition-colors"
                     onClick={() => onNavigate('reports')}
                 >
                     Explore All Reports

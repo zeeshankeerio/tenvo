@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -59,7 +59,7 @@ export function GlobalBusyToggle() {
                         <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
                             <Smile className={cn("w-3.5 h-3.5 transition-opacity", isBusyMode ? "opacity-30 text-white" : "opacity-0")} />
                             <div className="flex flex-col items-center">
-                                <span className={cn("text-[8px] font-black uppercase tracking-tighter transition-colors", isBusyMode ? "text-white/50" : "text-slate-400")}>
+                                <span className={cn("text-[10px] font-semibold uppercase tracking-tighter transition-colors", isBusyMode ? "text-white/50" : "text-slate-400")}>
                                     {isBusyMode ? "BUSY" : "EASY"}
                                 </span>
                             </div>
@@ -69,10 +69,10 @@ export function GlobalBusyToggle() {
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="bg-slate-900 text-white border-slate-800">
                     <div className="flex flex-col gap-1">
-                        <span className="font-black text-[10px] uppercase tracking-widest">
+                        <span className="font-semibold text-[10px] uppercase tracking-widest">
                             {isBusyMode ? "Disable Command Center" : "Enable Command Center"}
                         </span>
-                        <span className="text-[9px] text-slate-400 font-bold">
+                        <span className="text-[10px] text-slate-400 font-bold">
                             (Shift + B) to toggle density
                         </span>
                     </div>

@@ -1,12 +1,21 @@
 'use client';
 
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
-import { MARKETING_CONTAINER } from '@/lib/utils/marketingLayout';
+import { MARKETING_HONEST_STATS } from '@/lib/marketing/homeVisualThemes';
+import {
+  MARKETING_CONTAINER,
+  MARKETING_H2,
+  MARKETING_LEAD,
+  MARKETING_STAT_LABEL,
+  MARKETING_STAT_VALUE,
+} from '@/lib/utils/marketingLayout';
 import Hero from '@/components/marketing/sections/Hero';
 import CaseStudyCard from '@/components/marketing/cards/CaseStudyCard';
 import CTASection from '@/components/marketing/sections/CTASection';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 import { caseStudies } from '@/lib/marketing/case-studies';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function CaseStudiesPage() {
   const [selectedIndustry, setSelectedIndustry] = useState('all');
@@ -43,8 +52,8 @@ export default function CaseStudiesPage() {
           href: '/register'
         }}
         secondaryCTA={{
-          text: 'Schedule Demo',
-          href: '/demo'
+          text: 'Book a meeting',
+          href: getBookMeetingHref(),
         }}
       />
 
@@ -110,35 +119,25 @@ export default function CaseStudiesPage() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Platform scope (honest, not aggregate ROI claims) */}
       <section className="bg-gray-50 py-10 sm:py-14 lg:py-16">
         <div className={MARKETING_CONTAINER}>
           <div className="mb-8 space-y-3 text-center sm:mb-10 lg:mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-              Impact Across Industries
+            <h2 className={MARKETING_H2}>
+              What teams explore on TENVO
             </h2>
-            <p className="text-sm text-gray-600 sm:text-base">
-              Aggregate results from our customers
+            <p className={MARKETING_LEAD}>
+              Verifiable platform scope - not unverified aggregate ROI percentages
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8">
-            <div className="text-center">
-              <div className="mb-1 text-3xl font-bold text-brand-primary sm:mb-2 sm:text-4xl">70%</div>
-              <div className="text-gray-600">Average Cost Reduction</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-brand-primary mb-2">50%</div>
-              <div className="text-gray-600">Time Saved on Operations</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-brand-primary mb-2">95%</div>
-              <div className="text-gray-600">Customer Satisfaction</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-brand-primary mb-2">3x</div>
-              <div className="text-gray-600">ROI in First Year</div>
-            </div>
+            {MARKETING_HONEST_STATS.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className={cn(MARKETING_STAT_VALUE, 'mb-1 text-brand-primary sm:mb-2')}>{stat.value}</div>
+                <div className={MARKETING_STAT_LABEL}>{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -152,14 +151,14 @@ export default function CaseStudiesPage() {
             Success Story?
           </>
         }
-        subtitle="Join thousands of businesses already transforming their operations with TENVO"
+        subtitle="Start your free trial and explore live demo storefronts across verticals"
         primaryCTA={{
           text: 'Start Free Trial',
           href: '/register'
         }}
         secondaryCTA={{
-          text: 'Talk to Sales',
-          href: '/contact'
+          text: 'Book a meeting',
+          href: getBookMeetingHref(),
         }}
       />
     </MarketingLayout>

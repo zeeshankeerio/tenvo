@@ -2,11 +2,33 @@ import { NextResponse } from 'next/server';
 import { verifyIPN, handleIPN } from '@/lib/payments/nowpayments';
 import { applyCryptoSubscriptionFromIPN } from '@/lib/billing/cryptoSubscription';
 
+function resolveIpnSecret() {
+  const raw =
+    process.env.NOWPAYMENTS_IPN_SECRET?.trim() ||
+    process.env.NOWPAYMENTS_SECRET?.trim() ||
+    process.env.NOWPAYMENTS_SECRATE?.trim() ||
+    process.env.NOWPAYMENTS_IPN_SECRECT?.trim();
+  return raw || null;
+}
+
 /**
- * POST /api/webhooks/nowpayments — NOWPayments IPN callback.
+ * POST /api/webhooks/nowpayments, NOWPayments IPN callback.
  */
 export async function POST(request) {
   try {
+    const ipnSecret = resolveIpnSecret();
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (!ipnSecret) {
+      console.error('[NOWPayments IPN] Not configured, set NOWPAYMENTS_IPN_SECRET');
+      if (isProduction) {
+        return NextResponse.json(
+          { error: 'NOWPayments webhook not configured' },
+          { status: 503 }
+        );
+      }
+    }
+
     const raw = await request.text();
     let payload;
     try {
@@ -20,8 +42,13 @@ export async function POST(request) {
       request.headers.get('X-NOWPAYMENTS-SIG') ||
       '';
 
-    if (signature && !verifyIPN(payload, signature)) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    if (ipnSecret) {
+      if (!signature) {
+        return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+      }
+      if (!verifyIPN(payload, signature)) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
     }
 
     const summary = await handleIPN(payload);

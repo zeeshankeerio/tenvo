@@ -52,7 +52,7 @@ export function PurchaseOrderManager({ purchaseOrders = [], onCreate, onUpdateSt
             <ShoppingCart className="w-4 h-4" />
           </div>
           <div>
-            <p className="font-black text-gray-900 leading-none">{row.original.purchase_number}</p>
+            <p className="font-semibold text-gray-900 leading-none">{row.original.purchase_number}</p>
             <p className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-tighter">
               {new Date(row.original.date).toLocaleDateString()}
             </p>
@@ -71,14 +71,14 @@ export function PurchaseOrderManager({ purchaseOrders = [], onCreate, onUpdateSt
       accessorKey: 'total_amount',
       header: 'Amount',
       cell: ({ row }) => (
-        <span className="font-black text-gray-900">{formatCurrency(row.original.total_amount, 'PKR')}</span>
+        <span className="font-semibold text-gray-900">{formatCurrency(row.original.total_amount, 'PKR')}</span>
       ),
     },
     {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => (
-        <Badge variant="outline" className={`font-black uppercase text-[10px] px-2 py-0.5 rounded-full ${getStatusBadge(row.original.status)}`}>
+        <Badge variant="outline" className={`font-semibold uppercase text-[10px] px-2 py-0.5 rounded-full ${getStatusBadge(row.original.status)}`}>
           {getPurchaseStatusLabel(row.original.status)}
         </Badge>
       ),
@@ -167,7 +167,7 @@ export function PurchaseOrderManager({ purchaseOrders = [], onCreate, onUpdateSt
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-border shadow-sm bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Open Orders</CardTitle>
+            <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Open Orders</CardTitle>
             <CardDescription>Draft and sent purchase orders</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -178,7 +178,7 @@ export function PurchaseOrderManager({ purchaseOrders = [], onCreate, onUpdateSt
         </Card>
         <Card className="border-border shadow-sm bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Procurement Value</CardTitle>
+            <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Procurement Value</CardTitle>
             <CardDescription>Total of listed orders</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -189,7 +189,7 @@ export function PurchaseOrderManager({ purchaseOrders = [], onCreate, onUpdateSt
         </Card>
         <Card className="border-border shadow-sm bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Pending Receipt</CardTitle>
+            <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Pending Receipt</CardTitle>
             <CardDescription>Orders waiting inbound receipt</CardDescription>
           </CardHeader>
           <CardContent className="pt-6 flex items-center justify-between gap-3">
@@ -199,7 +199,7 @@ export function PurchaseOrderManager({ purchaseOrders = [], onCreate, onUpdateSt
         </Card>
         <Card className="border-border shadow-sm bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Received</CardTitle>
+            <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Received</CardTitle>
             <CardDescription>Orders completed into stock</CardDescription>
           </CardHeader>
           <CardContent className="pt-6 flex items-center justify-between gap-3">

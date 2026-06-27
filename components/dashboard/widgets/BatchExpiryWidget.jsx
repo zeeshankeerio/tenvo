@@ -181,19 +181,19 @@ export function BatchExpiryWidget({ businessId, currency = 'PKR', onViewDetails 
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-2">
                     <div className="text-center p-2 rounded-lg bg-orange-50">
-                        <div className="text-lg font-black text-orange-600">{stats.warning}</div>
+                        <div className="text-lg font-semibold text-orange-600">{stats.warning}</div>
                         <div className="text-[10px] font-bold text-orange-700 uppercase tracking-wide">
                             30 {t.days || 'Days'}
                         </div>
                     </div>
                     <div className="text-center p-2 rounded-lg bg-yellow-50">
-                        <div className="text-lg font-black text-yellow-600">{stats.caution}</div>
+                        <div className="text-lg font-semibold text-yellow-600">{stats.caution}</div>
                         <div className="text-[10px] font-bold text-yellow-700 uppercase tracking-wide">
                             90 {t.days || 'Days'}
                         </div>
                     </div>
                     <div className="text-center p-2 rounded-lg bg-gray-50">
-                        <div className="text-lg font-black text-gray-600">{stats.expired}</div>
+                        <div className="text-lg font-semibold text-gray-600">{stats.expired}</div>
                         <div className="text-[10px] font-bold text-gray-700 uppercase tracking-wide">
                             {t.expired || 'Expired'}
                         </div>
@@ -203,7 +203,7 @@ export function BatchExpiryWidget({ businessId, currency = 'PKR', onViewDetails 
                 {/* Top Expiring Batches */}
                 {stats.topExpiring.length > 0 && (
                     <div className="space-y-2">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                             {t.next_to_expire || 'Next to Expire'}
                         </div>
                         {stats.topExpiring.map((batch, idx) => (

@@ -183,7 +183,7 @@ export function ActionModals({
             <Dialog open={showQuickAction} onOpenChange={setShowQuickAction}>
                 <DialogContent className="max-w-xl rounded-2xl border-none p-4 shadow-2xl sm:p-6">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black flex items-center gap-2">
+                        <DialogTitle className="text-2xl font-semibold flex items-center gap-2">
                             <span className="p-2 rounded-xl" style={{ backgroundColor: `${colors.primary}15`, color: colors.primary }}>
                                 <Plus className="w-6 h-6" />
                             </span>

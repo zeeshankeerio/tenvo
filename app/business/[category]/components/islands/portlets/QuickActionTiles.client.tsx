@@ -18,8 +18,8 @@ interface QuickActionTilesProps {
     campaignEnabled?: boolean;
     multiLocationEnabled?: boolean;
     /**
-     * `toolbar` — single compact row, no heading (advanced dashboard strip under header).
-     * `portlet` — legacy card with “Quick Shortcuts” title.
+     * `toolbar`, single compact row, no heading (advanced dashboard strip under header).
+     * `portlet`, legacy card with “Quick Shortcuts” title.
      */
     layout?: 'toolbar' | 'portlet';
 }
@@ -30,7 +30,7 @@ const accentBorder: Record<string, string> = {
     'add-purchase': 'border-l-amber-600',
     inventory: 'border-l-emerald-600',
     'new-customer': 'border-l-sky-600',
-    'new-product': 'border-l-[#e34242]',
+    'new-product': 'border-l-brand-primary',
     campaigns: 'border-l-slate-600',
     reports: 'border-l-slate-600',
 };
@@ -92,10 +92,10 @@ export const QuickActionTiles = memo(function QuickActionTiles({
                                     <action.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <span className="block text-[8px] font-black uppercase leading-tight tracking-wide text-slate-800 sm:text-[9px]">
+                                    <span className="block text-[10px] font-semibold uppercase leading-tight tracking-wide text-slate-800 sm:text-[10px]">
                                         {action.label}
                                     </span>
-                                    <span className="mt-0.5 block text-[8px] font-semibold leading-snug text-slate-500 line-clamp-2 sm:text-[9px]">
+                                    <span className="mt-0.5 block text-[10px] font-semibold leading-snug text-slate-500 line-clamp-2 sm:text-[10px]">
                                         {action.desc}
                                     </span>
                                 </div>
@@ -131,7 +131,7 @@ export const QuickActionTiles = memo(function QuickActionTiles({
                             <action.icon className="h-5 w-5" aria-hidden />
                         </div>
                         <div className="min-w-0">
-                            <span className="block text-[11px] font-black uppercase tracking-wide text-slate-800">{action.label}</span>
+                            <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-800">{action.label}</span>
                             <span className="mt-0.5 block text-[10px] font-semibold text-slate-500">{action.desc}</span>
                         </div>
                     </button>

@@ -356,10 +356,10 @@ export function StockReservation({
                   <p className="text-xs text-red-600">Could not load batches. Try re-selecting the product.</p>
                 )}
                 {formData.productId && !batchesLoadFailed && batches.length > 0 && selectableBatches.length === 0 && (
-                  <p className="text-xs text-amber-600">Batches exist but none are active — activate a batch or use general stock.</p>
+                  <p className="text-xs text-amber-600">Batches exist but none are active, activate a batch or use general stock.</p>
                 )}
                 {formData.productId && !batchesLoadFailed && !batchRequired && (
-                  <p className="text-xs text-slate-500">No batch rows — reservation uses headline product stock (same checks as the hub).</p>
+                  <p className="text-xs text-slate-500">No batch rows, reservation uses headline product stock (same checks as the hub).</p>
                 )}
               </div>
 

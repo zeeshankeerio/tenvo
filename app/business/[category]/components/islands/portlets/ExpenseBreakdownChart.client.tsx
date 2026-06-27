@@ -26,7 +26,7 @@ export const ExpenseBreakdownChart = memo(function ExpenseBreakdownChart({ data 
     return (
         <Card className="h-full border-none shadow-none bg-transparent">
             <CardHeader className="px-0 py-2 border-b border-slate-100 mb-2">
-                <CardTitle className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <CardTitle className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <PieChartIcon className="w-3.5 h-3.5" />
                     Expense Breakdown
                 </CardTitle>
@@ -63,8 +63,8 @@ export const ExpenseBreakdownChart = memo(function ExpenseBreakdownChart({ data 
 
                 {/* Center Label */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none pr-14">
-                    <div className="text-[9px] font-bold text-slate-400 uppercase">Total</div>
-                    <div className="text-[12px] font-black text-slate-800">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase">Total</div>
+                    <div className="text-[12px] font-semibold text-slate-800">
                         {((sortedData.reduce((sum, item) => sum + item.value, 0) / 1000).toFixed(1))}k
                     </div>
                 </div>

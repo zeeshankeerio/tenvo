@@ -46,7 +46,7 @@ import {
 } from '@/lib/actions/standard/campaignsHub';
 
 function formatShortDate(iso) {
-  if (!iso) return '—';
+  if (!iso) return ', ';
   try {
     return new Date(iso).toLocaleString(undefined, {
       month: 'short',
@@ -55,7 +55,7 @@ function formatShortDate(iso) {
       minute: '2-digit',
     });
   } catch {
-    return '—';
+    return ', ';
   }
 }
 
@@ -168,7 +168,7 @@ export function CampaignsManager({
       items.push({
         id: 'activate',
         title: 'Activate dormant demand',
-        body: 'You have promotions on file but no active outreach — schedule a win-back send to past buyers.',
+        body: 'You have promotions on file but no active outreach, schedule a win-back send to past buyers.',
         action: () => setTab('outreach'),
         cta: 'Schedule send',
         tone: 'violet',
@@ -192,7 +192,7 @@ export function CampaignsManager({
   const statValue = (n) => {
     if (hubLoading) return '…';
     if (typeof n === 'number') return n;
-    return n ?? '—';
+    return n ?? ', ';
   };
 
   const handlePlaybook = async (index) => {
@@ -200,7 +200,7 @@ export function CampaignsManager({
     try {
       const res = await createSegmentFromPlaybookAction(businessId, index);
       if (res.success) {
-        toast.success(`Segment ready — ${res.members ?? 0} members matched`);
+        toast.success(`Segment ready, ${res.members ?? 0} members matched`);
         await loadHub();
         setTab('segments');
       } else {
@@ -269,7 +269,7 @@ export function CampaignsManager({
 
   return (
     <div className="space-y-4">
-      {/* Compact header — semantic surfaces */}
+      {/* Compact header, semantic surfaces */}
       <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm backdrop-blur-sm dark:bg-card/90 sm:p-4">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
@@ -281,7 +281,7 @@ export function CampaignsManager({
               Intelligent campaigns workspace
             </h2>
             <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
-              Promotions, segments, and outreach in one view — next steps adapt to your data
+              Promotions, segments, and outreach in one view, next steps adapt to your data
               {category ? (
                 <>
                   {' '}
@@ -512,7 +512,7 @@ export function CampaignsManager({
           ) : (hub?.segments || []).length === 0 ? (
             <Card className="border-dashed border-border">
               <CardContent className="py-8 text-center text-xs text-muted-foreground">
-                No segments yet — use playbooks on Command or define rules from CRM data.
+                No segments yet, use playbooks on Command or define rules from CRM data.
               </CardContent>
             </Card>
           ) : (
@@ -591,7 +591,7 @@ export function CampaignsManager({
                 value={outreachForm.segment_id}
                 onChange={(e) => setOutreachForm((f) => ({ ...f, segment_id: e.target.value }))}
               >
-                <option value="">— None (draft only) —</option>
+                <option value="">, None (draft only), </option>
                 {(hub?.segments || []).map((seg) => (
                   <option key={seg.id} value={seg.id}>
                     {seg.name} ({seg.member_count ?? 0})

@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 /**
- * Only allow same-origin paths and http(s)/mailto — blocks javascript: and data:.
+ * Only allow same-origin paths and http(s)/mailto - blocks javascript: and data:.
  */
 function normalizeAssistantHref(href) {
   if (href == null || typeof href !== 'string') return null;
@@ -76,7 +76,7 @@ export default function AssistantMessageMarkdown({ children }) {
           },
           h1({ children: c }) {
             return (
-              <p className="mb-1.5 text-[11px] font-black uppercase tracking-wide text-neutral-500">{c}</p>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">{c}</p>
             );
           },
           h2({ children: c }) {

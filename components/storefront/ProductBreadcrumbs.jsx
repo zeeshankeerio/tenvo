@@ -7,8 +7,8 @@ import { ChevronRight, Home } from 'lucide-react';
  * ProductBreadcrumbs
  *
  * Accepts two calling conventions:
- *   1. items[]  — generic: [{ label, href? }]
- *   2. category + categorySlug + productName — product-detail shorthand
+ *   1. items[], generic: [{ label, href? }]
+ *   2. category + categorySlug + productName, product-detail shorthand
  */
 export function ProductBreadcrumbs({ items, businessDomain, category, categorySlug, productName }) {
   // Build items array from shorthand props if items not provided

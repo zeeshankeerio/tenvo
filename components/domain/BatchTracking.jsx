@@ -216,9 +216,9 @@ export function BatchNumberInput({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100/50 shadow-sm relative overflow-hidden">
           <div className="relative z-10">
-            <p className="text-[10px] font-black uppercase text-blue-400 tracking-widest mb-1">Total Stock</p>
+            <p className="text-[10px] font-semibold uppercase text-blue-400 tracking-widest mb-1">Total Stock</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-black text-blue-900">{totalStock}</span>
+              <span className="text-3xl font-semibold text-blue-900">{totalStock}</span>
               <span className="text-xs font-bold text-blue-400 lowercase">{product.unit || 'units'}</span>
             </div>
           </div>
@@ -227,8 +227,8 @@ export function BatchNumberInput({
 
         <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-white border border-emerald-100/50 shadow-sm relative overflow-hidden">
           <div className="relative z-10">
-            <p className="text-[10px] font-black uppercase text-emerald-400 tracking-widest mb-1">Inventory Value</p>
-            <p className="text-2xl font-black text-emerald-900">{formatCurrency(stats.totalValue, currency)}</p>
+            <p className="text-[10px] font-semibold uppercase text-emerald-400 tracking-widest mb-1">Inventory Value</p>
+            <p className="text-2xl font-semibold text-emerald-900">{formatCurrency(stats.totalValue, currency)}</p>
           </div>
           <Activity className="absolute right-[-10px] bottom-[-10px] w-16 h-16 text-emerald-500/10" />
         </div>
@@ -237,11 +237,11 @@ export function BatchNumberInput({
           stats.nextExpiry ? (
             <div className="md:col-span-2 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100/50 shadow-sm flex items-center justify-between relative overflow-hidden">
               <div className="relative z-10">
-                <p className="text-[10px] font-black uppercase text-amber-500 tracking-widest mb-1 flex items-center gap-2">
+                <p className="text-[10px] font-semibold uppercase text-amber-500 tracking-widest mb-1 flex items-center gap-2">
                   <AlertTriangle className="w-3 h-3" /> FEFO Priority Focus
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="text-2xl font-black text-amber-900">{stats.nextExpiry.batchNumber}</div>
+                  <div className="text-2xl font-semibold text-amber-900">{stats.nextExpiry.batchNumber}</div>
                   <Badge variant="outline" className="bg-white/50 border-amber-200 text-amber-700">
                     Expires in {Math.ceil((new Date(stats.nextExpiry.expiryDate) - new Date()) / (1000 * 60 * 60 * 24))} days
                   </Badge>
@@ -275,7 +275,7 @@ export function BatchNumberInput({
                   variant="ghost"
                   size="sm"
                   onClick={suggestBatchNumber}
-                  className="h-8 text-[10px] font-black uppercase text-blue-600 hover:bg-blue-50"
+                  className="h-8 text-[10px] font-semibold uppercase text-blue-600 hover:bg-blue-50"
                 >
                   <Wand2 className="w-3 h-3 mr-1" /> Suggest
                 </Button>
@@ -297,7 +297,7 @@ export function BatchNumberInput({
               </div>
             )}
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-gray-400">{getBatchLabel(category)}</Label>
+              <Label className="text-[10px] font-semibold uppercase text-gray-400">{getBatchLabel(category)}</Label>
               <Input
                 ref={batchNumRef}
                 value={newBatch.batchNumber}
@@ -315,14 +315,14 @@ export function BatchNumberInput({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400">Mfg. Date</Label>
+                <Label className="text-[10px] font-semibold uppercase text-gray-400">Mfg. Date</Label>
                 <DatePicker
                   value={newBatch.manufacturingDate}
                   onChange={d => setNewBatch({ ...newBatch, manufacturingDate: d })}
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400">Expiry Date</Label>
+                <Label className="text-[10px] font-semibold uppercase text-gray-400">Expiry Date</Label>
                 <DatePicker
                   value={newBatch.expiryDate}
                   onChange={d => setNewBatch({ ...newBatch, expiryDate: d })}
@@ -332,7 +332,7 @@ export function BatchNumberInput({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400">Quantity</Label>
+                <Label className="text-[10px] font-semibold uppercase text-gray-400">Quantity</Label>
                 <Input
                   ref={qtyRef}
                   type="number"
@@ -349,7 +349,7 @@ export function BatchNumberInput({
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400">Unit Cost</Label>
+                <Label className="text-[10px] font-semibold uppercase text-gray-400">Unit Cost</Label>
                 <Input
                   ref={costRef}
                   type="number"
@@ -367,7 +367,7 @@ export function BatchNumberInput({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-gray-400">Storage Location</Label>
+              <Label className="text-[10px] font-semibold uppercase text-gray-400">Storage Location</Label>
               <Input
                 ref={locRef}
                 value={newBatch.location}
@@ -428,7 +428,7 @@ export function BatchNumberInput({
                       editingId === batch.id ? "ring-2 ring-amber-400 border-transparent bg-amber-50/30" : ""
                     )}>
                     {index === 0 && (
-                      <div className="absolute -top-2 left-4 px-2 py-0.5 bg-indigo-600 text-white text-[10px] font-black rounded uppercase shadow-sm">
+                      <div className="absolute -top-2 left-4 px-2 py-0.5 bg-indigo-600 text-white text-[10px] font-semibold rounded uppercase shadow-sm">
                         FEFO PRIORITY #1
                       </div>
                     )}
@@ -436,7 +436,7 @@ export function BatchNumberInput({
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-black text-gray-900">{batch.batchNumber}</span>
+                          <span className="font-mono font-semibold text-gray-900">{batch.batchNumber}</span>
                           <Badge className={`${status.color} text-white border-0 text-[10px] flex items-center gap-1`}>
                             <StatusIcon className="w-3 h-3" /> {status.label}
                           </Badge>
@@ -451,11 +451,11 @@ export function BatchNumberInput({
                         <div className="flex items-center gap-6 pr-4 border-r border-gray-100">
                           <div className="text-right">
                             <p className="text-[10px] font-bold text-gray-400 uppercase">Quantity</p>
-                            <p className="font-black text-gray-900">{batch.quantity}</p>
+                            <p className="font-semibold text-gray-900">{batch.quantity}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-[10px] font-bold text-gray-400 uppercase">Valuation</p>
-                            <p className="font-black text-blue-600">{formatCurrency(batch.costPrice * batch.quantity, currency)}</p>
+                            <p className="font-semibold text-blue-600">{formatCurrency(batch.costPrice * batch.quantity, currency)}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-1">

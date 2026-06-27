@@ -170,7 +170,7 @@ export function QuotationOrderChallanManager({
 
       <div className="hidden min-w-0 flex-col gap-4 rounded-2xl border border-gray-100 bg-white/50 p-4 shadow-sm backdrop-blur-sm sm:p-6 md:flex-row md:items-center md:justify-between lg:flex">
         <div className="min-w-0 space-y-1 md:pr-4">
-          <h2 className="text-2xl font-black uppercase italic tracking-tight text-wine-600 sm:text-3xl">Order Lifecycle</h2>
+          <h2 className="text-2xl font-semibold uppercase italic tracking-tight text-wine-600 sm:text-3xl">Order Lifecycle</h2>
           <p className="text-sm font-medium text-gray-500">Manage quotations, sales orders, and delivery challans</p>
         </div>
         <div className="flex min-w-0 shrink-0 flex-nowrap items-center gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] md:max-w-none md:justify-end md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden sm:gap-3">
@@ -182,7 +182,7 @@ export function QuotationOrderChallanManager({
             <Plus className="mr-2 h-4 w-4 shrink-0" />
             New Order
           </Button>
-          <Button onClick={() => { setActiveTab('challans'); setShowForm('delivery_challan'); }} className="shrink-0 whitespace-nowrap rounded-xl bg-wine-600 px-5 font-black text-white shadow-lg transition-all hover:opacity-90 active:scale-95">
+          <Button onClick={() => { setActiveTab('challans'); setShowForm('delivery_challan'); }} className="shrink-0 whitespace-nowrap rounded-xl bg-wine-600 px-5 font-semibold text-white shadow-lg transition-all hover:opacity-90 active:scale-95">
             <Plus className="mr-2 h-4 w-4 shrink-0" />
             New Challan
           </Button>

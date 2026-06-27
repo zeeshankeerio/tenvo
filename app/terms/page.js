@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
 import { MarketingPageHeader, MarketingSection } from '@/components/marketing/layout/MarketingSection';
+import { buildMarketingMetadata } from '@/lib/marketing/seo';
+import { getSalesMeetingUrl } from '@/lib/marketing/salesLinks';
 import { TENVO_PARENT_COMPANY } from '@/lib/marketing/tenvo-assistant-knowledge';
 
-export const metadata = {
+export const metadata = buildMarketingMetadata({
   title: 'Terms of Use',
-  description: 'Terms for using the TENVO public website and requesting information.',
-};
+  description: 'Terms for using the TENVO public website at www.tenvo.store and requesting information.',
+  path: '/terms',
+});
 
 export default function TermsPage() {
   const updated = new Date().toISOString().slice(0, 10);
@@ -32,9 +35,14 @@ export default function TermsPage() {
           <p>
             References to other platforms illustrate typical operator pain points. Feature sets change over
             time; verify fit on a{' '}
-            <Link href="/demo" className="font-bold text-brand-primary underline-offset-2 hover:underline">
-              demo call
-            </Link>
+            <a
+              href={getSalesMeetingUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-brand-primary underline-offset-2 hover:underline"
+            >
+              meeting call
+            </a>
             .
           </p>
           <h2 className="pt-2 text-base font-black text-neutral-900 sm:text-lg">Contact</h2>

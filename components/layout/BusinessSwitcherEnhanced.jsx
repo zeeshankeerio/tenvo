@@ -163,7 +163,7 @@ export function BusinessSwitcherEnhanced({ isCollapsed = false }) {
                 >
                     <ActiveIcon className="w-4.5 h-4.5 text-white" />
                     {businesses.length > 1 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-wine-500 text-[9px] font-bold rounded-full flex items-center justify-center text-white shadow-sm">
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-wine-500 text-[10px] font-bold rounded-full flex items-center justify-center text-white shadow-sm">
                             {businesses.length}
                         </span>
                     )}
@@ -237,7 +237,7 @@ export function BusinessSwitcherEnhanced({ isCollapsed = false }) {
                 {/* Header with search */}
                 <div className="p-3 border-b border-neutral-100 bg-neutral-50/50">
                     <div className="flex items-center justify-between mb-2">
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-wider">
+                        <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
                             Your Businesses
                         </p>
                         <button

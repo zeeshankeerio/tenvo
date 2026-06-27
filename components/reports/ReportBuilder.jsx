@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,7 +40,7 @@ function addDaysUtc(isoYYYYMMdd, deltaDays) {
 }
 
 /**
- * Map report toolbar preset → { from, to } ISO strings for getAnalyticsBundleAction.
+ * Map report toolbar preset ? { from, to } ISO strings for getAnalyticsBundleAction.
  * Presets anchor on the dashboard header `to` date (or today).
  * @param {{ from?: unknown; to?: unknown } | null | undefined} dashboardDateRange
  * @param {string} reportWindow
@@ -219,7 +219,7 @@ function WidgetPreview({ widget, onRemove, liveSnapshot, currency }) {
 
             {widget.type === 'kpi' && (
                 <div className="text-center py-4">
-                    <p className="text-3xl font-black text-gray-900">{widget.value || '--'}</p>
+                    <p className="text-3xl font-semibold text-gray-900">{widget.value || '--'}</p>
                     {widget.trend && (
                         <span className={cn(
                             'text-sm font-bold mt-1 inline-block',
@@ -230,14 +230,14 @@ function WidgetPreview({ widget, onRemove, liveSnapshot, currency }) {
                     )}
                     {liveSnapshot?.kpi ? (
                         <p className="text-[10px] text-gray-500 mt-2 font-medium">
-                            Live: growth {liveSnapshot.kpi.growth?.value ?? '—'} · 6-mo revenue {formatCurrency(liveSnapshot.trailingRevenue || 0, currency)}
+                            Live: growth {liveSnapshot.kpi.growth?.value ?? ', '} � 6-mo revenue {formatCurrency(liveSnapshot.trailingRevenue || 0, currency)}
                         </p>
                     ) : null}
                 </div>
             )}
             {widget.type === 'bar' && (
                 <div>
-                    <p className="text-[9px] text-gray-400 mb-2">Chart layout preview — open Analytics for full revenue charts.</p>
+                    <p className="text-[10px] text-gray-400 mb-2">Chart layout preview, open Analytics for full revenue charts.</p>
                     <div className="flex items-end gap-2 h-24 px-4 pt-2">
                         {[65, 45, 80, 55, 90, 70, 50, 85].map((h, i) => (
                             <div key={i} className="flex-1 bg-indigo-100 rounded-t-md hover:bg-indigo-300 transition-colors"
@@ -248,7 +248,7 @@ function WidgetPreview({ widget, onRemove, liveSnapshot, currency }) {
             )}
             {widget.type === 'line' && (
                 <div>
-                    <p className="text-[9px] text-gray-400 mb-1 px-2">Trend preview — live monthly series is in Analytics.</p>
+                    <p className="text-[10px] text-gray-400 mb-1 px-2">Trend preview, live monthly series is in Analytics.</p>
                     <div className="h-24 flex items-end px-2">
                         <svg viewBox="0 0 200 80" className="w-full h-full" preserveAspectRatio="none">
                             <path d="M0,60 Q30,40 50,50 Q80,20 100,35 Q130,10 160,25 Q180,15 200,20"
@@ -267,7 +267,7 @@ function WidgetPreview({ widget, onRemove, liveSnapshot, currency }) {
             )}
             {widget.type === 'pie' && (
                 <div>
-                    <p className="text-[9px] text-gray-400 mb-2 text-center">Composition preview — category pie uses the same bundle in Analytics.</p>
+                    <p className="text-[10px] text-gray-400 mb-2 text-center">Composition preview, category pie uses the same bundle in Analytics.</p>
                     <div className="flex items-center justify-center h-24">
                         <svg viewBox="0 0 100 100" className="w-20 h-20">
                             <circle cx="50" cy="50" r="40" fill="none" stroke="#E0E7FF" strokeWidth="20" />
@@ -292,7 +292,7 @@ function WidgetPreview({ widget, onRemove, liveSnapshot, currency }) {
                         ))}
                     </div>
                 ) : (
-                    <p className="text-[10px] text-gray-400 text-center py-3">No table rows for this window — add sales or widen the report range.</p>
+                    <p className="text-[10px] text-gray-400 text-center py-3">No table rows for this window, add sales or widen the report range.</p>
                 )
             )}
             {widget.type === 'summary' && (
@@ -312,8 +312,8 @@ function WidgetPreview({ widget, onRemove, liveSnapshot, currency }) {
                                 </span>
                             </div>
                             <div className="flex justify-between text-sm border-t border-gray-100 pt-2">
-                                <span className="font-black text-gray-900">6-mo GL profit (net)</span>
-                                <span className="font-black text-emerald-600">
+                                <span className="font-semibold text-gray-900">6-mo GL profit (net)</span>
+                                <span className="font-semibold text-emerald-600">
                                     {formatCurrency(Number(liveSnapshot.trailingProfit) || 0, currency)}
                                 </span>
                             </div>
@@ -322,8 +322,8 @@ function WidgetPreview({ widget, onRemove, liveSnapshot, currency }) {
                         <>
                             {['Revenue', 'Expenses', 'Net profit'].map((lbl, i) => (
                                 <div key={lbl} className="flex justify-between text-sm">
-                                    <span className={i === 2 ? 'font-black text-gray-900' : 'text-gray-500'}>{lbl}</span>
-                                    <span className={i === 2 ? 'font-black text-emerald-600' : 'text-gray-700'}>—</span>
+                                    <span className={i === 2 ? 'font-semibold text-gray-900' : 'text-gray-500'}>{lbl}</span>
+                                    <span className={i === 2 ? 'font-semibold text-emerald-600' : 'text-gray-700'}>, </span>
                                 </div>
                             ))}
                         </>
@@ -480,12 +480,12 @@ export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboa
             {businessId && liveSnapshot?.kpi && (
                 <Card className="border-emerald-100 bg-gradient-to-r from-emerald-50/80 to-white shadow-sm">
                     <CardHeader className="py-3 px-4">
-                        <CardTitle className="text-xs font-black uppercase tracking-wider text-emerald-800">
+                        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-emerald-800">
                             Live business snapshot (same data as Analytics tab)
                         </CardTitle>
                         {liveSnapshot.appliedRange?.from && liveSnapshot.appliedRange?.to && (
                             <p className="text-[10px] text-emerald-700/80 mt-1 font-medium">
-                                Range: {liveSnapshot.appliedRange.from} → {liveSnapshot.appliedRange.to}
+                                Range: {liveSnapshot.appliedRange.from} ? {liveSnapshot.appliedRange.to}
                                 {reportWindow !== 'header' && reportWindow !== 'custom' ? ' (report preset)' : ''}
                             </p>
                         )}
@@ -493,25 +493,25 @@ export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboa
                     <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 pb-4">
                         <div className="rounded-xl bg-white/80 border border-emerald-100 p-3">
                             <p className="text-[10px] font-bold text-gray-500 uppercase">Inventory asset</p>
-                            <p className="text-sm font-black text-gray-900">{formatCurrency(liveSnapshot.kpi.inventoryAsset || 0, currency)}</p>
+                            <p className="text-sm font-semibold text-gray-900">{formatCurrency(liveSnapshot.kpi.inventoryAsset || 0, currency)}</p>
                         </div>
                         <div className="rounded-xl bg-white/80 border border-emerald-100 p-3">
                             <p className="text-[10px] font-bold text-gray-500 uppercase">Growth (range vs prior)</p>
-                            <p className="text-sm font-black text-gray-900">{liveSnapshot.kpi.growth?.value ?? '—'}</p>
+                            <p className="text-sm font-semibold text-gray-900">{liveSnapshot.kpi.growth?.value ?? ', '}</p>
                         </div>
                         <div className="rounded-xl bg-white/80 border border-emerald-100 p-3">
                             <p className="text-[10px] font-bold text-gray-500 uppercase">Repeat customers</p>
-                            <p className="text-sm font-black text-gray-900">{liveSnapshot.kpi.retention ?? '—'}</p>
+                            <p className="text-sm font-semibold text-gray-900">{liveSnapshot.kpi.retention ?? ', '}</p>
                             {liveSnapshot.kpi.retentionDetail && (
-                                <p className="text-[9px] text-gray-500 mt-0.5">
+                                <p className="text-[10px] text-gray-500 mt-0.5">
                                     {liveSnapshot.kpi.retentionDetail.repeatCustomers} / {liveSnapshot.kpi.retentionDetail.invoicedCustomers} invoiced
                                 </p>
                             )}
                         </div>
                         <div className="rounded-xl bg-white/80 border border-emerald-100 p-3">
                             <p className="text-[10px] font-bold text-gray-500 uppercase">6-mo revenue (invoices + storefront)</p>
-                            <p className="text-sm font-black text-gray-900">{formatCurrency(liveSnapshot.trailingRevenue || 0, currency)}</p>
-                            <p className="text-[9px] text-gray-500 mt-0.5">GL profit (6 mo): {formatCurrency(liveSnapshot.trailingProfit || 0, currency)}</p>
+                            <p className="text-sm font-semibold text-gray-900">{formatCurrency(liveSnapshot.trailingRevenue || 0, currency)}</p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">GL profit (6 mo): {formatCurrency(liveSnapshot.trailingProfit || 0, currency)}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -528,7 +528,7 @@ export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboa
                         onChange={handleLoadSaved}
                         aria-label="Load saved report layout"
                     >
-                        <option value="">Load saved…</option>
+                        <option value="">Load saved�</option>
                         {savedLayouts.map((s) => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
@@ -632,7 +632,7 @@ export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboa
             <Dialog open={showAddWidget} onOpenChange={setShowAddWidget}>
                 <DialogContent className="sm:max-w-lg rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-lg font-black">Add Widget</DialogTitle>
+                        <DialogTitle className="text-lg font-semibold">Add Widget</DialogTitle>
                         <DialogDescription>Choose a data source and widget type to add to your report.</DialogDescription>
                     </DialogHeader>
 

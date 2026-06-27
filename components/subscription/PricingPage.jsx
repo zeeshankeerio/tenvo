@@ -30,6 +30,7 @@ import {
 } from '@/lib/config/plans';
 import { ModulePicker, ModulePackageCard } from './ModuleFeatureDiscovery';
 import { cn } from '@/lib/utils';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 
 const TIER_ICONS = {
   free: Package,
@@ -335,9 +336,14 @@ export function PricingPage({ onSelectTier, showComparison = true }) {
                   Unlimited users, custom features, SLA guarantee, and dedicated support
                 </p>
               </div>
-              <Button size="lg" onClick={() => onSelectTier?.('enterprise')}>
+              <Button
+                size="lg"
+                onClick={() => {
+                  window.open(getBookMeetingHref(), '_blank', 'noopener,noreferrer');
+                }}
+              >
                 <Crown className="w-4 h-4 mr-2" />
-                Contact Sales
+                Book a meeting
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>

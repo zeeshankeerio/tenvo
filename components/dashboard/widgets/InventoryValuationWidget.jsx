@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -145,7 +145,7 @@ export function InventoryValuationWidget({
         {/* Total Valuation */}
         <div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-3xl font-black text-premium-gradient">
+            <span className="text-3xl font-semibold text-premium-gradient">
               {formatCurrency(valuation?.total_value || 0, currency)}
             </span>
             {trend && (
@@ -181,7 +181,7 @@ export function InventoryValuationWidget({
         {/* Category Breakdown */}
         {topCategories.length > 0 && (
           <div className="space-y-2">
-            <div className="text-[10px] uppercase font-black tracking-widest text-gray-400">
+            <div className="text-[10px] uppercase font-semibold tracking-widest text-gray-400">
               {t.top_categories || 'Top Categories'}
             </div>
             {topCategories.map((cat, idx) => (

@@ -20,7 +20,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { getDomainKnowledge, getDomainDefaults } from '@/lib/domainKnowledge';
+import { getDomainDefaults } from '@/lib/domainKnowledge';
+import { useFormRegionalContext } from '@/lib/hooks/useFormRegionalContext';
 import { getDomainProductFields, getDomainFormLabels } from '@/lib/utils/domainHelpers';
 import { formatCurrency } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
@@ -30,7 +31,7 @@ const inputClass = 'h-9 rounded-lg border-gray-200 bg-white text-sm focus-visibl
 const labelClass = 'text-[10px] font-bold uppercase tracking-wide text-gray-500';
 
 /**
- * SmartQuickAddModal — compact product entry for domain experts.
+ * SmartQuickAddModal, compact product entry for domain experts.
  */
 export function SmartQuickAddModal({
     isOpen,
@@ -38,10 +39,11 @@ export function SmartQuickAddModal({
     onSave,
     category = 'retail-shop',
     businessId,
-    currency = 'PKR'
+    currency: currencyProp,
 }) {
-    const knowledge = getDomainKnowledge(category);
-    const defaults = getDomainDefaults(category);
+    const { currency, defaultTaxRate, domainKnowledge, countryIso } = useFormRegionalContext(category);
+    const displayCurrency = currencyProp || currency;
+    const defaults = getDomainDefaults(category, { countryIso });
 
     const [formData, setFormData] = useState({
         name: '',
@@ -51,8 +53,8 @@ export function SmartQuickAddModal({
         price: 0,
         stock: 0,
         unit: defaults.defaultUnit || 'pcs',
-        taxPercent: defaults.defaultTax || 17,
-        category: knowledge.name || 'General',
+        taxPercent: defaults.defaultTax || defaultTaxRate || 0,
+        category: domainKnowledge.name || 'General',
         domain_field: ''
     });
 
@@ -73,7 +75,7 @@ export function SmartQuickAddModal({
     const generateSku = () => {
         setIsGeneratingSku(true);
         setTimeout(() => {
-            const prefix = (knowledge.name || category).substring(0, 3).toUpperCase();
+            const prefix = (domainKnowledge.name || category).substring(0, 3).toUpperCase();
             const date = new Date().toISOString().slice(2, 4) + new Date().toISOString().slice(5, 7);
             const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
             setFormData(prev => ({ ...prev, sku: `${prefix}-${date}-${random}` }));
@@ -117,8 +119,8 @@ export function SmartQuickAddModal({
                 price: 0,
                 stock: 0,
                 unit: defaults.defaultUnit || 'pcs',
-                taxPercent: defaults.defaultTax || 17,
-                category: knowledge.name || 'General',
+                taxPercent: defaults.defaultTax || defaultTaxRate || 0,
+                category: domainKnowledge.name || 'General',
                 domain_field: ''
             });
         } catch (error) {
@@ -135,7 +137,7 @@ export function SmartQuickAddModal({
                             <Zap className="h-4 w-4 text-yellow-400" />
                         </div>
                         <div>
-                            <Badge variant="outline" className="mb-0.5 border-blue-400/30 text-[9px] text-blue-300">Ultra-speed</Badge>
+                            <Badge variant="outline" className="mb-0.5 border-blue-400/30 text-[10px] text-blue-300">Ultra-speed</Badge>
                             <DialogTitle className="text-lg font-bold leading-tight">Smart Quick-Add</DialogTitle>
                         </div>
                     </div>
@@ -199,7 +201,7 @@ export function SmartQuickAddModal({
                             <div className="space-y-1.5">
                                 <Label className={labelClass}>Unit</Label>
                                 <select value={formData.unit} onChange={e => setFormData(prev => ({ ...prev, unit: e.target.value }))} className={cn(inputClass, 'w-full border border-gray-200 px-2')}>
-                                    {knowledge.units?.map(u => <option key={u} value={u}>{u}</option>)}
+                                    {domainKnowledge.units?.map(u => <option key={u} value={u}>{u}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -212,7 +214,7 @@ export function SmartQuickAddModal({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger type="button"><Info className="h-3.5 w-3.5 text-blue-400" /></TooltipTrigger>
-                                        <TooltipContent className="max-w-[200px] text-xs">Set cost and margin — selling price updates automatically.</TooltipContent>
+                                        <TooltipContent className="max-w-[200px] text-xs">Set cost and margin, selling price updates automatically.</TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
                             </div>
@@ -228,12 +230,12 @@ export function SmartQuickAddModal({
                             </div>
                             <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-white px-3 py-2">
                                 <div>
-                                    <p className="text-[9px] font-bold uppercase text-gray-400">Selling price</p>
-                                    <p className="text-lg font-black text-gray-900">{formatCurrency(formData.price, currency)}</p>
+                                    <p className="text-[10px] font-bold uppercase text-gray-400">Selling price</p>
+                                    <p className="text-lg font-semibold text-gray-900">{formatCurrency(formData.price, displayCurrency)}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[9px] font-bold uppercase text-gray-400">Est. profit</p>
-                                    <p className="text-sm font-bold text-emerald-600">+{formatCurrency(formData.price - formData.costPrice, currency)}</p>
+                                    <p className="text-[10px] font-bold uppercase text-gray-400">Est. profit</p>
+                                    <p className="text-sm font-bold text-emerald-600">+{formatCurrency(formData.price - formData.costPrice, displayCurrency)}</p>
                                 </div>
                             </div>
                         </div>

@@ -19,7 +19,7 @@ export function StoreBuyerSupportStrip({ businessDomain, accent }) {
 
   return (
     <section className="border-t border-gray-100 bg-gray-50 px-4 py-4 lg:hidden">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[1400px]">
         <div className="mb-2 flex items-center gap-2">
           <Headphones className="h-4 w-4 text-gray-400" aria-hidden />
           <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Need help?</p>

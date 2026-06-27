@@ -21,6 +21,7 @@ import toast from 'react-hot-toast';
 import StakeholderLedger from './StakeholderLedger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
+import { useBusiness } from '@/lib/context/BusinessContext';
 
 export function CustomerManager({ customers = [], onAdd, onUpdate, onDelete, category = 'retail-shop', businessId }) {
   const colors = getDomainColors(category);
@@ -28,8 +29,9 @@ export function CustomerManager({ customers = [], onAdd, onUpdate, onDelete, cat
   const [customerToView, setCustomerToView] = useState(null);
   const [customerToDelete, setCustomerToDelete] = useState(null);
 
+  const { currency: businessCurrency } = useBusiness();
   const knowledge = getDomainKnowledge(category);
-  const currency = 'PKR';
+  const currency = businessCurrency || 'PKR';
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -78,7 +80,7 @@ export function CustomerManager({ customers = [], onAdd, onUpdate, onDelete, cat
       accessorKey: 'totalSpent',
       header: 'Total Value',
       cell: ({ row }) => (
-        <span className="font-black" style={{ color: colors.primary }}>
+        <span className="font-semibold" style={{ color: colors.primary }}>
           {formatCurrency(row.original.totalSpent || 0, currency)}
         </span>
       ),
@@ -210,7 +212,7 @@ export function CustomerManager({ customers = [], onAdd, onUpdate, onDelete, cat
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-400 block">Total Spent</label>
-                  <p className="font-black" style={{ color: colors.primary }}>
+                  <p className="font-semibold" style={{ color: colors.primary }}>
                     {formatCurrency(customerToView?.totalSpent || 0, currency)}
                   </p>
                 </div>

@@ -122,7 +122,7 @@ export default function FAQSection({
               </button>
             ))}
           </div>
-        )}
+        ) : null}
 
         {/* FAQs accordion */}
         {filteredFAQs.length > 0 ? (

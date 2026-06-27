@@ -255,7 +255,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                 {/* Session Header */}
                 <div className="flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3">
                     <div>
-                        <h4 className="text-sm font-black text-gray-900">
+                        <h4 className="text-sm font-semibold text-gray-900">
                             {session.account_name} · {format(new Date(session.statement_date), 'dd MMM yyyy')}
                         </h4>
                         <p className="text-xs text-gray-400 mt-0.5">
@@ -299,7 +299,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                             },
                         ].map(s => (
                             <div key={s.label} className="bg-white rounded-xl border border-gray-100 px-4 py-3 text-center">
-                                <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
+                                <p className={`text-lg font-semibold ${s.color}`}>{s.value}</p>
                                 <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mt-0.5">{s.label}</p>
                             </div>
                         ))}
@@ -311,7 +311,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                     {/* Statement Lines (Left) */}
                     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                         <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
-                            <h5 className="text-xs font-black text-gray-700 uppercase tracking-wide">Bank Statement Lines</h5>
+                            <h5 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Bank Statement Lines</h5>
                         </div>
                         <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
                             {lines.length === 0 && (
@@ -394,7 +394,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                     {/* GL Entries (Right) */}
                     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                         <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                            <h5 className="text-xs font-black text-gray-700 uppercase tracking-wide">GL Book Entries</h5>
+                            <h5 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">GL Book Entries</h5>
                             <span className="text-[10px] text-gray-400">{gl_entries.length} entries</span>
                         </div>
                         <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
@@ -418,7 +418,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                                                     ? <p className="text-xs font-bold text-red-600">DR {formatCurrency(Number(ge.debit), currency)}</p>
                                                     : <p className="text-xs font-bold text-emerald-600">CR {formatCurrency(Number(ge.credit), currency)}</p>}
                                                 {isMatched && (
-                                                    <Badge className="text-[8px] bg-emerald-100 text-emerald-700 border-0 px-1.5 mt-0.5">MATCHED</Badge>
+                                                    <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-0 px-1.5 mt-0.5">MATCHED</Badge>
                                                 )}
                                             </div>
                                         </div>
@@ -441,7 +441,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                 <>
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-lg font-black text-gray-900">Bank Reconciliation</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">Bank Reconciliation</h3>
                             <p className="text-xs text-gray-400">
                                 Match bank statement lines against GL book entries
                             </p>
@@ -457,7 +457,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                     {/* New Session Form */}
                     {showNewSession && (
                         <div className="bg-white rounded-2xl border border-brand-100 p-5 space-y-4 shadow-sm">
-                            <h4 className="text-sm font-black text-gray-900">Start Bank Reconciliation</h4>
+                            <h4 className="text-sm font-semibold text-gray-900">Start Bank Reconciliation</h4>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div>
@@ -585,7 +585,7 @@ export function BankReconciliation({ businessId, currency, accounts = [] }) {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-bold text-gray-900">{s.account_name}</span>
-                                            <Badge className={`text-[8px] px-1.5 py-0.5 border-0 font-black ${s.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            <Badge className={`text-[10px] px-1.5 py-0.5 border-0 font-semibold ${s.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                                                 {s.status?.toUpperCase()}
                                             </Badge>
                                         </div>

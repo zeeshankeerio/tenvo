@@ -92,7 +92,7 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
             headerActions={
                 <div className="flex items-center gap-1 mr-2">
                     <Sparkles className="w-3 h-3 text-wine" />
-                    <span className="text-[9px] font-black text-wine uppercase">AI Active</span>
+                    <span className="text-[10px] font-semibold text-wine uppercase">AI Active</span>
                 </div>
             }
         >
@@ -101,11 +101,11 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                     <div key={item.id} className="p-3 rounded-xl border border-gray-100 hover:border-wine/20 transition-all bg-white shadow-sm">
                         <div className="flex items-start justify-between mb-2">
                             <div>
-                                <p className="text-xs font-black text-gray-900 leading-none">{item.name}</p>
+                                <p className="text-xs font-semibold text-gray-900 leading-none">{item.name}</p>
                                 <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">SKU: {item.sku || 'N/A'}</p>
                             </div>
                             <div className={cn(
-                                "flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full border",
+                                "flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
                                 item.trend === 'up' ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-red-600 bg-red-50 border-red-100"
                             )}>
                                 {item.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -115,16 +115,16 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
 
                         <div className="grid grid-cols-2 gap-4 mb-3">
                             <div>
-                                <p className="text-[9px] text-gray-400 font-black uppercase mb-1">Stock Position</p>
+                                <p className="text-[10px] text-gray-400 font-semibold uppercase mb-1">Stock Position</p>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-lg font-black text-gray-900">{item.current}</span>
+                                    <span className="text-lg font-semibold text-gray-900">{item.current}</span>
                                     <span className="text-[10px] font-bold text-gray-400">Units</span>
                                 </div>
                             </div>
                             <div>
-                                <p className="text-[9px] text-gray-400 font-black uppercase mb-1">AI Forecast (30d)</p>
+                                <p className="text-[10px] text-gray-400 font-semibold uppercase mb-1">AI Forecast (30d)</p>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-lg font-black text-wine">{item.forecast}</span>
+                                    <span className="text-lg font-semibold text-wine">{item.forecast}</span>
                                     <span className="text-[10px] font-bold text-wine/50">Units</span>
                                 </div>
                             </div>
@@ -134,7 +134,7 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                             <div className="p-2 rounded-lg bg-gray-50 border border-gray-100 flex items-start gap-2">
                                 <Info className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
                                 <p className="text-[10px] font-medium text-gray-600 leading-tight">
-                                    <span className="font-bold text-gray-900 uppercase text-[9px] mr-1">AI Insight:</span>
+                                    <span className="font-bold text-gray-900 uppercase text-[10px] mr-1">AI Insight:</span>
                                     {item.insight}
                                 </p>
                             </div>
@@ -157,7 +157,7 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                                         }
                                     }
                                 }}
-                                className="w-full mt-3 py-1.5 rounded-lg font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-colors shadow-sm shadow-wine/10 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                className="w-full mt-3 py-1.5 rounded-lg font-semibold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors shadow-sm shadow-wine/10 bg-emerald-600 hover:bg-emerald-700 text-white"
                             >
                                 <ShoppingCart className="w-3.5 h-3.5" />
                                 Draft Restock Order

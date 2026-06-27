@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 /**
  * Supabase OAuth callback (storage / legacy OAuth only).
- * Identity for the app is Better Auth — this route only exchanges a Supabase OAuth code when configured.
+ * Identity for the app is Better Auth, this route only exchanges a Supabase OAuth code when configured.
  */
 export async function GET(request) {
   const { searchParams, origin } = new URL(request.url);

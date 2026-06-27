@@ -2,10 +2,13 @@ import { cn } from '@/lib/utils';
 import {
   MARKETING_CONTAINER,
   MARKETING_CONTAINER_NARROW,
+  MARKETING_LEAD,
+  MARKETING_PAGE_TITLE,
   MARKETING_SECTION,
   MARKETING_SECTION_LOOSE,
   MARKETING_SECTION_TIGHT,
 } from '@/lib/utils/marketingLayout';
+import { CopyText } from '@/components/ui/CopyText';
 
 const PADDING = {
   default: MARKETING_SECTION,
@@ -55,12 +58,12 @@ export function MarketingPageHeader({
       width="narrow"
       className={cn('border-b border-neutral-200/80 bg-white', className)}
     >
-      <h1 className="text-balance text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl lg:text-4xl">
-        {title}
+      <h1 className={MARKETING_PAGE_TITLE}>
+        <CopyText>{title}</CopyText>
       </h1>
       {description ? (
-        <div className="mt-3 text-sm font-medium leading-relaxed text-neutral-600 sm:text-base">
-          {description}
+        <div className={cn('mt-3', MARKETING_LEAD)}>
+          <CopyText>{description}</CopyText>
         </div>
       ) : null}
       {children}

@@ -129,7 +129,7 @@ export function ExpenseEntryForm({
                             <DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
                         <div className="min-w-0">
-                            <CardTitle className="text-base font-black uppercase tracking-tighter sm:text-2xl">Record Expense</CardTitle>
+                            <CardTitle className="text-base font-semibold uppercase tracking-tighter sm:text-2xl">Record Expense</CardTitle>
                             <p className="mt-0.5 hidden text-xs font-bold uppercase tracking-widest text-red-200 sm:block">
                                 {business?.name} · Financial Transactions
                             </p>
@@ -144,7 +144,7 @@ export function ExpenseEntryForm({
                     <form onSubmit={handleSave} className="space-y-4 sm:space-y-6">
                         <div className={cn(MOBILE_GRID_FIELDS, 'sm:gap-6')}>
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Expense Account (GL) *</Label>
+                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Expense Account (GL) *</Label>
                                 <Combobox
                                     options={glAccounts.map(a => ({
                                         value: String(a.id),
@@ -159,7 +159,7 @@ export function ExpenseEntryForm({
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Category Tag</Label>
+                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Category Tag</Label>
                                 <Combobox
                                     options={expenseCategories.map(c => ({
                                         value: c,
@@ -176,7 +176,7 @@ export function ExpenseEntryForm({
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Amount ({currency}) *</Label>
+                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Amount ({currency}) *</Label>
                                 <div className="relative">
                                     <Input
                                         type="number"
@@ -191,7 +191,7 @@ export function ExpenseEntryForm({
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Tax Included (Optional)</Label>
+                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Tax Included (Optional)</Label>
                                 <Input
                                     type="number"
                                     step="0.01"
@@ -205,7 +205,7 @@ export function ExpenseEntryForm({
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Date</Label>
+                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Date</Label>
                                 <div className="relative">
                                     <Input
                                         type="date"
@@ -217,14 +217,14 @@ export function ExpenseEntryForm({
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Payment Method</Label>
+                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Payment Method</Label>
                                 <div className="flex gap-2">
                                     {['cash', 'bank', 'credit'].map((method) => (
                                         <Button
                                             key={method}
                                             type="button"
                                             variant={formData.paymentMethod === method ? 'default' : 'outline'}
-                                            className={`flex-1 h-12 rounded-xl uppercase text-[10px] font-black tracking-widest transition-all ${formData.paymentMethod === method
+                                            className={`flex-1 h-12 rounded-xl uppercase text-[10px] font-semibold tracking-widest transition-all ${formData.paymentMethod === method
                                                     ? 'bg-red-600 hover:bg-red-700 text-white border-none'
                                                     : 'text-gray-400 hover:text-gray-900 border-gray-200'
                                                 }`}
@@ -239,7 +239,7 @@ export function ExpenseEntryForm({
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Paid to Vendor (Optional)</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Paid to Vendor (Optional)</Label>
                             <Combobox
                                 options={vendors.map(v => ({
                                     value: String(v.id),
@@ -255,7 +255,7 @@ export function ExpenseEntryForm({
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Description / Narrative</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Description / Narrative</Label>
                             <textarea
                                 className="w-full h-24 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-red-500 transition-all outline-none font-medium shadow-sm resize-none text-sm"
                                 placeholder="Purpose of this expense..."
@@ -265,7 +265,7 @@ export function ExpenseEntryForm({
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Receipt Attachment</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Receipt Attachment</Label>
                             <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center hover:border-red-500/50 hover:bg-red-50/30 transition-all cursor-pointer group">
                                 <div className="p-3 rounded-full bg-gray-50 text-gray-400 group-hover:bg-red-100 group-hover:text-red-500 transition-all mb-2">
                                     <Upload className="w-5 h-5" />
@@ -279,13 +279,13 @@ export function ExpenseEntryForm({
 
                 <div className={cn(MOBILE_FORM_FOOTER, 'bg-gray-50')}>
                     <div className="flex items-center justify-between gap-2">
-                        <Button variant="ghost" onClick={onClose} disabled={isSaving} className="h-9 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-gray-900">
+                        <Button variant="ghost" onClick={onClose} disabled={isSaving} className="h-9 text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-900">
                             Discard
                         </Button>
                         <Button
                             disabled={isSaving}
                             onClick={handleSave}
-                            className="h-9 rounded-xl px-6 text-xs font-black uppercase tracking-widest shadow-xl shadow-red-500/20 active:scale-95 transition-all flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white sm:h-12 sm:px-10"
+                            className="h-9 rounded-xl px-6 text-xs font-semibold uppercase tracking-widest shadow-xl shadow-red-500/20 active:scale-95 transition-all flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white sm:h-12 sm:px-10"
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             Record Expense

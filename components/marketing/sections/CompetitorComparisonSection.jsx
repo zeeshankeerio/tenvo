@@ -115,10 +115,10 @@ export default function CompetitorComparisonSection() {
       />
       <div className={cn('relative', MARKETING_CONTAINER)}>
         <div className="mx-auto mb-8 max-w-3xl space-y-3 text-center sm:mb-12 sm:space-y-4 lg:mb-14">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-brand-primary sm:text-[11px] sm:tracking-[0.28em]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-primary sm:text-[11px] sm:tracking-[0.28em]">
             Why teams pick TENVO
           </p>
-          <h2 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl md:text-4xl lg:text-5xl">
+          <h2 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl md:text-4xl lg:text-5xl">
             Built where commerce, operations, and compliance meet.
           </h2>
           <p className="text-base font-medium leading-relaxed text-neutral-600 sm:text-lg">
@@ -143,7 +143,7 @@ export default function CompetitorComparisonSection() {
                       )}
                     >
                       <ValueBadge value={row[col.key]} compact />
-                      <span className={cn('text-[9px] font-black uppercase leading-tight tracking-wide', col.highlight ? 'text-brand-primary' : 'text-neutral-500')}>
+                      <span className={cn('text-[9px] font-semibold uppercase leading-tight tracking-wide', col.highlight ? 'text-brand-primary' : 'text-neutral-500')}>
                         {col.label}
                       </span>
                     </div>
@@ -157,18 +157,18 @@ export default function CompetitorComparisonSection() {
             <table className="w-full text-left min-w-[720px] border-collapse">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50/90">
-                  <th className="p-4 lg:p-5 text-[10px] font-black uppercase tracking-wider text-neutral-500 w-[36%]">
+                  <th className="p-4 lg:p-5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500 w-[36%]">
                     What matters to your business
                   </th>
-                  <th className="p-4 lg:p-5 text-center text-[10px] font-black uppercase tracking-wider text-neutral-500">
+                  <th className="p-4 lg:p-5 text-center text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
                     <span className="block">Storefront-first</span>
                     <span className="block text-[9px] font-bold text-neutral-400 normal-case mt-1 tracking-normal">e.g. Shopify-style</span>
                   </th>
-                  <th className="p-4 lg:p-5 text-center text-[10px] font-black uppercase tracking-wider text-neutral-500">
+                  <th className="p-4 lg:p-5 text-center text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
                     <span className="block">Multi-app suites</span>
                     <span className="block text-[9px] font-bold text-neutral-400 normal-case mt-1 tracking-normal">e.g. Zoho-style</span>
                   </th>
-                  <th className="p-4 lg:p-5 text-center text-[10px] font-black uppercase tracking-wider text-brand-primary bg-brand-50/80">
+                  <th className="p-4 lg:p-5 text-center text-[10px] font-semibold uppercase tracking-wider text-brand-primary bg-brand-50/80">
                     TENVO
                   </th>
                 </tr>
@@ -197,7 +197,7 @@ export default function CompetitorComparisonSection() {
         </div>
 
         <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-12 sm:flex-row sm:items-center sm:gap-4">
-          <Button asChild className="h-11 rounded-xl bg-brand-primary px-6 font-black uppercase tracking-wider text-white hover:bg-brand-primary-dark sm:h-12 sm:px-8">
+          <Button asChild className="h-11 rounded-xl bg-brand-primary px-6 font-semibold uppercase tracking-wider text-white hover:bg-brand-primary-dark sm:h-12 sm:px-8">
             <Link href="/register">See TENVO on your data</Link>
           </Button>
           <Button asChild variant="outline" className="h-11 rounded-xl border-2 px-6 font-bold sm:h-12 sm:px-8">

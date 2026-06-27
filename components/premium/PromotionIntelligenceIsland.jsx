@@ -48,7 +48,7 @@ export function PromotionIntelligenceIsland({ businessId }) {
             <LiquidLayout variant="glass" className="h-[400px] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-                    <span className="text-xs font-black uppercase tracking-widest text-amber-500/60 animate-pulse">Scanning Sales Patterns...</span>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-amber-500/60 animate-pulse">Scanning Sales Patterns...</span>
                 </div>
             </LiquidLayout>
         );
@@ -64,12 +64,12 @@ export function PromotionIntelligenceIsland({ businessId }) {
                             <Sparkles className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white">AI Revenue Booster</h3>
+                            <h3 className="text-lg font-semibold uppercase tracking-tight text-slate-800 dark:text-white">AI Revenue Booster</h3>
                             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Inventory-Driven Marketing</p>
                         </div>
                     </LiquidItem>
 
-                    <Badge variant="outline" className="border-amber-200 bg-amber-50/50 text-amber-700 font-black h-7">
+                    <Badge variant="outline" className="border-amber-200 bg-amber-50/50 text-amber-700 font-semibold h-7">
                         PREDICTED +15% ROI
                     </Badge>
                 </div>
@@ -102,7 +102,7 @@ export function PromotionIntelligenceIsland({ businessId }) {
                     </div>
                     <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase">
                         These strategies target items with &gt;60 days of storage cost.
-                        <span className="block font-black text-amber-600">Activate to clear PKR 45,200 in stagnant capital.</span>
+                        <span className="block font-semibold text-amber-600">Activate to clear PKR 45,200 in stagnant capital.</span>
                     </p>
                 </div>
             </div>
@@ -118,26 +118,26 @@ function StrategyCard({ recommendation }) {
 
             <div className="flex items-start justify-between mb-4 relative z-10">
                 <div className="flex gap-4">
-                    <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center border border-amber-100 dark:border-amber-800 font-black text-amber-600">
+                    <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center border border-amber-100 dark:border-amber-800 font-semibold text-amber-600">
                         {recommendation.strategy === 'Clearance' ? <Flame className="w-6 h-6" /> : <Tag className="w-6 h-6" />}
                     </div>
                     <div>
-                        <h4 className="font-black text-slate-800 dark:text-white uppercase">{recommendation.strategy} Campaign</h4>
+                        <h4 className="font-semibold text-slate-800 dark:text-white uppercase">{recommendation.strategy} Campaign</h4>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{recommendation.reason}</span>
                         </div>
                     </div>
                 </div>
                 <div className="text-right">
-                    <div className="text-xl font-black text-amber-600">{recommendation.suggested_discount}</div>
-                    <div className="text-[9px] font-black uppercase text-slate-400 tracking-tight">Suggested Save</div>
+                    <div className="text-xl font-semibold text-amber-600">{recommendation.suggested_discount}</div>
+                    <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-tight">Suggested Save</div>
                 </div>
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/50 relative z-10">
                 <div className="flex -space-x-2">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[8px] font-bold text-slate-500">
+                        <div key={i} className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500">
                             P{i}
                         </div>
                     ))}
@@ -145,7 +145,7 @@ function StrategyCard({ recommendation }) {
                         {recommendation.product_ids?.length || 0} Affected
                     </div>
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 rounded-full px-4 text-xs font-black uppercase text-amber-600 hover:bg-amber-50 hover:text-amber-700 transition-colors">
+                <Button variant="ghost" size="sm" className="h-8 rounded-full px-4 text-xs font-semibold uppercase text-amber-600 hover:bg-amber-50 hover:text-amber-700 transition-colors">
                     Create <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
             </div>

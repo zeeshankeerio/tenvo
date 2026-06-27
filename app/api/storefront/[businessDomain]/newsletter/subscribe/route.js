@@ -33,7 +33,7 @@ export async function POST(request, { params }) {
         );
       } catch (insertErr) {
         if (insertErr.code === '42P01') {
-          // Table doesn't exist — create it silently and retry
+          // Table doesn't exist, create it silently and retry
           await client.query(`
             CREATE TABLE IF NOT EXISTS newsletter_subscribers (
               id SERIAL PRIMARY KEY,

@@ -107,7 +107,7 @@ export function ProductReviews({ productId, businessDomain, initialRating, revie
       setTotal(data.total || 0);
       setHasMore(data.hasMore || false);
     } catch {
-      // Silently fail — reviews are non-critical
+      // Silently fail, reviews are non-critical
     } finally {
       setLoading(false);
     }
@@ -165,7 +165,7 @@ export function ProductReviews({ productId, businessDomain, initialRating, revie
           {/* Average score */}
           <div className="text-center flex-shrink-0">
             <div className="text-5xl font-black text-gray-900 leading-none">
-              {avgRating > 0 ? avgRating.toFixed(1) : '—'}
+              {avgRating > 0 ? avgRating.toFixed(1) : ', '}
             </div>
             <StarRating value={Math.round(avgRating)} readOnly size="sm" />
             <p className="text-sm text-gray-500 mt-1">

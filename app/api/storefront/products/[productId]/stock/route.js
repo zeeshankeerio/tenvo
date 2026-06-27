@@ -4,7 +4,7 @@ import { checkProductStock } from '@/lib/actions/storefront/products';
 /**
  * POST /api/storefront/products/[productId]/stock
  * Check stock availability before adding to cart (tenant-scoped).
- * Requires businessId — product must belong to that business.
+ * Requires businessId, product must belong to that business.
  */
 export async function POST(request, { params }) {
   try {

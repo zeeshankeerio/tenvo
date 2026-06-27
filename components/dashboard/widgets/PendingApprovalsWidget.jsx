@@ -167,7 +167,7 @@ export function PendingApprovalsWidget({
         {/* Summary Counts */}
         <div className="grid grid-cols-3 gap-2">
           <div className="p-3 rounded-lg bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200">
-            <div className="text-2xl font-black text-red-700 mb-0.5">
+            <div className="text-2xl font-semibold text-red-700 mb-0.5">
               {highPriorityCount}
             </div>
             <div className="text-[10px] font-bold text-red-600 uppercase tracking-wider">
@@ -176,7 +176,7 @@ export function PendingApprovalsWidget({
           </div>
           
           <div className="p-3 rounded-lg bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200">
-            <div className="text-2xl font-black text-orange-700 mb-0.5">
+            <div className="text-2xl font-semibold text-orange-700 mb-0.5">
               {groupedApprovals.medium.length}
             </div>
             <div className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">
@@ -185,7 +185,7 @@ export function PendingApprovalsWidget({
           </div>
           
           <div className="p-3 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200">
-            <div className="text-2xl font-black text-gray-700 mb-0.5">
+            <div className="text-2xl font-semibold text-gray-700 mb-0.5">
               {groupedApprovals.low.length}
             </div>
             <div className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">

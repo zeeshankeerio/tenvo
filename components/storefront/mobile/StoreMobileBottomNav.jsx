@@ -21,7 +21,7 @@ export function StoreMobileBottomNav() {
   const cartCount =
     cart?.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
 
-  // Full-screen flows — hide chrome
+  // Full-screen flows, hide chrome
   if (
     pathname.includes('/checkout') ||
     pathname.includes('/account/login') ||

@@ -70,7 +70,7 @@ export async function GET(request) {
       business.stripe_subscription_status ||
       (business.plan_tier === 'free' ? 'inactive' : 'unknown');
 
-    /** Stripe dunning / incomplete payment — keep access like typical SaaS grace until hard cancel. */
+    /** Stripe dunning / incomplete payment, keep access like typical SaaS grace until hard cancel. */
     const graceWhilePaidTier =
       business.plan_tier &&
       business.plan_tier !== 'free' &&

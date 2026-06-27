@@ -77,7 +77,7 @@ export const RemindersPortlet = memo(function RemindersPortlet({
                         </div>
                         <div className="flex items-center gap-1.5">
                             <span className={cn(
-                                "text-sm font-black transition-transform group-hover:scale-110",
+                                "text-sm font-semibold transition-transform group-hover:scale-110",
                                 item.count > 0 ? item.color : "text-gray-300"
                             )}>
                                 {item.count}

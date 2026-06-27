@@ -15,7 +15,7 @@ const SORT_OPTIONS = [
   { value: 'rating',     label: 'Top Rated' },
   { value: 'price-asc',  label: 'Price: Low to High' },
   { value: 'price-desc', label: 'Price: High to Low' },
-  { value: 'name-asc',   label: 'Name: A–Z' },
+  { value: 'name-asc',   label: 'Name: A-Z' },
 ];
 
 export function SortDropdown({ currentSort, businessDomain }) {
@@ -122,18 +122,39 @@ export function ActiveFilters({ filters, businessDomain }) {
   if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
     const lo = formatCurrency(filters.minPrice || 0, currency);
     const hi = filters.maxPrice != null ? formatCurrency(filters.maxPrice, currency) : '∞';
-    activeFilters.push({ key: 'price', label: `Price: ${lo} – ${hi}` });
+    activeFilters.push({ key: 'price', label: `Price: ${lo} - ${hi}` });
   }
   if (filters.inStock)   activeFilters.push({ key: 'inStock', label: 'In Stock Only' });
   if (filters.onSale)    activeFilters.push({ key: 'onSale', label: 'On Sale' });
-  if (filters.search)    activeFilters.push({ key: 'search', label: `"${filters.search}"` });
+  if (filters.search) {
+    const mode = String(filters.searchMode || '').toLowerCase();
+    let label = `"${filters.search}"`;
+    if (mode === 'partnumber') label = `Part number: ${filters.search}`;
+    else if (mode === 'partsize') label = `Part size: ${filters.search}`;
+    else if (mode === 'plate') label = `Plate: ${filters.search}`;
+    else if (mode === 'vin') label = `VIN / chassis: ${filters.search}`;
+    activeFilters.push({ key: 'search', label });
+  }
+  if (filters.brand)     activeFilters.push({ key: 'brand', label: `Make: ${filters.brand}` });
+  if (filters.model)     activeFilters.push({ key: 'model', label: `Model: ${filters.model}` });
+  if (filters.year)      activeFilters.push({ key: 'year', label: `Year: ${filters.year}` });
+  if (filters.engine)    activeFilters.push({ key: 'engine', label: `Engine: ${filters.engine}` });
+  if (filters.engineNo)  activeFilters.push({ key: 'engineNo', label: `Engine no: ${filters.engineNo}` });
+  if (filters.vehicleClass) activeFilters.push({ key: 'class', label: `Class: ${filters.vehicleClass}` });
+  if (filters.vehicleType) activeFilters.push({ key: 'vehicleType', label: `Type: ${filters.vehicleType}` });
+  if (filters.body)      activeFilters.push({ key: 'body', label: `Body: ${filters.body}` });
+  if (filters.fuel)      activeFilters.push({ key: 'fuel', label: `Fuel: ${filters.fuel}` });
+  if (filters.condition) activeFilters.push({ key: 'condition', label: `Condition: ${filters.condition}` });
 
   if (activeFilters.length === 0) return null;
 
   const removeFilter = (key) => {
     const params = new URLSearchParams(searchParams.toString());
     if (key === 'price') { params.delete('minPrice'); params.delete('maxPrice'); }
-    else params.delete(key);
+    else if (key === 'search') {
+      params.delete('search');
+      params.delete('searchMode');
+    } else params.delete(key);
     params.delete('page');
     router.push(`/store/${businessDomain}/products?${params.toString()}`);
   };

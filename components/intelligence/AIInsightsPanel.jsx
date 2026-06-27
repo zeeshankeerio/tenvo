@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -52,10 +52,10 @@ function MetricCard({ label, value, trend, trendValue, icon: Icon, color, hint }
                     </div>
                 )}
             </div>
-            <p className="text-xl font-black text-gray-900 tracking-tight">{value}</p>
+            <p className="text-xl font-semibold text-gray-900 tracking-tight">{value}</p>
             <p className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">{label}</p>
             {hint ? (
-                <p className="text-[9px] text-gray-500 mt-1 leading-tight font-medium normal-case">{hint}</p>
+                <p className="text-[10px] text-gray-500 mt-1 leading-tight font-medium normal-case">{hint}</p>
             ) : null}
         </div>
     );
@@ -78,22 +78,22 @@ function ForecastRow({ item }) {
                 <p className="text-sm font-bold text-gray-800 truncate">{item.name}</p>
                 <p className="text-[10px] text-gray-400">
                     Stock: {item.current}
-                    {' · '}
+                    {' � '}
                     Forecast: {item.forecast}/mo
-                    {' · '}
+                    {' � '}
                     Recommended: {item.recommended}
                 </p>
             </div>
             <div className="text-right shrink-0">
                 <p className={cn(
-                    'text-xs font-black flex items-center justify-end gap-0.5',
+                    'text-xs font-semibold flex items-center justify-end gap-0.5',
                     item.trend === 'up' ? 'text-emerald-600' : 'text-red-600'
                 )}>
                     {item.trend === 'up' ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
                     {item.variance} units
                 </p>
                 {item.isAi && (
-                    <span className="text-[8px] px-1 py-0.5 rounded bg-wine-100 text-wine-600 font-bold">AI</span>
+                    <span className="text-[10px] px-1 py-0.5 rounded bg-wine-100 text-wine-600 font-bold">AI</span>
                 )}
             </div>
         </div>
@@ -112,8 +112,8 @@ function PromoCard({ promo, currency }) {
     return (
         <div className={cn('rounded-xl border p-3', strategyColors[promo.strategy] || 'bg-gray-50 border-gray-200')}>
             <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-black">{promo.strategy}</span>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-white/50 rounded">{promo.suggested_discount}</span>
+                <span className="text-xs font-semibold">{promo.strategy}</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 bg-white/50 rounded">{promo.suggested_discount}</span>
             </div>
             <p className="text-[10px] opacity-80">{promo.reason}</p>
             {promo.potential_revenue > 0 && (
@@ -141,7 +141,7 @@ function MiniBarChart({ data, valueKey = 'revenue', labelKey = 'date' }) {
                             transition={{ delay: i * 0.05, duration: 0.4 }}
                             className="w-full rounded-t-md bg-gradient-to-t from-indigo-600 to-indigo-400 min-h-[4px]"
                         />
-                        <span className="text-[8px] font-bold text-gray-400">{d[labelKey]}</span>
+                        <span className="text-[10px] font-bold text-gray-400">{d[labelKey]}</span>
                     </div>
                 );
             })}
@@ -229,8 +229,8 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                         <Brain className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-black text-gray-900">AI Analytics & Insights</h2>
-                        <p className="text-xs text-gray-400">Predictive analytics · Anomaly detection · Smart recommendations</p>
+                        <h2 className="text-lg font-semibold text-gray-900">AI Analytics & Insights</h2>
+                        <p className="text-xs text-gray-400">Predictive analytics � Anomaly detection � Smart recommendations</p>
                     </div>
                 </div>
                 <button onClick={loadAll} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
@@ -282,7 +282,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                 <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <div className="flex items-center gap-2 mb-4">
                         <BarChart3 className="w-4 h-4 text-indigo-500" />
-                        <h3 className="text-sm font-black text-gray-800">Revenue Trend (6 Months)</h3>
+                        <h3 className="text-sm font-semibold text-gray-800">Revenue Trend (6 Months)</h3>
                     </div>
                     <MiniBarChart data={salesTrend} valueKey="revenue" labelKey="date" />
                     {salesTrend.length === 0 && (
@@ -294,7 +294,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                 <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <Sparkles className="w-4 h-4 text-amber-500" />
-                        <h3 className="text-sm font-black text-gray-800">Top Products by Revenue</h3>
+                        <h3 className="text-sm font-semibold text-gray-800">Top Products by Revenue</h3>
                     </div>
                     <div className="space-y-2">
                         {topProducts.map((product, idx) => {
@@ -302,7 +302,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                             const barWidth = Math.max(10, (product.value / maxVal) * 100);
                             return (
                                 <div key={idx} className="flex items-center gap-2">
-                                    <span className="w-5 text-[10px] font-black text-gray-400 shrink-0">#{idx + 1}</span>
+                                    <span className="w-5 text-[10px] font-semibold text-gray-400 shrink-0">#{idx + 1}</span>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-bold text-gray-700 truncate">{product.name}</p>
                                         <div className="w-full bg-gray-100 rounded-full h-1.5 mt-0.5">
@@ -313,7 +313,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                                             />
                                         </div>
                                     </div>
-                                    <span className="text-[10px] font-black text-gray-600 shrink-0">{currency} {Number(product.value).toLocaleString()}</span>
+                                    <span className="text-[10px] font-semibold text-gray-600 shrink-0">{currency} {Number(product.value).toLocaleString()}</span>
                                 </div>
                             );
                         })}
@@ -329,8 +329,8 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                 <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                         <Activity className="w-4 h-4 text-wine-500" />
-                        <h3 className="text-sm font-black text-gray-800">Demand forecast & restock signals</h3>
-                        <span className="text-[8px] px-1.5 py-0.5 bg-wine-100 text-wine-600 rounded-full font-bold">AI POWERED</span>
+                        <h3 className="text-sm font-semibold text-gray-800">Demand forecast & restock signals</h3>
+                        <span className="text-[10px] px-1.5 py-0.5 bg-wine-100 text-wine-600 rounded-full font-bold">AI POWERED</span>
                     </div>
                     <p className="text-[10px] text-gray-500 mb-3">
                         Top items by demand vs stock using invoice and paid storefront history (up to 12). Different from the movement-based restock queue below.
@@ -347,8 +347,8 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                 <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                         <Package className="w-4 h-4 text-rose-500" />
-                        <h3 className="text-sm font-black text-gray-800">Restock queue</h3>
-                        <span className="text-[9px] font-bold text-gray-500">({restockSuggestions.length} items)</span>
+                        <h3 className="text-sm font-semibold text-gray-800">Restock queue</h3>
+                        <span className="text-[10px] font-bold text-gray-500">({restockSuggestions.length} items)</span>
                     </div>
                     <p className="text-[10px] text-gray-500 mb-3">
                         Matches the Restock alerts KPI: outbound stock movements vs AI forecasted monthly demand.
@@ -369,11 +369,11 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                                         Stock: <b>{s.stock}</b>
                                     </span>
                                     <span className="text-gray-600">
-                                        Forecast: <b>{fc ?? '—'}</b>/mo
+                                        Forecast: <b>{fc ?? ', '}</b>/mo
                                     </span>
                                     <span
                                         className={cn(
-                                            'text-[9px] font-black uppercase px-1.5 py-0.5 rounded',
+                                            'text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded',
                                             s.priority === 'High' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'
                                         )}
                                     >
@@ -392,7 +392,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                 <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <PieChart className="w-4 h-4 text-rose-500" />
-                        <h3 className="text-sm font-black text-gray-800">Expense breakdown (selected range)</h3>
+                        <h3 className="text-sm font-semibold text-gray-800">Expense breakdown (selected range)</h3>
                     </div>
                     <div className="space-y-2">
                         {expenseBreakdown.map((exp, idx) => {
@@ -402,7 +402,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                                     <div className={cn('w-2 h-2 rounded-full shrink-0', colors[idx % colors.length])} />
                                     <span className="flex-1 text-xs font-semibold text-gray-700 truncate">{exp.name}</span>
                                     <span className="text-xs font-bold text-gray-800">{currency} {Number(exp.value).toLocaleString()}</span>
-                                    <span className="text-[9px] text-gray-400 w-8 text-right">{exp.percentage}%</span>
+                                    <span className="text-[10px] text-gray-400 w-8 text-right">{exp.percentage}%</span>
                                 </div>
                             );
                         })}
@@ -416,8 +416,8 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                 <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <Lightbulb className="w-4 h-4 text-amber-500" />
-                        <h3 className="text-sm font-black text-gray-800">Smart Promotions</h3>
-                        <span className="text-[8px] px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded-full font-bold">AI</span>
+                        <h3 className="text-sm font-semibold text-gray-800">Smart Promotions</h3>
+                        <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded-full font-bold">AI</span>
                     </div>
                     <div className="space-y-2">
                         {promos.map((promo, idx) => (

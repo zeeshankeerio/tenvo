@@ -44,7 +44,7 @@ export function QuickWarehouseForm({ onSave, onCancel }) {
         <form onSubmit={handleSubmit} className="space-y-4 pt-2 sm:space-y-6 sm:pt-4">
             <div className="space-y-3 sm:space-y-4">
                 <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Location Name *</Label>
+                    <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Location Name *</Label>
                     <div className="relative">
                         <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                         <Input
@@ -58,7 +58,7 @@ export function QuickWarehouseForm({ onSave, onCancel }) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Address / Description</Label>
+                    <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Address / Description</Label>
                     <div className="relative">
                         <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                         <Input
@@ -71,7 +71,7 @@ export function QuickWarehouseForm({ onSave, onCancel }) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Location Type</Label>
+                    <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Location Type</Label>
                     <select
                         className={cn(MOBILE_INPUT_CLASS, 'w-full border bg-white px-3 py-2 font-bold text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500')}
                         value={formData.type}

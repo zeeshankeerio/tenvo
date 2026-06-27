@@ -59,7 +59,7 @@ export const WorkflowOrchestrator = memo(function WorkflowOrchestrator({ busines
             title="Workflow Orchestrator"
             description="Agentic automation via natural language"
             headerActions={
-                <Badge variant="outline" className="text-[9px] border-wine/20 text-wine bg-wine/5 animate-pulse uppercase font-black">
+                <Badge variant="outline" className="text-[10px] border-wine/20 text-wine bg-wine/5 animate-pulse uppercase font-semibold">
                     Live Agent
                 </Badge>
             }
@@ -87,7 +87,7 @@ export const WorkflowOrchestrator = memo(function WorkflowOrchestrator({ busines
 
                 {/* Audit Trail / History */}
                 <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                         <History className="w-3 h-3" />
                         Automation History
                     </h4>
@@ -98,7 +98,7 @@ export const WorkflowOrchestrator = memo(function WorkflowOrchestrator({ busines
                                     <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
                                     <span className="font-bold text-gray-700 truncate max-w-[180px]">{item.msg}</span>
                                 </div>
-                                <span className="text-[9px] text-gray-400 font-medium group-hover:text-gray-500">{item.time}</span>
+                                <span className="text-[10px] text-gray-400 font-medium group-hover:text-gray-500">{item.time}</span>
                             </div>
                         ))}
                     </div>
@@ -110,7 +110,7 @@ export const WorkflowOrchestrator = memo(function WorkflowOrchestrator({ busines
                         <Brain className="w-4 h-4" />
                     </div>
                     <div className="text-[10px] leading-tight">
-                        <p className="font-black text-wine">Agentic Mindset Active</p>
+                        <p className="font-semibold text-wine">Agentic Mindset Active</p>
                         <p className="font-medium text-wine/60">Monitoring triggers across inventory & sales.</p>
                     </div>
                 </div>

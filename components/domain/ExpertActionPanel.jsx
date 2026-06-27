@@ -56,7 +56,7 @@ export function ExpertActionPanel({ category, item, onUpdate }) {
               {getDomainIcon()}
             </div>
             <div>
-              <DialogTitle className="text-xl font-black tracking-tight">Expert Precision Data</DialogTitle>
+              <DialogTitle className="text-xl font-semibold tracking-tight">Expert Precision Data</DialogTitle>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{category.replace(/-/g, ' ')} Module</p>
             </div>
           </div>
@@ -72,8 +72,8 @@ export function ExpertActionPanel({ category, item, onUpdate }) {
               return (
                 <div key={field} className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{field}</Label>
-                    <Badge variant="outline" className="text-[9px] h-4 border-gray-200 text-gray-400">Precision</Badge>
+                    <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">{field}</Label>
+                    <Badge variant="outline" className="text-[10px] h-4 border-gray-200 text-gray-400">Precision</Badge>
                   </div>
                   <Input
                     value={item[key] || ''}
@@ -98,7 +98,7 @@ export function ExpertActionPanel({ category, item, onUpdate }) {
         <div className="flex justify-end pt-4 border-t">
           <Button 
             onClick={() => setOpen(false)}
-            className="bg-brand-primary hover:opacity-90 text-white font-black px-8 h-10 rounded-xl shadow-lg"
+            className="bg-brand-primary hover:opacity-90 text-white font-semibold px-8 h-10 rounded-xl shadow-lg"
           >
             Apply Precision Data
             <ChevronRight className="ml-2 w-4 h-4" />

@@ -106,7 +106,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-black text-gray-900">Fiscal Periods</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Fiscal Periods</h3>
                     <p className="text-xs text-gray-400">
                         {periods.length} period{periods.length !== 1 ? 's' : ''} · controls GL posting windows
                     </p>
@@ -122,7 +122,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
             {/* Create Form */}
             {showCreateForm && (
                 <div className="bg-white rounded-2xl border border-brand-100 p-5 space-y-4 shadow-sm">
-                    <h4 className="text-sm font-black text-gray-900">Create Fiscal Period</h4>
+                    <h4 className="text-sm font-semibold text-gray-900">Create Fiscal Period</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                             <label className="text-xs font-bold text-gray-600 mb-1 block">Period Name</label>
@@ -208,7 +208,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-bold text-gray-900">{period.name}</span>
-                                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${statusStyle.bg}`}>
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${statusStyle.bg}`}>
                                                 {statusStyle.label}
                                             </span>
                                         </div>
@@ -227,13 +227,13 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
                                     {(period.total_debit != null || period.total_credit != null) && (
                                         <div className="hidden md:flex gap-4 shrink-0 text-right">
                                             <div>
-                                                <p className="text-[9px] font-bold text-gray-400 uppercase">Total DR</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Total DR</p>
                                                 <p className="text-xs font-mono font-bold text-gray-700">
                                                     {formatCurrency(Number(period.total_debit || 0), currency)}
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-[9px] font-bold text-gray-400 uppercase">Total CR</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Total CR</p>
                                                 <p className="text-xs font-mono font-bold text-gray-700">
                                                     {formatCurrency(Number(period.total_credit || 0), currency)}
                                                 </p>
@@ -271,7 +271,7 @@ export function FiscalPeriodManager({ businessId, currency, periods = [], onRefr
                                 {/* Pre-Close Checklist */}
                                 {isConfirmingClose && (
                                     <div className="border-t border-amber-100 bg-amber-50/60 px-5 py-4 space-y-3">
-                                        <h5 className="text-xs font-black text-amber-800 flex items-center gap-1.5">
+                                        <h5 className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">
                                             <AlertTriangle className="w-4 h-4" />
                                             Pre-Close Checklist -- {period.name}
                                         </h5>

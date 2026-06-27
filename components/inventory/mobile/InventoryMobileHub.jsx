@@ -33,7 +33,7 @@ import {
 import { MobileHubTile, MobileActionRow } from '@/components/mobile/MobileHubPrimitives';
 
 /**
- * Mobile-only inventory hub — app-style tiles for sections and actions.
+ * Mobile-only inventory hub, app-style tiles for sections and actions.
  * Desktop uses InventoryCommandBar; this renders only below lg breakpoint.
  */
 export function InventoryMobileHub({
@@ -109,16 +109,16 @@ export function InventoryMobileHub({
       {/* Mini KPI scroll */}
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 scrollbar-none">
         {[
-          { label: 'Products', value: stats.totalProducts ?? '—' },
-          { label: 'Alerts', value: stats.lowStock ?? '—', alert: (stats.lowStock ?? 0) > 0 },
-          { label: 'Value', value: stats.inventoryValue ?? '—' },
-          { label: 'Class', value: stats.efficiencyClass ?? '—' },
+          { label: 'Products', value: stats.totalProducts ?? ', ' },
+          { label: 'Alerts', value: stats.lowStock ?? ', ', alert: (stats.lowStock ?? 0) > 0 },
+          { label: 'Value', value: stats.inventoryValue ?? ', ' },
+          { label: 'Class', value: stats.efficiencyClass ?? ', ' },
         ].map((kpi) => (
           <div
             key={kpi.label}
             className="min-w-[100px] shrink-0 rounded-xl border border-gray-100 bg-white px-3 py-2 shadow-sm"
           >
-            <p className="text-[9px] font-bold uppercase tracking-wide text-gray-400">{kpi.label}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{kpi.label}</p>
             <p className={cn('mt-0.5 truncate text-sm font-bold', kpi.alert ? 'text-red-600' : 'text-gray-900')}>
               {kpi.value}
             </p>
@@ -159,7 +159,7 @@ export function InventoryMobileHub({
         </div>
       )}
 
-      {/* Bottom sheet — extended tools */}
+      {/* Bottom sheet, extended tools */}
       <Sheet open={toolsOpen} onOpenChange={setToolsOpen}>
         <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl px-4 pb-8 pt-4">
           <SheetHeader className="text-left">

@@ -154,7 +154,7 @@ export function TodaysSalesWidget({
               <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">
                 {t.total_sales || 'Total Sales'}
               </div>
-              <div className="text-3xl font-black text-green-900">
+              <div className="text-3xl font-semibold text-green-900">
                 {formatCurrency(salesData.totalSales, currency)}
               </div>
             </div>
@@ -194,7 +194,7 @@ export function TodaysSalesWidget({
                 {t.orders || 'Orders'}
               </span>
             </div>
-            <div className="text-2xl font-black text-gray-900">
+            <div className="text-2xl font-semibold text-gray-900">
               {salesData.totalOrders}
             </div>
           </div>
@@ -206,7 +206,7 @@ export function TodaysSalesWidget({
                 {t.avg_order || 'Avg Order'}
               </span>
             </div>
-            <div className="text-2xl font-black text-gray-900">
+            <div className="text-2xl font-semibold text-gray-900">
               {formatCurrency(salesData.avgOrderValue, currency)}
             </div>
           </div>

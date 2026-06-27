@@ -258,7 +258,7 @@ export function InventoryDashboard({
       {/* Inventory Dashboard Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-gray-900">
+          <h2 className="text-2xl font-semibold text-gray-900">
             {t.inventory_dashboard || 'Inventory Dashboard'}
           </h2>
           <p className="text-sm text-gray-500">
@@ -298,7 +298,7 @@ export function InventoryDashboard({
                   {t.total_value || 'Total Value'}
                 </span>
               </div>
-              <div className="text-xl font-black text-wine-900">
+              <div className="text-xl font-semibold text-wine-900">
                 {formatCurrency(stockLevels.totalValue, currency)}
               </div>
             </div>
@@ -310,7 +310,7 @@ export function InventoryDashboard({
                   {t.total_products || 'Total Products'}
                 </span>
               </div>
-              <div className="text-xl font-black text-blue-900">
+              <div className="text-xl font-semibold text-blue-900">
                 {stockLevels.totalProducts}
               </div>
             </div>
@@ -322,7 +322,7 @@ export function InventoryDashboard({
                   {t.low_stock || 'Low Stock'}
                 </span>
               </div>
-              <div className="text-xl font-black text-orange-900">
+              <div className="text-xl font-semibold text-orange-900">
                 {stockLevels.lowStockCount}
               </div>
             </div>
@@ -334,7 +334,7 @@ export function InventoryDashboard({
                   {t.out_of_stock || 'Out of Stock'}
                 </span>
               </div>
-              <div className="text-xl font-black text-red-900">
+              <div className="text-xl font-semibold text-red-900">
                 {stockLevels.outOfStockCount}
               </div>
             </div>
@@ -435,7 +435,7 @@ export function InventoryDashboard({
             {/* Alert Summary */}
             <div className="grid grid-cols-3 gap-2">
               <div className="p-3 rounded-lg bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200">
-                <div className="text-2xl font-black text-red-700">
+                <div className="text-2xl font-semibold text-red-700">
                   {reorderAlerts.criticalCount}
                 </div>
                 <div className="text-xs font-bold text-red-600 uppercase tracking-wider">
@@ -444,7 +444,7 @@ export function InventoryDashboard({
               </div>
               
               <div className="p-3 rounded-lg bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200">
-                <div className="text-2xl font-black text-orange-700">
+                <div className="text-2xl font-semibold text-orange-700">
                   {reorderAlerts.urgentCount}
                 </div>
                 <div className="text-xs font-bold text-orange-600 uppercase tracking-wider">
@@ -453,7 +453,7 @@ export function InventoryDashboard({
               </div>
               
               <div className="p-3 rounded-lg bg-gradient-to-br from-yellow-50 to-yellow-100/50 border border-yellow-200">
-                <div className="text-2xl font-black text-yellow-700">
+                <div className="text-2xl font-semibold text-yellow-700">
                   {reorderAlerts.warningCount}
                 </div>
                 <div className="text-xs font-bold text-yellow-600 uppercase tracking-wider">
@@ -532,7 +532,7 @@ export function InventoryDashboard({
             {/* Task Summary */}
             <div className="grid grid-cols-3 gap-2">
               <div className="p-3 rounded-lg bg-gradient-to-br from-yellow-50 to-yellow-100/50 border border-yellow-200">
-                <div className="text-2xl font-black text-yellow-700">
+                <div className="text-2xl font-semibold text-yellow-700">
                   {cycleCountTasks.pendingCount}
                 </div>
                 <div className="text-xs font-bold text-yellow-600 uppercase tracking-wider">
@@ -541,7 +541,7 @@ export function InventoryDashboard({
               </div>
               
               <div className="p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200">
-                <div className="text-2xl font-black text-blue-700">
+                <div className="text-2xl font-semibold text-blue-700">
                   {cycleCountTasks.inProgressCount}
                 </div>
                 <div className="text-xs font-bold text-blue-600 uppercase tracking-wider">
@@ -550,7 +550,7 @@ export function InventoryDashboard({
               </div>
               
               <div className="p-3 rounded-lg bg-gradient-to-br from-green-50 to-green-100/50 border border-green-200">
-                <div className="text-2xl font-black text-green-700">
+                <div className="text-2xl font-semibold text-green-700">
                   {cycleCountTasks.completedToday}
                 </div>
                 <div className="text-xs font-bold text-green-600 uppercase tracking-wider">
@@ -637,7 +637,7 @@ export function InventoryDashboard({
           {/* Queue Summary */}
           <div className="grid grid-cols-3 gap-3">
             <div className="p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200">
-              <div className="text-2xl font-black text-blue-700">
+              <div className="text-2xl font-semibold text-blue-700">
                 {receivingQueue.pendingCount}
               </div>
               <div className="text-xs font-bold text-blue-600 uppercase tracking-wider">
@@ -646,7 +646,7 @@ export function InventoryDashboard({
             </div>
             
             <div className="p-3 rounded-lg bg-gradient-to-br from-yellow-50 to-yellow-100/50 border border-yellow-200">
-              <div className="text-2xl font-black text-yellow-700">
+              <div className="text-2xl font-semibold text-yellow-700">
                 {receivingQueue.partialCount}
               </div>
               <div className="text-xs font-bold text-yellow-600 uppercase tracking-wider">
@@ -658,7 +658,7 @@ export function InventoryDashboard({
               <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">
                 {t.total_value || 'Total Value'}
               </div>
-              <div className="text-lg font-black text-green-900">
+              <div className="text-lg font-semibold text-green-900">
                 {formatCurrency(receivingQueue.totalValue, currency)}
               </div>
             </div>

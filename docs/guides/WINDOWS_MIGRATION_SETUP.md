@@ -15,7 +15,7 @@ $env:DATABASE_URL="postgresql://your_username:your_password@your_host:5432/your_
 ```
 
 **Option C - Using .env file:**
-Create/edit `e:\tenvo-main\.env`:
+Create/edit `.env` in the repository root:
 ```
 DATABASE_URL=postgresql://your_username:your_password@your_host:5432/your_database
 ```
@@ -33,7 +33,7 @@ DATABASE_URL=postgresql://your_username:your_password@your_host:5432/your_databa
 
 Use the **Node.js-only migration script** (no psql required):
 ```powershell
-cd e:\tenvo-main
+cd <path-to-repo>
 node scripts\migrate-using-node.js
 ```
 
@@ -92,7 +92,7 @@ GRANT ALL ON SCHEMA public TO your_username;
 Run this PowerShell script (as Administrator) to set everything up:
 
 ```powershell
-cd e:\tenvo-main
+cd <path-to-repo>
 powershell -ExecutionPolicy Bypass -File scripts\setup-windows-env.ps1
 ```
 

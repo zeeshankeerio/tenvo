@@ -139,7 +139,7 @@ function FiltersBody({ filters, categories, businessDomain, onClose }) {
             <div className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-gray-50">
               {formatCurrency(priceRange[0], currency)}
             </div>
-            <span className="text-gray-400 text-sm">—</span>
+            <span className="text-gray-400 text-sm">, </span>
             <div className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-gray-50">
               {formatCurrency(priceRange[1], currency)}
             </div>

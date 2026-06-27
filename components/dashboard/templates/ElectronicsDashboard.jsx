@@ -121,14 +121,14 @@ export function ElectronicsDashboard({ businessId, category, onQuickAction }) {
           return (
             <Card key={idx} className="glass-card cursor-pointer border-none hover:shadow-lg transition-shadow" onClick={() => onQuickAction?.(stat.label.toLowerCase().replace(/ /g, '-'))}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground/70">{stat.label}</CardTitle>
+                <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">{stat.label}</CardTitle>
                 <div className={`p-2.5 rounded-2xl ${stat.bg} border ${stat.bg.replace('bg-', 'border-').replace('-50', '-200')} shadow-inner`}>
                   <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <div className="text-3xl font-black text-premium-gradient mb-1">{stat.value}</div>
+                  <div className="text-3xl font-semibold text-premium-gradient mb-1">{stat.value}</div>
                   <div className="flex items-center gap-1.5 text-xs font-bold">
                     <div className={`flex items-center px-1.5 py-0.5 rounded-full ${stat.trend === 'up' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                       {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}

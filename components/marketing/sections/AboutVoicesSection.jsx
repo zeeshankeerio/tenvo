@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, Quote, Star } from 'lucide-react';
 
 const FOUNDER_QUOTE =
-  "I run Mindscape Analytics and TENVO as founder and CEO, and I still own the architecture and AI layer as lead engineer. Every major application under Mindscape—from first idea through deploy—has gone through my hands so the stack stays coherent, secure, and honest about what operators actually need. TENVO is where that discipline meets Pakistan-first compliance and language, with a product path that scales globally.";
+  "I run Mindscape Analytics and TENVO as founder and CEO, and I still own the architecture and AI layer as lead engineer. Every major application under Mindscape - from first idea through deploy - has gone through my hands so the stack stays coherent, secure, and honest about what operators actually need. TENVO is where that discipline meets Pakistan-first compliance and language, with a product path that scales globally.";
 
 const TESTIMONIALS = [
   {
@@ -48,7 +48,7 @@ function TestimonialCard({ t }) {
       <p className="text-[13px] font-medium text-neutral-600 leading-relaxed line-clamp-5">&ldquo;{t.quote}&rdquo;</p>
       <div className="mt-4 flex items-center gap-3 border-t border-neutral-100 pt-3">
         <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-black ${t.avatarClass}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${t.avatarClass}`}
         >
           {t.initials}
         </div>
@@ -69,8 +69,8 @@ export default function AboutVoicesSection() {
     <section id="voices" className="scroll-mt-24 border-b border-neutral-200/80 bg-neutral-50 py-12 lg:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10">
         <div className="mb-8 text-center lg:mb-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-primary">People &amp; proof</p>
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-brand-primary">People &amp; proof</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
             Why we build TENVO
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm font-medium text-neutral-500">
@@ -84,7 +84,7 @@ export default function AboutVoicesSection() {
             <div className="relative mx-auto h-28 w-28 shrink-0 sm:mx-0 sm:h-32 sm:w-32">
               <Image
                 src="/zeeshan_keerio.png"
-                alt="Zeeshan Keerio — Founder, CEO, and Lead AI Engineer of TENVO"
+                alt="Zeeshan Keerio - Founder, CEO, and Lead AI Engineer of TENVO"
                 fill
                 className="rounded-2xl object-contain"
                 sizes="128px"
@@ -97,7 +97,7 @@ export default function AboutVoicesSection() {
               </blockquote>
               <footer className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-neutral-100 pt-4">
                 <cite className="not-italic">
-                  <span className="font-black text-neutral-900">Zeeshan Keerio</span>
+                  <span className="font-semibold text-neutral-900">Zeeshan Keerio</span>
                   <span className="mx-2 text-neutral-300" aria-hidden>
                     ·
                   </span>
@@ -114,12 +114,12 @@ export default function AboutVoicesSection() {
         </div>
 
         <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">
             Customer stories
           </h3>
           <Link
             href="/case-studies"
-            className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-brand-primary hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-brand-primary hover:underline"
           >
             Case studies <ArrowRight className="h-3.5 w-3.5" />
           </Link>

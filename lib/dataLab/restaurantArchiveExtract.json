@@ -1,0 +1,377 @@
+{
+  "source": "archive/restraint.html",
+  "brand": "Supermeal.pk",
+  "theme": {
+    "purple": "#603cba",
+    "red": "#ed0000",
+    "grey": "#484848",
+    "bg": "#f2f2f2"
+  },
+  "cuisines": [
+    {
+      "label": "Chinese",
+      "slug": "chinese",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_default-cuisine-icon.jpg"
+    },
+    {
+      "label": "Salads",
+      "slug": "salads",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_salad.jpg"
+    },
+    {
+      "label": "Soup",
+      "slug": "soup",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_soup.jpg"
+    },
+    {
+      "label": "BBQ",
+      "slug": "bbq",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_bbq.jpg"
+    },
+    {
+      "label": "Desserts",
+      "slug": "desserts",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_dessert.jpg"
+    },
+    {
+      "label": "Drinks",
+      "slug": "drinks",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_drinks.jpg"
+    },
+    {
+      "label": "Arabic",
+      "slug": "arabic",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_arabic.jpg"
+    },
+    {
+      "label": "Karhai",
+      "slug": "karhai",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_karahi.jpg"
+    },
+    {
+      "label": "Thai",
+      "slug": "thai",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_thai.jpg"
+    },
+    {
+      "label": "Pakistani",
+      "slug": "pakistani",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_pakistani.jpg"
+    },
+    {
+      "label": "Indian",
+      "slug": "indian",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_indian.jpg"
+    },
+    {
+      "label": "Appetizers",
+      "slug": "appetizers",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_appetizers.jpg"
+    },
+    {
+      "label": "Italian",
+      "slug": "italian",
+      "image": "https://cloud.superme.al/p/pk/images/000/000/000000000_italian.jpg"
+    }
+  ],
+  "restaurants": [
+    {
+      "name": "Grill O",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141867_download---2025-10-09T123101.687.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141867_download---2025-10-09T123101.687.jfif",
+      "minOrder": 500,
+      "deliveryFee": "from Rs 50",
+      "distance": "2 km",
+      "superPick": true,
+      "isNew": false
+    },
+    {
+      "name": "Sultan",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141909_Sultan.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141909_Sultan.jfif",
+      "minOrder": 500,
+      "deliveryFee": "Free Delivery",
+      "distance": "0 km",
+      "superPick": true,
+      "isNew": false
+    },
+    {
+      "name": "Pizzay Bahadurabad",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141843_download--99-.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141843_download--99-.jfif",
+      "minOrder": 600,
+      "deliveryFee": "from Rs 60",
+      "distance": "2 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Penny Pizza",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141853_shutterstock-2272273435.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141853_shutterstock-2272273435.jpg",
+      "minOrder": 1000,
+      "deliveryFee": "from Rs 100",
+      "distance": "8 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza Inc",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141855_shutterstock-2504891743.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141855_shutterstock-2504891743.jpg",
+      "minOrder": 499,
+      "deliveryFee": "from Rs 150",
+      "distance": "3 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Bun Ka Baap",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141857_Bun-Ka-Baap.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141856_Bun-Ka-Baap-logo.png",
+      "minOrder": 350,
+      "deliveryFee": "from Rs 100",
+      "distance": "3 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Icy n Spicy",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141859_Icy-n-Spicy.jpeg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141858_Icy-n-Spicy-logo.png",
+      "minOrder": 800,
+      "deliveryFee": "from Rs 70",
+      "distance": "6 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Spice Minded Home Chef",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141983_images--26-.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141983_images--26-.jfif",
+      "minOrder": 800,
+      "deliveryFee": "from Rs 100",
+      "distance": "5 km",
+      "superPick": false,
+      "isNew": true
+    },
+    {
+      "name": "EATMEAT",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141957_EATMEAT.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141956_EATMEAT-logo.jfif",
+      "minOrder": 800,
+      "deliveryFee": "from Rs 80",
+      "distance": "7 km",
+      "superPick": false,
+      "isNew": true
+    },
+    {
+      "name": "Zhi Zhi Fan Chao",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141955_Zhi-Zhi-Fan-Chao.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141954_Zhi-Zhi-Fan-Chao-logo.jfif",
+      "minOrder": 350,
+      "deliveryFee": "from Rs 70",
+      "distance": "3 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza Lounge",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141861_Hungry-Bitez-banner.jpeg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141860_Pizza-Lounge-logo.png",
+      "minOrder": 300,
+      "deliveryFee": "from Rs 100",
+      "distance": "3 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "The Olive Burger",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141885_shutterstock-1873089304.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141885_shutterstock-1873089304.jpg",
+      "minOrder": 500,
+      "deliveryFee": "Free Delivery",
+      "distance": "4 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza Zone King",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141925_Pizza-Zone-King.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141924_Pizza-Zone-King-logo.jfif",
+      "minOrder": 300,
+      "deliveryFee": "from Rs 100",
+      "distance": "4 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza 99",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141905_shutterstock-2492633903.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141905_shutterstock-2492633903.jpg",
+      "minOrder": 500,
+      "deliveryFee": "from Rs 50",
+      "distance": "2 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza Crispy",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141935_Pizza-Crispy.webp",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141934_Pizza-Crispy-logo.jfif",
+      "minOrder": 800,
+      "deliveryFee": "from Rs 150",
+      "distance": "4 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza Home",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141953_Pizza-Crispy.webp",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141952_Pizza-Home-logo.png",
+      "minOrder": 300,
+      "deliveryFee": "from Rs 150",
+      "distance": "1 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Subway DHA",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141951_Subway-DHA.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141950_Subway-DHA-logo.jpg",
+      "minOrder": 300,
+      "deliveryFee": "from Rs 100",
+      "distance": "4 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza IZ",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141863_Pizza-IZ.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141862_Pizza-IZ-logo.jfif",
+      "minOrder": 1500,
+      "deliveryFee": "from Rs 150",
+      "distance": "10 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Golden Apple Bahadurabad",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141881_Golden-Apple-Bahadurabad.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141880_Golden-Apple-Bahadurabad-logo.webp",
+      "minOrder": 300,
+      "deliveryFee": "from Rs 100",
+      "distance": "2 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Cross Roadz Pizza",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141887_Cross-Roadz-Pizza.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141886_Cross-Roadz-Pizza-logo.jfif",
+      "minOrder": 500,
+      "deliveryFee": "from Rs 50",
+      "distance": "4 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza Hot",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141891_Pizza-Hot.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141890_Pizza-Hot-logo.png",
+      "minOrder": 500,
+      "deliveryFee": "from Rs 50",
+      "distance": "2 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Burger Hut",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141897_Burger-Hut.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141896_Burger-Hut-logo.jfif",
+      "minOrder": 800,
+      "deliveryFee": "from Rs 80",
+      "distance": "7 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Chicken Cottage",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141907_Chicken-Cottage.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141906_Chicken-Cottage-logo.jpg",
+      "minOrder": 800,
+      "deliveryFee": "from Rs 80",
+      "distance": "7 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "HeisenBurgers",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141928_HeisenBurger.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141927_HeisenBurger-logo.jfif",
+      "minOrder": 800,
+      "deliveryFee": "from Rs 80",
+      "distance": "6 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "De Pizza Town",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141913_shutterstock-2272273435.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141913_shutterstock-2272273435.jpg",
+      "minOrder": 600,
+      "deliveryFee": "from Rs 150",
+      "distance": "6 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Hot Snacks Roll n BBQ",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141919_shutterstock-1025313721.jpg",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141919_shutterstock-1025313721.jpg",
+      "minOrder": 800,
+      "deliveryFee": "from Rs 80",
+      "distance": "6 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza Gateway",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141949_Pizza-Gateway.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141948_Pizza-Gateway-logo.jfif",
+      "minOrder": 500,
+      "deliveryFee": "from Rs 70",
+      "distance": "3 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Pizza Own",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141941_Pizza-Own.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141940_Pizza-Own-logo.jfif",
+      "minOrder": 500,
+      "deliveryFee": "from Rs 100",
+      "distance": "2 km",
+      "superPick": false,
+      "isNew": false
+    },
+    {
+      "name": "Red Apple PECHS",
+      "bannerImage": "https://cloud.superme.al/p/pk/images/000/141/000141947_Red-Apple-PECHS.jfif",
+      "logoImage": "https://cloud.superme.al/p/pk/images/000/141/000141946_Red-Apple-PECHS-logo.jfif",
+      "minOrder": 400,
+      "deliveryFee": "from Rs 50",
+      "distance": "3 km",
+      "superPick": false,
+      "isNew": false
+    }
+  ],
+  "heroImages": [
+    "https://cloud.superme.al/p/pk/images/000/141/000141867_download---2025-10-09T123101.687.jfif",
+    "https://cloud.superme.al/p/pk/images/000/141/000141909_Sultan.jfif",
+    "https://cloud.superme.al/p/pk/images/000/141/000141843_download--99-.jfif",
+    "https://cloud.superme.al/p/pk/images/000/141/000141853_shutterstock-2272273435.jpg",
+    "https://cloud.superme.al/p/pk/images/000/141/000141855_shutterstock-2504891743.jpg",
+    "https://cloud.superme.al/p/pk/images/000/141/000141857_Bun-Ka-Baap.jfif"
+  ]
+}

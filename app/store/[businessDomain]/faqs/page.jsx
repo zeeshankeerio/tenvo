@@ -16,7 +16,7 @@ const FAQS = [
   {
     category: 'Shipping',
     items: [
-      { q: 'How long does delivery take?', a: 'Standard delivery takes 3–5 business days. Express delivery takes 1–2 business days. Store pickup is available same day during business hours.' },
+      { q: 'How long does delivery take?', a: 'Standard delivery takes 3-5 business days. Express delivery takes 1-2 business days. Store pickup is available same day during business hours.' },
       { q: 'Do you offer free shipping?', a: 'Yes! Orders above the free shipping threshold qualify for free standard delivery. The threshold is displayed during checkout.' },
       { q: 'Do you ship internationally?', a: 'Currently we only ship within Pakistan. We hope to expand internationally in the future.' },
     ],
@@ -25,7 +25,7 @@ const FAQS = [
     category: 'Returns & Refunds',
     items: [
       { q: 'What is your return policy?', a: 'We accept returns on eligible items within the return window from the date of delivery. Items must be unused and in original packaging.' },
-      { q: 'How long does a refund take?', a: 'Once we receive and inspect the returned item, refunds are processed within 5–7 business days to your original payment method.' },
+      { q: 'How long does a refund take?', a: 'Once we receive and inspect the returned item, refunds are processed within 5-7 business days to your original payment method.' },
       { q: 'Who pays for return shipping?', a: 'If the return is due to a defective or incorrect item we sent, we cover return shipping. For change-of-mind returns, the customer is responsible for return shipping costs.' },
     ],
   },

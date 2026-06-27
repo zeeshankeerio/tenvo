@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { CARD_DESCRIPTION, CARD_TITLE } from "@/lib/utils/typography"
 
 /**
  * @typedef {Object} CardProps
@@ -12,7 +13,7 @@ const Card = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border border-neutral-200 bg-white text-neutral-900 shadow-md hover:shadow-lg transition-all duration-300",
+      "rounded-xl border border-neutral-200 bg-white font-sans text-neutral-900 shadow-md hover:shadow-lg transition-all duration-300",
       className
     )}
     {...props}
@@ -34,10 +35,7 @@ CardHeader.displayName = "CardHeader"
 const CardTitle = React.forwardRef(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn(
-      "text-xl font-semibold leading-none tracking-tight text-neutral-900",
-      className
-    )}
+    className={cn(CARD_TITLE, "leading-none", className)}
     {...props}
   />
 ))
@@ -47,7 +45,7 @@ CardTitle.displayName = "CardTitle"
 const CardDescription = React.forwardRef(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-neutral-500", className)}
+    className={cn(CARD_DESCRIPTION, className)}
     {...props}
   />
 ))

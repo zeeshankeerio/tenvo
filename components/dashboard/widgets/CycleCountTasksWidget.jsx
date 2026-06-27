@@ -159,7 +159,7 @@ export function CycleCountTasksWidget({
         {/* Task Summary */}
         <div className="grid grid-cols-3 gap-2">
           <div className="p-3 rounded-lg bg-gradient-to-br from-yellow-50 to-yellow-100/50 border border-yellow-200">
-            <div className="text-2xl font-black text-yellow-700">
+            <div className="text-2xl font-semibold text-yellow-700">
               {cycleCountData.pendingCount}
             </div>
             <div className="text-xs font-bold text-yellow-600 uppercase tracking-wider">
@@ -168,7 +168,7 @@ export function CycleCountTasksWidget({
           </div>
           
           <div className="p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200">
-            <div className="text-2xl font-black text-blue-700">
+            <div className="text-2xl font-semibold text-blue-700">
               {cycleCountData.inProgressCount}
             </div>
             <div className="text-xs font-bold text-blue-600 uppercase tracking-wider">
@@ -177,7 +177,7 @@ export function CycleCountTasksWidget({
           </div>
           
           <div className="p-3 rounded-lg bg-gradient-to-br from-green-50 to-green-100/50 border border-green-200">
-            <div className="text-2xl font-black text-green-700">
+            <div className="text-2xl font-semibold text-green-700">
               {cycleCountData.completedToday}
             </div>
             <div className="text-xs font-bold text-green-600 uppercase tracking-wider">

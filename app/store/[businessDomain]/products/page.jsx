@@ -34,12 +34,12 @@ export async function generateMetadata({ params, searchParams }) {
   const onSale = sp?.onSale === 'true';
 
   const title = search
-    ? `Search: ${search} — ${business.business_name}`
+    ? `Search: ${search}, ${business.business_name}`
     : onSale
-      ? `On sale — ${business.business_name}`
+      ? `On sale, ${business.business_name}`
       : catSlug
-        ? `${categoryTitle} — ${business.business_name}`
-        : `Shop all products — ${business.business_name}`;
+        ? `${categoryTitle}, ${business.business_name}`
+        : `Shop all products, ${business.business_name}`;
 
   return {
     title,
@@ -72,6 +72,17 @@ export default async function ProductsPage({ params, searchParams }) {
     inStock: sp?.inStock === 'true' ? true : undefined,
     onSale: sp?.onSale === 'true',
     featured: sp?.featured === 'true' ? 'only' : undefined,
+    brand: typeof sp?.brand === 'string' ? sp.brand : undefined,
+    model: typeof sp?.model === 'string' ? sp.model : undefined,
+    year: typeof sp?.year === 'string' ? sp.year : undefined,
+    engine: typeof sp?.engine === 'string' ? sp.engine : undefined,
+    engineNo: typeof sp?.engineNo === 'string' ? sp.engineNo : undefined,
+    vehicleClass: typeof sp?.class === 'string' ? sp.class : undefined,
+    vehicleType: typeof sp?.vehicleType === 'string' ? sp.vehicleType : undefined,
+    searchMode: typeof sp?.searchMode === 'string' ? sp.searchMode : undefined,
+    body: typeof sp?.body === 'string' ? sp.body : undefined,
+    fuel: typeof sp?.fuel === 'string' ? sp.fuel : undefined,
+    condition: typeof sp?.condition === 'string' ? sp.condition : undefined,
     page: parseInt(sp?.page || '1', 10) || 1,
     limit: 24,
   };
@@ -83,14 +94,26 @@ export default async function ProductsPage({ params, searchParams }) {
 
   const categoryMeta = filters.category ? categories.find((c) => c.slug === filters.category) : null;
   const heroTitle = filters.search
-    ? `Search results for “${filters.search}”`
-    : filters.onSale
-      ? 'On sale'
-      : filters.sort === 'newest'
-        ? 'New arrivals'
-        : categoryMeta
-          ? categoryMeta.name
-          : 'All products';
+    ? filters.searchMode === 'partNumber'
+      ? `Part number: ${filters.search}`
+      : filters.searchMode === 'partSize'
+        ? `Part size: ${filters.search}`
+        : filters.searchMode === 'plate'
+          ? `Plate: ${filters.search}`
+          : filters.searchMode === 'vin'
+            ? `VIN / chassis: ${filters.search}`
+            : `Search results for “${filters.search}”`
+    : filters.brand && filters.model
+      ? `Parts for ${filters.brand} ${filters.model}`
+      : filters.brand
+        ? `Parts for ${filters.brand}`
+        : filters.onSale
+          ? 'On sale'
+          : filters.sort === 'newest'
+            ? 'New arrivals'
+            : categoryMeta
+              ? categoryMeta.name
+              : 'All products';
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -170,7 +193,7 @@ export default async function ProductsPage({ params, searchParams }) {
             />
             
             {/* Products */}
-            <Suspense fallback={<ProductsSkeleton count={12} />}>
+            <Suspense fallback={<ProductsSkeleton count={12} density="catalog" />}>
               <ProductGridContent 
                 businessId={business.id}
                 businessDomain={businessDomain}
@@ -199,7 +222,7 @@ async function ProductGridContent({ businessId, businessDomain, filters, view = 
   const { products, total, hasMore } = result;
   
   return (
-    <ProductGrid 
+    <ProductGrid
       products={products}
       total={total}
       hasMore={hasMore}
@@ -207,6 +230,7 @@ async function ProductGridContent({ businessId, businessDomain, filters, view = 
       currentPage={filters.page}
       filters={filters}
       view={view}
+      density="catalog"
     />
   );
 }

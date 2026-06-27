@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bot, MessageCircle, Send, X, Loader2, Sparkles } from 'lucide-react';
+import { MessageCircle, Send, X, Loader2, Sparkles } from 'lucide-react';
+import { TenvoIcon } from '@/components/branding/TenvoIcon';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { TENVO_PARENT_COMPANY } from '@/lib/marketing/tenvo-assistant-knowledge';
@@ -124,11 +125,11 @@ export default function MarketingAssistantWidget() {
         >
           <div className="flex items-center justify-between gap-2 border-b border-neutral-100 bg-gradient-to-r from-brand-primary to-brand-primary-dark px-4 py-3 text-white">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
-                <Bot className="h-4 w-4" aria-hidden />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10">
+                <TenvoIcon size={28} className="h-7 w-7" alt="" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-black uppercase tracking-wide truncate">TENVO assistant</p>
+                <p className="text-xs font-semibold uppercase tracking-wide truncate">TENVO assistant</p>
                 <p className="text-[10px] font-semibold text-white/85 truncate">Answers + next steps</p>
               </div>
             </div>
@@ -187,7 +188,7 @@ export default function MarketingAssistantWidget() {
 
           {messages.length === 1 && (
             <div className="border-t border-neutral-100 bg-white px-3 py-2">
-              <p className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-neutral-400">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
                 Try asking
               </p>
               <div className="flex flex-wrap gap-1.5">

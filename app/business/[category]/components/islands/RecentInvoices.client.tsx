@@ -68,7 +68,7 @@ export function RecentInvoices({ invoices, currency, business, category = 'retai
                                 onClick={() => onViewInvoice?.(invoice)}
                             >
                                 <div className="flex items-center gap-4 flex-1 min-w-0">
-                                    <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-[10px] font-black text-gray-400 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all ring-1 ring-gray-100">
+                                    <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-[10px] font-semibold text-gray-400 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all ring-1 ring-gray-100">
                                         {invoice.invoice_number?.split('-')?.[1]?.substring(0, 4) || 'REF'}
                                     </div>
                                     <div className="min-w-0">
@@ -85,14 +85,14 @@ export function RecentInvoices({ invoices, currency, business, category = 'retai
 
                                 <div className="flex items-center gap-6">
                                     <div className="text-right hidden sm:block">
-                                        <p className="text-sm font-black text-gray-900">
+                                        <p className="text-sm font-semibold text-gray-900">
                                             {formatCurrency(invoice.grand_total || invoice.amount || 0, currency)}
                                         </p>
-                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{invoice.payment_method || 'CASH'}</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{invoice.payment_method || 'CASH'}</p>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <UiBadge variant="outline" className={`text-[9px] font-black uppercase tracking-tighter px-2 h-5 border rounded-md shadow-none ${getStatusColor(invoice.status)}`}>
+                                        <UiBadge variant="outline" className={`text-[10px] font-semibold uppercase tracking-tighter px-2 h-5 border rounded-md shadow-none ${getStatusColor(invoice.status)}`}>
                                             {invoice.status || 'PENDING'}
                                         </UiBadge>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
 import * as LucideIcons from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackEvent, EVENTS } from '@/lib/analytics/tracking';
@@ -10,6 +11,8 @@ import { cn } from '@/lib/utils';
 import {
   MARKETING_CONTAINER,
   MARKETING_CONTAINER_NARROW,
+  MARKETING_EYEBROW,
+  MARKETING_H1,
   MARKETING_LEAD,
 } from '@/lib/utils/marketingLayout';
 
@@ -74,7 +77,7 @@ export default function Hero({
     const BadgeIcon = (typeof badge === 'object' && badge.icon) ? LucideIcons[badge.icon] : null;
     
     return (
-      <div className="mb-6 inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-brand-primary shadow-sm min-[400px]:px-4 min-[400px]:text-[11px] min-[400px]:tracking-[0.25em]">
+      <div className={cn('mb-6 inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3 py-2 shadow-sm min-[400px]:px-4', MARKETING_EYEBROW)}>
         {BadgeIcon && <BadgeIcon className="h-4 w-4 shrink-0" aria-hidden />}
         <span className="min-w-0 text-balance leading-snug">{badgeText}</span>
       </div>
@@ -108,23 +111,23 @@ export default function Hero({
     );
   };
 
-  // Render CTA buttons — tracking on Link ensures clicks are captured with asChild/Slot
+  // Render CTA buttons - tracking on Link ensures clicks are captured with asChild/Slot
   const renderCTAs = () => (
     <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-4">
       {primaryCTA && (
         <Button
           asChild
           size="lg"
-          className="group relative h-12 min-h-[48px] w-full min-w-0 overflow-hidden rounded-xl border border-black/[0.06] bg-brand-primary px-5 text-[0.9375rem] font-semibold tracking-tight text-white shadow-[0_1px_0_rgba(255,255,255,0.12)_inset,0_12px_32px_-8px_rgba(227,66,66,0.45)] transition-[transform,box-shadow,background-color] duration-200 hover:bg-brand-primary-dark hover:shadow-[0_1px_0_rgba(255,255,255,0.1)_inset,0_16px_40px_-8px_rgba(227,66,66,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.99] motion-safe:sm:hover:-translate-y-px sm:h-[3.25rem] sm:w-auto sm:min-w-[10rem] sm:px-8 sm:text-sm sm:font-bold"
+          className="group relative h-12 min-h-[48px] w-full min-w-0 overflow-hidden rounded-xl border border-black/[0.06] bg-brand-primary px-5 text-[0.9375rem] font-semibold tracking-tight text-white shadow-[0_1px_0_rgba(255,255,255,0.12)_inset,0_12px_32px_-8px_rgba(210,43,43,0.45)] transition-[transform,box-shadow,background-color] duration-200 hover:bg-brand-primary-dark hover:shadow-[0_1px_0_rgba(255,255,255,0.1)_inset,0_16px_40px_-8px_rgba(210,43,43,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.99] motion-safe:sm:hover:-translate-y-px sm:h-[3.25rem] sm:w-auto sm:min-w-[10rem] sm:px-8 sm:text-sm sm:font-bold"
         >
-          <Link
+          <MarketingCtaLink
             href={primaryCTA.href}
             className="relative z-[1] inline-flex w-full items-center justify-center gap-2 text-center"
             onClick={() => handleCTAClick('primary', primaryCTA.href)}
           >
             {primaryCTA.text}
             <LucideIcons.ArrowRight className="h-4 w-4 shrink-0 opacity-90 transition-transform duration-200 motion-safe:group-hover:translate-x-0.5" aria-hidden />
-          </Link>
+          </MarketingCtaLink>
         </Button>
       )}
 
@@ -135,13 +138,13 @@ export default function Hero({
           size="lg"
           className="group relative h-12 min-h-[48px] w-full min-w-0 rounded-xl border border-neutral-200 bg-white px-5 text-[0.9375rem] font-semibold tracking-tight text-neutral-900 shadow-[0_1px_0_rgba(255,255,255,1)_inset,0_6px_20px_-8px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-[transform,box-shadow,border-color,color] duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/80 focus-visible:ring-offset-2 active:scale-[0.99] motion-safe:sm:hover:-translate-y-px sm:h-[3.25rem] sm:w-auto sm:min-w-[10rem] sm:border-neutral-200 sm:px-8 sm:text-sm sm:font-bold"
         >
-          <Link
+          <MarketingCtaLink
             href={secondaryCTA.href}
             className="inline-flex w-full items-center justify-center text-center"
             onClick={() => handleCTAClick('secondary', secondaryCTA.href)}
           >
             {secondaryCTA.text}
-          </Link>
+          </MarketingCtaLink>
         </Button>
       )}
     </div>
@@ -151,7 +154,7 @@ export default function Hero({
   if (variant === 'default') {
     return (
       <section className="relative overflow-x-clip bg-slate-50 border-b border-slate-200/50">
-        {/* Decorative blurs — toned down on small viewports to avoid bleed */}
+        {/* Decorative blurs - toned down on small viewports to avoid bleed */}
         <div className="pointer-events-none absolute top-0 right-0 hidden h-[28rem] w-[28rem] rounded-full bg-brand-primary/10 blur-3xl sm:block md:h-[32rem] md:w-[32rem] md:animate-pulse" />
         <div className="pointer-events-none absolute bottom-0 left-0 h-[22rem] w-[22rem] rounded-full bg-brand-secondary/10 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
         <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[36rem] w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 blur-3xl md:block md:h-[50rem] md:w-[50rem]" />
@@ -162,7 +165,7 @@ export default function Hero({
             <div className={`min-w-0 max-w-full space-y-6 ${mounted ? 'animate-fade-in-up' : 'opacity-0'}`}>
               {renderBadge()}
               
-              <h1 className="text-balance text-3xl font-bold leading-tight text-neutral-900 min-[400px]:text-4xl sm:text-5xl lg:text-6xl">
+              <h1 className={MARKETING_H1}>
                 {typeof headlineText === 'string' 
                   ? headlineText.split(' ').map((word, index) => {
                       const highlightWords = ['Pakistan', 'Intelligent', 'Operating'];
@@ -220,7 +223,7 @@ export default function Hero({
           <div className={`${mounted ? 'animate-fade-in-up' : 'opacity-0'} space-y-5 sm:space-y-6`}>
             {renderBadge()}
             
-            <h1 className="mx-auto max-w-4xl text-balance text-3xl font-extrabold leading-tight tracking-tight text-neutral-900 min-[400px]:text-4xl sm:text-5xl lg:text-6xl">
+            <h1 className={cn('mx-auto max-w-4xl', MARKETING_H1)}>
               {headlineText}
             </h1>
             
@@ -267,7 +270,7 @@ export default function Hero({
             <div className={`container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 space-y-6 ${mounted ? 'animate-fade-in-up' : 'opacity-0'}`}>
               {renderBadge()}
               
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-neutral-900 leading-tight">
+              <h1 className={MARKETING_H1}>
                 {headlineText}
               </h1>
               

@@ -20,7 +20,7 @@ export function StorefrontTabShell({ activeTab, pendingOrders = 0, children }) {
 
   return (
     <StorefrontMobileContext.Provider value={{ embedded: true, activeTab }}>
-      <div className={fullscreenMobile ? 'lg:space-y-6' : 'space-y-2 lg:space-y-6'}>
+      <div className={fullscreenMobile ? 'h-full min-h-0' : 'space-y-2 lg:space-y-6'}>
         {!fullscreenMobile && (
           <StorefrontMobileHub activeTab={activeTab} pendingOrders={pendingOrders} />
         )}

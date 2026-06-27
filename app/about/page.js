@@ -7,6 +7,7 @@ import { MarketingSection } from '@/components/marketing/layout/MarketingSection
 import { MARKETING_CONTAINER } from '@/lib/utils/marketingLayout';
 import Hero from '@/components/marketing/sections/Hero';
 import StatsBar from '@/components/marketing/sections/StatsBar';
+import { MARKETING_HONEST_STATS } from '@/lib/marketing/homeVisualThemes';
 import CTASection from '@/components/marketing/sections/CTASection';
 import AboutVoicesSection from '@/components/marketing/sections/AboutVoicesSection';
 import { Button } from '@/components/ui/button';
@@ -50,13 +51,14 @@ const timeline = [
     year: '2025',
     title: 'Rapid Growth',
     description:
-      'Platform roadmap accelerates: FBR-certified tax module, Daraz integration, and Urdu UI toggle ship to production. Adoption grows across retail, textile, and distribution teams.',
+      'Platform roadmap accelerates: GST-aware tax tools, branded storefronts, and POS depth ship to production. Daraz and live FBR IRIS connectors remain on the roadmap per our integrations map.',
     icon: TrendingUp
   },
   {
     year: '2026',
     title: 'Enterprise Ready',
-    description: 'Introduce AI-powered demand forecasting, manufacturing module (BOM), and multi-business governance. 450+ enterprise customers with 99.99% uptime SLA.',
+    description:
+      'AI-assisted demand forecasting, manufacturing module (BOM), and multi-business governance expand on Business+. We publish honest capability status instead of vanity certification claims.',
     icon: Shield
   }
 ];
@@ -85,10 +87,10 @@ const leadershipTeam = [
 
 // Certifications Data
 const certifications = [
-  { name: 'FBR Certified', status: 'Active', icon: Shield },
+  { name: 'GST tax configuration', status: 'Available', icon: Shield },
   { name: 'PSEB Registered', status: 'Active', icon: Award },
-  { name: 'ISO 27001', status: 'In Progress', icon: Shield },
-  { name: 'PCI DSS', status: 'Compliant', icon: Shield }
+  { name: 'ISO 27001', status: 'Planned', icon: Shield },
+  { name: 'PCI via partners', status: 'Partial', icon: Shield }
 ];
 
 export default function AboutPage() {
@@ -118,20 +120,15 @@ export default function AboutPage() {
       {/* Stats */}
       <StatsBar 
         variant="default"
-        stats={[
-          { value: '450k+', label: 'Active Users' },
-          { value: '55+', label: 'Industries Served' },
-          { value: '99.9%', label: 'Uptime SLA' },
-          { value: '24/7', label: 'Support' }
-        ]}
+        stats={MARKETING_HONEST_STATS}
       />
 
       {/* Mission & Vision */}
       <MarketingSection className="bg-white" padding="loose">
           <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
             <div>
-              <h2 className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-brand-primary sm:mb-4 sm:text-[11px] sm:tracking-[0.3em]">Our Mission</h2>
-              <h3 className="mb-4 text-2xl font-black text-gray-900 sm:mb-6 sm:text-3xl lg:text-4xl">Empowering Pakistani Businesses</h3>
+              <h2 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-primary sm:mb-4 sm:text-[11px] sm:tracking-[0.3em]">Our Mission</h2>
+              <h3 className="mb-4 text-2xl font-semibold text-gray-900 sm:mb-6 sm:text-3xl lg:text-4xl">Empowering Pakistani Businesses</h3>
               <p className="mb-4 text-base font-medium leading-relaxed text-gray-500 sm:mb-6 sm:text-lg">
                 We believe every business deserves access to world-class enterprise software. TENVO was built from the ground up to address the unique challenges of Pakistani businesses - from FBR compliance to multi-currency operations.
               </p>
@@ -140,8 +137,8 @@ export default function AboutPage() {
               </p>
             </div>
             <div>
-              <h2 className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-brand-primary sm:mb-4 sm:text-[11px] sm:tracking-[0.3em]">Our Vision</h2>
-              <h3 className="mb-4 text-2xl font-black text-gray-900 sm:mb-6 sm:text-3xl lg:text-4xl">The Operating System for Business</h3>
+              <h2 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-primary sm:mb-4 sm:text-[11px] sm:tracking-[0.3em]">Our Vision</h2>
+              <h3 className="mb-4 text-2xl font-semibold text-gray-900 sm:mb-6 sm:text-3xl lg:text-4xl">The Operating System for Business</h3>
               <p className="mb-4 text-base font-medium leading-relaxed text-gray-500 sm:mb-6 sm:text-lg">
                 We envision a future where every business in Pakistan runs on TENVO - a unified platform that connects inventory, finance, operations, and compliance into one seamless experience.
               </p>
@@ -156,8 +153,8 @@ export default function AboutPage() {
       <section className="py-10 sm:py-16 lg:py-24 bg-gray-50">
         <div className={MARKETING_CONTAINER}>
           <div className="mx-auto mb-8 max-w-3xl space-y-3 text-center sm:mb-12 lg:mb-16 sm:space-y-4">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.22em] text-brand-primary sm:text-[11px] sm:tracking-[0.3em]">Our Values</h2>
-            <h3 className="text-2xl font-black tracking-tighter text-gray-900 sm:text-3xl md:text-4xl lg:text-5xl">What Drives Us</h3>
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-primary sm:text-[11px] sm:tracking-[0.3em]">Our Values</h2>
+            <h3 className="text-2xl font-semibold tracking-tighter text-gray-900 sm:text-3xl md:text-4xl lg:text-5xl">What Drives Us</h3>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 sm:gap-6 md:gap-8">
@@ -199,8 +196,8 @@ export default function AboutPage() {
       <section className="py-10 sm:py-16 lg:py-24 bg-gray-50">
         <div className={MARKETING_CONTAINER}>
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.3em]">Our Journey</h2>
-            <h3 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter">From Idea to Impact</h3>
+            <h2 className="text-[11px] font-semibold text-brand-primary uppercase tracking-[0.3em]">Our Journey</h2>
+            <h3 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tighter">From Idea to Impact</h3>
             <p className="text-lg text-gray-500 font-medium">
               The story of how TENVO sharpened operations software for Pakistan and scales with teams worldwide.
             </p>
@@ -217,9 +214,9 @@ export default function AboutPage() {
                     <div className={`bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all ${idx % 2 === 0 ? 'md:ml-auto' : 'md:mr-auto'} max-w-md`}>
                       <div className={`inline-flex items-center gap-2 text-brand-primary mb-3 ${idx % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
                         <item.icon className="w-5 h-5" />
-                        <span className="text-xs font-black uppercase tracking-wider">{item.year}</span>
+                        <span className="text-xs font-semibold uppercase tracking-wider">{item.year}</span>
                       </div>
-                      <h4 className="text-xl font-black text-gray-900 mb-2">{item.title}</h4>
+                      <h4 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h4>
                       <p className="text-sm text-gray-500 font-medium leading-relaxed">{item.description}</p>
                     </div>
                   </div>
@@ -238,8 +235,8 @@ export default function AboutPage() {
       <section id="team" className="py-10 sm:py-16 lg:py-24 bg-white">
         <div className={MARKETING_CONTAINER}>
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.3em]">Leadership</h2>
-            <h3 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter">Meet the Founder</h3>
+            <h2 className="text-[11px] font-semibold text-brand-primary uppercase tracking-[0.3em]">Leadership</h2>
+            <h3 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tighter">Meet the Founder</h3>
             <p className="text-lg text-gray-500 font-medium">
               One founding technical leader behind TENVO and the Mindscape Analytics portfolio: architecture, AI, and delivery in one thread.
             </p>
@@ -257,7 +254,7 @@ export default function AboutPage() {
                     <div className="absolute inset-0 bg-brand-primary/10 rounded-2xl transform rotate-3" />
                     <Image
                       src="/zeeshan_keerio.png"
-                      alt="Zeeshan Keerio — Founder, CEO, and Lead AI Engineer of TENVO"
+                      alt="Zeeshan Keerio - Founder, CEO, and Lead AI Engineer of TENVO"
                       fill
                       className="object-contain rounded-2xl relative z-10"
                     />
@@ -267,7 +264,7 @@ export default function AboutPage() {
                 {/* Profile Content */}
                 <div className="lg:col-span-8 space-y-6">
                   <div>
-                    <h3 className="text-3xl font-black text-gray-900">Zeeshan Keerio</h3>
+                    <h3 className="text-3xl font-semibold text-gray-900">Zeeshan Keerio</h3>
                     <p className="text-brand-primary font-bold text-lg">
                       Founder, CEO &amp; Lead AI Engineer
                     </p>
@@ -277,7 +274,7 @@ export default function AboutPage() {
                   </div>
 
                   <p className="text-gray-600 font-medium leading-relaxed">
-                    Zeeshan leads TENVO and Mindscape Analytics LLC as founder and chief executive, with hands-on ownership as lead AI engineer and systems architect. He originates the product direction, designs the platform architecture, and carries builds from first commit through production deployment—including the applications and initiatives across the Mindscape portfolio.
+                    Zeeshan leads TENVO and Mindscape Analytics LLC as founder and chief executive, with hands-on ownership as lead AI engineer and systems architect. He originates the product direction, designs the platform architecture, and carries builds from first commit through production deployment - including the applications and initiatives across the Mindscape portfolio.
                   </p>
 
                   <p className="text-gray-600 font-medium leading-relaxed">
@@ -330,7 +327,7 @@ export default function AboutPage() {
 
           {/* Notable Projects */}
           <div className="mt-16">
-            <h4 className="text-center text-sm font-black text-gray-500 uppercase tracking-wider mb-8">Other Ventures & Projects</h4>
+            <h4 className="text-center text-sm font-semibold text-gray-500 uppercase tracking-wider mb-8">Other Ventures & Projects</h4>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 { name: 'Mindscape Analytics LLC', desc: 'Parent company; founder-led architecture, AI, and full product delivery', icon: Cpu },
@@ -357,8 +354,8 @@ export default function AboutPage() {
       <section className="py-10 sm:py-16 lg:py-24 bg-gray-50">
         <div className={MARKETING_CONTAINER}>
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.3em]">Certifications</h2>
-            <h3 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter">Trusted & Verified</h3>
+            <h2 className="text-[11px] font-semibold text-brand-primary uppercase tracking-[0.3em]">Certifications</h2>
+            <h3 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tighter">Trusted & Verified</h3>
             <p className="text-lg text-gray-500 font-medium">
               We maintain the highest standards of security, compliance, and data protection.
             </p>
@@ -371,8 +368,8 @@ export default function AboutPage() {
                   <cert.icon className="w-8 h-8" />
                 </div>
                 <h4 className="font-bold text-gray-900 mb-1">{cert.name}</h4>
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${
-                  cert.status === 'Active' || cert.status === 'Compliant' 
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                  cert.status === 'Active' || cert.status === 'Available' || cert.status === 'Partial'
                     ? 'bg-green-100 text-green-700' 
                     : 'bg-amber-100 text-amber-700'
                 }`}>
@@ -388,9 +385,9 @@ export default function AboutPage() {
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 text-brand-primary">
                   <MapPin className="w-5 h-5" />
-                  <span className="text-xs font-black uppercase tracking-wider">Headquarters</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider">Headquarters</span>
                 </div>
-                <h4 className="text-2xl font-black text-gray-900">Karachi, Pakistan</h4>
+                <h4 className="text-2xl font-semibold text-gray-900">Karachi, Pakistan</h4>
                 <p className="text-gray-600 font-medium leading-relaxed">
                   Our main office is located in the heart of Karachi&apos;s tech district. We&apos;re a remote-first company with team members across Pakistan, but our Karachi hub serves as the center for product development and customer success.
                 </p>
@@ -421,8 +418,8 @@ export default function AboutPage() {
       <section id="careers" className="py-10 sm:py-16 lg:py-24 bg-white">
         <div className={MARKETING_CONTAINER}>
           <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
-            <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.3em]">Join Our Team</h2>
-            <h3 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter">Build the Future with Us</h3>
+            <h2 className="text-[11px] font-semibold text-brand-primary uppercase tracking-[0.3em]">Join Our Team</h2>
+            <h3 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tighter">Build the Future with Us</h3>
             <p className="text-lg text-gray-500 font-medium">
               We&apos;re always looking for talented individuals who share our passion for empowering Pakistani businesses.
             </p>
@@ -430,21 +427,21 @@ export default function AboutPage() {
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="bg-gray-50 rounded-2xl p-8 text-center hover:bg-brand-50 transition-all">
-              <div className="text-4xl font-black text-brand-primary mb-2">50+</div>
+              <div className="text-4xl font-semibold text-brand-primary mb-2">50+</div>
               <div className="text-sm font-bold text-gray-500 uppercase tracking-wider">Team Members</div>
             </div>
             <div className="bg-gray-50 rounded-2xl p-8 text-center hover:bg-brand-50 transition-all">
-              <div className="text-4xl font-black text-brand-primary mb-2">Remote</div>
+              <div className="text-4xl font-semibold text-brand-primary mb-2">Remote</div>
               <div className="text-sm font-bold text-gray-500 uppercase tracking-wider">Work Culture</div>
             </div>
             <div className="bg-gray-50 rounded-2xl p-8 text-center hover:bg-brand-50 transition-all">
-              <div className="text-4xl font-black text-brand-primary mb-2">Growing</div>
+              <div className="text-4xl font-semibold text-brand-primary mb-2">Growing</div>
               <div className="text-sm font-bold text-gray-500 uppercase tracking-wider">Always Hiring</div>
             </div>
           </div>
 
           <div className="text-center">
-            <Button asChild size="lg" className="h-14 rounded-xl bg-brand-primary hover:bg-brand-primary-dark text-white px-8 font-black uppercase tracking-wider">
+            <Button asChild size="lg" className="h-14 rounded-xl bg-brand-primary hover:bg-brand-primary-dark text-white px-8 font-semibold uppercase tracking-wider">
               <Link href="/contact">View Open Positions</Link>
             </Button>
           </div>
@@ -455,7 +452,7 @@ export default function AboutPage() {
       <CTASection 
         variant="centered"
         title="Ready to Transform Your Business?"
-        subtitle="Join thousands of businesses already using TENVO to streamline their operations."
+        subtitle="Join growing teams using TENVO to streamline their operations."
         primaryCTA={{
           text: 'Start Free Trial',
           href: '/register'
@@ -473,7 +470,7 @@ function ValueCard({ icon, title, description }) {
   return (
     <div className="rounded-2xl border border-gray-100 bg-white p-5 transition-all duration-300 hover:shadow-lg sm:p-6 lg:p-8">
       <div className="text-brand-primary mb-4">{icon}</div>
-      <h4 className="text-xl font-black text-gray-900 mb-3">{title}</h4>
+      <h4 className="text-xl font-semibold text-gray-900 mb-3">{title}</h4>
       <p className="text-gray-500 font-medium leading-relaxed">{description}</p>
     </div>
   );

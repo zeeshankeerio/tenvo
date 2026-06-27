@@ -1,0 +1,2209 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en-us" xmlns="http://www.w3.org/1999/xhtml" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
+<head id="ctl00_Head1">
+    <!-- xHU4ZIDDXLFPJVbfmsEGbwGADvo -->
+    <title>
+	Order online from restaurants in karachi | Supermeal.pk
+</title><link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" /><link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png" /><link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png" /><link rel="manifest" href="/favicons/site.webmanifest" /><link rel="mask-icon" href="/favicons/safari-pinned-tab.svg" color="#603cba" /><link rel="shortcut icon" href="/favicons/favicon.ico" /><meta name="apple-mobile-web-app-title" content="Supermeal" /><meta name="application-name" content="Supermeal" /><meta name="msapplication-TileColor" content="#603cba" /><meta name="msapplication-config" content="/favicons/browserconfig.xml" /><meta name="theme-color" content="#f2f2f2" /><link rel="preload" href="/resources/lefttoright/fontawesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin="anonymous" /><link rel="preload" href="/resources/lefttoright/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link href="/resources/lefttoright/css/consumer.min.css?_1824" rel="preload" as="style" />
+    <link href="/resources/lefttoright/css/consumer.min.css?_1824" rel="stylesheet" media="all" />
+
+    
+
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&display=swap');
+
+        .acc-profile-image {
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        @media(max-width:1000px) {
+            @-webkit-keyframes stickySlideDown {
+                0% {
+                    opacity: 0.7;
+                    -webkit-transform: translateY(-100%);
+                    transform: translateY(-100%);
+                }
+
+                100% {
+                    opacity: 1;
+                    -webkit-transform: translateY(0);
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes stickySlideDown {
+                0% {
+                    opacity: 0.7;
+                    -webkit-transform: translateY(-100%);
+                    transform: translateY(-100%);
+                }
+
+                100% {
+                    opacity: 1;
+                    -webkit-transform: translateY(0);
+                    transform: translateY(0);
+                }
+            }
+        }
+
+        #map:after {
+            width: 22px;
+            height: 40px;
+            display: block;
+            content: ' ';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin: -40px 0 0 -11px;
+            background: url('https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi_hdpi.png');
+            background-size: 22px 40px; /* Since I used the HiDPI marker version this compensates for the 2x size */
+            pointer-events: none; /* This disables clicks on the marker. Not fully supported by all major browsers, though */
+        }
+
+        #map_canvas .centerMarker {
+            position: absolute;
+            /*url of the marker*/
+            background: url(http://maps.gstatic.com/mapfiles/markers2/marker.png) no-repeat;
+            /*center the marker*/
+            top: 50%;
+            left: 50%;
+            z-index: 1;
+            /*fix offset when needed*/
+            margin-left: -10px;
+            margin-top: -34px;
+            /*size of the image*/
+            height: 34px;
+            width: 20px;
+            cursor: pointer;
+        }
+
+        .gm-style .controls {
+            font-size: 28px; /* this adjusts the size of all the controls */
+            background-color: white;
+            box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
+            box-sizing: border-box;
+            border-radius: 2px;
+            cursor: pointer;
+            font-weight: 300;
+            height: 1em;
+            margin: 6px;
+            text-align: center;
+            user-select: none;
+            padding: 2px;
+            width: 1em;
+        }
+
+            .gm-style .controls button {
+                border: 0;
+                background-color: white;
+                color: rgba(0, 0, 0, 0.6);
+            }
+
+                .gm-style .controls button:hover {
+                    color: rgba(0, 0, 0, 0.9);
+                }
+
+            .gm-style .controls.zoom-control {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+            }
+
+                .gm-style .controls.zoom-control button {
+                    font: 0.85em Arial;
+                    margin: 1px;
+                    padding: 0;
+                }
+    </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><meta id="ctl00_mtFacebookId" property="fb:app_id" content="576175559949913" /><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" /><meta id="ctl00_Meta1" property="og:type" content="website" />
+    <script type="text/javascript">
+        var ConsumerMessages = [];
+        var ConsumerLabels = [];
+        var ErrorCodes = [];
+        var PopItems = '';
+        var popularRestaurants = '';
+        var countryCode = "PK";
+        var decimalPlaces = "0";
+        var IsForgotWrong = false;
+        var Api = "AIzaSyDmHiT390eKDV9sDf4_JoLZQ6RbEAMcYtA";
+        var smsResendLimit = 0;
+        var AllowAutoComplete = "1";
+        var PreOrderTimeThreshold = Number("90");
+        var ShortMonthNames = new Array(
+		'Jan',
+		'Feb',
+		'Mar',
+		'Apr',
+		'May',
+		'Jun',
+		'Jul',
+		'Aug',
+		'Sept',
+		'Oct',
+		'Nov',
+		'Dec'
+        );
+
+        var Label_Approx = 'Approx.';
+
+    </script>
+
+    
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-32913412-1"></script>
+
+    
+    <script>
+
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'UA-32913412-1');
+
+        
+
+      
+        gtag('set', { 'user_id': '0' });
+
+
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                    n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+
+        
+        fbq('init', '640798732965163');
+        
+       
+        fbq('track', 'PageView');
+
+        if (sessionStorage.getItem('EcommerceTransaction') !== null) {
+
+            var orderDetail = JSON.parse(sessionStorage.getItem('EcommerceTransaction'));
+            var Cur = 'Rs ';
+
+            fbq('track', 'Purchase', {
+                value: orderDetail.revenue,
+                currency: Cur,
+            });
+        }
+
+    </script>
+    <noscript>
+            <img height="1" width="1" src="https://www.facebook.com/tr?id=640798732965163&ev=PageView&noscript=1"/>
+    </noscript>
+
+
+    
+    
+    <meta property="twitter:site" content=""/>
+    <meta property="twitter:card" content="summary"/>
+    <meta property="og:title" content="Order online to restaurants in Pakistan | Supermeal.pk"/>
+    <meta name="keywords" content="restaurants in your area, order meal online, restaurants" />
+    <meta name="og:description" content="Order from your favourite restaurants in karachi. Choose between delivery, collection and eat-in within karachi. Browse full menus with prices and order online." />
+    <meta content="https://www.supermeal.pk/resources/lefttoright/images/supermeal-web-share-icon.jpg" property="og:image"/>
+
+    
+    <style>
+        * {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+            color: #484848;
+        }
+
+        .slideDown {
+            padding: 15px 0px 15px 0px;
+        }
+
+        #applicationMessage .modal-body * {
+            color: inherit;
+        }
+
+        body {
+            padding: 0px !important;
+        }
+
+        .Add-restaurant-wrap {
+            width: 100%;
+        }
+
+        .header-res-search-field {
+            padding: 5px 0% 5px 19%;
+            width: 100%;
+        }
+
+        .not-active {
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .sr-no-result-found {
+            background-color: #fff;
+            margin: 10px 0% 10px 0%;
+            width: 100%;
+            float: left;
+            padding: 0px 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+        .container-wrap {    max-width: 100%;
+        }
+        #dvHeader{
+                font-size: 24px;
+                   
+        }
+         #dvHeader div{
+         color: #484848!important;
+    font-weight: bold!important;
+    margin-top: 15px!important;
+    margin-bottom: 10px!important;
+                   
+        }
+        div#dvHeader span{    color: #484848!important;}
+        .res-dynamic-cusines-wrap-show-resp{display:none;}
+        @media (max-width: 1021px) {
+            ol.nav.breadcrumb {
+                display: none !important;
+            }
+        }
+
+        /*.sk-fading-circle .sk-circle:before {
+            background-color: red !important;
+        }*/
+        @media (max-width: 1300px) and (min-width: 1001px) {
+            .res-list-fooditem-wrap {
+                width: 50%;
+            }
+        }
+        @media (max-width: 1000px) {
+
+            .show-res-search-page {
+                display: block;
+            }
+
+            .no-area-found-wrap {
+                margin-top: 0px;
+            }
+
+            .res-dynamic-cusines-wrap {
+                display: none;
+            }
+            .res-dynamic-cusines-wrap-show-resp{
+                display:block;
+                    text-align: left;
+            }
+
+            .deault-background {
+            margin-top: 116px;
+            }
+            .deault-background.top-space-search {
+            margin-top: 160px;
+            }
+            .top-space-search .no-area-found-wrap {
+          top: 121px;
+    position: fixed;
+    margin-top: 0px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .confirmationModalWidth {
+                width: 700px;
+            }
+        }
+        @media (max-width: 480px)  {
+                                                .deault-background {
+    margin-top: 107px;
+}
+                                                .top-space-search .no-area-found-wrap {
+    top: 114px;
+}
+        }
+        @media (max-width: 428px)  {
+            .deault-background.top-space-search {
+    margin-top: 175px;
+}
+
+
+        }
+    
+    </style>
+</head>
+<body>
+
+    
+    <form method="post" action="./karachi" id="aspnetForm">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="yU7WAvU5MogRuLISSZ9nxtp9mc2AfQcTvlAmd9VMW6bjDQekLoCuC8JBMuWDqYI4hp/JMofTYKnUhoDBdleKFsZkIQtzIMUTzLkRD8TE5Ho=" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['aspnetForm'];
+if (!theForm) {
+    theForm = document.aspnetForm;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+
+<script src="https://cloud.superme.al/p/pk/en-us/consumer/consumer-messages-error-labels.js?v=1824" type="text/javascript"></script>
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="17E3B4F3" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="4x2s0Pp2wVUT5moTRdIMloA47wjcS5/TWlNklJxk2nlYXb2FT96jpx6jci3GSkbqCXDS4NeYmPkEwIpEQeSo6uoRgHBysMo2imtzx+buwsyrjh4ABqGHGbgY7YUF/WHVObmshihZFYGezhcoMXZho9r/fd6wNdB9iEyvYxaTyJJvAKfUUzFUtDzU+6537W14r6ubJT953J7sLVBbRcjrkNiXB8j5WB6VEF3gx7ZAPKj+flSMHvlm8klcjVahANf+nmiChBA7Bh97qneDJOIQ/8/IRSeHVP6bov+ZrC5uUPD5Mm1tViO2+PY6ktRtHJoVEKYuanpTIHpfXCWX1oJGrsRRuK8kwTIGKisKjOkyuaVCgpA6LV8fege/Cz2pBAm9H5j9phjssH2omgthj0D1KiwWlMqAEVmTmrg/Kmmze3k=" />
+</div>
+
+        <div class="o-wrapper" id="o-wrapper">
+
+            
+            <div id="c-app-canvas">
+                <!--Start header-->
+                <div class="browser-info" id="browser-support-info">
+
+                    <div class="bi-wrapper">
+                        <div class="bi-box-wrapper">
+                            <span class="bi-w-img"></span><span class="bi-w-heading">
+                                Your web browser is too  limited for this website.</span> <span class="bi-w-msg"
+                                    id="browser-support-popup">
+                                    Click here to findout more.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="browser-info-wrapper" id="browser-support-message">
+                </div>
+
+
+                
+                <div class="header-privacy-msg-wrap no-display" id="headerPrivacyMsgWrap">
+                    <div class="header-privacy-msg-wrap-inside">
+                        <span class="float-left privacy-message-wrap">
+                            <b>SUPERMEAL TAKEAWAY</b> use cookies to improve your browsing experience. By continuing, you agree to receive cookies on our website. Read more about our  <a href="/docs/cookie-policy" target="_blank">cookies policy.</a>
+                        </span>
+                        <span class="float-right btn-hide-msg" id="btnPrivacyWrapHide"><span class="cookie-icon"><i class="fa fa-times"></i></span><span class="cookie-text">Close</span></span>
+
+                    </div>
+                </div>
+
+                
+
+                <div id="ctl00_headerWrapper" class="c-app-header-wrapper hidden-print">
+                    <div id="ctl00_dvAppSearchWrap" class="app-logo-search-warpper">
+                        <div class="back-plus-burger-wrap">
+                            <a class="back-btn" onclick="consumermaster_GoBack();">
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                            </a>
+                            <div class="menu-line-wrap" id="c-button--slide-left">
+                                <i class="fa fa-bars" aria-hidden="true"></i>
+                            </div>
+                            
+                            <span id="ctl00_spMasterAreaWrap" class="area-on-header-wrap" style="display:none;">
+                                <span><i class="fa fa-map-marker" aria-hidden="true"></i></span>
+                                <span id="lblConsumerArea" class="restaurant-name"></span>
+                                
+                            </span>
+                            <span class="show-res-search-page">Restaurants</span>
+                            
+                            <a href="/" class="logo" tabindex="-1">
+                                <img id="ctl00_imgLogo" class="lazy responsive-logo" src="../App_Themes/theme-pk/images/logo.png" alt="logo" style="z-index:50;" />
+                            </a>
+
+                        </div>
+
+                        <a class="hide-web header-logo-text hide-res" href="/">Supermeal.pk</a>
+
+                        <div class="header-deliver-type-wrap ha-header" id="ha-header" style="margin-top: 10px">
+
+                            <div class="header-deliver-type-inner-wrap">
+
+                                <div id="dvOrderTypeLabelWrap" class="select-Search-asap-wrap">
+                                    <div class="order-type-change-wrap">
+
+                                        <div id="delivery" data-toggle="modal" data-target="#changeOrderType">
+                                            <span class="order-type-icon" id="spOrderTypeIcon">
+                                                <i class="fa" aria-hidden="true" id="icoOrderType"></i>
+                                            </span>
+                                            <span class="order-type-label">
+                                                <span id="spOrderTypeLabel"></span>
+                                                <span class="bold" id="spTimeLabel"></span>
+                                                <span class="change-ordertype-btn">Change</span>
+                                            </span>
+                                        </div>
+
+
+                                    </div>
+                                    
+                                </div>
+
+                            </div>
+                            <span id="showAreaHeader1" class="res-header-area-wrap" style="display: none;"></span>
+
+                        </div>
+
+                        <div id="dvCities" class="all-cities no-display" tabindex="-1">
+                            <span class="map-pin-city-name">
+                                </span>
+                            <div class="map-pin-header"></div>
+                            <ul class="dropdown" id="msCities">
+                            </ul>
+                            <input name="ctl00$hdnCurrentCity" type="hidden" id="hdnCurrentCity" />
+                        </div>
+
+                        
+                        
+                        <div>
+                            <div class="search-icon-slide no-display-web" id="search-icon-slide">
+                                <i class="fa fa-search" aria-hidden="true"></i>
+                            </div>
+                            <div id="ctl00_dvBasketWrap" class="header-basket-wrap basket-empty-show">
+                                <div style="display: block;">
+                                    <span style="float: right; padding: 0px 0px; position:relative;"><a class="order-basket-active" id="hklOrderBasket">
+                                        
+                                        <img class=" search-selected" src="/resources/lefttoright/images/shopping-cart.svg" alt="Order meal online - Supermeal" />
+                                        <span id="spPayableAmount" style="display: none;">Rs 0</span>
+                                        <span class="active-bubble" style='display:none;'>0</span>
+                                    </a>
+                                    <span class="basket-empty" id="basketEmpty">
+                                        Basket is empty                            
+                                    </span>
+                                    </span>
+                                </div>
+                                
+                            </div>
+                        </div>
+
+
+
+                        <div class="welcome-back-login-name-main-wrap">
+                            
+                        </div>
+
+                        <div class="mob-nav-wrap nav-responsive-hide">
+
+                            <div class="header-nav">
+                                <div>
+                                    <ul class="nav-ul-list" style="display: flex; align-items: center;">
+                                        
+
+                                        <li>
+                                            
+                                        </li>
+
+                                        
+                                        <li><a  data-toggle="modal" data-target="#aboutUsModal" class="main-nav-a">About Us</a></li>
+                                        <li style="margin-right: 40px"><a href="/faq" class="main-nav-a" tabindex="-1">Help?</a></li>
+
+                                        
+                                        <li><a class="btn-h-signup" href="/register">Hungry? Sign-Up Today</a></li>
+                                        <li>
+                                            <span>
+                                                <a id="actionVisitorLogin" class="header-login-btn-blue float-right" href="/login">
+									        <span class="login-head-user-icon"><i class="fa fa-user-o" aria-hidden="true"></i></span>Login</a>
+                                            </span>
+
+                                        </li>
+                                        
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="ctl00_dvSearchRestaurant" class="header-res-wrap float-right">
+                            <ul>
+                                <li class="header-res-search-warp-li">
+                                    <div class="header-res-search-wrap">
+                                        <input name="ctl00$txtSearch" type="text" id="txtSearch" class="header-res-search-field float-right watermark" placeholder="Find a restaurant" autocomplete="off" tabindex="-1" />
+                                        <div class="sk-three-bounce restaurant-home-search-loader  no-display" id="dvSearch">
+                                            <div class="sk-child sk-bounce1"></div>
+                                            <div class="sk-child sk-bounce2"></div>
+                                            <div class="sk-child sk-bounce3"></div>
+                                        </div>
+                                        <span class="mag-glass"><i class="fa fa-search" aria-hidden="true" style="font-size: 14px; color: #aaa;"></i></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!--End header-->
+                <a id="ctl00_hlkWallet" class="except-home-hide-on-all-pages" href="/login">
+				<div class="ewall-res-wrap" >
+					<div class="ewallet-row-res">
+						<div class="wallet-icon-res-wrap">
+							<div class="wallet-icon-res font-26 text-center">
+								<i class="fa fa-money"></i>
+							</div>
+						</div>
+                       <div class="wallet-amount-price-res-wrap">
+                     
+                       
+							 
+						<div class="wallet-login" >
+                            <span class="login-label">
+                                <i class="fa fa-lock" aria-hidden="true"></i>Login to see e-Wallet balance
+                            </span>
+                        </div>
+						   
+                    </div>
+					</div>
+				</div>
+                </a>
+                <!--Start Content-->
+                <div class="slide__pizza only-home-responsive hide-all-pages">
+                    <img id="ctl00_imgLeftImageResponsive" src="" />
+                </div>
+                <div id="ctl00_defaultBackground" class="deault-background">
+                    <div class="no-area-found-wrap">
+                        <div id="divAreaMessage" style="display: none"><a data-toggle="modal" data-target="#dvSelectArea">Enter your area  for more accurate results</a></div>
+
+                        <div class="area-found-wrap" id="divNotDeliveryMessage" style="display: none">
+                            <div class="area-found-wrap-inner">
+                                <div class="area-found-wrap-location" id="divEnterpriseNameLocation"></div>
+                            </div>
+                            <div class="area-found-wrap-inner-not-a-delivery">
+                            </div>
+
+                        </div>
+                    </div>
+                    <div id="divBreadcrums" class="breadcrumb-main-wrap">
+                        <ol id="ctl00_OlBreadcrumb" class="nav  breadcrumb">
+                            <li class="current-active"><a href="/">Home</a></li>
+                            
+                            
+                            <li id="ctl00_li4">
+                                <span id="ctl00_lblli4">Delivery Restaurants </span><span id="ctl00_spli4"></span></li>
+                        </ol>
+                    </div>
+
+                    
+    <div class="restaurant-list-wrap">
+        <div class="container-wrap">
+            <div class="search-result-wrap-main">
+
+
+                <div class="search-res-left ">
+                    
+
+                    <div class="sidebar-filter-wrap hide-sidebar-filter-web" id="scrollFixedRes">
+                        <div class="search-filter-res-wrap">
+
+
+                            <a onclick="consumermaster_CloseModalPopupOnBack('searchFilter',false,true)" data-toggle="modal" data-target="#searchFilter">
+
+                                <span class="icon-l">
+                                    <i class="fa " id="icoOrderTypeMenu"></i>
+                                </span><span class="text-label" ><span id="spAreaLabel"></span><b id="bPreTime"></b></span>
+                            </a>
+
+                            <a onclick="consumermaster_CloseModalPopupOnBack('searchFilter',false,true)" class="filter-res modal-hide-div" data-toggle="modal" data-target="#searchFilter">
+                                <i class="fas fa-sliders-h"></i>
+                                
+                            </a>
+                        </div>
+                    </div>
+                    <div class="main-add-m-res-a " id="searchFilter" role="dialog">
+                        <div class="main-add-m-res-b">
+
+                            <!-- Modal content-->
+                            <div class="main-add-m-res-c">
+                                <div class="modal-header main-add-m-res-d no-display">
+
+                                    <h4 class="modal-title clr-head-gray ">
+                                        <span class="icon-l" data-dismiss="modal">
+                                            <i class="fas fa-arrow-left"></i>
+                                        </span>Search preferences
+						
+                                    </h4>
+                                </div>
+                                <div class="main-add-m-res-e" style="width: 100%;">
+                                    <div class="sidebar-filter-cusines-categ-wrap">
+                                        <div class="sidebar-filter-wrap res-p">
+                                            <a onclick="javascript:consumermaster_CloseModalPopupOnBack('sortingPopup',true,true)" data-toggle="modal" data-target="#sortingPopup"  class="hide-w">
+                                                <span class="icon-l">
+                                                    <i class="fas fa-sort-alpha-down"></i>
+                                                </span>
+                                           <div><div class="type-label">Sort by</div> <span class="text-label">Relevance</span></div>
+                                         <span class="change-lab">Change</span>
+                                                </a>
+                                            <a onclick="javascript:consumermaster_CloseModalPopupOnBack('orderTypeModal',true,true)" data-toggle="modal" data-target="#orderTypeModal" >
+                                                <span class="icon-l">
+                                                    <i id="icoOrderType" class="fa "></i>
+                                                </span>
+                                                   <div>
+                                                       <div class="type-label">Order type</div>
+                                                    <span id="spOrderTypeLabel" class="text-label"></span>
+                                                   </div>
+                                                     <span class="change-lab">Change</span>
+                                            </a>
+                                            <a onclick="javascript:consumermaster_CloseModalPopupOnBack('dvSelectArea',true,true)" data-toggle="modal" data-target="#dvSelectArea">
+                                                <span class="icon-l">
+                                                    <i class="fa fa-map-marker"></i>
+                                                </span>
+                                            <div>  
+                                               <div class="type-label" id="dvOrderLabel"></div>  
+                                               <span class="text-label" id="spUserArea">Enter your location</span>
+                                            </div>
+                                                     <span class="change-lab">Change</span>
+                                            </a>
+                                           
+                                                <a onclick="javascript:consumermaster_CloseModalPopupOnBack('OrderTimeModal',true,true)" data-toggle="modal" data-target="#OrderTimeModal">
+                                                    <span class="icon-l">
+                                                        <i class="fa fa-clock-o"></i>
+                                                    </span>
+                                                   <div>  <div class="type-label">Order time</div> <span class="text-label" id="spPreTime"></span></div>
+                                                 <span class="change-lab">Change</span>
+                                                    </a>
+
+                                        </div>
+                                        
+                                        <div class="sidebar-cat-wrap">
+                                           <div id="loaderSidebar" class="no-display"> 
+                                               <div  class="carousel-loader show-loadercuisnes">
+                                                    <div class="spinner search-page-carousel-loader">
+                                                        <div class="rect1"></div>
+                                                        <div class="rect2"></div>
+                                                        <div class="rect3"></div>
+                                                        <div class="rect4"></div>
+                                                        <div class="rect5"></div>
+                                                    </div>
+                                            </div>
+                                               </div>
+                                            <div class="accordion">
+                                                Categories
+                            
+                                            </div>
+                                            <div class="panel" style="display:block;">
+                                                <ul id="ulCuisines" class="left-ul-links"><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'American');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=american"> <span class="cuisine-box"><i class="fas fa-check"></i></span>American (1)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Appetizers');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=appetizers"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Appetizers (20)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Arabic');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=arabic"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Arabic (1)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'BBQ');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=bbq"> <span class="cuisine-box"><i class="fas fa-check"></i></span>BBQ (6)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Breads');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=breads"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Breads (2)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Chinese');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=chinese"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Chinese (8)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Chinese');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=chinese"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Chinese (4)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Continental');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=continental"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Continental (1)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Desserts');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=desserts"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Desserts (5)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Drinks');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=drinks"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Drinks (20)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Fast Food');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=fast food"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Fast Food (15)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Frozen Fish');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=frozen fish"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Frozen Fish (1)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Halal');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=halal"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Halal (28)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Indian');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=indian"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Indian (1)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Italian');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=italian"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Italian (8)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Karhai');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=karhai"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Karhai (4)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Kebab');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=kebab"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Kebab (5)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Khausay');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=khausay"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Khausay (3)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Pakistani');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=pakistani"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Pakistani (4)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Pizza');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=pizza"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Pizza (17)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Salads');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=salads"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Salads (11)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Sandwich');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=sandwich"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Sandwich (19)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Sea Food');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=sea food"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Sea Food (4)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Singaporean');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=singaporean"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Singaporean (1)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Soup');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=soup"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Soup (3)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Thai');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=thai"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Thai (1)</a></li><li><a  onclick="gtag('send','event', 'Restaurant-Search', 'Filter-Cuisine', 'Vegetarian');"  href ="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=vegetarian"> <span class="cuisine-box"><i class="fas fa-check"></i></span>Vegetarian (2)</a></li></ul>
+                                            </div>
+                                        </div>
+                                        
+
+                                    </div>
+                                </div>
+                                <div class="main-add-m-res-f modal-footer no-display">
+                              
+
+                                    <a class="btn btn-success" data-dismiss="modal">Show results</a>
+                                   
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="search-res-right">
+
+                    <h1 id="searchRestaurantTotalCount" class="res-dynamic-cusines-wrap font-18">30 restaurants found for delivery </h1>
+                 <div class="filter-search-wrap"> 
+                     
+                    
+                     </div> 
+                    <div id="showSearchFilterModalResponsive" class="refine-search-results-wrap show-mobile-search-cuisine-res-filter">
+                        <span><i class="fa fa-search" aria-hidden="true"></i></span>
+                        <input type="text" class="form-control close-input" id="txtSearhItemRes" readonly style="padding-right: 10px !important;"/>
+                    </div>
+
+                    
+
+                    <div id="showSearchFilterModal" class="row res-cusines-wrap res-cusines-wrap-new">
+
+                        <div class="search-a-wrap">
+                            <div class="res-order-type-dropdown-wrap" style="display: none;">
+                            </div>
+                            <span class="cross-m-search-page-icon">
+                                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                                <span id="spSearchTitle"></span>
+                            </span>
+
+                            <div class="refine-search-results-wrap">
+                                <span><i class="fa fa-search" aria-hidden="true"></i></span>
+                                <input name="ctl00$cphContentBody$txtSearhItem" type="text" maxlength="128" id="txtSearhItem" class="form-control close-input" />
+                                <div id="dvKeywordList"></div>
+                                <span class="cross-s-page" id="spSearhItemClose" style="display:none;"> <i class="fas fa-times-circle" aria-hidden="true"></i></span>
+                            </div>
+                            <div class="sort-selct-field">
+                                <span>Sort:</span>
+                                 <a class="form-control-sort" data-toggle="modal" data-target="#sortingPopup">
+                                  
+                                       Relevance
+                                   <i class="fas fa-sort"></i>
+                                 </a>
+                            </div>
+                            <div class="cusi-or-autocomplete-wrap" style="display: none;">
+
+                                <div class="res-cuisines-wrap" id="dvCuisineAndRestaurant" style="display:none;">
+
+                                    <div class="search-res-autocomplete-wrap">
+
+                                        <div class="refine-search-results-wrap cusinies-filter-heading" style="margin: 0px;">
+                                            <div class="autocomplete-group">
+                                                <strong>in Restaurants </strong>
+
+                                            </div>
+
+                                        </div>
+                                        <ul class="res-list-autocomplete-wrap" id="ulRestaurants">
+
+                                        </ul>
+                                    </div>
+                                    <div class="search-cuisines-autocomplete-wrap">
+                                                                           
+                                        <div class="refine-search-results-wrap cusinies-filter-heading" style="margin: 0px;">
+                                            <div class="autocomplete-group">
+                                                <strong>in cuisines & items </strong>
+                                            </div>
+
+                                        </div>
+                                        <ul class="res-list-autocomplete-wrap" id="ulItems">
+                                          
+                                            
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="overlay-for-res-wrap"></div>
+                        </div>
+                    </div>
+                    <div id="ctl00_cphContentBody_dvPopularCuisine" class="carousel-wrap popular-cuisines-wraper">
+                      
+                            <div class="owl-carousel cuisines owl-theme " >
+                                      
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=chinese" >
+                                                    <span class="popular-item-name">Chinese</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_default-cuisine-icon.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=chinese" >
+                                                    <span class="popular-item-name">Chinese</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_chinese.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=salads" >
+                                                    <span class="popular-item-name">Salads</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_salad.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=soup" >
+                                                    <span class="popular-item-name">Soup</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_soup.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=bbq" >
+                                                    <span class="popular-item-name">BBQ</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_bbq.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=desserts" >
+                                                    <span class="popular-item-name">Desserts</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_dessert.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=drinks" >
+                                                    <span class="popular-item-name">Drinks</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_drinks.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=arabic" >
+                                                    <span class="popular-item-name">Arabic</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_arabic.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=karhai" >
+                                                    <span class="popular-item-name">Karhai</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_karahi.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=thai" >
+                                                    <span class="popular-item-name">Thai</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_thai.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=pakistani" >
+                                                    <span class="popular-item-name">Pakistani</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_pakistani.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=indian" >
+                                                    <span class="popular-item-name">Indian</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_indian.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=appetizers" >
+                                                    <span class="popular-item-name">Appetizers</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_appetizers.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+
+                                             <a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&cuisine=italian" >
+                                                    <span class="popular-item-name">Italian</span>
+                                                 <span class="carousel-search-popular-item" style="background-image:url('https://cloud.superme.al/p/pk/images/000/000/000000000_italian.jpg');">
+                                                 <span class="carousel-item-overlay">
+                                            
+                                                  </span>
+                                            </span>
+                                                 </a>
+                                        
+                                   </div>
+
+
+                    </div>
+
+                                        <h1 id="searchRestaurantTotalCountResponsive" class="res-dynamic-cusines-wrap res-dynamic-cusines-wrap-show-resp font-18">30 restaurants found for delivery </h1>
+                  
+                 
+
+
+
+
+                    <div class="sr-controls-responsive" style="display: none;">
+                        <a class="mobile-res-btn " id="showMobileCuisines"><i class="fa fa-filter" aria-hidden="true"></i>Cuisines
+            
+                    
+                        </a>
+
+                        <a class="mobile-res-btn map-side" id="viewType"><i class="fa fa-map-marker"></i>Map</a>
+                    </div>
+                    <div class="sr-controls-responsive" style="display: none;">
+                        
+                        <span>Sort by
+                        </span>
+                        <span id="ctl00_cphContentBody_showMobileSorting" data-target="#sortingPopup" data-toggle="modal" class="relevance">Relevance
+                        </span>
+                    </div>
+                    <div class="refine-search-results-wrap hide-web show-res" style="display: none;">
+                        <span><i class="fa fa-search" aria-hidden="true"></i></span>
+                        <input name="ctl00$cphContentBody$txtSearhItemRes1" type="text" maxlength="128" id="txtSearhItemRes1" class="form-control close-input" />
+                        <div id="dvKeywordListRes"></div>
+                    </div>
+
+                    <div class="row res-cusines-list-wrap">
+                        
+                        <div class="res-list-more-btn-wrap" style="display: none;">
+
+                            <div class="dropdown-more no-display" id="divMoreCuisineddl">
+                                <a class="more-btn-dropdown"><i class="dropdown-icon-right "><i class="fa fa-chevron-down" aria-hidden="true"></i></i><span class="dropdown-order-label">More Cuisines</span></a>
+                                <ul class="dropdown-more-inner-wrap no-display" id="more-nav">
+                                    <li>
+                                        <ul class="subfilter"></ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row res-sorting-wrap">
+                        <div id="dvFilterWeb" class="res-sorting-inner-wrap">
+                        </div>
+                        <div class="res-sorting-map-wrap"><span id="mapShow"><i class="fa fa-map-marker" aria-hidden="true"></i>Map</span><span class="selected" id="resListShow"><i class="fa fa-th" aria-hidden="true"></i>Tile</span> </div>
+                    </div>
+                    <div id="divTile" class="row res-gird-list-fooditem-wrap">
+                        <div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('grill-o', 'True','False', 'True', '12:30~21:45', 'True', '12:30 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="ecash-or-discount-wrap"><span class="sponser-label">Super Pick</span></div><div class="image-lazy"><div class="lazy-new"  alt ="Grill O" data-src="https://cloud.superme.al/p/pk/images/000/141/000141867_download---2025-10-09T123101.687.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141866_download---2025-10-09T123050.260.jfif" alt ="Grill O"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-no-label-dv"><div class="open-for-collection"><span class="pre-order-text-label" style="margin: 0px; ">Open for <span class="bold">Collection</span></span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">12:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Grill O</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 500</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 50</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>2 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('sultan', 'False','False', 'True', '12:00~23:45', 'True', '12:00 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="ecash-or-discount-wrap"><span class="sponser-label">Super Pick</span></div><div class="image-lazy"><div class="lazy-new"  alt ="Sultan" data-src="https://cloud.superme.al/p/pk/images/000/141/000141909_Sultan.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141908_Sultan.jfif" alt ="Sultan"/></div></div><div class="res-list-fooditem-details-wrap"><h2 class="res-list-fooditem-name-heading"><a>Sultan</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 500</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>Free Delivery</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>0 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizzay-bahadurabad', 'False','False', 'True', '01:00~01:30', 'True', '1:00 AM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizzay Bahadurabad" data-src="https://cloud.superme.al/p/pk/images/000/141/000141843_download--99-.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141842_download--98-.jfif" alt ="Pizzay Bahadurabad"/></div></div><div class="res-list-fooditem-details-wrap"><h2 class="res-list-fooditem-name-heading"><a>Pizzay Bahadurabad</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 85px"></span></div> <span class="reviews-count">5 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 600</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 60</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>2 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('penny-pizza', 'False','False', 'True', '12:15~01:00', 'True', '12:15 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Penny Pizza" data-src="https://cloud.superme.al/p/pk/images/000/141/000141853_shutterstock-2272273435.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141852_download---2025-10-09T120255.331.jfif" alt ="Penny Pizza"/></div></div><div class="res-list-fooditem-details-wrap"><h2 class="res-list-fooditem-name-heading"><a>Penny Pizza</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 74px"></span></div> <span class="reviews-count">186 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 1000</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 100</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>8 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-inc', 'False','False', 'True', '12:00~01:00', 'True', '12:00 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza Inc" data-src="https://cloud.superme.al/p/pk/images/000/141/000141855_shutterstock-2504891743.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141854_download---2025-10-09T120441.898.jfif" alt ="Pizza Inc"/></div></div><div class="res-list-fooditem-details-wrap"><h2 class="res-list-fooditem-name-heading"><a>Pizza Inc</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 74px"></span></div> <span class="reviews-count">9 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 499</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 150</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>3 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('bun-ka-baap', 'False','False', 'True', '11:30~21:00', 'True', '11:30 AM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Bun Ka Baap" data-src="https://cloud.superme.al/p/pk/images/000/141/000141857_Bun-Ka-Baap.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141856_Bun-Ka-Baap-logo.png" alt ="Bun Ka Baap"/></div></div><div class="res-list-fooditem-details-wrap"><h2 class="res-list-fooditem-name-heading"><a>Bun Ka Baap</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 49px"></span></div> <span class="reviews-count">2 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 350</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 100</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>3 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('icy-n-spicy', 'False','False', 'True', '11:45~00:45', 'True', '11:45 AM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Icy n Spicy" data-src="https://cloud.superme.al/p/pk/images/000/141/000141859_Icy-n-Spicy.jpeg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141858_Icy-n-Spicy-logo.png" alt ="Icy n Spicy"/></div></div><div class="res-list-fooditem-details-wrap"><h2 class="res-list-fooditem-name-heading"><a>Icy n Spicy</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 17px"></span></div> <span class="reviews-count">1 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 800</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 70</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>6 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="ribbon"><span>New</span></div><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('spicemindedhomechef', 'False','False', 'True', '09:30~21:00', 'True', '9:30 AM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Spice Minded Home Chef" data-src="https://cloud.superme.al/p/pk/images/000/141/000141983_images--26-.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141982_download--56-.png" alt ="Spice Minded Home Chef"/></div></div><div class="res-list-fooditem-details-wrap"><h2 class="res-list-fooditem-name-heading"><a>Spice Minded Home Chef</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 800</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 100</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>5 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="ribbon"><span>New</span></div><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('eatmeat', 'False','False', 'True', '09:00~18:00', 'True', '9:00 AM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="EATMEAT" data-src="https://cloud.superme.al/p/pk/images/000/141/000141957_EATMEAT.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141956_EATMEAT-logo.jfif" alt ="EATMEAT"/></div></div><div class="res-list-fooditem-details-wrap"><h2 class="res-list-fooditem-name-heading"><a>EATMEAT</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 800</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 80</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>7 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('zhi-zhi-fan-chao', 'False','False', 'True', '11:30~00:00', 'True', '11:30 AM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Zhi Zhi Fan Chao" data-src="https://cloud.superme.al/p/pk/images/000/141/000141955_Zhi-Zhi-Fan-Chao.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141954_Zhi-Zhi-Fan-Chao-logo.jfif" alt ="Zhi Zhi Fan Chao"/></div></div><div class="res-list-fooditem-details-wrap"><h2 class="res-list-fooditem-name-heading"><a>Zhi Zhi Fan Chao</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 350</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 70</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>3 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-lounge', 'True','False', 'True', '12:30~00:00', 'True', '12:30 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza Lounge" data-src="https://cloud.superme.al/p/pk/images/000/141/000141861_Hungry-Bitez-banner.jpeg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141860_Pizza-Lounge-logo.png" alt ="Pizza Lounge"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-no-label-dv"><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">12:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Pizza Lounge</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 71px"></span></div> <span class="reviews-count">7 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 300</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 100</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>3 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('the-olive-burger', 'True','False', 'True', '12:30~01:30', 'True', '12:30 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="The Olive Burger" data-src="https://cloud.superme.al/p/pk/images/000/141/000141885_shutterstock-1873089304.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141884_download---2025-10-09T124439.884.jfif" alt ="The Olive Burger"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-no-label-dv"><div class="open-for-collection"><span class="pre-order-text-label" style="margin: 0px; ">Open for <span class="bold">Collection</span></span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">12:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>The Olive Burger</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 500</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>Free Delivery</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>4 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-zone-king', 'True','False', 'True', '12:30~01:30', 'True', '12:30 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza Zone King" data-src="https://cloud.superme.al/p/pk/images/000/141/000141925_Pizza-Zone-King.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141924_Pizza-Zone-King-logo.jfif" alt ="Pizza Zone King"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-no-label-dv"><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">12:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Pizza Zone King</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 300</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 100</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>4 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-99', 'True','False', 'True', '12:30~01:30', 'True', '12:30 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza 99" data-src="https://cloud.superme.al/p/pk/images/000/141/000141905_shutterstock-2492633903.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141904_download--47-.png" alt ="Pizza 99"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-no-label-dv"><div class="open-for-collection"><span class="pre-order-text-label" style="margin: 0px; ">Open for <span class="bold">Collection</span></span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">12:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Pizza 99</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 500</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 50</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>2 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-crispy', 'True','False', 'True', '12:30~00:00', 'True', '12:30 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza Crispy" data-src="https://cloud.superme.al/p/pk/images/000/141/000141935_Pizza-Crispy.webp"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141934_Pizza-Crispy-logo.jfif" alt ="Pizza Crispy"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-no-label-dv"><div class="open-for-collection"><span class="pre-order-text-label" style="margin: 0px; ">Open for <span class="bold">Collection</span></span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">12:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Pizza Crispy</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 800</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 150</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>4 km</span></div></div></div></div></div><div class="rest-looking-found-wrap"><i class="fas fa-store-alt common-building-icon"></i><div class="res-looking-heading">CAN’T FIND THE RESTAURANT YOU’RE LOOKING FOR?</div><div class="res-looking-p1">Recommend  and get <span class="bold" style="color: #ed0000;">Rs 100 e-Cash</span></div><div class="res-looking-p">Recommend a restaurant in your area and <span class="bold">get rewarded with Rs 100 e-Cash,</span> more recommendations; means more e-cash!</div><div class="res-looking-link"><a data-toggle="modal" data-target="#TermsConditionPopup">Terms and Conditions apply.</a></div><div class="res-looking-btn"><a onclick="openNewModal()">Recommend Now</a></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-home', 'True','False', 'True', '12:30~23:30', 'True', '12:30 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza Home" data-src="https://cloud.superme.al/p/pk/images/000/141/000141953_Pizza-Crispy.webp"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141952_Pizza-Home-logo.png" alt ="Pizza Home"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-no-label-dv"><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">12:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Pizza Home</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 300</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 150</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>1 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('subway-dha', 'True','False', 'True', '12:30~23:00', 'True', '12:30 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Subway DHA" data-src="https://cloud.superme.al/p/pk/images/000/141/000141951_Subway-DHA.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141950_Subway-DHA-logo.jpg" alt ="Subway DHA"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-no-label-dv"><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">12:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Subway DHA</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 300</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 100</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>4 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-iz', 'True','False', 'False', '17:15~00:00', 'True', '5:15 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza IZ" data-src="https://cloud.superme.al/p/pk/images/000/141/000141863_Pizza-IZ.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141862_Pizza-IZ-logo.jfif" alt ="Pizza IZ"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">5: 15 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">5:15 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Pizza IZ</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 85px"></span></div> <span class="reviews-count">1 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 1500</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 150</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>10 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('golden-apple-bahadurabad', 'True','False', 'False', '13:30~00:30', 'True', '1:30 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Golden Apple Bahadurabad" data-src="https://cloud.superme.al/p/pk/images/000/141/000141881_Golden-Apple-Bahadurabad.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141880_Golden-Apple-Bahadurabad-logo.webp" alt ="Golden Apple Bahadurabad"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">1: 00 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">1:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Golden Apple Bahadurabad</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 84px"></span></div> <span class="reviews-count">26 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 300</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 100</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>2 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('cross-roadz-pizza', 'True','False', 'False', '14:00~01:00', 'True', '2:00 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Cross Roadz Pizza" data-src="https://cloud.superme.al/p/pk/images/000/141/000141887_Cross-Roadz-Pizza.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141886_Cross-Roadz-Pizza-logo.jfif" alt ="Cross Roadz Pizza"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">1: 30 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">2:00 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Cross Roadz Pizza</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 81px"></span></div> <span class="reviews-count">2 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 500</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 50</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>4 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-hot', 'True','False', 'False', '15:00~00:00', 'True', '3:00 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza Hot" data-src="https://cloud.superme.al/p/pk/images/000/141/000141891_Pizza-Hot.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141890_Pizza-Hot-logo.png" alt ="Pizza Hot"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">2: 30 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">3:00 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Pizza Hot</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 68px"></span></div> <span class="reviews-count">1 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 500</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 50</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>2 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('burger-hut', 'True','False', 'False', '22:00~21:30', 'True', '10:00 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Burger Hut" data-src="https://cloud.superme.al/p/pk/images/000/141/000141897_Burger-Hut.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141896_Burger-Hut-logo.jfif" alt ="Burger Hut"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">1: 30 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">10:00 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Burger Hut</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 54px"></span></div> <span class="reviews-count">6 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 800</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 80</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>7 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('burger-hut', 'True','False', 'False', '22:00~21:30', 'True', '10:00 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Burger Hut" data-src="https://cloud.superme.al/p/pk/images/000/141/000141897_Burger-Hut.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141896_Burger-Hut-logo.jfif" alt ="Burger Hut"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">1: 30 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">10:00 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Burger Hut</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 54px"></span></div> <span class="reviews-count">6 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 800</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 80</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>5 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('chicken-cottage', 'True','False', 'False', '14:00~22:00', 'True', '2:00 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Chicken Cottage" data-src="https://cloud.superme.al/p/pk/images/000/141/000141907_Chicken-Cottage.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141906_Chicken-Cottage-logo.jpg" alt ="Chicken Cottage"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">1: 30 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">2:00 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Chicken Cottage</a> </h2><div class="res-list-fooditem-stars-wrap"><div class= "stars-off" style="width:86px;"><span class="stars-on" style="width: 17px"></span></div> <span class="reviews-count">1 reviews</span></div> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 800</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 80</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>7 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('heisenburgers', 'True','False', 'False', '13:30~23:15', 'True', '1:30 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="HeisenBurgers" data-src="https://cloud.superme.al/p/pk/images/000/141/000141928_HeisenBurger.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141927_HeisenBurger-logo.jfif" alt ="HeisenBurgers"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">1: 00 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">1:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>HeisenBurgers</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 800</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 80</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>6 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('de-pizza-town', 'True','False', 'False', '17:15~01:15', 'True', '5:15 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="De Pizza Town" data-src="https://cloud.superme.al/p/pk/images/000/141/000141913_shutterstock-2272273435.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141912_download---2025-10-09T132317.744.jfif" alt ="De Pizza Town"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">5: 00 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">5:15 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>De Pizza Town</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 600</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 150</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>6 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('hot-snacks-roll-n-bbq', 'True','False', 'False', '17:30~01:30', 'True', '5:30 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Hot Snacks Roll n BBQ" data-src="https://cloud.superme.al/p/pk/images/000/141/000141919_shutterstock-1025313721.jpg"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141918_download---2025-10-09T132831.659.jfif" alt ="Hot Snacks Roll n BBQ"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">5: 30 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">5:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Hot Snacks Roll n BBQ</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 800</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 80</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>6 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-gateway', 'True','False', 'False', '14:00~01:30', 'True', '2:00 PM','True', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza Gateway" data-src="https://cloud.superme.al/p/pk/images/000/141/000141949_Pizza-Gateway.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141948_Pizza-Gateway-logo.jfif" alt ="Pizza Gateway"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">1: 30 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">2:00 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Pizza Gateway</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 500</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 70</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>3 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('pizza-own', 'True','False', 'False', '14:30~00:30', 'True', '2:30 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Pizza Own" data-src="https://cloud.superme.al/p/pk/images/000/141/000141941_Pizza-Own.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141940_Pizza-Own-logo.jfif" alt ="Pizza Own"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">2: 00 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">2:30 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Pizza Own</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 500</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 100</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>2 km</span></div></div></div></div></div><div class="res-list-fooditem-wrap"><div class="res-list-fooditem-inner-wrap"><div class="res-list-fooditem-result" onclick ="return sr_CheckRestaurantStatus('red-apple-pechs', 'True','False', 'False', '13:00~00:00', 'True', '1:00 PM','False', this); "><div class="res-list-fooditem-image-wrap"><div class="image-lazy"><div class="lazy-new"  alt ="Red Apple PECHS" data-src="https://cloud.superme.al/p/pk/images/000/141/000141947_Red-Apple-PECHS.jfif"></div></div><div class="res-logo-image"><img src="https://cloud.superme.al/p/pk/images/000/000/000000000_no-image.jpg" class="lazy" data-src = "https://cloud.superme.al/p/pk/images/000/141/000141946_Red-Apple-PECHS-logo.jfif" alt ="Red Apple PECHS"/></div></div><div class="res-list-fooditem-details-wrap"><div class="res-close-dv"><div class="res-close-info-dv"><span class="res-close-info-opening">Opens at</span><span class="res-close-dayTime">12: 30 PM</span></div><div class="res-close-time-dv"><span class="res-close-type">Delivery after</span><span class="res-close-dayTime">1:00 PM</span></div></div><h2 class="res-list-fooditem-name-heading"><a>Red Apple PECHS</a> </h2> <h3 class="res-list-fooditem-cusines-name"></h3><div class="res-list-fooditem-order-distance"><span>Min: Rs 400</span><span><i class="fa fa-motorcycle" aria-hidden="true"></i>from Rs 50</span><span><i class="fa fa-map-pin" aria-hidden="true"></i>3 km</span></div></div></div></div></div>
+
+                        <div id="cLoader" class="carousel-loader" style="display: none">
+                          <div class="spinner search-page-carousel-loader">
+                            <div class="rect1"></div>
+							<div class="rect2"></div>
+							<div class="rect3"></div>
+							<div class="rect4"></div>
+							<div class="rect5"></div>
+						</div>
+                        </div>
+                    </div>
+
+
+
+
+
+                    <div id="dvMapView" class="restaurant-map-wrap">
+                        <div id="map_canvas" style="height: 600px;">
+                        </div>
+                    </div>
+
+                    <div id="dvNoData" class="sr-not-found-wrap" style="display:none;">
+                        <div class="sr-not-found-wrap-inner">
+                            
+                            <div id="dvNoSearch" class="sr-not-found-wrap-no-result"></div>
+                            <div class="sr-results-matched" style="display: none;" id="divResultMatched">Results matched in</div>
+                            <div id="restaurantscount" class="sr-not-found-wrap-no-result">
+                                <div class="sr-not-found-wrap-no-result">
+                                    <span id="spOrderType" style="display: none;"></span>
+                                    <a id="hlkCuisineFound" class="search-no-result-found" style="display: none;"></a>
+                                </div>
+                                <div class="sr-not-found-wrap-no-result">
+                                    <span id="spOrderType2" style="display: none;"></span>
+                                    <a id="hlkCuisineFound2" class="search-no-result-found" style="display: none;"></a>
+                                </div>
+                            </div>
+                            
+                           
+                            <div id="dvSearchItemFound" class="no-display"><span id="dvShowOR" style="display: none; margin: 0px 15px;">OR</span></div>
+                            
+                           
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- cuisines popup starst here-->
+
+    <div class="modal fade common-modal-responsive no-display" id="cusinesPopup" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+
+                    <h2 class="modal-title" style="display: flex; align-items: center;">Cuisines
+                    </h2>
+                </div>
+                <div class="responsive-topping-scroll">
+
+                    <div class="topping-scroll-modal">
+                        <div class="modal-body" style="width: 100%;">
+                            <div class="topping-wrap m-t-60">
+
+                                <ul id="ctl00_cphContentBody_ulResCuisines" class="cusines-mobile-wrap">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default " data-dismiss="modal">Cancel</button>
+                    
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- cuisines popup ends here-->
+
+
+    <!-- sort popup starts here-->
+
+
+    <div class="modal fade common-modal-responsive no-display" id="sortingPopup" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                  <h4 class="modal-title clr-head-gray">
+                    <span class="icon-l" data-dismiss="modal">
+                        <i class="fas fa-arrow-left"></i>
+                    </span>
+                  Sort by
+                </h4>
+
+                </div>
+            
+                <div class="responsive-topping-scroll ">
+
+                    <div class="topping-scroll-modal">
+                        <div class="modal-body" style="width: 100%;">
+                            <div class="topping-wrap m-t-60">
+
+                                <ul id="ctl00_cphContentBody_ulSortBy" class="sorting-mobile-wrap"><li class="bold"><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=relevance-desc">Relevance<i class="fa fa-check" aria-hidden="true"></i></a></li><li><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=time-asc" class="" >Delivery Time<i class="fa " aria-hidden="true"></i></a></li><li class=""><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=discount-desc">Discount: High to Low  <i class="fa " aria-hidden="true"></i></a></li><li  class=""><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=discount-asc">Discount: Low to High  <i class="fa " aria-hidden="true"></i></a></li><li class=""><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=cashback-desc">Cashback: High to Low  <i class="fa " aria-hidden="true"></i></a></li><li  class=""><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=cashback-asc">Cashback: Low to High  <i class="fa " aria-hidden="true"></i></a></li><li class=""><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=ratings-desc">Ratings: High to Low  <i class="fa " aria-hidden="true"></i></a></li><li  class=""><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=ratings-asc">Ratings: Low to High  <i class="fa " aria-hidden="true"></i></a></li><li class=""><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=distance-asc">Distance: Low to High  <i class="fa " aria-hidden="true"></i></a></li><li  class=""><a href="https://www.supermeal.pk/restaurants/karachi?ordertype=delivery&placeid=&sort=distance-desc">Distance: High to Low  <i class="fa " aria-hidden="true"></i></a></li></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default " data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- sort popup ends here-->
+    <div class="c-app-content-wrapper no-display">
+
+        <div class="sr-count-records-main-wrap">
+            <div style="width: 100%; float: left;">
+            </div>
+        </div>
+
+        <div class="page-content-wrapper no-display" style="position: relative; margin-bottom: 30px">
+            <!--start links of sort by filter searh results-->
+
+            <div class="search-result-filter-wrapper no-display">
+                <div class="search-result-filter-landscape-wrapper">
+
+                    <div class="clearfix"></div>
+                    <div class="hotel-location-search-eat-res float-left">
+
+                        <div class="search-eat-dropdown-wrap  sr-eat-wrp">
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                    <!--start top left navigation-->
+                    <div class="com-ln-center-content">
+                    </div>
+                    <!--end top left navigation-->
+                    <div class="clearfix"></div>
+
+                    
+                    <p id="back-top">
+                        <a href="#top"><span></span></a>
+                    </p>
+                    <a class="goto-filter-close no-display">SHOW RESULTS</a>
+                </div>
+            </div>
+
+
+            <!--end links of sort by filter searh results-->
+            <!--start Item searh results-->
+            <div class="search-result-wrapper scroll">
+                <!--start Master page message-->
+                <div id="dvMasterMessage" class="ap-c-m-b-m">
+                </div>
+                <!--end Master page message-->
+                <!-- Start of Search result content area -->
+                <div class="sr-diplay-search-box-restaurant-wrap">
+                    <div class="search-box-restaurant-pages">
+                        <div class="search-box-content-wrap" style="width: 100%;">
+                            <div class="common-order-type-slc-wrap">
+                            </div>
+                            <div class="sr-search-side">
+                                <span class="common-area-txtbox-map-pin"></span>
+                                <input name="ctl00$cphContentBody$txtArea" id="txtArea" type="text" class="common-area-txtbox search-area-txtbox-restaurant sr-txtbox" />
+                                <div style="margin-left: 215px; width: 170px; position: relative; top: -28px; float: left; display: none" id="dvAreaValidationError">
+                                    <span style="margin-left: 10px; color: #d10101; font-size: 15px; float: left;" id="spAreaValidationError"></span>
+                                    <span class="orc-field-img-remove-icon" id="spnClearAreaText" style="margin: 0 0 0 5px; height: 18px; cursor: pointer; background-position: -96px -51px;"></span>
+                                </div>
+                                <span class="common-area-search-go-btn" id="spnGo">GO</span>
+                            </div>
+                            <div class="sr-radius-or-sr-search-btn-wrap">
+                                <div class="sr-radius-or-sort-by">
+                                    <div id="dvSortByRadius" class="sr-radius-inner no-display">
+                                        <span>Radius</span>
+                                        <select name="ctl00$cphContentBody$ddlRadius" id="ddlRadius">
+	<option value="1">1 km</option>
+	<option value="3">3 km</option>
+	<option value="6">6 km</option>
+	<option value="9">9 km</option>
+	<option value="12">12 km</option>
+	<option selected="selected" value="15">15 km</option>
+
+</select>
+
+                                    </div>
+                                    <div class="sr-inner-sort-by float-right">
+                                        <span>Sort by</span>
+                                        <select name="ctl00$cphContentBody$ddlSortFilter" id="ddlSortFilter">
+
+</select>
+                                    </div>
+                                </div>
+                                <div class="sr-search-btn-wrap">
+                                    <div class="sr-serach-icon-2nd-wrap">
+                                        <span class="sr-serach-icon-2nd"></span>
+                                    </div>
+                                    <div class="sr-search-btn-wrap-inner arrow_box no-display">
+                                        <span class="search-count" id="resultFound"></span>
+                                        <span class="cleartext" onclick="javascript: sr_ClearQuickSearch();"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="dvMainFilters" class="sr-display-results">
+                        <a class="filter-your-search"><span class="filter-img-io"></span><span class="display-block-resp">Filter Your Search</span></a>
+
+                        <div id="dvAppliedFilters" class="sr-applied-filters-wrap no-display">
+                            <h5 class="common-applied-filters-heading">Filter/s</h5>
+                            <a onclick="return sr_RemoveStorageItems();" id="lnkClearOtherFilters" class="clr-filters no-display" href="javascript:__doPostBack(&#39;ctl00$cphContentBody$lnkClearOtherFilters&#39;,&#39;&#39;)">
+									<span class="float-left" style="color:#484848">clear filters</span>
+									<span class="float-right filter-close-io"></span>
+                            </a>
+                        </div>
+
+
+                    </div>
+
+                    
+
+                    <!-- End of Search result content area -->
+                </div>
+                <!--end Item searh results-->
+            </div>
+        </div>
+        <!--Video-POP-UP-Main-Page-->
+        <div class="common-popup-bg" id="dvmasterVideoPopupbg">
+        </div>
+        <div class="restuarant-video-popup-wrapper" id="dvRestuarentVideoPopup">
+            <div class="clpw-video-content">
+                <div class="clpw-restuarent-name" id="restuarentName">
+                </div>
+                <div class="cplw-video-frame-wrapper">
+                    <iframe id="restuarentVideoUrl" width="390" height="300" frameborder="0"></iframe>
+                </div>
+                <div class="popup-close-wrapper" id="dvRestuarentVideoPopupHide">
+                    Close
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <!-- end of Video-POP-UP-Main-Page-->
+
+        <div id="moreTakeAway_PopupBox" class="more-takeaway">
+            <div class="moreTakeAway_wrapper">
+                <a class="moreTakeAway-content-logo" id="takeAwayContentlogo"></a>
+                <div class="moreTakeAway_content" id="dvMoretakeawayContent">
+                </div>
+                <div class="moreTakeAway_optionBox">
+                    <div class="rbc-form-field-wrapper" id="dvCity">
+                        <span class="orc-city-label">
+                            City</span>
+                        <select id="ddlTakeAwayCity" tabindex="3" style="padding: 5px; width: 150px;">
+                        </select>
+                        <div class="menu-des-loader-w">
+                            <span id="dvMultipleAddressLoader" class="no-display">Please wait...</span>
+                        </div>
+                    </div>
+                    <table border="1" bordercolor="#CCCCCC" width="100%" cellpadding="4" cellspacing="4"
+                        id="dvTakeawayOptionbox">
+                    </table>
+                </div>
+                <div class="moreTakeAway_actionBox">
+                    <a class="a-restaurant-working-hrs" id="moreTakeAway_BtnClose"><span>
+                        OK</span></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="common-dbl-border-popup-wrap no-display">
+            <div class="popup-inner-layer">
+                <span></span>
+            </div>
+        </div>
+    </div>
+    <div class="filter-overlap"></div>
+
+    <input type="hidden" name="ctl00$cphContentBody$hdnSelectedCityId" id="hdnSelectedCityId" />
+    <input type="hidden" name="ctl00$cphContentBody$hdnOrderType" id="hdnOrderType" />
+    <input type="hidden" name="ctl00$cphContentBody$hdnCurrentTabView" id="hdnCurrentTabView" />
+
+    <!-- Button trigger modal -->
+    <button type="button" id="mymodal" class="btn btn-primary btn-lg" style="display: none;" data-toggle="modal" data-target="#myModal">
+        cusines
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade " id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h2 class="modal-title" id="myModalLabel">Info</h2>
+                </div>
+                <div class="modal-body">
+                    <p>You can apply maximum 03 cuisine filters. Please remove one to add another.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-close" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    
+
+<!--ordertypeModal modal-->
+<div id="dvSelectArea" class="modal fade common-modal-responsive" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-md" role="document">
+
+        <div class="modal-content">
+            <div class="modal-header cursor-pointer" id="btnCloseAreaPop">
+
+                <div class="modal-title clr-head-gray bold ">
+                    <span class="icon-l" style="display: inline;">
+                        <i class="fas fa-arrow-left"></i>
+                    </span>Your Location</div>
+            </div>
+            <div class="modal-body" style="padding: 0px;">
+                <div class="search-area-map-modal">
+
+                    <div class="map-address-wrap" id="map" style="min-height: 380px; position: relative; overflow: hidden; float: left; width: 100%;"></div>
+                    <div class="search-m-wrap">
+                        <div class="map-search-field">
+                            <input name="ctl00$cphContentBody$commonpopups$txtAreaPopup" id="txtAreaPopup" type="text" class="form-control" />
+                            <i class="fas fa-times map-input-cross" aria-hidden="true"></i>
+
+                            
+                            <a class="login-to-see" href="/login">
+                                <b>Login</b> to see your saved addresses
+                            </a>
+                            
+                        </div>
+
+                        
+                    </div>
+                </div>
+
+                
+            </div>
+
+            <div class="modal-footer" style="text-align: center;">
+                
+
+                <a class="btn btn-success disable-btn-map" style="width: 100%;" id="hlkConfirm">
+                    <div class="sk-three-bounce no-display" id="dvLoaderLocation">
+                        <div class="sk-child sk-bounce1" style="background-color: #fff; width: 10px; height: 10px;"></div>
+                        <div class="sk-child sk-bounce2" style="background-color: #fff; width: 10px; height: 10px;"></div>
+                        <div class="sk-child sk-bounce3" style="background-color: #fff; width: 10px; height: 10px;"></div>
+                    </div>
+                    <span id="spConfirmLabel">Confirm</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--ordertypeModal time modal-->
+<div id="OrderTimeModal" class="modal fade common-modal-responsive">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h4 class="modal-title clr-head-gray">
+                    <span class="icon-l" data-dismiss="modal">
+                        <i class="fas fa-arrow-left"></i>
+                    </span><span id="spOrderTimeTitle"></span>
+                    
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="modal-common-scroll-wrap">
+                    <div class="change-order-type-section" id="dvTiming">
+                        <label class="change-type-row" id="dvNow" for="rdoAsap">
+                            <label class="show-overlay-g no-display"></label>
+                            <label class="left-type-row">
+                                <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                <label class="sr-order-type-label" for="rdoAsap">Now</label>
+                                <label id="lblRestaurantStatusTime" class="restaurant-close-label" style="display: none;"></label>
+                            </label>
+                            <label class="change-type-radio">
+                                <label>
+                                    <input id="rdoAsap" class="radio-custom" name="orderTime" type="radio">
+                                    <label class="radio-custom-label" for="rdoAsap"></label>
+                                </label>
+                            </label>
+                        </label>
+                        <label class="change-type-row" for="rdoSchedule">
+                            <label class="left-type-row">
+                                <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                <label class="sr-order-type-label" for="rdoSchedule">Schedule for later</label>
+                            </label>
+                            <label class="change-type-radio">
+                                <label>
+                                    <input id="rdoSchedule" class="radio-custom" name="orderTime" type="radio">
+                                    <label class="radio-custom-label" for="rdoSchedule"></label>
+                                </label>
+                            </label>
+                        </label>
+
+
+                    </div>
+                    <div class="asap-dropdown-modal-wrap row" id="dvScheduleOrder" style="display: none;">
+
+                        <div class="select-core-asap ">
+                            <span><i class="far fa-calendar-alt"></i></span>
+                            <select id="ddlDay" class="form-control">
+                            </select>
+                        </div>
+                        <div class="select-core-asap">
+                            <span><i class="fa fa-clock-o"></i></span>
+                            <select id="ddlTime" class="form-control" style="display: block;">
+                                <option value="0">time</option>
+                            </select>
+                        </div>
+                        <div id="dvValidationMessage" style="display: none;">Please choose order time</div>
+                    </div>
+
+
+
+                </div>
+            </div>
+
+
+            <div class="modal-footer">
+                <a class="btn btn-default" data-dismiss="modal" id="btnCancelOrderDateTime">Cancel</a>
+                <a class="btn btn-success" id="btnChangeOrderDateTime">Change</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--ordertypeModal modal-->
+<div id="orderTypeModal" class="modal fade common-modal-responsive" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title clr-head-gray">
+                    <span class="icon-l" data-dismiss="modal">
+                        <i class="fas fa-arrow-left"></i>
+                    </span>
+                    Change order type
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="modal-common-scroll-wrap">
+                    <div class="change-order-type-section" id="dvOrderType">
+                        <label id="dvOrderTypeDelivery" for="rdoDelivery" class="change-type-row" style="border-bottom: 1px solid #d2d2d2; position: relative;">
+                            <div class="show-overlay-g no-display"></div>
+
+                            <span class="left-type-row">
+                                <i class="fa fa-motorcycle" aria-hidden="true"></i>
+                                <label class="sr-order-type-label" for="rdoDelivery">Delivery</label>
+                                <label id="spRestuarantStatusOrder" class="close-deliver-label" style="display: none;"></label>
+                            </span>
+
+                            <span class="change-type-radio">
+                                <label>
+                                    <input id="rdoDelivery" class="radio-custom" name="orderType" type="radio" value="1" />
+                                    <label class="radio-custom-label" for="rdoDelivery"></label>
+                                </label>
+                            </span>
+
+                        </label>
+                        <label id="dvOrderTypeCollection" for="rdoPickup" class="change-type-row">
+                            <span class="left-type-row">
+                                <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+                                <label class="sr-order-type-label" for="rdoPickup">Collection</label>
+                            </span>
+                            <span class="change-type-radio">
+                                <span>
+                                    <input id="rdoPickup" class="radio-custom" name="orderType" type="radio" value="2" />
+                                    <label class="radio-custom-label" for="rdoPickup"></label>
+                                </span>
+                            </span>
+                        </label>
+                        <label id="dvOrderTypeEatIn" for="rdoDinein" class="change-type-row">
+                            <label class="left-type-row">
+                                <i class="fa fa fa-cutlery" aria-hidden="true"></i>
+                                <label class="sr-order-type-label" for="rdoDinein">Eat-in</label>
+                            </label>
+                            <label class="change-type-radio">
+                                <label>
+                                    <input id="rdoDinein" value="3" class="radio-custom" name="orderType" type="radio" />
+                                    <label class="radio-custom-label" for="rdoDinein"></label>
+                                </label>
+                            </label>
+                        </label>
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-default" data-dismiss="modal" id="btnCancelOrderType">Cancel</a>
+                <a class="btn btn-success" id="btnUpdateOrderType">Update</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" role="dialog" id="cashBackInfoPopup">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <div class="modal-title clr-head-gray bold">Cashback - You get it on Supermeal only.</div>
+            </div>
+            <div class="modal-body">
+                <div class="font-16 common-color-p" id="dvCashbackPopupMessage">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal">That's Great!</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!--Restaurant offline modal-->
+
+
+<!--Country modal css starts here-->
+<div class="modal fade" role="dialog" id="countryModal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-sm-normal">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+
+            <div class="modal-body">
+                <div class="travel-image">
+                    <img src="/resources/lefttoright/images/travel.png" alt="Order meal online - Supermeal"/></div>
+                <p class="country-modal-text" id="spCountryMessage"></p>
+            </div>
+            <div class="modal-footer" style="text-align: center; padding: 15px;">
+                <button type="button" style="width: 60%" class="btn btn-success map-modal-show" data-dismiss="modal" id="btnOutOfCountry">OK</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!--Reedem voucher modal-->
+
+
+
+
+
+
+
+                    <div class="common-popupl-layout" id="browser-support-popupshow">
+                        <div class="bspw-box-wrapper">
+                            <span class="bw-heading">
+                                Sorry!</span>
+                            <div class="bw-row">
+                                Your web browser is too limited for this website which can result in unwanted behaviour of certain functionalities.
+                            </div>
+                            <div class="bw-row">
+                                It is strongly recommended that you use following alternative web browser. They are free, faster, and safer.
+                            </div>
+                            <div class="bw-row">
+                                Click on the icons below to install any of the following web browsers.
+                            </div>
+                            <div class="bw-row">
+                                <div class="bw-r-icon-wrapper">
+                                    <a href="https://www.google.com/intl/en/chrome/browser/" target="_blank" class="bw-r-google"></a><a href="http://www.mozilla.org/en-US/firefox/new/" target="_blank" class="bw-r-firefox"></a>
+                                </div>
+                            </div>
+                            <div class="bw-row">
+                                <span class="bw-r-btn-action" id="browser-support-popup-close">
+                                    I know and understand browser compatibility issues</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="header-uan-wrap no-display no-shown-for-mobile">
+                    <br />
+                    <span class="bold" style="font-size: 24px; color: #f2f2f2;"><span>(021) 111-775-775</span></span>
+                    <br />
+                    <span class="header-uan-timing-spn uppercase">mon - sat | 11am - 2am</span>
+                </div>
+                
+                <!--End content-->
+                <!-- Restaurant partner section starts here-->
+                
+            </div>
+            <!-- Restaurant partner section ends here-->
+            <!--Start Footer-->
+            <div id="ctl00_footer" class="footer-height-new">
+                <div class="bg-nav-copyright-wrapper" id="c-app-footer-wrapper">
+
+
+
+                    
+
+                    
+
+                    <div class="c-app-footer-wrapper footer-new-wrap">
+                        <div class="footer-privacy-lang-wrapper">
+                            <ul class="help-link-responsive-wrap">
+                                <li class="footer-foortal-ul-heading-b" style="padding: 0px 0px 0px 15px; margin-bottom: 15px;">
+                                    <h4>Need Help?</h4>
+                                </li>
+                                <li>
+                                    <a id="ctl00_HyperLink29" href="http://support.supermeal.co.uk/open.php" target="_blank">Contact Us</a></li>
+                                <li>
+                                    <a id="ctl00_HyperLink30" href="/referral-system-faq">Referral FAQs</a></li>
+                                <li>
+                                    <a id="ctl00_HyperLink31" href="/faq">FAQs</a></li>
+                            </ul>
+                            <div class="float-left terms-n-footer-text">
+                                <span>
+                                    © 2026 Supermeal. All rights reserved.</span>
+
+                                <a id="term-condition-popup" target="_blank" href="/docs/privacy-policy">Terms & Conditions-
+								Privacy Policy</a>
+                                
+                                <div class="number-address">
+                                    <span style="font-size: 13px;"><i class="fa fa-map-marker" aria-hidden="true"></i></span><span class="margin-left-5">118, Rashid Minhas Road, Block 10-A, Gulshan-Iqbal, Karachi</span>
+                                    &nbsp;|&nbsp;
+									<span style="font-size: 13px;"><i class="fa fa-phone"></i></span><span class="margin-left-5">+922134610877</span>
+                                </div>
+                                
+                            </div>
+
+
+                            
+                            <span class="footer-powered-by ">
+                                Powered by:
+                                <a href="/">
+                                    Supermeal Limited</a></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--End footer-->
+
+            <div id="dvItemImagePopup" class="common-image-popup">
+            </div>
+            <div id="dvItemImagePopupBg" class="menu-image-popup-bg">
+            </div>
+            <!--My-Location-Change-POP-UP-Main-Page-->
+            <div class="common-popup-bg" id="dvmasterPopupbg">
+            </div>
+
+        </div>
+
+        <div class="mobile-responsive">
+
+            <nav id="c-menu--push-left" class="c-menu c-menu--push-left">
+                <button class="c-menu__close" style="display: none!important;">Close Menu &rarr;</button>
+                <div class="slide-menu-in-mobile">
+                    
+
+                    <div class="menu-links-wrap">
+                        <ul class="nav-ul-list">
+
+
+                            
+
+
+                            
+                            
+
+                            <li><a href="/" class="header-login-btn-blue float-right"><i class="fa fa-home" aria-hidden="true"></i>Home</a></li>
+                            <li>
+                                <span>
+                                    <a id="HyperLink28" class="header-login-btn-blue float-right" href="/login">
+									<i class="fa fa-lock" aria-hidden="true"></i>Login as Customer</a>
+                                </span>
+                            </li>
+                            
+                            
+                            <li>
+                                <span>
+                                    <a id="hlkBackOfficeUrl" class="header-login-btn-blue float-right" href="https://backofffice.supermeal.pk" target="_blank">
+									<i class="fa fa-lock" aria-hidden="true"></i>Login as Restaurant</a>
+                                </span>
+                            </li>
+                            
+                            <li style="padding: 5px 20px;"><a class="btn-h-signup" href="/register"> Hungry? Sign-Up Today</a></li>
+                            
+                        </ul>
+                        <div class="nav-ul-list">
+                            <!-- Supermeal 1st UL Wrap -->
+                            <ul class="footer-foortal-ul-wrap" style="margin: 0px;">
+                                <li class="header-links-top-border"></li>
+                                <li style="width: 115px; font-size: 14px; font-weight: bold; margin: 0px; padding: 5px 18px;" class="footer-foortal-ul-heading-b">
+                                    <h2>  Supermeal</h2>
+                                </li>
+                                
+
+                                <li>
+                                    <a id="ctl00_hlkIamRestaurantAnonymous" href="/anonymous/restaurant-register">I am a restaurant</a></li>
+                                
+                             
+                                <li>
+                                    <a id="ctl00_hlkBlogLeftNav" href="https://blog.supermeal.pk">Blog</a>
+                                </li>
+
+                            </ul>
+                            <ul class="footer-foortal-ul-wrap" style="margin: 0px; margin-right: 40px;">
+                                <li class="header-links-top-border"></li>
+                                <li style="width: 115px; font-size: 14px; font-weight: bold; margin: 0px; padding: 5px 18px;" class="footer-foortal-ul-heading-b">
+                                    <h2>Need Help?</h2>
+                                </li>
+
+                               
+                                <li>
+                                    <a id="ctl00_HyperLink39" href="/faq">FAQs</a></li>
+                                <li>
+                                    <a id="ctl00_HyperLink38" href="/referral-system-faq">Referral FAQs</a></li>
+                              
+                                <li>
+                                    <a href="/faq" target="_blank">Contact Us</a></li>
+
+
+                            </ul>
+                            <!-- Supermeal 1st UL Wrap Ends-->
+                        </div>
+
+                    </div>
+
+                </div>
+            </nav>
+            <!-- /c-menu push-right -->
+        </div>
+
+
+        <input name="__RequestVerificationToken" type="hidden" value="QrdTvHgfUYa8AjfoBRf-RCpcv0YLIWTXkJ7HUSRm3KCo175kPpvBPahDSxFf4jAuvOFBoRszwU2gI7N_2Ka9t6_cJoGfqAaL1lOBbfxmQuQ1" />
+    </form>
+
+    <div id="TermsConditionPopup" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h2 class="modal-title">Recommend a Restaurant</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="common-font-14 bold">Terms and Conditions</div>
+                    <ul> 
+                        <li>- Once a recommended restaurant has been signed on to Supermeal's Platform we will transfer the Rs 100 e-Cash into customers e-wallet.</li>
+                        <li>- e-cash will be given to the first person that has recommended.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade " id="applicationMessage" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></a>
+                    <h2 class="modal-title">
+                        <span id="ctl00_lblTitle"></span></h2>
+                </div>
+                <div class="modal-body" style="width: 100%;">
+                    <span id="ctl00_lblDescription" class="bw-row"></span>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-close" data-dismiss="modal">Close</a>
+                    <a class="btn bw-r-btn-action" id="spnClose" style="font-size: 14px;" data-dismiss="modal">OK</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <!--Confirmation Modal-->
+    <div id="dvPreOrderConfirmation" class="modal fade confirmationModal" role="dialog">
+        <div class="modal-dialog modal-md">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header customPaddingHeader">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h2 class="modal-title" id="hTitle" style="min-height: 15px;"></h2>
+                </div>
+                <div class="modal-body" id="dvPreOrderBody">
+                </div>
+                <div class="pre-order-modal-wraper" style="display: none;" id="dvOpenCollection">
+                    <div class="pre-order-rest-image text-center" id="dvImageWrap">
+                    </div>
+                    <h2 class="text-center headingFontSize" id="dvHeading"></h2>
+
+                    <div class="pre-order-modal-body">
+                        <div class="common-sub-heading m-b-10" id="dvSubHeadingCollection">
+                        </div>
+                        <label for="rdoDeliveryPop" class="change-type-row type-selected" style="border-bottom: none; position: relative; justify-content: flex-start;">
+
+                            <span class="change-type-radio">
+                                <label>
+                                    <input id="rdoDeliveryPop" class="radio-custom" name="orderTypePreOrder" type="radio" value="1" checked="checked" />
+                                    <label class="radio-custom-label" for="rdoDeliveryPop"></label>
+                                </label>
+                            </span><span class="left-type-row">
+                                <label class="sr-order-type-label" for="rdoDeliveryPop" id="lblDeliveryTime"></label>
+                            </span>
+                        </label>
+                        <label for="rdoPickupPop" class="change-type-row m-b-10 " style="position: relative; justify-content: flex-start;" >
+                            <span class="change-type-radio">
+                                <label>
+                                    <input id="rdoPickupPop" class="radio-custom" name="orderTypePreOrder" type="radio" value="2" />
+                                    <label class="radio-custom-label" for="rdoPickupPop"></label>
+                                </label>
+                            </span>
+                            <span class="left-type-row">
+                                <label class="sr-order-type-label" for="rdoPickupPop">Collection order now</label>
+                            </span>
+                        </label>
+                        <p class="common-note-p mar-top-10" id="pNote">
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-default" data-dismiss="modal" id="hlkCloseMenu">Cancel</a>
+                    <a class="btn btn-success" id="hlkProceedMenu">
+                        <span id="hideProceedText">Proceed</span>
+                        <div class="no-display" id="showLoaderProceed">
+                                <div class="spinner login-btn-loader-wrp" style="margin: 0px;position: relative;padding-top: 5px;">
+                                    <div class="rect1"></div>
+							        <div class="rect2"></div>
+							        <div class="rect3"></div>
+							        <div class="rect4"></div>
+							        <div class="rect5"></div>
+						        </div>
+                         </div>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+       <!--About us modal css-->
+    <div class="modal fade common-modal-responsive" id="aboutUsModal" role="dialog" style="text-align: center;">
+        <div class="modal-dialog min-700">
+
+            <!-- Modal content-->
+            <div class="modal-content redeem-bg-color">
+                <div class="modal-header" style="border: none;">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    
+                </div>
+                <div class="modal-body">
+                    <div class="redeem-modal-main-wrap space-around">
+                        <div class="redeem-v-img-wrap">
+                            <img src="https://cloud.superme.al/p/pk/images/supermeal-2019.png"  />
+                        </div>
+                        <div class="redeem-right-modal-wrap">
+                     
+                            <div class="redeem-title about-modal-text">
+                            <p>
+                                Supermeal is an online food ordering platform with a difference – We constantly reward our customers! Get instant cashback on every delivery, dine-in, or takeaway. Be it a cup of coffee or a treat for the entire family, you get cashback on every bite!
+                            </p>
+                            </div>
+                            
+                            <div class="redeem-apps-btn-wrap">
+                                <div class="download-app-wrapper">
+                           
+                        <div class="appstore-buttons">
+                        <div class="get-app-text">Get the App</div>
+                        <a href="https://itunes.apple.com/gb/app/supermeal-co-uk/id1342610328?ls=1&mt=8">
+                            <img src="https://cloud.superme.al/p/pk/images/apple.svg"  /></a>
+                        <a href="https://play.google.com/store/apps/details?id=waqartech.supermeal.consumer&hl=en">
+                            <img src="https://cloud.superme.al/p/pk/images/playstore.svg"  /></a>
+                            <a href="https://appgallery.huawei.com/#/app/C103403591">
+ <img  class="huawei-img" src="https://cloud.superme.al/p/pk/images/huawei.png"  />
+</a> 
+                        
+                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 0px;">
+                    <img src="https://cloud.superme.al/p/pk/images/email-footer.jpg"  style="width: 100%; margin-bottom: -4px;" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Chat modal -->
+     <div class="modal fade" id="chatModal" role="dialog" >
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h2 class="modal-title">Chat</h2>
+                </div>
+                <div class="modal-body">
+                    <p>chat start here</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="c-mask" class="c-mask"></div>
+
+    <script src="/assets/javascript/jquery.min.js?ver=1824" type="text/javascript"></script>
+    <script type="text/javascript">	   
+
+
+        var imageRootPath = 'images',
+            CdnUrl = 'https://cloud.superme.al/p/pk',
+            currencySymbol = "Rs ",
+            croppedImagePath = 'cropped-images',
+            master_defaultAddressTab = "10",
+            csvSeperator = "^^^",
+            /*TODO has to remove pointsValuePerMonetary unused depriciated*/
+            pointsValuePerMonetary = "0",
+            distanceSymbol = "km",
+            MaximumConsumerAddresses = "5",
+            CookieSelectedTownName = "TownName",
+            CookieOrderType = "OrderType",
+            CookieAreaId = "AreaId",
+            CookieLatLng = "LatLng",
+            master_facebookAppId = "576175559949913",
+            master_noOfOrders = "0",
+            master_cityId = "0",
+            master_City = "",
+            master_userPhoto = "",
+            strPage = "~/consumer/anonymous/search-result.aspx",
+            IsShowPopup = "False",
+            sysTime = "06/27/2026 12:25:12",
+            CurrentDayOfWeek = "6",
+            Source = "src",
+            SelectedArea = "",
+            master_ApplicationMessageId = 0,
+            master_AllowCashBack = "1",
+            HasAreaDefaultPatthern = "0",
+            AllowMobileVerification = "True",
+            Culture = "en-pk",
+            Location = "24.8668057,67.0807009",
+            IsShop = "False",
+            UserLogin = "False",
+            CharityName = '',
+            DonationPercentage = 0,
+            Currency = 'Rs ';
+
+
+
+        function openNewModal() {
+            let params = 'scrollbars=yes,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=800,height=600,left=400,top=400';
+            open('//rrm.supermeal.pk/forms/wtl/3bbff0df7a46b434527d48bf51efb112');
+        }
+
+        
+        var LHCChatOptions = {};
+        LHCChatOptions.opt = { widget_height: 340, widget_width: 300, popup_height: 520, popup_width: 500 };
+        (function () {
+            var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+            var refferer = (document.referrer) ? encodeURIComponent(document.referrer) : '';
+            var location = (document.location) ? encodeURIComponent(document.location) : '';
+            po.src = '//livechat.supermeal.pk/index.php/chat/getstatus/(position)/bottom_right/(top)/350/(units)/pixels?r=' + refferer + '&l=' + location;
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+        })();
+        
+        
+
+        $(document).ready(function () {
+
+
+            $("#close-pop-reg").click(function () {
+                $(".restuarant-status-popup,.common-popup-bg").hide();
+            });
+
+            $("#search-icon-slide").click(function () {
+                $(".header-res-wrap").slideToggle();
+                $(".search-icon-slide i").toggleClass("search-selected ");
+            });
+
+			/**
+            * Slide right instantiation and action.
+            */
+            var pushRight = new Menu({
+                wrapper: '#o-wrapper',
+                type: 'push-left',
+                menuOpenerClass: '.c-button',
+                maskId: '#c-mask'
+            });
+
+            var pushRightBtn = document.querySelector('#c-button--slide-left');
+
+            pushRightBtn.addEventListener('click', function (e) {
+                e.preventDefault;
+                pushRight.open();
+            });
+
+            var pushRightBtnAfterLogin = document.querySelector('#MyAccountAction');
+
+            if (pushRightBtnAfterLogin !== null) {
+                pushRightBtnAfterLogin.addEventListener('click', function (e) {
+                    e.preventDefault;
+                    pushRight.open();
+                });
+            }
+            var pushRightBtnAfterLogins = document.querySelector("[id$=imgAvatar]");
+            if (pushRightBtnAfterLogins !== null) {
+                pushRightBtnAfterLogins.addEventListener('click', function (e) {
+                    e.preventDefault;
+                    pushRight.open();
+                });
+
+            }
+            /* Referral-System.html video modal JS */
+            $('#referral-vdo-pk-modal').on('hidden.bs.modal', function () {
+                $('#popup-youtube-player').attr('src', '');
+            });
+
+            $('.modalClick').on('click', function () {
+                $('#popup-youtube-player').attr('src', '//www.youtube.com/embed/0pTdnhsqTjs');
+            });
+            //if ($.ConvertStringToBool(UserLogin)) {
+            //    $('#liveChatHelper').load('chat/live-chat-helper.aspx');
+            //}
+             
+
+            
+        });
+
+    </script>
+
+    
+    <script src="/assets/javascript/plugin.min.js?ver=1824" type="text/javascript"></script>
+    
+
+    
+        <script src="/assets/javascript/search.min.js?ver=1824" type="text/javascript"></script>
+    
+
+
+    <script type="text/javascript">
+
+        var TYPE_SORT = "Sort";
+        var ORDER_DESC = "DESC";
+        var ORDER_ASC = "ASC";
+        var TYPE_CUISINE = "Filter-Cuisines";
+        var CUISINE_TYPES_TO_SHOW = "10";
+        var searchRestaurantHome = "0";
+        var consumerArea = "";
+        sr_IsDelivery = Number("1") == ORDER_TYPE_DELIVERY_ID ? true : false;
+        sr_IsCollection = !sr_IsDelivery;
+        var sr_systemDateTime = "06/27/2026 12:25:12";
+        var sr_currentDayOfWeek = "6";
+        sr_CuisineTypeCsv = "";
+        sr_AllowCashBack = $.ConvertStringToBool("1");
+        sr_filterCsv = "";
+        var sr_UserLoggedIn = 0;
+        var sr_CookieRestaurantFoodtypeCsv = "RestaurantFoodtypeCsv";
+        var sr_CookieRestaurantFiltersCsv = "RestaurantFilterCsv";
+        var sr_OrderType = "1";
+        var sr_CookieRestaurantFilterDdl = "ddlSortFilterValue";
+        var sr_CookieRestaurantSortByRadiusDdl = "ddlRadiusValue";
+        var sr_viewType = 'viewType';
+        var sr_queryStringSort = 'sort';
+        var sr_queryStringCuisine = 'cuisine';
+        var sr_OrderDateTime = '27/06/2026 12:25:12';
+        var sr_OrderDayTimeCsvLabel = "orderDayTimeCsv";
+        var sr_RecentOrderLimit = "3";
+        var sr_PopularCuisineCount = "14";
+
+        if ($.ConvertStringToBool("True")) {
+            $('#dvOpenRestaurantCheck, #dvOpenRestaurantCheckPop').show();
+        }
+
+    </script>
+
+    <script> 
+
+        $('#showMobileCuisines').click(function () {
+            $("#cusinesPopup").modal('show');
+        });
+        $('#showMobileSorting').click(function () {
+            $("#sortingPopup").modal('show');
+
+        });
+        $('.common-popup-bg, .cancel-hide-popup').click(function () {
+            $("#cusinesPopup, #sortingPopup").hide();
+            $(".common-popup-bg").hide();
+
+        });
+
+        consumermaster_EnterpriseJson = [{"Id":0,"Name":"Grill O","HitCount":0,"IsPublished":false,"Url":"grill-o","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141866_download---2025-10-09T123050.260.jfif"},{"Id":0,"Name":"Sultan","HitCount":0,"IsPublished":false,"Url":"sultan","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141908_Sultan.jfif"},{"Id":0,"Name":"Pizzay Bahadurabad","HitCount":0,"IsPublished":false,"Url":"pizzay-bahadurabad","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141842_download--98-.jfif"},{"Id":0,"Name":"Penny Pizza","HitCount":0,"IsPublished":false,"Url":"penny-pizza","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141852_download---2025-10-09T120255.331.jfif"},{"Id":0,"Name":"Pizza Inc","HitCount":0,"IsPublished":false,"Url":"pizza-inc","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141854_download---2025-10-09T120441.898.jfif"},{"Id":0,"Name":"Bun Ka Baap","HitCount":0,"IsPublished":false,"Url":"bun-ka-baap","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141856_Bun-Ka-Baap-logo.png"},{"Id":0,"Name":"Icy n Spicy","HitCount":0,"IsPublished":false,"Url":"icy-n-spicy","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141858_Icy-n-Spicy-logo.png"},{"Id":0,"Name":"Spice Minded Home Chef","HitCount":0,"IsPublished":false,"Url":"spicemindedhomechef","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141982_download--56-.png"},{"Id":0,"Name":"EATMEAT","HitCount":0,"IsPublished":false,"Url":"eatmeat","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141956_EATMEAT-logo.jfif"},{"Id":0,"Name":"Zhi Zhi Fan Chao","HitCount":0,"IsPublished":false,"Url":"zhi-zhi-fan-chao","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141954_Zhi-Zhi-Fan-Chao-logo.jfif"},{"Id":0,"Name":"Pizza Lounge","HitCount":0,"IsPublished":false,"Url":"pizza-lounge","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141860_Pizza-Lounge-logo.png"},{"Id":0,"Name":"The Olive Burger","HitCount":0,"IsPublished":false,"Url":"the-olive-burger","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141884_download---2025-10-09T124439.884.jfif"},{"Id":0,"Name":"Pizza Zone King","HitCount":0,"IsPublished":false,"Url":"pizza-zone-king","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141924_Pizza-Zone-King-logo.jfif"},{"Id":0,"Name":"Pizza 99","HitCount":0,"IsPublished":false,"Url":"pizza-99","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141904_download--47-.png"},{"Id":0,"Name":"Pizza Crispy","HitCount":0,"IsPublished":false,"Url":"pizza-crispy","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141934_Pizza-Crispy-logo.jfif"},{"Id":0,"Name":"Pizza Home","HitCount":0,"IsPublished":false,"Url":"pizza-home","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141952_Pizza-Home-logo.png"},{"Id":0,"Name":"Subway DHA","HitCount":0,"IsPublished":false,"Url":"subway-dha","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141950_Subway-DHA-logo.jpg"},{"Id":0,"Name":"Pizza IZ","HitCount":0,"IsPublished":false,"Url":"pizza-iz","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141862_Pizza-IZ-logo.jfif"},{"Id":0,"Name":"Golden Apple Bahadurabad","HitCount":0,"IsPublished":false,"Url":"golden-apple-bahadurabad","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141880_Golden-Apple-Bahadurabad-logo.webp"},{"Id":0,"Name":"Cross Roadz Pizza","HitCount":0,"IsPublished":false,"Url":"cross-roadz-pizza","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141886_Cross-Roadz-Pizza-logo.jfif"},{"Id":0,"Name":"Pizza Hot","HitCount":0,"IsPublished":false,"Url":"pizza-hot","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141890_Pizza-Hot-logo.png"},{"Id":0,"Name":"Burger Hut","HitCount":0,"IsPublished":false,"Url":"burger-hut","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141896_Burger-Hut-logo.jfif"},{"Id":0,"Name":"Burger Hut","HitCount":0,"IsPublished":false,"Url":"burger-hut","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141896_Burger-Hut-logo.jfif"},{"Id":0,"Name":"Chicken Cottage","HitCount":0,"IsPublished":false,"Url":"chicken-cottage","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141906_Chicken-Cottage-logo.jpg"},{"Id":0,"Name":"HeisenBurgers","HitCount":0,"IsPublished":false,"Url":"heisenburgers","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141927_HeisenBurger-logo.jfif"},{"Id":0,"Name":"De Pizza Town","HitCount":0,"IsPublished":false,"Url":"de-pizza-town","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141912_download---2025-10-09T132317.744.jfif"},{"Id":0,"Name":"Hot Snacks Roll n BBQ","HitCount":0,"IsPublished":false,"Url":"hot-snacks-roll-n-bbq","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141918_download---2025-10-09T132831.659.jfif"},{"Id":0,"Name":"Pizza Gateway","HitCount":0,"IsPublished":false,"Url":"pizza-gateway","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141948_Pizza-Gateway-logo.jfif"},{"Id":0,"Name":"Pizza Own","HitCount":0,"IsPublished":false,"Url":"pizza-own","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141940_Pizza-Own-logo.jfif"},{"Id":0,"Name":"Red Apple PECHS","HitCount":0,"IsPublished":false,"Url":"red-apple-pechs","KeywordType":"in Restaurants","logoUrl":"/images/000/141/000141946_Red-Apple-PECHS-logo.jfif"}];
+       
+
+        $('.common-popup-bg, .cancel-hide-popup').click(function () {
+            $(".popup-web-wrap").hide();
+            $(".common-popup-bg").hide();
+
+        });
+
+        /* Close all dropdown onclick on another element */
+        $(document).bind('click', function (e) {
+            if (!$(e.target).parents().hasClass("dropdown")) $(".dropdown dd ul").hide();
+        });
+
+        $('.map-side').click(function () {
+
+
+            $('#mapResContaonerShow').show();
+            $("html").addClass("add-scroll");
+
+        });
+        $('#hideMapSide').click(function () {
+            $('#mapResContaonerShow').hide();
+            $("html").removeClass("add-scroll");
+        });
+        $('.more-btn-dropdown').click(function () {
+            $('.dropdown-more-inner-wrap').toggle();
+        });
+      
+        $('#viewType').click(function () {
+            if ($("#viewType i").hasClass("fa-map-marker")) {
+                sr_renderMapView();
+            } else {
+                sr_renderListView();
+            }
+
+        });
+
+    var theHeight = $(window).height() - 355;
+    $("#ulCuisines").css({ "max-height": theHeight + 'px' });
+   
+
+        $(function () {
+
+            $(window).scroll(function () {
+                if ($(window).width() >= 1021) {
+                    if ($(window).scrollTop() >= 80) {
+                    
+                          var theHeight = $(window).height() - 253;
+                         $("#ulCuisines").css({ "max-height": theHeight + 'px' });
+                    }
+                    else {
+                
+                          var theHeight = $(window).height() - 355;
+                           $("#ulCuisines").css({ "max-height": theHeight + 'px' });
+                    }
+                }
+            });
+        });
+       
+        $('#selDay').change(function () {
+            var url = $(this).find('option:selected').attr('url');
+           
+        });
+
+        var acc = document.getElementsByClassName("accordion");
+        var i;
+
+        for (i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function () {
+                this.classList.toggle("active");
+                var panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
+            });
+        }
+
+    </script>
+    
+   <script src="https://maps.googleapis.com/maps/api/js?language=en&key=AIzaSyDmHiT390eKDV9sDf4_JoLZQ6RbEAMcYtA&libraries=places&callback=consumermaster_InitAutocomplete" async defer></script>
+
+    <a href="#0" class="cd-top hidden-print"><i class="fas fa-arrow-up" aria-hidden="true"></i></a>
+    
+    <!-- helpdesk chat widget -->
+    <div id="jaklcp-chat-container"></div>
+    <!-- end helpdesk chat widget -->
+</body>
+</html>

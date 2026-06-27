@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useBusiness } from '@/lib/context/BusinessContext';
 // Supabase removed - using Better Auth + Server Actions
-import { createBusiness, checkDomainAvailabilityAction, completeRegistrationSetupAction, seedRegistrationInventoryAction } from '@/lib/actions/basic/business';
+import { createBusiness, checkDomainAvailabilityAction, completeRegistrationSetupAction } from '@/lib/actions/basic/business';
 import { domainKnowledge, getDomainKnowledge } from '@/lib/domainKnowledge';
 import { getBrandPlaceholderExamples } from '@/lib/regionalMarket/index.js';
 import { PLAN_TIERS, PLAN_ORDER, resolvePlanTier } from '@/lib/config/plans';
@@ -128,7 +128,7 @@ const DOMAIN_CATEGORY_BLUEPRINTS = [
         id: 'specialized',
         name: 'Specialized',
         icon: Crown,
-        domains: ['auto-parts', 'pharmacy', 'computer-hardware', 'electrical', 'agriculture', 'livestock-cattle', 'gems-jewellery', 'real-estate', 'hardware-sanitary', 'poultry-farm', 'solar-energy', 'courier-logistics', 'wholesale-distribution', 'petrol-pump', 'cold-storage', 'book-publishing', 'steel-iron', 'construction-material', 'dairy-farm']
+        domains: ['auto-parts', 'auto-marketplace', 'vehicle-dealership', 'pharmacy', 'computer-hardware', 'electrical', 'agriculture', 'livestock-cattle', 'gems-jewellery', 'real-estate', 'hardware-sanitary', 'poultry-farm', 'solar-energy', 'courier-logistics', 'wholesale-distribution', 'petrol-pump', 'cold-storage', 'book-publishing', 'steel-iron', 'construction-material', 'dairy-farm']
     }
 ];
 
@@ -367,7 +367,7 @@ export default function RegisterWizard() {
 
         if (verifiedParam) {
             setVerificationState('verified');
-            toast.success('Email verified — finish your workspace setup.');
+            toast.success('Email verified - finish your workspace setup.');
         }
 
         setResumeChecked(true);
@@ -449,7 +449,7 @@ export default function RegisterWizard() {
                 <div className="p-2 bg-gray-50 rounded-xl mb-3 group-hover:bg-wine group-hover:text-white transition-colors relative z-10">
                     <IconComponent className="w-5 h-5" />
                 </div>
-                <span className={`font-black text-gray-900 mb-1 relative z-10 ${language === 'ur' ? 'font-urdu' : ''}`}>
+                <span className={`font-semibold text-gray-900 mb-1 relative z-10 ${language === 'ur' ? 'font-urdu' : ''}`}>
                     {domainName}
                 </span>
                 <span className={`text-[10px] text-gray-500 font-bold uppercase tracking-tight relative z-10 ${language === 'ur' ? 'font-urdu' : ''}`}>
@@ -459,27 +459,6 @@ export default function RegisterWizard() {
         );
     };
 
-    const seedBusinessData = async (businessId, domainKey, country, alreadySeeded = false) => {
-        if (alreadySeeded) return;
-        try {
-            const seedResult = await seedRegistrationInventoryAction({
-                businessId,
-                domainKey,
-                countryIso: country,
-            });
-
-            if (!seedResult.success) {
-                console.error('Seeding Error:', seedResult.error);
-                toast.error('Dashboard created, but sample products failed to load.');
-            } else if (seedResult.skipped) {
-                console.log('Seeding skipped:', seedResult.message);
-            } else if (seedResult.count > 0) {
-                console.log('Seeding successful:', seedResult.message);
-            }
-        } catch (err) {
-            console.error('Seeding Exception:', err);
-        }
-    };
 
     const completeProvisioning = async (newUser) => {
         const bizResult = await createBusiness({
@@ -512,12 +491,6 @@ export default function RegisterWizard() {
         }
 
         toast.success('Registration successful! Welcome to Tenvo.');
-        await seedBusinessData(
-            bizResult.businessId,
-            formData.category,
-            formData.country,
-            Boolean(bizResult.seeded)
-        );
 
         try {
             const setupRes = await completeRegistrationSetupAction(bizResult.businessId, {
@@ -649,7 +622,7 @@ export default function RegisterWizard() {
                     }
                     if (authError.code === 'INVALID_USERNAME') {
                         toast.error(
-                            'Your store handle can only use letters, numbers, and hyphens (3–63 characters), and cannot be a reserved name. Adjust the handle field and try again.'
+                            'Your store handle can only use letters, numbers, and hyphens (3 - 63 characters), and cannot be a reserved name. Adjust the handle field and try again.'
                         );
                         setIsLoading(false);
                         return;
@@ -775,7 +748,7 @@ export default function RegisterWizard() {
                                         <div className="grid gap-4 animate-in slide-in-from-left-4 duration-300">
                                             {user ? (
                                                 <p className="rounded-xl border border-wine/15 bg-wine/5 px-3 py-2 text-xs font-medium text-gray-700">
-                                                    Signed in as <strong>{user.email}</strong> — adding a new business.
+                                                    Signed in as <strong>{user.email}</strong> - adding a new business.
                                                 </p>
                                             ) : null}
 
@@ -799,11 +772,11 @@ export default function RegisterWizard() {
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1 flex justify-between items-center">
+                                                    <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest ml-1 flex justify-between items-center">
                                                         <span>Workspace URL Handle</span>
                                                         {formData.handle && (
                                                             <span className={cn(
-                                                                "text-[10px] font-black",
+                                                                "text-[10px] font-semibold",
                                                                 handleStatus.checking ? "text-gray-400" : (handleStatus.available ? "text-emerald-500" : "text-rose-500")
                                                             )}>
                                                                 {handleStatus.checking ? "Checking..." : (handleStatus.available ? "Available ✓" : "Already Taken ✗")}
@@ -820,7 +793,7 @@ export default function RegisterWizard() {
                                                                 !handleStatus.available && formData.handle && "border-rose-200 bg-rose-50/30"
                                                             )}
                                                         />
-                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 pointer-events-none">
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-gray-400 pointer-events-none">
                                                             /store
                                                         </div>
                                                     </div>
@@ -829,7 +802,7 @@ export default function RegisterWizard() {
                                                     </p>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Business Region</Label>
+                                                    <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest ml-1">Business Region</Label>
                                                     <Select value={formData.country} onValueChange={(v) => setFormData({ ...formData, country: v })}>
                                                         <SelectTrigger className={authInputClass}>
                                                             <SelectValue />
@@ -844,7 +817,7 @@ export default function RegisterWizard() {
                                                     </Select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Currency</Label>
+                                                    <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest ml-1">Currency</Label>
                                                     <Select
                                                         value={formData.currency}
                                                         onValueChange={(v) => setFormData({ ...formData, currency: v })}
@@ -864,7 +837,7 @@ export default function RegisterWizard() {
                                                 {!user ? (
                                                     <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                         <div className="space-y-1.5">
-                                                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Email</Label>
+                                                            <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest ml-1">Email</Label>
                                                             <Input
                                                                 type="email"
                                                                 placeholder="owner@business.com"
@@ -874,7 +847,7 @@ export default function RegisterWizard() {
                                                             />
                                                         </div>
                                                         <div className="space-y-1.5">
-                                                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Password</Label>
+                                                            <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest ml-1">Password</Label>
                                                             <Input
                                                                 type="password"
                                                                 placeholder="Min. 8 characters"
@@ -898,7 +871,7 @@ export default function RegisterWizard() {
                                             {showOptionalFields ? (
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl border border-gray-100 bg-gray-50/80 p-3">
                                                     <div className="space-y-1.5">
-                                                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Phone</Label>
+                                                        <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Phone</Label>
                                                         <Input
                                                             type="tel"
                                                             placeholder={`${regionalForWizard.phoneCode} number`}
@@ -908,7 +881,7 @@ export default function RegisterWizard() {
                                                         />
                                                     </div>
                                                     <div className="space-y-1.5">
-                                                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{regionalForWizard.taxIdLabel}</Label>
+                                                        <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">{regionalForWizard.taxIdLabel}</Label>
                                                         <Input
                                                             placeholder={regionalForWizard.taxIdLabel}
                                                             value={formData.ntn}
@@ -917,7 +890,7 @@ export default function RegisterWizard() {
                                                         />
                                                     </div>
                                                     <div className="space-y-1.5 sm:col-span-2">
-                                                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Store tagline</Label>
+                                                        <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Store tagline</Label>
                                                         <Input
                                                             placeholder="Short storefront headline"
                                                             value={formData.storeTagline}
@@ -930,7 +903,7 @@ export default function RegisterWizard() {
                                             ) : null}
 
                                             <Button
-                                                className="h-11 w-full rounded-xl bg-wine text-sm font-black text-white hover:bg-wine/90"
+                                                className="h-11 w-full rounded-xl bg-wine text-sm font-semibold text-white hover:bg-wine/90"
                                                 onClick={nextStep}
                                                 disabled={!formData.businessName || !formData.handle || !handleStatus.available || handleStatus.checking || (!user && (!formData.email || !formData.password))}
                                             >
@@ -1014,7 +987,7 @@ export default function RegisterWizard() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Plan</p>
+                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Plan</p>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     {Object.entries(PLAN_TIERS).map(([tier, config]) => {
                                                         const isSelected = formData.planTier === tier;
@@ -1035,11 +1008,11 @@ export default function RegisterWizard() {
                                                                 )}
                                                             >
                                                                 <div className="flex items-center justify-between mb-2">
-                                                                    <span className="text-sm font-black text-gray-900 capitalize">{config.name}</span>
-                                                                    {isRecommended && <span className="text-[10px] font-black uppercase text-emerald-600">Recommended</span>}
+                                                                    <span className="text-sm font-semibold text-gray-900 capitalize">{config.name}</span>
+                                                                    {isRecommended && <span className="text-[10px] font-semibold uppercase text-emerald-600">Recommended</span>}
                                                                 </div>
                                                                 <p className="text-xs text-gray-500 font-medium">{config.tagline}</p>
-                                                                <p className="text-xs font-black text-wine mt-2">
+                                                                <p className="text-xs font-semibold text-wine mt-2">
                                                                     {formatCurrency(amount, currency)} / mo
                                                                 </p>
                                                                 {footnote ? (
@@ -1097,7 +1070,7 @@ export default function RegisterWizard() {
                                                         type="button"
                                                         onClick={handleVerifyOtpAndProvision}
                                                         disabled={isLoading}
-                                                        className="h-11 flex-[2] rounded-xl bg-wine text-sm font-black text-white hover:bg-wine/90"
+                                                        className="h-11 flex-[2] rounded-xl bg-wine text-sm font-semibold text-white hover:bg-wine/90"
                                                     >
                                                         {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify & launch'}
                                                     </Button>
@@ -1105,7 +1078,7 @@ export default function RegisterWizard() {
                                                     <Button
                                                         onClick={handleFinish}
                                                         disabled={isLoading}
-                                                        className="h-11 flex-[2] rounded-xl bg-wine text-sm font-black text-white hover:bg-wine/90"
+                                                        className="h-11 flex-[2] rounded-xl bg-wine text-sm font-semibold text-white hover:bg-wine/90"
                                                     >
                                                         {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Launch workspace'}
                                                     </Button>

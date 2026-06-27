@@ -17,7 +17,7 @@ import { useHubMobileNav } from '@/lib/hooks/useHubMobileNav';
 import { normalizeDashboardTab } from '@/lib/config/tabs';
 
 /**
- * Fixed bottom navigation for mobile hub — app-like primary tabs + overflow sheet.
+ * Fixed bottom navigation for mobile hub, app-like primary tabs + overflow sheet.
  * Hidden on lg+ where the sidebar is the canonical nav.
  */
 export function HubMobileBottomNav() {

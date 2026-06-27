@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,13 +52,13 @@ export function ExpenseManager({ businessId, expenses = [], onCreateExpense, onD
                 <Card className="border-none shadow-sm">
                     <CardContent className="p-4">
                         <p className="text-xs text-gray-500 font-medium">Total Expenses</p>
-                        <p className="text-2xl font-black text-gray-900 mt-1">{currency}{totalExpenses.toLocaleString()}</p>
+                        <p className="text-2xl font-semibold text-gray-900 mt-1">{currency}{totalExpenses.toLocaleString()}</p>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm">
                     <CardContent className="p-4">
                         <p className="text-xs text-gray-500 font-medium">This Month</p>
-                        <p className="text-2xl font-black text-red-600 mt-1">{currency}{thisMonth.toLocaleString()}</p>
+                        <p className="text-2xl font-semibold text-red-600 mt-1">{currency}{thisMonth.toLocaleString()}</p>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm">
@@ -132,7 +132,7 @@ export function ExpenseManager({ businessId, expenses = [], onCreateExpense, onD
                                         <p className="text-sm font-semibold text-gray-900 truncate">{expense.description}</p>
                                         <p className="text-[10px] text-gray-400">{expense.date} * {cat?.label || expense.category}</p>
                                     </div>
-                                    <span className="text-sm font-black text-red-600">{currency}{parseFloat(expense.amount).toLocaleString()}</span>
+                                    <span className="text-sm font-semibold text-red-600">{currency}{parseFloat(expense.amount).toLocaleString()}</span>
                                 </motion.div>
                             );
                         })}

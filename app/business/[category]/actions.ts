@@ -1,6 +1,6 @@
 /**
  * Consolidated Server Actions for Business Dashboard
- * Delegates to canonical action modules — no direct DB queries here.
+ * Delegates to canonical action modules, no direct DB queries here.
  * This file exists for backward compatibility; all logic lives in lib/actions/.
  */
 

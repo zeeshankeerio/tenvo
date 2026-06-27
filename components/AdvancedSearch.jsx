@@ -57,7 +57,7 @@ export function AdvancedSearch({ onSearch, filters = [], placeholder = 'Search..
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              "relative px-5 py-3 border rounded-2xl transition-all flex items-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95",
+              "relative px-5 py-3 border rounded-2xl transition-all flex items-center gap-2 font-semibold text-[10px] uppercase tracking-widest shadow-sm active:scale-95",
               activeFilterCount > 0
                 ? "bg-blue-600 text-white border-blue-600 shadow-blue-200"
                 : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -66,7 +66,7 @@ export function AdvancedSearch({ onSearch, filters = [], placeholder = 'Search..
             <Filter className="w-4 h-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center shadow-lg border-2 border-white">
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-lg border-2 border-white">
                 {activeFilterCount}
               </span>
             )}
@@ -88,7 +88,7 @@ export function AdvancedSearch({ onSearch, filters = [], placeholder = 'Search..
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filters.map((filter) => (
               <div key={filter.key} className="space-y-1.5">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">
+                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em] ml-1">
                   {filter.label}
                 </label>
                 {filter.type === 'select' ? (
@@ -142,7 +142,7 @@ export function AdvancedSearch({ onSearch, filters = [], placeholder = 'Search..
             return (
               <span
                 key={key}
-                className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase tracking-tight shadow-sm animate-in zoom-in-95"
+                className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-blue-100 text-blue-700 rounded-full text-[10px] font-semibold uppercase tracking-tight shadow-sm animate-in zoom-in-95"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                 <span className="opacity-60">{filter?.label}:</span> {value}

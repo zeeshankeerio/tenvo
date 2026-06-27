@@ -391,13 +391,13 @@ export default function PaymentManager({
             <div className="hidden grid-cols-1 gap-6 duration-500 animate-in fade-in slide-in-from-top-2 md:grid-cols-3 lg:grid">
                 <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-100 shadow-sm hover:shadow-md transition-all">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-xs font-black text-emerald-700 uppercase tracking-widest">Total Receipts</CardTitle>
+                        <CardTitle className="text-xs font-semibold text-emerald-700 uppercase tracking-widest">Total Receipts</CardTitle>
                         <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-inner">
                             <ArrowDownLeft className="w-4 h-4" />
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black text-emerald-700 tracking-tight">
+                        <div className="text-3xl font-semibold text-emerald-700 tracking-tight">
                             {formatCurrency(
                                 payments.filter(p => isReceiptType(p.payment_type)).reduce((sum, p) => sum + Number(p.amount), 0),
                                 currency
@@ -408,13 +408,13 @@ export default function PaymentManager({
 
                 <Card className="bg-gradient-to-br from-red-50 to-red-100/50 border-red-100 shadow-sm hover:shadow-md transition-all">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-xs font-black text-red-700 uppercase tracking-widest">Total Payments</CardTitle>
+                        <CardTitle className="text-xs font-semibold text-red-700 uppercase tracking-widest">Total Payments</CardTitle>
                         <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 shadow-inner">
                             <ArrowUpRight className="w-4 h-4" />
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black text-red-700 tracking-tight">
+                        <div className="text-3xl font-semibold text-red-700 tracking-tight">
                             {formatCurrency(
                                 payments.filter(p => !isReceiptType(p.payment_type)).reduce((sum, p) => sum + Number(p.amount), 0),
                                 currency
@@ -425,13 +425,13 @@ export default function PaymentManager({
 
                 <Card className="bg-gradient-to-br from-brand-50 to-brand-100/50 border-brand-100 shadow-sm hover:shadow-md transition-all">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-xs font-black text-brand-primary uppercase tracking-widest">Net Cash Flow</CardTitle>
+                        <CardTitle className="text-xs font-semibold text-brand-primary uppercase tracking-widest">Net Cash Flow</CardTitle>
                         <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-primary shadow-inner">
                             <RefreshCcw className="w-4 h-4" />
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black text-brand-primary tracking-tight">
+                        <div className="text-3xl font-semibold text-brand-primary tracking-tight">
                             {formatCurrency(
                                 payments.reduce((sum, p) => sum + (isReceiptType(p.payment_type) ? Number(p.amount) : -Number(p.amount)), 0),
                                 currency
@@ -455,7 +455,7 @@ export default function PaymentManager({
                             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
                                 <Receipt className="w-8 h-8 text-gray-300" />
                             </div>
-                            <h3 className="text-base font-black text-gray-900 mb-1 tracking-tight">No Transactions Yet</h3>
+                            <h3 className="text-base font-semibold text-gray-900 mb-1 tracking-tight">No Transactions Yet</h3>
                             <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">Record your first customer receipt or vendor payment to start tracking your cash flow.</p>
                             <Button onClick={() => setShowPaymentDialog(true)} className="bg-wine hover:bg-wine/90 text-white rounded-xl shadow-lg shadow-wine/20 font-bold px-6">
                                 <Plus className="w-4 h-4 mr-2" />
@@ -509,7 +509,7 @@ export default function PaymentManager({
                                     accessorKey: 'formatted_amount',
                                     header: 'Amount',
                                     cell: ({ row }) => (
-                                        <span className={`font-black ${isReceiptType(row.original.payment_type) ? 'text-emerald-600' : 'text-red-600'}`}>
+                                        <span className={`font-semibold ${isReceiptType(row.original.payment_type) ? 'text-emerald-600' : 'text-red-600'}`}>
                                             {row.original.formatted_amount}
                                         </span>
                                     )

@@ -141,8 +141,8 @@ function DomainMetricCard({ label, value, subValue, trend, icon: Icon, colorClas
             <CardContent className="p-3.5">
                 <div className="flex items-start justify-between">
                     <div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-                        <h3 className="text-lg xl:text-xl font-black text-gray-900 leading-tight">{value}</h3>
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
+                        <h3 className="text-lg xl:text-xl font-semibold text-gray-900 leading-tight">{value}</h3>
                         <p className="text-[10px] font-bold text-gray-500 mt-1">{subValue}</p>
                     </div>
                     <div className={cn("p-2 rounded-xl shadow-sm", colorClass)}>
@@ -464,7 +464,7 @@ export function DomainDashboard({
         }, 0);
     }, [invoices]);
 
-    /** Open / unpaid sales documents — Easy Mode header uses this instead of duplicating low-stock count. */
+    /** Open / unpaid sales documents, Easy Mode header uses this instead of duplicating low-stock count. */
     const openInvoicesCount = useMemo(
         () =>
             invoices.filter((inv: InvoiceLike) => {
@@ -812,7 +812,7 @@ export function DomainDashboard({
                 label: 'Low Stock',
                 value: remindersData.lowStock,
                 subValue: remindersData.lowStock > 0
-                    ? 'Below minimum — review shelf'
+                    ? 'Below minimum, review shelf'
                     : coverageDays > 365
                         ? 'Coverage looks stable'
                         : `${coverageDays} days coverage`,
@@ -878,13 +878,13 @@ export function DomainDashboard({
             const priorEnd = new Date(from.getTime());
             const priorStart = new Date(from.getTime() - len);
             const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-            return `${priorStart.toLocaleDateString(undefined, opts)} – ${priorEnd.toLocaleDateString(undefined, opts)}`;
+            return `${priorStart.toLocaleDateString(undefined, opts)} - ${priorEnd.toLocaleDateString(undefined, opts)}`;
         })();
 
         const deltaVisual = (pct: number, mode: 'growth' | 'expense') => {
             const p = Number(pct);
             if (!Number.isFinite(p)) {
-                return { text: '—', className: 'text-slate-400 font-semibold tabular-nums' };
+                return { text: ', ', className: 'text-slate-400 font-semibold tabular-nums' };
             }
             const r = Math.round(p * 10) / 10;
             if (Math.abs(r) < 0.05) {
@@ -893,13 +893,13 @@ export function DomainDashboard({
             const sign = r > 0 ? '+' : '';
             const text = `${sign}${r}%`;
             if (mode === 'expense') {
-                if (r > 10) return { text, className: 'text-amber-700 font-extrabold tabular-nums' };
-                if (r < -0.05) return { text, className: 'text-emerald-700 font-extrabold tabular-nums' };
+                if (r > 10) return { text, className: 'text-amber-700 font-semibold tabular-nums' };
+                if (r < -0.05) return { text, className: 'text-emerald-700 font-semibold tabular-nums' };
                 return { text, className: 'text-slate-700 font-semibold tabular-nums' };
             }
             return {
                 text,
-                className: r >= 0 ? 'text-emerald-700 font-extrabold tabular-nums' : 'text-rose-700 font-extrabold tabular-nums',
+                className: r >= 0 ? 'text-emerald-700 font-semibold tabular-nums' : 'text-rose-700 font-semibold tabular-nums',
             };
         };
 
@@ -947,7 +947,7 @@ export function DomainDashboard({
                         <CardContent className="p-4 sm:p-5 flex flex-col flex-1">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 pb-3 border-b border-slate-100">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 shrink-0">Registered business</span>
-                                <span className="text-sm font-extrabold text-slate-900 truncate max-w-[min(100%,16rem)] sm:max-w-[20rem]" title={business?.name || undefined}>
+                                <span className="text-sm font-semibold text-slate-900 truncate max-w-[min(100%,16rem)] sm:max-w-[20rem]" title={business?.name || undefined}>
                                     {business?.name?.trim() || 'Your workspace'}
                                 </span>
                                 <span className="hidden sm:inline text-slate-300 select-none" aria-hidden>
@@ -978,7 +978,7 @@ export function DomainDashboard({
                                         {greeting}, {userName}.
                                     </h1>
                                     <p className="text-xs text-slate-500">
-                                        Revenue, orders, stock, and receivables in one view — period:{' '}
+                                        Revenue, orders, stock, and receivables in one view, period:{' '}
                                         <span className="font-semibold text-slate-600">{periodLabel}</span>.
                                     </p>
                                 </div>
@@ -1024,7 +1024,7 @@ export function DomainDashboard({
                                                     <ActionIcon className="w-4 h-4 shrink-0" aria-hidden />
                                                 </span>
                                                 <span className="min-w-0 flex-1">
-                                                    <span className="block text-xs font-extrabold leading-tight">{action.label}</span>
+                                                    <span className="block text-xs font-semibold leading-tight">{action.label}</span>
                                                     <span className="block text-[10px] opacity-80 font-semibold leading-snug mt-0.5 line-clamp-2">
                                                         {action.desc}
                                                     </span>
@@ -1048,10 +1048,10 @@ export function DomainDashboard({
                                                 <Hi className="w-3.5 h-3.5" aria-hidden />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-tight">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 leading-tight">
                                                     {item.label}
                                                 </p>
-                                                <p className={cn('mt-0.5 text-base font-extrabold tabular-nums', item.tone)}>{item.value}</p>
+                                                <p className={cn('mt-0.5 text-base font-semibold tabular-nums', item.tone)}>{item.value}</p>
                                             </div>
                                         </div>
                                     );
@@ -1060,7 +1060,7 @@ export function DomainDashboard({
                         </CardContent>
                     </Card>
 
-                    {/* Operational Pulse — compact 2×2 (Zoho-style density) */}
+                    {/* Operational Pulse, compact 2×2 (Zoho-style density) */}
                     <Card className="xl:col-span-4 border border-slate-200 bg-white shadow-sm rounded-lg h-full flex flex-col">
                         <CardContent className="p-4 flex flex-col flex-1">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
@@ -1076,9 +1076,9 @@ export function DomainDashboard({
                                         key={panel.label}
                                         className="rounded-lg border border-slate-100 bg-slate-50/90 px-2.5 py-2 min-h-[4.25rem] flex flex-col justify-between"
                                     >
-                                        <p className="text-[9px] font-bold uppercase tracking-wide text-slate-500 leading-tight line-clamp-2">{panel.label}</p>
-                                        <p className={cn('text-sm font-extrabold tabular-nums mt-0.5', panel.tone)}>{panel.value}</p>
-                                        <p className="text-[9px] text-slate-400 font-medium leading-snug line-clamp-2 mt-0.5">{panel.detail}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 leading-tight line-clamp-2">{panel.label}</p>
+                                        <p className={cn('text-sm font-semibold tabular-nums mt-0.5', panel.tone)}>{panel.value}</p>
+                                        <p className="text-[10px] text-slate-400 font-medium leading-snug line-clamp-2 mt-0.5">{panel.detail}</p>
                                     </div>
                                 ))}
                             </div>
@@ -1109,8 +1109,8 @@ export function DomainDashboard({
                     {easyKpis.map(kpi => {
                         const borderColors: Record<string, string> = {
                             'bg-emerald-500': 'border-l-4 border-l-emerald-500',
-                            'bg-brand-primary': 'border-l-4 border-l-[#e34242]',
-                            'bg-brand-primary-dark': 'border-l-4 border-l-[#b91c1c]',
+                            'bg-brand-primary': 'border-l-4 border-l-brand-primary',
+                            'bg-brand-primary-dark': 'border-l-4 border-l-brand-primary-dark',
                             'bg-rose-500': 'border-l-4 border-l-rose-500',
                             'bg-slate-500': 'border-l-4 border-l-slate-400',
                             'bg-cyan-500': 'border-l-4 border-l-cyan-500',
@@ -1120,8 +1120,8 @@ export function DomainDashboard({
                         };
                         const textColors: Record<string, string> = {
                             'bg-emerald-500': 'text-emerald-600',
-                            'bg-brand-primary': 'text-[#e34242]',
-                            'bg-brand-primary-dark': 'text-[#b91c1c]',
+                            'bg-brand-primary': 'text-brand-primary',
+                            'bg-brand-primary-dark': 'text-brand-primary-dark',
                             'bg-rose-500': 'text-rose-600',
                             'bg-slate-500': 'text-slate-500',
                             'bg-cyan-500': 'text-cyan-600',
@@ -1143,9 +1143,9 @@ export function DomainDashboard({
                                         </div>
                                     </div>
                                     <div className="flex items-baseline justify-between mt-1">
-                                        <p className="text-lg font-extrabold text-slate-900 tracking-tight">{kpi.value}</p>
+                                        <p className="text-lg font-semibold text-slate-900 tracking-tight">{kpi.value}</p>
                                         {kpi.trend !== undefined && kpi.trend !== 0 && (
-                                            <span className={cn("text-[10px] font-extrabold flex items-center gap-0.5",
+                                            <span className={cn("text-[10px] font-semibold flex items-center gap-0.5",
                                                 kpi.trend > 0 ? "text-emerald-600" : "text-rose-600"
                                             )}>
                                                 {kpi.trend > 0 ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
@@ -1168,7 +1168,7 @@ export function DomainDashboard({
                 >
                     <div className="flex flex-col gap-2.5">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 shrink-0">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 shrink-0">
                                 Vs prior period
                             </p>
                             <p className="sr-only">
@@ -1278,7 +1278,7 @@ export function DomainDashboard({
                                             className="flex items-center justify-between gap-2 rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 text-left hover:bg-amber-50 transition-colors"
                                         >
                                             <span className="text-xs font-semibold text-amber-900">
-                                                <span className="font-extrabold tabular-nums">{remindersData.lowStock}</span> SKU
+                                                <span className="font-semibold tabular-nums">{remindersData.lowStock}</span> SKU
                                                 {remindersData.lowStock === 1 ? '' : 's'} below safety stock
                                             </span>
                                             <span className="text-[10px] font-bold text-amber-700 uppercase shrink-0">Restock →</span>
@@ -1291,7 +1291,7 @@ export function DomainDashboard({
                                             className="flex items-center justify-between gap-2 rounded-lg border border-rose-100 bg-rose-50/60 px-3 py-2 text-left hover:bg-rose-50 transition-colors"
                                         >
                                             <span className="text-xs font-semibold text-rose-900">
-                                                <span className="font-extrabold tabular-nums">{remindersData.overdueInvoices}</span>{' '}
+                                                <span className="font-semibold tabular-nums">{remindersData.overdueInvoices}</span>{' '}
                                                 overdue invoice{remindersData.overdueInvoices === 1 ? '' : 's'}
                                             </span>
                                             <span className="text-[10px] font-bold text-rose-700 uppercase shrink-0">Collect →</span>
@@ -1313,7 +1313,7 @@ export function DomainDashboard({
                             </div>
                             <button
                                 onClick={() => onQuickAction?.('invoices')}
-                                className="text-xs font-bold text-[#e34242] hover:underline"
+                                className="text-xs font-bold text-brand-primary hover:underline"
                             >
                                 View All {'→'}
                             </button>
@@ -1359,9 +1359,9 @@ export function DomainDashboard({
                                                 </div>
                                                 <div className="text-right flex items-center gap-4">
                                                     <div className="text-right">
-                                                        <p className="text-xs font-extrabold text-slate-900">{formatCurrencyCompact(Number(inv.grand_total) || Number(inv.amount) || 0)}</p>
+                                                        <p className="text-xs font-semibold text-slate-900">{formatCurrencyCompact(Number(inv.grand_total) || Number(inv.amount) || 0)}</p>
                                                     </div>
-                                                    <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider", statusColors[status] || statusColors.draft)}>
+                                                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider", statusColors[status] || statusColors.draft)}>
                                                         {status}
                                                     </span>
                                                 </div>
@@ -1389,26 +1389,26 @@ export function DomainDashboard({
                                 <div className="space-y-2.5">
                                     <div className="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-slate-50/50 transition-colors px-1">
                                         <p className="text-[11px] font-bold text-slate-600">Products In Catalog</p>
-                                        <p className="text-sm font-extrabold text-slate-900">{products.length}</p>
+                                        <p className="text-sm font-semibold text-slate-900">{products.length}</p>
                                     </div>
                                     <div className="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-slate-50/50 transition-colors px-1">
                                         <p className="text-[11px] font-bold text-slate-600">Open invoices</p>
-                                        <p className="text-sm font-extrabold text-slate-900 tabular-nums">{openInvoicesCount}</p>
+                                        <p className="text-sm font-semibold text-slate-900 tabular-nums">{openInvoicesCount}</p>
                                     </div>
                                     <div className="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-slate-50/50 transition-colors px-1">
                                         <p className="text-[11px] font-bold text-slate-600">Low-stock SKUs</p>
-                                        <p className={cn('text-sm font-extrabold tabular-nums', remindersData.lowStock > 0 ? 'text-amber-600' : 'text-slate-900')}>{remindersData.lowStock}</p>
+                                        <p className={cn('text-sm font-semibold tabular-nums', remindersData.lowStock > 0 ? 'text-amber-600' : 'text-slate-900')}>{remindersData.lowStock}</p>
                                     </div>
                                     <div className="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-slate-50/50 transition-colors px-1">
                                         <div>
                                             <p className="text-[11px] font-bold text-slate-600">Returns</p>
                                             <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{returnRate.toFixed(1)}% return rate</p>
                                         </div>
-                                        <p className="text-sm font-extrabold text-slate-900">{periodMetrics.returnInvoices}</p>
+                                        <p className="text-sm font-semibold text-slate-900">{periodMetrics.returnInvoices}</p>
                                     </div>
                                     <div className="flex items-center justify-between py-2 hover:bg-slate-50/50 transition-colors px-1">
                                         <p className="text-[11px] font-bold text-slate-600">Stock Check Recency</p>
-                                        <p className="text-sm font-extrabold text-slate-900">{stockCheckRecencyDisplay}</p>
+                                        <p className="text-sm font-semibold text-slate-900">{stockCheckRecencyDisplay}</p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -1518,7 +1518,7 @@ export function DomainDashboard({
                     <Card className="border border-brand-100 bg-brand-50/40 shadow-sm">
                         <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary">Quick Setup</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-brand-primary">Quick Setup</p>
                                 <p className="text-sm font-bold text-slate-800 mt-1">Start by adding products, customers, or your first invoice to unlock richer KPI insights.</p>
                             </div>
                             <div className="flex items-center gap-2">
@@ -1551,18 +1551,18 @@ export function DomainDashboard({
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
                                             Dashboard overview
                                         </p>
                                         <span
-                                            className="inline-flex items-center gap-1 rounded border border-emerald-200/70 bg-emerald-50/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-800"
+                                            className="inline-flex items-center gap-1 rounded border border-emerald-200/70 bg-emerald-50/80 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800"
                                             title="Figures refresh when workspace data or the date filter changes"
                                         >
                                             <TrendingUp className="h-3 w-3 shrink-0" aria-hidden />
                                             Live
                                         </span>
                                     </div>
-                                    <h2 className="text-lg font-black tracking-tight text-slate-900 md:text-xl">Business overview</h2>
+                                    <h2 className="text-lg font-semibold tracking-tight text-slate-900 md:text-xl">Business overview</h2>
                                     <p className="mt-1 text-[11px] leading-snug text-slate-600">
                                         <span className="font-semibold tabular-nums text-slate-800">
                                             {new Date(dateRange.from).toLocaleDateString()} -{' '}
@@ -1593,10 +1593,10 @@ export function DomainDashboard({
                                                 <Hi className="h-3 w-3" aria-hidden />
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <p className="text-[8px] font-black uppercase leading-tight tracking-wider text-slate-400">
+                                                <p className="text-[10px] font-semibold uppercase leading-tight tracking-wider text-slate-400">
                                                     {item.label}
                                                 </p>
-                                                <p className={cn('text-sm font-black tabular-nums leading-tight', item.tone)}>
+                                                <p className={cn('text-sm font-semibold tabular-nums leading-tight', item.tone)}>
                                                     {item.value}
                                                 </p>
                                             </div>
@@ -1610,29 +1610,29 @@ export function DomainDashboard({
                     <div className="xl:col-span-4 grid grid-cols-2 gap-2 auto-rows-fr">
                         <Card className="border border-slate-200 shadow-sm bg-white">
                             <CardContent className="p-3.5">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Coverage Days</p>
-                                <p className="text-lg font-black text-slate-900 mt-1">{coverageDays > 365 ? '365+' : coverageDays}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Coverage Days</p>
+                                <p className="text-lg font-semibold text-slate-900 mt-1">{coverageDays > 365 ? '365+' : coverageDays}</p>
                                 <p className="text-[10px] text-slate-500 mt-1">Estimated stock coverage</p>
                             </CardContent>
                         </Card>
                         <Card className="border border-slate-200 shadow-sm bg-white">
                             <CardContent className="p-3.5">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">In-Stock Units</p>
-                                <p className="text-lg font-black text-slate-900 mt-1">{inStockUnits.toLocaleString()}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">In-Stock Units</p>
+                                <p className="text-lg font-semibold text-slate-900 mt-1">{inStockUnits.toLocaleString()}</p>
                                 <p className="text-[10px] text-slate-500 mt-1">Total available quantity</p>
                             </CardContent>
                         </Card>
                         <Card className="border border-slate-200 shadow-sm bg-white">
                             <CardContent className="p-3.5">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Warehouse Utilization</p>
-                                <p className="text-lg font-black text-slate-900 mt-1">{warehouseUtilizationDisplay}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Warehouse Utilization</p>
+                                <p className="text-lg font-semibold text-slate-900 mt-1">{warehouseUtilizationDisplay}</p>
                                 <p className="text-[10px] text-slate-500 mt-1">{warehouseUtilizationDetail}</p>
                             </CardContent>
                         </Card>
                         <Card className="border border-slate-200 shadow-sm bg-white">
                             <CardContent className="p-3.5">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Paid Order Ratio</p>
-                                <p className="text-lg font-black text-slate-900 mt-1">{paidOrderRateDisplay}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Paid Order Ratio</p>
+                                <p className="text-lg font-semibold text-slate-900 mt-1">{paidOrderRateDisplay}</p>
                                 <p className="text-[10px] text-slate-500 mt-1">{paidOrderRateDetail}</p>
                             </CardContent>
                         </Card>
@@ -1685,7 +1685,7 @@ export function DomainDashboard({
                     />
                 </div>
 
-                {/* Analytics — full main width; Domain Efficiency lives in sidebar under Recent Activity */}
+                {/* Analytics, full main width; Domain Efficiency lives in sidebar under Recent Activity */}
                 <div className="min-h-0">
                     <AnalyticsDashboard
                         businessId={activeBusinessId}
@@ -1713,14 +1713,14 @@ export function DomainDashboard({
                 </div>
                 </div>
 
-                {/* Mobile-only portlets — compact reminders, insights, activity */}
+                {/* Mobile-only portlets, compact reminders, insights, activity */}
                 <div className="space-y-3 lg:hidden">
                     <RemindersPortlet data={remindersData} onItemClick={onQuickAction} />
 
                     <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
                         <div className="mb-2 flex items-center gap-2">
                             <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
-                            <h3 className="text-sm font-black text-gray-900">Intelligent Insights</h3>
+                            <h3 className="text-sm font-semibold text-gray-900">Intelligent Insights</h3>
                         </div>
                         <div className="space-y-2">
                             {intelligentInsights.slice(0, 3).map((insight, idx) => (
@@ -1744,14 +1744,14 @@ export function DomainDashboard({
                 </div>
             </div>
 
-            {/* Sidebar Column (3/12) — desktop only */}
+            {/* Sidebar Column (3/12), desktop only */}
             <div className="hidden lg:flex flex-col gap-2.5 order-2 lg:order-2 lg:col-span-3 min-h-0">
                 <RemindersPortlet data={remindersData} onItemClick={onQuickAction} />
 
                 <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm shrink-0">
                     <div className="flex items-center gap-2 mb-3">
                         <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
-                        <h3 className="text-sm font-black text-gray-900">Intelligent Insights</h3>
+                        <h3 className="text-sm font-semibold text-gray-900">Intelligent Insights</h3>
                     </div>
                     <div className="space-y-2.5 max-h-72 overflow-y-auto overscroll-y-contain pr-0.5">
                         {intelligentInsights.map((insight, idx) => (
@@ -1799,11 +1799,11 @@ export function DomainDashboard({
                                         <div className="rounded-md bg-white p-1 border border-slate-100 text-slate-500 shrink-0">
                                             <Users className="w-3.5 h-3.5" aria-hidden />
                                         </div>
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 truncate">
+                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 truncate">
                                             Active Customers
                                         </p>
                                     </div>
-                                    <p className="text-base font-black text-slate-900 tabular-nums shrink-0 whitespace-nowrap">
+                                    <p className="text-base font-semibold text-slate-900 tabular-nums shrink-0 whitespace-nowrap">
                                         {(dashboardMetrics?.customers?.active ?? 0).toLocaleString()}
                                     </p>
                                 </div>
@@ -1812,11 +1812,11 @@ export function DomainDashboard({
                                         <div className="rounded-md bg-white p-1 border border-slate-100 text-slate-500 shrink-0">
                                             <BadgeDollarSign className="w-3.5 h-3.5" aria-hidden />
                                         </div>
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 truncate">
+                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 truncate">
                                             Cash Flow
                                         </p>
                                     </div>
-                                    <p className="text-sm font-black text-slate-900 tabular-nums shrink-0 whitespace-nowrap">
+                                    <p className="text-sm font-semibold text-slate-900 tabular-nums shrink-0 whitespace-nowrap">
                                         {formatCurrencyCompact(dashboardMetrics?.cashFlow?.current || 0)}
                                     </p>
                                 </div>

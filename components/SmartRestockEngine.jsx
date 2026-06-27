@@ -247,7 +247,7 @@ export const SmartRestockEngine = memo(function SmartRestockEngine({
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="flex items-center justify-end gap-1 text-wine font-black text-lg">
+                                        <div className="flex items-center justify-end gap-1 text-wine font-semibold text-lg">
                                             <PackagePlus className="w-4 h-4" />
                                             +{item.restockAmount || item.forecast?.forecastedQuantity}
                                         </div>
@@ -262,7 +262,7 @@ export const SmartRestockEngine = memo(function SmartRestockEngine({
             {restockSuggestions.length > 0 && (
                 <CardFooter className="bg-wine/[0.02] border-t border-wine/5 p-4">
                     <Button
-                        className="w-full font-black h-10 shadow-md shadow-wine/20 rounded-xl group bg-emerald-600 hover:bg-emerald-700 text-white"
+                        className="w-full font-semibold h-10 shadow-md shadow-wine/20 rounded-xl group bg-emerald-600 hover:bg-emerald-700 text-white"
                         disabled={selectedItems.length === 0 || isGenerating || !effectiveBusinessId}
                         onClick={handleBulkRestock}
                     >

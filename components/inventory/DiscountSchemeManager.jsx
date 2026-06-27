@@ -131,7 +131,7 @@ export function DiscountSchemeManager({
       <div className={`flex flex-nowrap items-center gap-2 ${embedInCard ? 'justify-end' : 'flex-wrap items-start justify-between gap-3'}`}>
         {!embedInCard && (
           <div className="min-w-0">
-            <h3 className="text-base font-extrabold text-slate-900">Discount Schemes</h3>
+            <h3 className="text-base font-semibold text-slate-900">Discount Schemes</h3>
             <p className="text-xs text-slate-500">Manage discount rules and promotions</p>
           </div>
         )}

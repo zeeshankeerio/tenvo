@@ -315,6 +315,34 @@ export function getTaxIdLabel(standards: RegionalStandards): string {
   return standards.taxIdLabel;
 }
 
+/** Default tax category strings when a domain row does not define its own list */
+export function buildRegionalTaxCategoryDefaults(countryIso?: string | null): string[] {
+  const s = getRegionalStandards(countryIso);
+  if (s.defaultTaxRate > 0) {
+    return [`${s.taxLabel} ${s.defaultTaxRate}%`, 'Zero Rated', 'Exempt'];
+  }
+  return ['Standard', 'Zero Rated', 'Exempt'];
+}
+
+/** Phone dial-code options for customer/vendor forms — sourced from REGIONAL_REGISTRY only */
+export function getPhoneCountryCodeOptions(): Array<{
+  code: string;
+  label: string;
+  countryIso: string;
+}> {
+  return Object.values(REGIONAL_REGISTRY)
+    .map((r) => ({
+      code: r.phoneCode,
+      label: `${r.countryName} (${r.phoneCode})`,
+      countryIso: r.countryCode,
+    }))
+    .sort((a, b) => {
+      if (a.countryIso === DEFAULT_REGISTRATION_COUNTRY_ISO) return -1;
+      if (b.countryIso === DEFAULT_REGISTRATION_COUNTRY_ISO) return 1;
+      return a.label.localeCompare(b.label);
+    });
+}
+
 /** Wizard / admin dropdowns — sorted with Pakistan first, then A–Z */
 export function getRegistrationCountryOptions(): Array<{
   value: keyof typeof REGIONAL_REGISTRY;

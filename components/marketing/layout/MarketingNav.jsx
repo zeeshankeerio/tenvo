@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { trackNavMenuOpen, trackCTAClick } from '@/lib/analytics/tracking';
 import { useAuth } from '@/lib/context/AuthContext';
 import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
+import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 import { cn } from '@/lib/utils';
 import { MARKETING_NAV_HEIGHT } from '@/lib/utils/marketingLayout';
 import { modulesForNav } from '@/lib/marketing/capabilities';
@@ -98,7 +100,7 @@ export default function MarketingNav({
     <nav className={navClasses} aria-label="Primary marketing">
       <div className="mx-auto max-w-[1440px] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(0.25rem,env(safe-area-inset-top))] sm:pl-7 sm:pr-7 lg:pl-10 lg:pr-10 xl:pl-14 xl:pr-14 2xl:pl-16 2xl:pr-16">
         <div className={cn('flex items-center justify-between gap-3 sm:gap-6 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:justify-items-stretch lg:gap-x-8 xl:gap-x-10', MARKETING_NAV_HEIGHT)}>
-          {/* Logo — keep a hard gutter so the first nav control never overlaps the wordmark */}
+          {/* Logo - keep a hard gutter so the first nav control never overlaps the wordmark */}
           <Link
             href="/"
             className="flex min-w-0 max-w-[min(100%,14rem)] shrink-0 items-center gap-3 rounded-lg outline-none ring-brand-primary/30 transition-all hover:opacity-95 focus-visible:ring-2 sm:max-w-none"
@@ -122,7 +124,7 @@ export default function MarketingNav({
               >
                 <div className="grid w-[min(96vw,56rem)] grid-cols-1 gap-6 p-6 sm:p-8 lg:grid-cols-3 lg:gap-8">
                   <div>
-                    <h4 className="text-[10px] font-black text-gray-400 mb-6 uppercase tracking-widest">Enterprise Core</h4>
+                    <h4 className="text-[10px] font-semibold text-gray-400 mb-6 uppercase tracking-widest">Enterprise Core</h4>
                     {enterpriseCore.map((mod) => {
                       const Icon = navIcons[mod.id] || Package;
                       return (
@@ -137,7 +139,7 @@ export default function MarketingNav({
                     })}
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-black text-gray-400 mb-6 uppercase tracking-widest">Verticals</h4>
+                    <h4 className="text-[10px] font-semibold text-gray-400 mb-6 uppercase tracking-widest">Verticals</h4>
                     {verticals.map((mod) => {
                       const Icon = navIcons[mod.id] || Store;
                       return (
@@ -152,7 +154,7 @@ export default function MarketingNav({
                     })}
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-black text-gray-400 mb-6 uppercase tracking-widest">Growth & customers</h4>
+                    <h4 className="text-[10px] font-semibold text-gray-400 mb-6 uppercase tracking-widest">Growth & customers</h4>
                     {growth.map((mod) => {
                       const Icon = navIcons[mod.id] || Megaphone;
                       return (
@@ -202,13 +204,13 @@ export default function MarketingNav({
                   >
                     About
                   </Link>
-                  <Link
-                    href="/demo"
+                  <MarketingCtaLink
+                    href={getBookMeetingHref()}
                     className="block rounded-xl px-4 py-3 text-left text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-50"
                     onClick={() => setExpandedMenu(null)}
                   >
-                    Book a demo
-                  </Link>
+                    Book a meeting
+                  </MarketingCtaLink>
                 </div>
               </NavDropdown>
               <Link href="/contact" className={navItemClass}>
@@ -224,7 +226,7 @@ export default function MarketingNav({
                 {user ? (
                   <Button
                     onClick={() => handleCTAClick('nav', 'Enter Dashboard', '/multi-business')}
-                    className="h-10 shrink-0 rounded-full bg-brand-primary px-4 font-black text-white shadow-[0_8px_20px_-8px_rgba(227,66,66,0.6)] transition-all hover:bg-brand-primary-dark active:scale-[0.98] xl:px-5"
+                    className="h-10 shrink-0 rounded-full bg-brand-primary px-4 font-semibold text-white shadow-brand transition-all hover:bg-brand-primary-dark active:scale-[0.98] xl:px-5"
                   >
                     Enter Dashboard
                   </Button>
@@ -239,7 +241,7 @@ export default function MarketingNav({
                     </Button>
                     <Button
                       onClick={() => handleCTAClick('nav', 'Start your journey', '/register')}
-                      className="h-10 shrink-0 rounded-full bg-brand-primary px-3.5 font-black text-white shadow-[0_8px_20px_-8px_rgba(227,66,66,0.6)] transition-all hover:bg-brand-primary-dark active:scale-[0.98] sm:px-4 xl:px-5"
+                      className="h-10 shrink-0 rounded-full bg-brand-primary px-3.5 font-semibold text-white shadow-brand transition-all hover:bg-brand-primary-dark active:scale-[0.98] sm:px-4 xl:px-5"
                     >
                       <span className="hidden xl:inline">Start your journey</span>
                       <span className="xl:hidden">Get started</span>
@@ -296,7 +298,7 @@ export default function MarketingNav({
             >
               Integrations
             </button>
-            <p className="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-neutral-400">Company</p>
+            <p className="px-3 pt-3 text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Company</p>
             <button
               className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-neutral-50 hover:text-brand-primary-dark"
               onClick={() => router.push('/why-tenvo')}
@@ -311,9 +313,13 @@ export default function MarketingNav({
             </button>
             <button
               className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-neutral-50 hover:text-brand-primary-dark"
-              onClick={() => router.push('/demo')}
+              onClick={() => {
+                trackCTAClick('mobile-nav', 'Book a meeting', getBookMeetingHref());
+                window.open(getBookMeetingHref(), '_blank', 'noopener,noreferrer');
+                setMobileMenuOpen(false);
+              }}
             >
-              Book a demo
+              Book a meeting
             </button>
             <button
               className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-neutral-50 hover:text-brand-primary-dark"
@@ -327,7 +333,7 @@ export default function MarketingNav({
             <div className="flex flex-col gap-2 border-t border-neutral-100 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
               {user ? (
                 <Button
-                  className="w-full h-12 bg-brand-primary font-black text-white rounded-xl shadow-[0_8px_20px_-8px_rgba(227,66,66,0.6)]"
+                  className="w-full h-12 bg-brand-primary font-semibold text-white rounded-xl shadow-brand"
                   onClick={() => handleCTAClick('mobile-nav', 'Enter Dashboard', '/multi-business')}
                 >
                   Enter Dashboard
@@ -342,7 +348,7 @@ export default function MarketingNav({
                     Log in
                   </Button>
                   <Button
-                    className="w-full h-12 bg-brand-primary font-black text-white rounded-xl shadow-[0_8px_20px_-8px_rgba(227,66,66,0.6)]"
+                    className="w-full h-12 bg-brand-primary font-semibold text-white rounded-xl shadow-brand"
                     onClick={() => handleCTAClick('mobile-nav', 'Start your journey', '/register')}
                   >
                     Start your journey

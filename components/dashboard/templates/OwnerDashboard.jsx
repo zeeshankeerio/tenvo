@@ -97,7 +97,7 @@ export function OwnerDashboard({
       {/* Owner Dashboard Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-gray-900">
+          <h2 className="text-2xl font-semibold text-gray-900">
             {t.owner_dashboard || 'Owner Dashboard'}
           </h2>
           <p className="text-sm text-gray-500">
@@ -137,7 +137,7 @@ export function OwnerDashboard({
                 </span>
                 <TrendingUp className="w-4 h-4 text-green-600" />
               </div>
-              <div className="text-2xl font-black text-gray-900 mb-1">
+              <div className="text-2xl font-semibold text-gray-900 mb-1">
                 {formatCurrency(financialSummary.totalRevenue, currency)}
               </div>
               <div className="flex items-center gap-1 text-xs">
@@ -156,7 +156,7 @@ export function OwnerDashboard({
                 </span>
                 <Activity className="w-4 h-4 text-orange-600" />
               </div>
-              <div className="text-2xl font-black text-gray-900 mb-1">
+              <div className="text-2xl font-semibold text-gray-900 mb-1">
                 {formatCurrency(financialSummary.totalExpenses, currency)}
               </div>
               <div className="text-xs text-gray-500">
@@ -172,7 +172,7 @@ export function OwnerDashboard({
                 </span>
                 <Award className="w-4 h-4 text-green-600" />
               </div>
-              <div className="text-2xl font-black text-green-900 mb-1">
+              <div className="text-2xl font-semibold text-green-900 mb-1">
                 {formatCurrency(financialSummary.netProfit, currency)}
               </div>
               <div className="text-xs text-green-700 font-bold">

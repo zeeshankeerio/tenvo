@@ -7,7 +7,7 @@ import {
     Banknote, Smartphone, SplitSquareHorizontal, User, Clock, Hash,
     Receipt, CheckCircle2, Star, Gift, ChevronDown, RotateCcw,
     Layers, Weight, Package, ScanLine, Volume2, AlertTriangle, Filter,
-    Maximize, Minimize
+    Maximize, Minimize, Printer, FileDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
 import { getDomainConfig } from '@/lib/config/domains';
-import { buildThermalReceiptHtml, printThermalReceiptHtml } from '@/lib/print/thermalReceipt';
 import { buildPosCheckoutPayload, getPosUiConfig } from '@/lib/utils/posHelpers';
+import { usePosFullscreen } from '@/lib/hooks/usePosFullscreen';
+import { usePosReceipt } from '@/lib/hooks/usePosReceipt';
 import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { ProductThumbnail } from '@/components/product/ProductThumbnail';
+import toast from 'react-hot-toast';
 
 // --- Constants ----------------------------------------------------------------
 
@@ -128,7 +130,7 @@ function DepartmentBar({ activeDepartment, onDepartmentChange, productCounts }) 
                         <span>{dept.label}</span>
                         {dept.key !== 'all' && (
                             <span className={cn(
-                                "text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none",
+                                "text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none",
                                 isActive ? "bg-white/20" : "bg-gray-100 text-gray-500"
                             )}>
                                 {count}
@@ -177,7 +179,7 @@ function ScannedItemsList({
                                 <div className="flex items-center gap-2 mt-0.5">
                                     <span className="text-[10px] text-gray-400 font-mono">{item.sku || item.barcode || '--'}</span>
                                     {item.isWeightItem && (
-                                        <Badge variant="outline" className="text-[9px] h-4 px-1 border-amber-300 text-amber-600">
+                                        <Badge variant="outline" className="text-[10px] h-4 px-1 border-amber-300 text-amber-600">
                                             <Weight className="w-2.5 h-2.5 mr-0.5" /> Weight
                                         </Badge>
                                     )}
@@ -197,17 +199,17 @@ function ScannedItemsList({
                                         type="number"
                                         value={item.quantity}
                                         onChange={(e) => onWeightChange?.(idx, parseFloat(e.target.value) || 0.1)}
-                                        className="w-14 text-center text-xs font-black bg-white rounded px-1 py-1 border-0"
+                                        className="w-14 text-center text-xs font-semibold bg-white rounded px-1 py-1 border-0"
                                         step="0.01"
                                         min="0.01"
                                     />
                                 ) : (
                                     <div className="flex items-center">
-                                        <span className="w-8 text-center text-xs font-black">{item.quantity}</span>
+                                        <span className="w-8 text-center text-xs font-semibold">{item.quantity}</span>
                                         {/* Quick Add Presets for Retail Crate/Bulk */}
                                         <div className="flex flex-col ml-1 border-l border-gray-200 pl-1">
-                                            <button onClick={() => onQuantityChange(idx, item.quantity + 5)} className="text-[7px] font-black text-emerald-600 hover:bg-emerald-50 px-1 rounded">+5</button>
-                                            <button onClick={() => onQuantityChange(idx, item.quantity + 12)} className="text-[7px] font-black text-brand-primary hover:bg-brand-50 px-1 rounded">+12</button>
+                                            <button onClick={() => onQuantityChange(idx, item.quantity + 5)} className="text-[7px] font-semibold text-emerald-600 hover:bg-emerald-50 px-1 rounded">+5</button>
+                                            <button onClick={() => onQuantityChange(idx, item.quantity + 12)} className="text-[7px] font-semibold text-brand-primary hover:bg-brand-50 px-1 rounded">+12</button>
                                         </div>
                                     </div>
                                 )}
@@ -232,7 +234,7 @@ function ScannedItemsList({
                             </span>
 
                             {/* Line total */}
-                            <span className="text-xs font-black text-gray-900 w-20 text-right shrink-0">
+                            <span className="text-xs font-semibold text-gray-900 w-20 text-right shrink-0">
                                 {currency}{(item.unitPrice * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </span>
 
@@ -265,7 +267,7 @@ function CartSummary({
     items, customer, onCustomerSelect, taxPercent, taxConfig,
     discount = 0, onDiscountChange, onPaymentMethodSelect,
     onCompleteSale, onHoldSale, onVoidSale, isProcessing,
-    currency = 'Rs.', heldOrders = [], onResumeHeldSale
+    currency = 'Rs.', heldOrders = [], onResumeHeldSale, onPrintBill, onDownloadBillPdf,
 }) {
     // Priority: taxConfig.sales_tax_rate -> taxPercent prop -> 17.0 (fallback)
     const effectiveTaxRate = taxConfig?.sales_tax_rate ?? taxPercent ?? 17;
@@ -288,7 +290,7 @@ function CartSummary({
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50">
                 <div className="flex items-center gap-2">
                     <ShoppingCart className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm font-black tracking-tight">CART</span>
+                    <span className="text-sm font-semibold tracking-tight">CART</span>
                     <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
                         {items.length} items * {itemCount} qty
                     </Badge>
@@ -336,7 +338,7 @@ function CartSummary({
                                     min={0}
                                 />
                             </div>
-                            <div className="flex justify-between text-2xl font-black text-white pt-3 border-t border-slate-700">
+                            <div className="flex justify-between text-2xl font-semibold text-white pt-3 border-t border-slate-700">
                                 <span>TOTAL</span>
                                 <span className="text-emerald-400">{currency}{total.toLocaleString()}</span>
                             </div>
@@ -359,7 +361,7 @@ function CartSummary({
                                     )}
                                 >
                                     <Icon className="w-4 h-4" />
-                                    <span className="text-[9px] font-medium">{label}</span>
+                                    <span className="text-[10px] font-medium">{label}</span>
                                 </button>
                             ))}
                         </div>
@@ -395,11 +397,34 @@ function CartSummary({
                             </Button>
                         )}
 
+                        {onPrintBill ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onPrintBill({ subtotal, taxAmount, discountAmount, total })}
+                                disabled={isProcessing}
+                                className="w-full h-9 rounded-lg text-[10px] font-bold border-slate-700 text-gray-300 bg-slate-800 hover:bg-slate-700"
+                            >
+                                <Printer className="w-3.5 h-3.5 mr-1.5" /> PRINT
+                            </Button>
+                        ) : null}
+                        {onDownloadBillPdf ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onDownloadBillPdf({ subtotal, taxAmount, discountAmount, total })}
+                                disabled={isProcessing}
+                                className="w-full h-9 rounded-lg text-[10px] font-bold border-slate-700 text-gray-300 bg-slate-800 hover:bg-slate-700"
+                            >
+                                <FileDown className="w-3.5 h-3.5 mr-1.5" /> PDF
+                            </Button>
+                        ) : null}
+
                         {/* Complete Sale */}
                         <Button
                             onClick={onCompleteSale}
                             disabled={isProcessing || items.length === 0}
-                            className="w-full h-14 rounded-xl text-sm font-black bg-gradient-to-r from-emerald-500 to-emerald-600
+                            className="w-full h-14 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600
                                        hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/20 disabled:opacity-50 tracking-tight"
                         >
                             {isProcessing ? (
@@ -410,7 +435,7 @@ function CartSummary({
                             ) : (
                                 <>
                                     <CheckCircle2 className="w-5 h-5 mr-2" />
-                                    CHECKOUT -- {currency}{total.toLocaleString()}
+                                    CHECKOUT - {currency}{total.toLocaleString()}
                                 </>
                             )}
                         </Button>
@@ -435,14 +460,15 @@ function CartSummary({
 
 export function SuperStorePOS({ 
     businessId, products = [], customers = [], onStartSession, 
-    onCompleteSale, currency = 'Rs.', session, taxConfig 
+    onCompleteSale, currency = 'Rs.', session, taxConfig, category: categoryProp,
 }) {
-    const { business } = useBusiness();
-    const category = business?.category || 'supermarket';
+    const { business, currencySymbol } = useBusiness();
+    const category = categoryProp || business?.category || 'supermarket';
     const posUi = getPosUiConfig(category, business);
     const domainConfig = getDomainConfig(category);
-    const documentLabel = domainConfig?.label_overrides?.invoice || 'Receipt';
-    const currencyCode = business?.currency || 'PKR';
+    const documentLabel = posUi.receiptLabel || domainConfig?.label_overrides?.invoice || 'Receipt';
+    const currencyCode = posUi.currencyCode;
+    const displayCurrency = currencySymbol || posUi.currencySymbol;
     const effectiveTaxRate = taxConfig?.sales_tax_rate ?? posUi.defaultTaxRate;
     const [cart, setCart] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -453,14 +479,29 @@ export function SuperStorePOS({
     const [discount, setDiscount] = useState(0);
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [isProcessing, setIsProcessing] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [lastSale, setLastSale] = useState(null);
     const [heldOrders, setHeldOrders] = useState([]);
     const [isStartingSession, setIsStartingSession] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
     const [lastScannedItem, setLastScannedItem] = useState(null);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    const containerRef = useRef(null);
+    const { containerRef, isFullscreen, toggleFullscreen } = usePosFullscreen();
+    const {
+        autoPrintEnabled,
+        toggleAutoPrint,
+        lastSale,
+        showSuccess,
+        dismissSuccess,
+        printBillFromCart,
+        downloadBillPdfFromCart,
+        recordSuccessfulSale,
+        printLastReceipt,
+        downloadLastReceiptPdf,
+        formatSaleError,
+    } = usePosReceipt({
+        business,
+        documentLabel,
+        category,
+        currencyCode,
+    });
     const hasSession = Boolean(
         session?.id
         && session?.id !== 'sess-initial'
@@ -485,17 +526,30 @@ export function SuperStorePOS({
     }, [customers, customerQuery]);
 
     const handlePrintReceipt = useCallback(() => {
-        if (!lastSale) return;
-        const html = buildThermalReceiptHtml({
-            business,
-            documentLabel,
-            category,
-            currencyCode,
-            sale: lastSale,
-            lineItems: lastSale.lineItems || [],
+        printLastReceipt();
+    }, [printLastReceipt]);
+
+    const handleDownloadBillPdf = useCallback((totalsFromCart) => {
+        downloadBillPdfFromCart({
+            cart,
+            customer,
+            paymentMethod,
+            discount,
+            discountType: 'fixed',
+            totalsFromCart,
         });
-        printThermalReceiptHtml(html);
-    }, [business, category, currencyCode, documentLabel, lastSale]);
+    }, [cart, customer, discount, paymentMethod, downloadBillPdfFromCart]);
+
+    const handlePrintBill = useCallback((totalsFromCart) => {
+        printBillFromCart({
+            cart,
+            customer,
+            paymentMethod,
+            discount,
+            discountType: 'fixed',
+            totalsFromCart,
+        });
+    }, [cart, customer, discount, paymentMethod, printBillFromCart]);
 
     const handleStartSession = useCallback(async () => {
         if (!onStartSession || isStartingSession) return;
@@ -507,28 +561,7 @@ export function SuperStorePOS({
         }
     }, [onStartSession, isStartingSession]);
 
-    // --- Fullscreen Logic ----------------------------------------------------
-
-    const toggleFullscreen = useCallback(() => {
-        if (!containerRef.current) return;
-
-        if (!document.fullscreenElement) {
-            containerRef.current.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    }, []);
-
-    useEffect(() => {
-        const handleFullscreenChange = () => {
-            setIsFullscreen(!!document.fullscreenElement);
-        };
-
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    }, []);
+    // --- Fullscreen (shared hook) --------------------------------------------
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -689,41 +722,27 @@ export function SuperStorePOS({
             });
 
             if (result?.success) {
-                const lineItems = cart.map((i) => ({
-                    name: i.name,
-                    sku: i.sku,
-                    quantity: i.quantity,
-                    unitPrice: i.unitPrice,
-                    lineTotal: Math.round(i.unitPrice * i.quantity * (1 + (i.taxPercent || 0) / 100) * 100) / 100,
-                }));
-                setLastSale({
-                    ...result.transaction,
-                    saleNumber: result.transaction?.transaction_number || `SALE-${Date.now()}`,
-                    transaction_number: result.transaction?.transaction_number || result.transaction?.invoice_number,
-                    invoice_number: result.transaction?.invoice_number,
-                    total: payload.total,
-                    subtotal: payload.subtotal,
-                    taxAmount: payload.taxAmount,
-                    discountAmount: payload.discountAmount,
-                    lineItems,
-                    items: cart.length,
-                    customerName: customer?.name || null,
+                recordSuccessfulSale({
+                    result,
+                    payload,
+                    cart,
+                    customer,
                     paymentMethod,
-                    mode: result?.mode || (hasSession ? 'pos' : 'invoice-fallback'),
-                    date: new Date().toISOString(),
+                    hasSession,
                 });
-                setShowSuccess(true);
                 setCart([]);
                 setCustomer(null);
                 setDiscount(0);
-                setTimeout(() => setShowSuccess(false), 3000);
+            } else if (result?.error) {
+                toast.error(formatSaleError(result), { id: 'pos-sale-error' });
             }
         } catch (err) {
             console.error('SuperStore POS sale error:', err);
+            toast.error(err?.message || 'Sale failed', { id: 'pos-sale-error' });
         } finally {
             setIsProcessing(false);
         }
-    }, [cart, businessId, session, customer, discount, paymentMethod, isProcessing, onCompleteSale, hasSession, effectiveTaxRate, category]);
+    }, [cart, businessId, session, customer, discount, paymentMethod, isProcessing, onCompleteSale, hasSession, effectiveTaxRate, category, recordSuccessfulSale, formatSaleError]);
 
     // --- Keyboard Shortcuts --------------------------------------------------
 
@@ -731,11 +750,12 @@ export function SuperStorePOS({
         const handleKeyDown = (e) => {
             if (e.key === 'F9') { e.preventDefault(); handleCompleteSale(); }
             if (e.key === 'F8') { e.preventDefault(); handleHoldSale(); }
+            if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(); }
             if (e.key === 'Escape') { handleVoidSale(); }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handleCompleteSale, handleHoldSale, handleVoidSale]);
+    }, [handleCompleteSale, handleHoldSale, handleVoidSale, toggleFullscreen]);
 
     // --- Render --------------------------------------------------------------
 
@@ -793,6 +813,19 @@ export function SuperStorePOS({
                         </Badge>
                         <Button
                             variant="ghost"
+                            size="sm"
+                            onClick={toggleAutoPrint}
+                            className={cn(
+                                'h-8 px-2 text-[10px] font-bold',
+                                autoPrintEnabled ? 'text-emerald-600' : 'text-gray-400'
+                            )}
+                            aria-pressed={autoPrintEnabled}
+                        >
+                            <Printer className="w-3.5 h-3.5 mr-1" />
+                            Auto
+                        </Button>
+                        <Button
+                            variant="ghost"
                             size="icon"
                             onClick={toggleFullscreen}
                             className="h-8 w-8 text-gray-400 hover:text-brand-primary hover:bg-brand-50"
@@ -816,7 +849,7 @@ export function SuperStorePOS({
                         onQuantityChange={handleQuantityChange}
                         onRemoveItem={handleRemoveItem}
                         onWeightChange={handleWeightChange}
-                        currency={currency}
+                        currency={displayCurrency}
                         businessCategory={category}
                     />
                 ) : null}
@@ -825,7 +858,7 @@ export function SuperStorePOS({
                 {searchTerm && (
                     <div className="border-t border-gray-100 bg-gray-50/50 overflow-y-auto max-h-64">
                         <div className="px-4 py-1.5">
-                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                                 Search Results ({filteredProducts.length})
                             </span>
                         </div>
@@ -855,8 +888,8 @@ export function SuperStorePOS({
                                         <p className="text-xs font-bold text-gray-900 truncate">{product.name}</p>
                                         <p className="text-[10px] text-gray-400 font-mono">{product.sku || product.barcode || '--'}</p>
                                     </div>
-                                    <span className="text-xs font-black text-emerald-600">
-                                        {currency}{parseFloat(product.selling_price || product.price || 0).toLocaleString()}
+                                    <span className="text-xs font-semibold text-emerald-600">
+                                        {displayCurrency}{parseFloat(product.selling_price || product.price || 0).toLocaleString()}
                                     </span>
                                     <span className={cn(
                                         "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
@@ -878,7 +911,7 @@ export function SuperStorePOS({
                 )}
 
                 {/* Keyboard Shortcuts Bar */}
-                <div className="flex items-center justify-between px-4 py-1.5 bg-gray-50 border-t border-gray-100 text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+                <div className="flex items-center justify-between px-4 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     <span>F9: Checkout</span>
                     <span>F8: Hold</span>
                     <span>ESC: Void</span>
@@ -899,8 +932,10 @@ export function SuperStorePOS({
                     onHoldSale={handleHoldSale}
                     onVoidSale={handleVoidSale}
                     onResumeHeldSale={handleResumeLastHeldSale}
+                    onPrintBill={handlePrintBill}
+                    onDownloadBillPdf={handleDownloadBillPdf}
                     isProcessing={isProcessing}
-                    currency={currency}
+                    currency={displayCurrency}
                     heldOrders={heldOrders}
                     taxConfig={taxConfig}
                 />
@@ -919,7 +954,7 @@ export function SuperStorePOS({
                         <div>
                             <p className="font-bold text-sm">Sale Complete!</p>
                             <p className="text-xs text-emerald-100">
-                                {lastSale?.transaction_number} -- {currency}{lastSale?.total?.toLocaleString()} ({lastSale?.mode === 'invoice-fallback' ? 'Invoice Mode' : 'POS Mode'})
+                                {lastSale?.transaction_number} - {displayCurrency}{lastSale?.total?.toLocaleString()} ({lastSale?.mode === 'invoice-fallback' ? 'Invoice Mode' : 'POS Mode'})
                             </p>
                         </div>
                         <Button
@@ -927,7 +962,23 @@ export function SuperStorePOS({
                             className="text-emerald-100 hover:text-white hover:bg-emerald-500 ml-2"
                             onClick={handlePrintReceipt}
                         >
-                            <Receipt className="w-4 h-4 mr-1" /> Receipt
+                            <Printer className="w-4 h-4 mr-1" /> Print
+                        </Button>
+                        <Button
+                            variant="ghost" size="sm"
+                            className="text-emerald-100 hover:text-white hover:bg-emerald-500"
+                            onClick={() => downloadLastReceiptPdf()}
+                            aria-label="Download PDF"
+                        >
+                            <FileDown className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost" size="sm"
+                            className="text-emerald-100 hover:text-white hover:bg-emerald-500"
+                            onClick={dismissSuccess}
+                            aria-label="Dismiss"
+                        >
+                            <X className="w-4 h-4" />
                         </Button>
                     </motion.div>
                 )}

@@ -119,7 +119,7 @@ export function AttendanceTracker({ businessId, employees: propEmployees = [] })
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => navigateMonth(-1)}>
                         <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <h3 className="text-lg font-black text-gray-900 min-w-[180px] text-center">{monthName}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 min-w-[180px] text-center">{monthName}</h3>
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => navigateMonth(1)}>
                         <ChevronRight className="w-4 h-4" />
                     </Button>
@@ -152,7 +152,7 @@ export function AttendanceTracker({ businessId, employees: propEmployees = [] })
                             <stat.icon className="w-4 h-4" />
                         </div>
                         <div>
-                            <p className="text-lg font-black text-gray-900">{stat.value}</p>
+                            <p className="text-lg font-semibold text-gray-900">{stat.value}</p>
                             <p className="text-[11px] text-gray-400">{stat.label}</p>
                         </div>
                     </div>
@@ -167,8 +167,8 @@ export function AttendanceTracker({ businessId, employees: propEmployees = [] })
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h4 className="text-xs font-black text-violet-900 uppercase tracking-wider">AI Attendance Copilot</h4>
-                            <span className="bg-violet-100 text-violet-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">Intelligent</span>
+                            <h4 className="text-xs font-semibold text-violet-900 uppercase tracking-wider">AI Attendance Copilot</h4>
+                            <span className="bg-violet-100 text-violet-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">Intelligent</span>
                         </div>
                         <p className="text-xs text-violet-700 font-medium mt-0.5">
                             AI analyzed {employees.length} active employee rosters. Coverage index is stable at 94.2%.
@@ -248,7 +248,7 @@ export function AttendanceTracker({ businessId, employees: propEmployees = [] })
                                 <tr key={emp.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                                     <td className="p-2.5 sticky left-0 bg-white z-10">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-primary flex items-center justify-center text-[10px] font-black">
+                                            <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-primary flex items-center justify-center text-[10px] font-semibold">
                                                 {emp.name.split(' ').map(n => n[0]).join('')}
                                             </div>
                                             <div>

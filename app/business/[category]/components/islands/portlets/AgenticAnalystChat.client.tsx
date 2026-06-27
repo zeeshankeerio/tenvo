@@ -110,7 +110,7 @@ export const AgenticAnalystChat = memo(function AgenticAnalystChat({ businessId:
                                 )}>
                                     {m.content}
                                     <div className={cn(
-                                        "text-[8px] mt-1 opacity-50 font-bold uppercase",
+                                        "text-[10px] mt-1 opacity-50 font-bold uppercase",
                                         m.role === 'user' ? "text-white" : "text-gray-400"
                                     )}>
                                         {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -124,7 +124,7 @@ export const AgenticAnalystChat = memo(function AgenticAnalystChat({ businessId:
                                     <Loader2 className="w-4 h-4 text-brand-primary animate-spin" />
                                 </div>
                                 <div className="p-3 rounded-2xl bg-white border border-slate-100 rounded-tl-none shadow-sm flex items-center gap-2">
-                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Thinking</span>
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest animate-pulse">Thinking</span>
                                 </div>
                             </div>
                         )}
@@ -154,7 +154,7 @@ export const AgenticAnalystChat = memo(function AgenticAnalystChat({ businessId:
                         </div>
                         <div className="mt-2 flex items-center gap-2 px-1">
                             <Sparkles className="w-3 h-3 text-brand-primary" />
-                            <span className="text-[9px] font-bold text-gray-400 uppercase">Powered by Neural Enterprise AI</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase">Powered by Neural Enterprise AI</span>
                         </div>
                     </div>
                 </div>

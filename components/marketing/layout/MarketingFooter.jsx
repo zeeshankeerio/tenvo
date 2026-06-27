@@ -9,6 +9,8 @@ import { trackEvent, EVENTS } from '@/lib/analytics/tracking';
 import { validateEmail } from '@/lib/marketing/validation';
 import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
 import { SupportWhatsAppLink } from '@/components/marketing/SupportWhatsAppLink';
+import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 import { cn } from '@/lib/utils';
 
 const FOOTER_LINK = 'text-sm font-medium text-neutral-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 rounded-sm';
@@ -16,7 +18,7 @@ const FOOTER_LINK = 'text-sm font-medium text-neutral-400 transition-colors hove
 function FooterColumn({ title, children }) {
   return (
     <div className="min-w-0">
-      <h4 className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-neutral-500 sm:mb-5 sm:text-[11px] sm:tracking-[0.22em]">
+      <h4 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500 sm:mb-5 sm:text-[11px] sm:tracking-[0.22em]">
         {title}
       </h4>
       <ul className="space-y-2.5 sm:space-y-3.5">{children}</ul>
@@ -25,7 +27,7 @@ function FooterColumn({ title, children }) {
 }
 
 /**
- * Marketing footer — dark shell aligned with the login page brand column (neutral-900 + brand border).
+ * Marketing footer - dark shell aligned with the login page brand column (neutral-900 + brand border).
  */
 export default function MarketingFooter({ variant = 'default' }) {
   const [email, setEmail] = useState('');
@@ -72,11 +74,11 @@ export default function MarketingFooter({ variant = 'default' }) {
     return (
       <footer className="border-t border-brand-primary/20 bg-neutral-900">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 py-8 sm:flex-row sm:px-6 lg:px-12">
-          <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 sm:text-left">
+          <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-500 sm:text-left">
             © {new Date().getFullYear()} TENVO · Mindscape Analytics LLC · Pakistan launch; global roadmap
           </p>
           <nav
-            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-black uppercase tracking-[0.2em]"
+            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-semibold uppercase tracking-[0.2em]"
             aria-label="Legal"
           >
             <Link href="/privacy" className="text-neutral-500 transition-colors hover:text-white">
@@ -99,7 +101,7 @@ export default function MarketingFooter({ variant = 'default' }) {
     <footer className="relative overflow-x-clip border-t border-brand-primary/20 bg-neutral-900 text-neutral-300">
       <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.07]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.35),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_90%,rgba(227,66,66,0.25),transparent_45%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_90%,rgba(210,43,43,0.25),transparent_45%)]" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1440px] px-4 pb-8 pt-10 sm:px-7 sm:pb-10 sm:pt-14 lg:px-10 lg:pb-12 lg:pt-16 xl:px-14 2xl:px-16">
@@ -110,7 +112,7 @@ export default function MarketingFooter({ variant = 'default' }) {
               <TenvoTextLogo
                 textClassName="text-white"
                 taglineClassName="text-neutral-500"
-                iconClassName="border border-white/15 bg-brand-primary shadow-lg shadow-black/20"
+                iconClassName="shadow-lg shadow-black/25"
               />
             </Link>
             <p className="mt-6 max-w-sm text-sm font-medium leading-relaxed text-neutral-400">
@@ -121,18 +123,18 @@ export default function MarketingFooter({ variant = 'default' }) {
               <SupportWhatsAppLink variant="dark" className="text-sm font-semibold" iconClassName="h-4 w-4" />
             </p>
             <div className="mt-8 flex flex-wrap gap-2.5">
-              <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-200/95">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-200/95">
                 <Shield className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
                 PK tax configuration
               </span>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-amber-100/95">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-100/95">
                 <CheckCircle2 className="h-3.5 w-3.5 text-amber-400" aria-hidden />
                 SECP-ready narrative
               </span>
             </div>
           </div>
 
-          {/* Link columns — aligned grid */}
+          {/* Link columns - aligned grid */}
           <nav
             className="grid min-w-0 grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:col-span-5 lg:gap-x-10 lg:gap-y-8"
             aria-label="Site footer"
@@ -154,9 +156,9 @@ export default function MarketingFooter({ variant = 'default' }) {
                 </Link>
               </li>
               <li>
-                <Link href="/demo" className={FOOTER_LINK}>
-                  Book a demo
-                </Link>
+                <MarketingCtaLink href={getBookMeetingHref()} className={FOOTER_LINK}>
+                  Book a meeting
+                </MarketingCtaLink>
               </li>
               <li>
                 <Link href="/integrations" className={FOOTER_LINK}>
@@ -262,9 +264,9 @@ export default function MarketingFooter({ variant = 'default' }) {
             </FooterColumn>
           </nav>
 
-          {/* Newsletter — aligned with link columns; avoid mt-auto so the form sits under the intro copy */}
+          {/* Newsletter - aligned with link columns; avoid mt-auto so the form sits under the intro copy */}
           <div className="flex min-w-0 flex-col lg:col-span-3">
-            <h4 className="mb-5 text-[11px] font-black uppercase tracking-[0.22em] text-neutral-500">Stay updated</h4>
+            <h4 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stay updated</h4>
             <p className="mb-5 text-sm font-medium leading-relaxed text-neutral-400">
               Product updates, compliance notes, and launch news, no spam.
             </p>
@@ -301,7 +303,7 @@ export default function MarketingFooter({ variant = 'default' }) {
                   </div>
                   <Button
                     type="submit"
-                    className="h-11 shrink-0 rounded-xl bg-brand-primary px-6 font-black text-white hover:bg-brand-primary-dark"
+                    className="h-11 shrink-0 rounded-xl bg-brand-primary px-6 font-semibold text-white hover:bg-brand-primary-dark"
                     disabled={loading}
                   >
                     {loading ? '…' : 'Subscribe'}
@@ -319,10 +321,10 @@ export default function MarketingFooter({ variant = 'default' }) {
 
         {/* Bottom bar */}
         <div className="mt-14 flex flex-col items-center justify-between gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-end">
-          <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600 sm:text-left">
+          <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-600 sm:text-left">
             © {new Date().getFullYear()} TENVO · Mindscape Analytics LLC · All rights reserved
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-600">
             <Link href="/industries" className="transition-colors hover:text-neutral-300">
               Markets we serve
             </Link>

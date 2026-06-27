@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/currency';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { isAutoPartsFinderStore } from '@/lib/storefront/partsFinder';
 
 export function ProductInfo({ product }) {
   const { currency, settings, business } = useStorefront();
@@ -13,6 +14,15 @@ export function ProductInfo({ product }) {
   const discountPercentage = product.compare_price && product.compare_price > product.price
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
     : null;
+
+  const categoryKey = business?.category;
+  const domainData = product.domain_data || {};
+  const showPartsMeta = isAutoPartsFinderStore(categoryKey);
+  const partNumber = domainData.partnumber || product.sku;
+  const oemNumber = domainData.oemnumber;
+  const fitmentLine = [domainData.vehiclemake, domainData.vehiclemodel, domainData.modelyear]
+    .filter(Boolean)
+    .join(' ');
   
   return (
     <div className="space-y-4">
@@ -97,11 +107,30 @@ export function ProductInfo({ product }) {
         </div>
       </div>
       
-      {/* SKU */}
-      {product.sku && (
-        <p className="text-sm text-gray-500">
-          SKU: <span className="font-medium">{product.sku}</span>
-        </p>
+      {/* SKU / part metadata */}
+      {(product.sku || (showPartsMeta && partNumber)) && (
+        <div className="space-y-1 text-sm text-gray-500">
+          {(showPartsMeta && partNumber) ? (
+            <p>
+              Part number: <span className="font-medium text-gray-800">{partNumber}</span>
+            </p>
+          ) : null}
+          {showPartsMeta && oemNumber ? (
+            <p>
+              OEM: <span className="font-medium text-gray-800">{oemNumber}</span>
+            </p>
+          ) : null}
+          {showPartsMeta && fitmentLine ? (
+            <p>
+              Fits: <span className="font-medium text-gray-800">{fitmentLine}</span>
+            </p>
+          ) : null}
+          {product.sku && (!showPartsMeta || product.sku !== partNumber) ? (
+            <p>
+              SKU: <span className="font-medium">{product.sku}</span>
+            </p>
+          ) : null}
+        </div>
       )}
     </div>
   );

@@ -242,7 +242,7 @@ export function InvoiceList({
 
     return (
         <div className="space-y-4 lg:space-y-6">
-            {/* Mobile — compact header + stat strip */}
+            {/* Mobile, compact header + stat strip */}
             <MobileTabHeader
                 icon={FileText}
                 iconClassName="bg-emerald-100 text-emerald-600"

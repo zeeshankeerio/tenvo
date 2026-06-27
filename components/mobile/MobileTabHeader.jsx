@@ -110,14 +110,14 @@ export function MobileStatStrip({ items = [], layout = 'scroll' }) {
               item.alert ? 'border-red-100' : 'border-gray-100'
             )}
           >
-            <p className={cn('text-[9px] font-bold uppercase tracking-wide', item.labelTone || 'text-gray-400')}>
+            <p className={cn('text-[10px] font-bold uppercase tracking-wide', item.labelTone || 'text-gray-400')}>
               {item.label}
             </p>
             <p className={cn('mt-0.5 text-sm font-bold tabular-nums leading-tight truncate', item.valueTone || 'text-gray-900')}>
               {item.value}
             </p>
             {item.hint && (
-              <p className={cn('mt-0.5 truncate text-[9px] font-medium', item.hintTone || 'text-gray-400')}>
+              <p className={cn('mt-0.5 truncate text-[10px] font-medium', item.hintTone || 'text-gray-400')}>
                 {item.hint}
               </p>
             )}
@@ -137,14 +137,14 @@ export function MobileStatStrip({ items = [], layout = 'scroll' }) {
             item.alert ? 'border-red-100' : 'border-gray-100'
           )}
         >
-          <p className={cn('text-[9px] font-bold uppercase tracking-wide', item.labelTone || 'text-gray-400')}>
+          <p className={cn('text-[10px] font-bold uppercase tracking-wide', item.labelTone || 'text-gray-400')}>
             {item.label}
           </p>
           <p className={cn('mt-0.5 text-base font-bold tabular-nums leading-tight', item.valueTone || 'text-gray-900')}>
             {item.value}
           </p>
           {item.hint && (
-            <p className={cn('mt-0.5 truncate text-[9px] font-medium', item.hintTone || 'text-gray-400')}>
+            <p className={cn('mt-0.5 truncate text-[10px] font-medium', item.hintTone || 'text-gray-400')}>
               {item.hint}
             </p>
           )}

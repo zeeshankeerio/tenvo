@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { HUB_TABLE_HEAD } from "@/lib/utils/typography"
 
 const Table = React.forwardRef(({ className, ...props }, ref) => (
     <div className="relative w-full overflow-auto">
@@ -54,7 +55,8 @@ const TableHead = React.forwardRef(({ className, ...props }, ref) => (
     <th
         ref={ref}
         className={cn(
-            "h-9 px-3 text-left align-middle font-bold text-muted-foreground text-xs uppercase tracking-wider [&:has([role=checkbox])]:pr-0",
+            "h-9 px-3 text-left align-middle [&:has([role=checkbox])]:pr-0",
+            HUB_TABLE_HEAD,
             className
         )}
         {...props}

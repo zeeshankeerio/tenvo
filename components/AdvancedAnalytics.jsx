@@ -23,7 +23,7 @@ function formatRangeLabel(dateRange) {
     const a = dateRange.from instanceof Date ? dateRange.from : new Date(dateRange.from);
     const b = dateRange.to instanceof Date ? dateRange.to : new Date(dateRange.to);
     if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null;
-    return `${a.toLocaleDateString(undefined, { dateStyle: 'medium' })} – ${b.toLocaleDateString(undefined, { dateStyle: 'medium' })}`;
+    return `${a.toLocaleDateString(undefined, { dateStyle: 'medium' })} - ${b.toLocaleDateString(undefined, { dateStyle: 'medium' })}`;
   } catch {
     return null;
   }
@@ -140,14 +140,14 @@ export function AdvancedAnalytics({ businessId, category = 'retail-shop', curren
           <Card key={i} className="border-border shadow-sm bg-card transition-shadow hover:shadow-md">
             <CardContent className="pt-4 sm:pt-6 pb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] sm:text-[10px] font-bold uppercase text-muted-foreground tracking-widest">{m.label}</span>
+                <span className="text-[10px] sm:text-[10px] font-bold uppercase text-muted-foreground tracking-widest">{m.label}</span>
                 <m.icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", m.color)} style={m.style || {}} />
               </div>
               <div className="text-lg sm:text-xl font-bold text-foreground">{m.value}</div>
               {m.label === 'Active Retention' && kpi.retentionDetail != null && (
                 <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">
                   {kpi.retentionDetail.invoicedCustomers === 0
-                    ? 'No invoices linked to customers yet — link customers to measure repeat rate.'
+                    ? 'No invoices linked to customers yet, link customers to measure repeat rate.'
                     : `${kpi.retentionDetail.repeatCustomers} repeat of ${kpi.retentionDetail.invoicedCustomers} invoiced customers`}
                 </p>
               )}

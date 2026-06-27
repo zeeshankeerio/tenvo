@@ -1,44 +1,25 @@
 import type { MetadataRoute } from 'next';
+import { caseStudies } from '@/lib/marketing/case-studies';
+import { MARKETING_SITEMAP_ROUTES } from '@/lib/marketing/seo';
 import { getSiteUrl } from '@/lib/marketing/site-url';
-
-const PATHS = [
-  '',
-  '/about',
-  '/features',
-  '/pricing',
-  '/contact',
-  '/demo',
-  '/integrations',
-  '/industries',
-  '/solutions/marketing-crm',
-  '/why-tenvo',
-  '/register',
-  '/login',
-  '/case-studies',
-  '/privacy',
-  '/terms',
-  '/careers',
-  '/press',
-  '/help',
-  '/docs',
-  '/status',
-];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = getSiteUrl();
-  const last = new Date();
-  return PATHS.map((path) => ({
+  const lastModified = new Date();
+
+  const marketing = MARKETING_SITEMAP_ROUTES.map(({ path, priority, changeFrequency }) => ({
     url: `${base}${path}`,
-    lastModified: last,
-    changeFrequency:
-      path === '' || path === '/contact' || path === '/pricing' || path === '/demo'
-        ? 'weekly'
-        : 'monthly',
-    priority:
-      path === ''
-        ? 1
-        : path === '/contact' || path === '/pricing' || path === '/register'
-          ? 0.9
-          : 0.8,
+    lastModified,
+    changeFrequency,
+    priority,
   }));
+
+  const caseStudyPages = caseStudies.map((cs) => ({
+    url: `${base}/case-studies/${cs.slug}`,
+    lastModified: cs.publishedDate ? new Date(cs.publishedDate) : lastModified,
+    changeFrequency: 'monthly' as const,
+    priority: 0.65,
+  }));
+
+  return [...marketing, ...caseStudyPages];
 }

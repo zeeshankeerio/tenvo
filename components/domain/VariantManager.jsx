@@ -199,7 +199,7 @@ export function VariantManager({
               </div>
               <div className="text-right">
                 <p className="text-xs font-bold text-emerald-600 uppercase">Total Stock</p>
-                <p className="text-xl font-black text-emerald-900">{variants.reduce((s, v) => s + (v.stock || 0), 0)}</p>
+                <p className="text-xl font-semibold text-emerald-900">{variants.reduce((s, v) => s + (v.stock || 0), 0)}</p>
               </div>
             </div>
           </CardHeader>

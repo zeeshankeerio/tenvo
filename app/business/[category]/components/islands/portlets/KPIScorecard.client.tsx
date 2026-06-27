@@ -36,11 +36,11 @@ export const KPIScorecard = memo(function KPIScorecard({
                 <table className="w-full text-[11px]">
                     <thead>
                         <tr className="border-b border-gray-100 text-left">
-                            <th className="pb-2 font-black text-gray-400 uppercase tracking-wider pl-2">Indicator</th>
-                            <th className="pb-2 font-black text-gray-400 uppercase tracking-wider">Period</th>
-                            <th className="pb-2 font-black text-gray-400 uppercase tracking-wider text-right">Current</th>
-                            <th className="pb-2 font-black text-gray-400 uppercase tracking-wider text-right">Previous</th>
-                            <th className="pb-2 font-black text-gray-400 uppercase tracking-wider text-right pr-2">Change</th>
+                            <th className="pb-2 font-semibold text-gray-400 uppercase tracking-wider pl-2">Indicator</th>
+                            <th className="pb-2 font-semibold text-gray-400 uppercase tracking-wider">Period</th>
+                            <th className="pb-2 font-semibold text-gray-400 uppercase tracking-wider text-right">Current</th>
+                            <th className="pb-2 font-semibold text-gray-400 uppercase tracking-wider text-right">Previous</th>
+                            <th className="pb-2 font-semibold text-gray-400 uppercase tracking-wider text-right pr-2">Change</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -48,7 +48,7 @@ export const KPIScorecard = memo(function KPIScorecard({
                             <tr key={item.id} className="group hover:bg-gray-50/50 transition-colors">
                                 <td className="py-2.5 pl-2 font-bold text-gray-700">{item.label}</td>
                                 <td className="py-2.5 text-gray-500">{item.period}</td>
-                                <td className="py-2.5 text-right font-black text-gray-900">
+                                <td className="py-2.5 text-right font-semibold text-gray-900">
                                     {item.current}
                                 </td>
                                 <td className="py-2.5 text-right text-gray-500 font-medium">

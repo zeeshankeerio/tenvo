@@ -76,7 +76,7 @@ function KPICard({ label, value, icon: Icon, trend, color = 'indigo', loading })
             {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin opacity-40" />
             ) : (
-                <p className="text-2xl font-black tracking-tight">{value}</p>
+                <p className="text-2xl font-semibold tracking-tight">{value}</p>
             )}
             <p className="text-[11px] font-semibold opacity-60 mt-1">{label}</p>
         </div>
@@ -185,7 +185,7 @@ function CreditNotesPanel({ businessId, creditNotes, currency, onRefresh }) {
             {showForm && (
                 <div className="bg-white rounded-xl border border-red-100 p-4 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-black text-gray-900">Create Credit Note</h4>
+                        <h4 className="text-sm font-semibold text-gray-900">Create Credit Note</h4>
                         <button onClick={() => setShowForm(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
                     </div>
 
@@ -266,7 +266,7 @@ function CreditNotesPanel({ businessId, creditNotes, currency, onRefresh }) {
                                     ))}
                                 </div>
                                 <div className="flex justify-end mt-2">
-                                    <span className="text-sm font-black text-red-600">Total: {currency} {totalCredit.toLocaleString()}</span>
+                                    <span className="text-sm font-semibold text-red-600">Total: {currency} {totalCredit.toLocaleString()}</span>
                                 </div>
                             </div>
 
@@ -300,7 +300,7 @@ function CreditNotesPanel({ businessId, creditNotes, currency, onRefresh }) {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-bold text-gray-800">{cn.credit_note_number}</span>
-                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${STATUS_STYLES[cn.status] || STATUS_STYLES.draft}`}>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${STATUS_STYLES[cn.status] || STATUS_STYLES.draft}`}>
                                         {cn.status?.toUpperCase()}
                                     </span>
                                 </div>
@@ -379,7 +379,7 @@ function ExchangeRatesPanel({ businessId, rates, baseCurrencyCode, onRefresh }) 
             {showForm && (
                 <div className="bg-white rounded-xl border border-brand-100 p-4 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-black text-gray-900">Add Exchange Rate</h4>
+                        <h4 className="text-sm font-semibold text-gray-900">Add Exchange Rate</h4>
                         <button onClick={() => setShowForm(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -418,11 +418,11 @@ function ExchangeRatesPanel({ businessId, rates, baseCurrencyCode, onRefresh }) 
                 <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
                     {rates.map(r => (
                         <div key={r.id} className="flex items-center gap-3 px-4 py-3">
-                            <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center text-xs font-black text-brand-primary">
+                            <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center text-xs font-semibold text-brand-primary">
                                 {r.from_currency}
                             </div>
                             <ChevronRight className="w-3 h-3 text-gray-300" />
-                            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-xs font-black text-emerald-600">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-xs font-semibold text-emerald-600">
                                 {r.to_currency}
                             </div>
                             <div className="flex-1">
@@ -431,7 +431,7 @@ function ExchangeRatesPanel({ businessId, rates, baseCurrencyCode, onRefresh }) 
                                 </span>
                             </div>
                             <div className="text-right shrink-0">
-                                <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full font-black',
+                                <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full font-semibold',
                                     r.source === 'api' ? 'bg-brand-50 text-brand-primary' : 'bg-gray-100 text-gray-600'
                                 )}>
                                     {r.source?.toUpperCase()}
@@ -644,14 +644,14 @@ export default function FinanceHub({ businessId, initialTab, businessCategory = 
                                 className="flex-1 h-24 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl flex flex-col gap-2 shadow-xl shadow-emerald-500/10 transition-all hover:scale-[1.02]"
                             >
                                 <DollarSign className="w-6 h-6" />
-                                <span className="font-black text-xs uppercase tracking-widest">Customer Receipt</span>
+                                <span className="font-semibold text-xs uppercase tracking-widest">Customer Receipt</span>
                             </Button>
                             <Button
                                 onClick={() => { setVoucherType('payment'); setShowVoucherForm(true); }}
                                 className="flex-1 h-24 bg-brand-primary hover:bg-brand-primary-dark text-white rounded-2xl flex flex-col gap-2 shadow-xl shadow-brand-primary/20 transition-all hover:scale-[1.02]"
                             >
                                 <CreditCard className="w-6 h-6" />
-                                <span className="font-black text-xs uppercase tracking-widest">Vendor Payment</span>
+                                <span className="font-semibold text-xs uppercase tracking-widest">Vendor Payment</span>
                             </Button>
                         </div>
                         
@@ -695,13 +695,13 @@ export default function FinanceHub({ businessId, initialTab, businessCategory = 
                                             </div>
                                             <div className="text-right shrink-0">
                                                 <p className={cn(
-                                                    "text-sm font-black",
+                                                    "text-sm font-semibold",
                                                     receipt ? "text-emerald-600" : "text-red-600"
                                                 )}>
                                                     {receipt ? '+' : '-'}{effectiveCurrency} {Number(p.amount).toLocaleString()}
                                                 </p>
                                                 <span className={cn(
-                                                    "text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider",
+                                                    "text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider",
                                                     receipt ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
                                                 )}>
                                                     {getPaymentTypeLabel(p.payment_type)}
@@ -767,7 +767,7 @@ export default function FinanceHub({ businessId, initialTab, businessCategory = 
                     <Landmark className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h2 className="text-lg font-black text-gray-900 tracking-tight">Finance & Accounting</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Finance & Accounting</h2>
                     <p className="text-xs text-gray-400 font-medium">Statements · Trial balance · GL · Expenses · Fiscal</p>
                 </div>
             </div>

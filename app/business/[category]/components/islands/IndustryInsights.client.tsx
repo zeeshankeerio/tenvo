@@ -30,7 +30,7 @@ export function IndustryInsights({ category }: IndustryInsightsProps) {
                         </div>
                         <CardTitle className="text-base font-bold tracking-tight">Intelligence</CardTitle>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] font-black uppercase tracking-widest bg-white/50">
+                    <Badge variant="secondary" className="text-[10px] font-semibold uppercase tracking-widest bg-white/50">
                         {knowledge.icon && <span className="mr-1">{knowledge.icon}</span>}
                         {knowledge.name || 'EXPERT'}
                     </Badge>
@@ -91,12 +91,12 @@ export function IndustryInsights({ category }: IndustryInsightsProps) {
                 {/* KPI Grid */}
                 <div className="grid grid-cols-2 gap-2 pt-1">
                     <div className="p-2.5 rounded-lg bg-white/20 border border-white/40 text-center">
-                        <span className="text-[9px] uppercase font-bold text-muted-foreground block mb-1">Min Order Qty</span>
-                        <span className="text-sm font-black text-primary">{intelligence.minOrderQuantity || 'N/A'}</span>
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">Min Order Qty</span>
+                        <span className="text-sm font-semibold text-primary">{intelligence.minOrderQuantity || 'N/A'}</span>
                     </div>
                     <div className="p-2.5 rounded-lg bg-white/20 border border-white/40 text-center">
-                        <span className="text-[9px] uppercase font-bold text-muted-foreground block mb-1">Avg Lead Time</span>
-                        <span className="text-sm font-black text-primary">{intelligence.leadTime || 'N/A'} days</span>
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">Avg Lead Time</span>
+                        <span className="text-sm font-semibold text-primary">{intelligence.leadTime || 'N/A'} days</span>
                     </div>
                 </div>
             </CardContent>

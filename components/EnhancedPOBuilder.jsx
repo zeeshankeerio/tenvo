@@ -12,6 +12,9 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Combobox } from '@/components/ui/combobox';
 import { formatCurrency } from '@/lib/currency';
+import { useFormRegionalContext } from '@/lib/hooks/useFormRegionalContext';
+import { calculatePurchaseLineTotal, calculatePurchaseTotals } from '@/lib/utils/purchaseTotals';
+import { showActionError } from '@/lib/utils/formErrorHandler';
 import { purchaseAPI } from '@/lib/api/purchases';
 import { productAPI } from '@/lib/api/product';
 import { vendorAPI } from '@/lib/api/vendors';
@@ -25,6 +28,7 @@ import { cn } from '@/lib/utils';
 
 export default function EnhancedPOBuilder({ businessId, onSuccess, onCancel, category = 'retail-shop', colors }) {
     const accentColor = colors?.primary || '#059669';
+    const { currency, defaultTaxRate } = useFormRegionalContext(category);
 
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,14 +106,15 @@ export default function EnhancedPOBuilder({ businessId, onSuccess, onCancel, cat
                 if (prod) {
                     updated.description = prod.name;
                     updated.unitCost = parseFloat(prod.cost_price || prod.price || 0);
-                    updated.taxRate = parseFloat(prod.tax_percent || 0);
+                    updated.taxRate = parseFloat(prod.tax_percent || defaultTaxRate || 0);
                 }
             }
             if (['quantity', 'unitCost', 'taxRate', 'productId'].includes(field)) {
-                const q = parseFloat(updated.quantity || 0);
-                const c = parseFloat(updated.unitCost || 0);
-                const t = parseFloat(updated.taxRate || 0);
-                updated.total = parseFloat(((q * c) + (q * c * t / 100)).toFixed(2));
+                updated.total = calculatePurchaseLineTotal(
+                    updated.quantity,
+                    updated.unitCost,
+                    updated.taxRate
+                );
             }
             return updated;
         }));
@@ -117,20 +122,7 @@ export default function EnhancedPOBuilder({ businessId, onSuccess, onCancel, cat
 
     const removeItem = (id) => setItems(prev => prev.filter(i => i.id !== id));
 
-    const totals = useMemo(() => {
-        const subtotal = items.reduce((s, i) => s + parseFloat(i.quantity || 0) * parseFloat(i.unitCost || 0), 0);
-        const taxTotal = items.reduce((s, i) => {
-            const base = parseFloat(i.quantity || 0) * parseFloat(i.unitCost || 0);
-            return s + base * parseFloat(i.taxRate || 0) / 100;
-        }, 0);
-        const total = parseFloat((subtotal + taxTotal).toFixed(2));
-        return {
-            subtotal: parseFloat(subtotal.toFixed(2)),
-            taxTotal: parseFloat(taxTotal.toFixed(2)),
-            total,
-            grandTotal: total,
-        };
-    }, [items]);
+    const totals = useMemo(() => calculatePurchaseTotals(items), [items]);
 
     const mapItemForApi = (item) => ({
         product_id: item.productId,
@@ -194,7 +186,11 @@ export default function EnhancedPOBuilder({ businessId, onSuccess, onCancel, cat
             );
             onSuccess?.();
         } catch (error) {
-            toast.error(error.message || 'Failed to create purchase order');
+            showActionError({
+                success: false,
+                error: error.message || 'Failed to create purchase order',
+                code: error.code || null,
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -446,10 +442,10 @@ export default function EnhancedPOBuilder({ businessId, onSuccess, onCancel, cat
 
                                         {/* Total */}
                                         <div className="px-2 py-2 text-right">
-                                            <p className="text-xs font-bold text-slate-800">{formatCurrency(item.total, 'PKR')}</p>
+                                            <p className="text-xs font-bold text-slate-800">{formatCurrency(item.total, currency)}</p>
                                             {item.taxRate > 0 && (
-                                                <p className="text-[9px] text-slate-400 leading-tight">
-                                                    {formatCurrency(base, 'PKR')}+{formatCurrency(tax, 'PKR')}
+                                                <p className="text-[10px] text-slate-400 leading-tight">
+                                                    {formatCurrency(base, currency)}+{formatCurrency(tax, currency)}
                                                 </p>
                                             )}
                                         </div>
@@ -501,18 +497,18 @@ export default function EnhancedPOBuilder({ businessId, onSuccess, onCancel, cat
                     <div className="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-2.5 self-start">
                         <div className="flex justify-between items-center text-sm text-slate-600">
                             <span className="font-medium">Subtotal</span>
-                            <span className="font-semibold tabular-nums">{formatCurrency(totals.subtotal, 'PKR')}</span>
+                            <span className="font-semibold tabular-nums">{formatCurrency(totals.subtotal, currency)}</span>
                         </div>
                         {totals.taxTotal > 0 && (
                             <div className="flex justify-between items-center text-sm text-slate-500">
                                 <span>Sales Tax</span>
-                                <span className="tabular-nums">{formatCurrency(totals.taxTotal, 'PKR')}</span>
+                                <span className="tabular-nums">{formatCurrency(totals.taxTotal, currency)}</span>
                             </div>
                         )}
                         <div className="flex justify-between items-center pt-2.5 border-t border-slate-200">
                             <span className="text-base font-bold text-slate-800">Grand Total</span>
-                            <span className="text-xl font-black tabular-nums" style={{ color: accentColor }}>
-                                {formatCurrency(totals.grandTotal, 'PKR')}
+                            <span className="text-xl font-semibold tabular-nums" style={{ color: accentColor }}>
+                                {formatCurrency(totals.grandTotal, currency)}
                             </span>
                         </div>
 

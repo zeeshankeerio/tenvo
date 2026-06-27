@@ -172,19 +172,19 @@ export function SerialWarrantyWidget({ businessId, onViewDetails }) {
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-2">
                     <div className="text-center p-2 rounded-lg bg-green-50">
-                        <div className="text-lg font-black text-green-600">{stats.active}</div>
+                        <div className="text-lg font-semibold text-green-600">{stats.active}</div>
                         <div className="text-[10px] font-bold text-green-700 uppercase tracking-wide">
                             {t.active || 'Active'}
                         </div>
                     </div>
                     <div className="text-center p-2 rounded-lg bg-orange-50">
-                        <div className="text-lg font-black text-orange-600">{stats.expiringSoon}</div>
+                        <div className="text-lg font-semibold text-orange-600">{stats.expiringSoon}</div>
                         <div className="text-[10px] font-bold text-orange-700 uppercase tracking-wide">
                             {t.expiring || 'Expiring'}
                         </div>
                     </div>
                     <div className="text-center p-2 rounded-lg bg-gray-50">
-                        <div className="text-lg font-black text-gray-600">{stats.expired}</div>
+                        <div className="text-lg font-semibold text-gray-600">{stats.expired}</div>
                         <div className="text-[10px] font-bold text-gray-700 uppercase tracking-wide">
                             {t.expired || 'Expired'}
                         </div>
@@ -194,7 +194,7 @@ export function SerialWarrantyWidget({ businessId, onViewDetails }) {
                 {/* Top Expiring Serials */}
                 {stats.topExpiring.length > 0 && (
                     <div className="space-y-2">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                             {t.next_to_expire || 'Next to Expire'}
                         </div>
                         {stats.topExpiring.map((serial, idx) => (

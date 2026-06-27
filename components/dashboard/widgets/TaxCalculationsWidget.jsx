@@ -137,7 +137,7 @@ export function TaxCalculationsWidget({
             <span className="text-xs font-bold text-gray-700">
               {t.taxable_sales || 'Taxable Sales'}
             </span>
-            <span className="text-lg font-black text-gray-900">
+            <span className="text-lg font-semibold text-gray-900">
               {formatCurrency(taxData.taxableAmount, currency)}
             </span>
           </div>
@@ -148,7 +148,7 @@ export function TaxCalculationsWidget({
             <div className="text-xs text-blue-700 font-medium mb-1">
               {t.pst || 'PST'} ({taxData.pst.rate}%)
             </div>
-            <div className="text-xl font-black text-blue-900">
+            <div className="text-xl font-semibold text-blue-900">
               {formatCurrency(taxData.pst.amount, currency)}
             </div>
           </div>
@@ -157,7 +157,7 @@ export function TaxCalculationsWidget({
             <div className="text-xs text-wine-700 font-medium mb-1">
               {t.fst || 'FST'} ({taxData.fst.rate}%)
             </div>
-            <div className="text-xl font-black text-wine-900">
+            <div className="text-xl font-semibold text-wine-900">
               {formatCurrency(taxData.fst.amount, currency)}
             </div>
           </div>
@@ -168,7 +168,7 @@ export function TaxCalculationsWidget({
             <span className="text-xs font-bold text-green-900">
               {t.total_tax_liability || 'Total Tax Liability'}
             </span>
-            <span className="text-2xl font-black text-green-900">
+            <span className="text-2xl font-semibold text-green-900">
               {formatCurrency(taxData.totalTax, currency)}
             </span>
           </div>

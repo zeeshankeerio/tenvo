@@ -10,6 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { BRAND_PRIMARY, BRAND_PRIMARY_LIGHT } from '@/lib/theme/brandTokens';
 
 const TIERS = [
     { id: 'bronze', name: 'Bronze', minPoints: 0, icon: Shield, color: 'from-orange-700 to-amber-600', textColor: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200' },
@@ -68,7 +69,7 @@ export function CustomerLoyaltyPortal({ businessId, currency = 'Rs.' }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="relative overflow-hidden rounded-2xl p-6 text-white"
-                style={{ background: 'linear-gradient(135deg, #c49c3b 0%, #e34242 50%, #f2d785 100%)' }}
+                style={{ background: `linear-gradient(135deg, #C49C3B 0%, ${BRAND_PRIMARY} 50%, ${BRAND_PRIMARY_LIGHT} 100%)` }}
             >
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/3 -translate-x-1/4" />
@@ -77,7 +78,7 @@ export function CustomerLoyaltyPortal({ businessId, currency = 'Rs.' }) {
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-sm text-white/60 font-medium">Available Points</p>
-                            <h2 className="text-5xl font-black mt-1 tracking-tight">{totalPoints.toLocaleString()}</h2>
+                            <h2 className="text-5xl font-semibold mt-1 tracking-tight">{totalPoints.toLocaleString()}</h2>
                             <p className="text-sm text-white/50 mt-1">
                                 Lifetime: {lifetimePoints.toLocaleString()} pts
                             </p>
@@ -120,7 +121,7 @@ export function CustomerLoyaltyPortal({ businessId, currency = 'Rs.' }) {
                                     <stat.icon className="w-3.5 h-3.5 text-white/50" />
                                     <span className="text-[10px] text-white/50 font-medium">{stat.label}</span>
                                 </div>
-                                <p className="text-lg font-black mt-1">{stat.value}</p>
+                                <p className="text-lg font-semibold mt-1">{stat.value}</p>
                                 <p className="text-[10px] text-white/40">{stat.sub}</p>
                             </div>
                         ))}
@@ -226,7 +227,7 @@ export function CustomerLoyaltyPortal({ businessId, currency = 'Rs.' }) {
                                             <p className="text-[10px] text-gray-400">{tx.date}</p>
                                         </div>
                                         <span className={cn(
-                                            'text-sm font-black',
+                                            'text-sm font-semibold',
                                             tx.type === 'earn' ? 'text-emerald-600' : 'text-orange-600'
                                         )}>
                                             {tx.points > 0 ? '+' : ''}{tx.points}
@@ -263,7 +264,7 @@ export function CustomerLoyaltyPortal({ businessId, currency = 'Rs.' }) {
                                         <reward.icon className="w-6 h-6" />
                                     </div>
                                     <span className={cn(
-                                        'text-xs font-black px-2.5 py-1 rounded-full',
+                                        'text-xs font-semibold px-2.5 py-1 rounded-full',
                                         canRedeem ? 'bg-brand-100 text-brand-primary-dark' : 'bg-gray-200 text-gray-500'
                                     )}>
                                         {reward.points} pts
@@ -312,7 +313,7 @@ export function CustomerLoyaltyPortal({ businessId, currency = 'Rs.' }) {
                                         <span className="text-xs text-gray-400 font-medium">{currency} {tx.total.toLocaleString()}</span>
                                     )}
                                     <span className={cn(
-                                        'text-sm font-black min-w-[60px] text-right',
+                                        'text-sm font-semibold min-w-[60px] text-right',
                                         tx.type === 'earn' ? 'text-emerald-600' : 'text-orange-600'
                                     )}>
                                         {tx.points > 0 ? '+' : ''}{tx.points}

@@ -72,11 +72,11 @@ export function PropheticInsightCard({ businessId, category }) {
                         <div className="flex-1 space-y-4">
                             <div className="flex items-center justify-between gap-4">
                                 <div className="space-y-0.5">
-                                    <h4 className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+                                    <h4 className="text-lg font-semibold text-gray-900 tracking-tight flex items-center gap-2">
                                         Prophetic AI Insight
-                                        {isHighPriority && <Badge className="bg-orange-100 text-orange-600 border-orange-200 text-[10px] uppercase font-black">Urgent</Badge>}
+                                        {isHighPriority && <Badge className="bg-orange-100 text-orange-600 border-orange-200 text-[10px] uppercase font-semibold">Urgent</Badge>}
                                     </h4>
-                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{insight.current_status}</p>
+                                    <p className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">{insight.current_status}</p>
                                 </div>
                                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
                                     <TrendingUp className="w-3.5 h-3.5 text-gray-400" />
@@ -98,7 +98,7 @@ export function PropheticInsightCard({ businessId, category }) {
                                         Suggested Action: <span className="text-brand-primary">{insight.suggested_action}</span>
                                     </div>
                                 </div>
-                                <Button size="sm" className="bg-gray-900 text-white hover:bg-black rounded-xl text-[10px] font-black uppercase px-6 h-9 group">
+                                <Button size="sm" className="bg-gray-900 text-white hover:bg-black rounded-xl text-[10px] font-semibold uppercase px-6 h-9 group">
                                     Apply Strategy
                                     <ArrowUpRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                                 </Button>

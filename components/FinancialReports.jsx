@@ -35,7 +35,7 @@ const SectionHeader = ({ title, icon: Icon, color }) => (
 /**
  * @param {Object} props
  * @param {string} props.businessId
- * @param {string} [props.category] optional — reserved for future domain-specific report chrome
+ * @param {string} [props.category] optional, reserved for future domain-specific report chrome
  */
 export default function FinancialReports({ businessId }) {
     const { business, currency: businessCurrencyCode } = useBusiness();

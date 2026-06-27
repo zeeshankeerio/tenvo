@@ -71,7 +71,7 @@ export function ProductTabs({ product, freeShippingThreshold = 2000, returnPolic
             <div>
               <h4 className="font-semibold text-gray-900 mb-1">Shipping</h4>
               <p className="text-sm text-gray-600">
-                Standard delivery: 3–5 business days. Express delivery: 1–2 business days.
+                Standard delivery: 3-5 business days. Express delivery: 1-2 business days.
                 Free shipping on orders over {formatCurrency(freeShippingThreshold, currency)}.
               </p>
             </div>

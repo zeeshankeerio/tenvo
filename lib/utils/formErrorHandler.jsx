@@ -191,7 +191,7 @@ export function parseActionError(result) {
     return null;
   }
 
-  const code = result.code || 'UNKNOWN_ERROR';
+  const code = result.code || result.errorCode || 'UNKNOWN_ERROR';
   const errorConfig = ERROR_MESSAGES[code];
 
   // If we have a predefined error message, use it

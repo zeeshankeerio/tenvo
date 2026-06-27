@@ -4,6 +4,8 @@
  */
 
 import { getDomainKnowledge } from '../domainKnowledge';
+import { getRegionalStandards } from './regionalHelpers';
+import { resolveDomainKey } from '../config/domainKeyAliases';
 export { getDomainKnowledge };
 
 export type DomainKnowledgeOptions = { countryIso?: string };
@@ -75,7 +77,12 @@ export function getDomainUnits(category: string): string[] {
  */
 export function getDomainDefaultTax(category: string, options?: DomainKnowledgeOptions): number {
   const knowledge: any = resolveKnowledge(category, options);
-  return knowledge?.defaultTax || 0;
+  const domainTax = Number(knowledge?.defaultTax);
+  if (Number.isFinite(domainTax) && domainTax > 0) return domainTax;
+  if (options?.countryIso) {
+    return getRegionalStandards(options.countryIso).defaultTaxRate;
+  }
+  return Number.isFinite(domainTax) ? domainTax : 0;
 }
 
 /**
@@ -238,21 +245,15 @@ export function getDomainDefaults(category: string, product: any = null): any {
   // Initialize domain-specific fields with empty strings if not present in product
   const productFields = knowledge?.productFields || [];
   productFields.forEach((field: string) => {
-    // Standardize to lowercase key (internal representation)
-    const key = normalizeKey(field);
+    const key = resolveDomainFieldKey(field, category);
 
     // Skip standard fields that are handled separately in the UI
     const skipFields = ['hsncode', 'saccode', 'name', 'sku', 'barcode', 'price', 'mrp', 'costprice'];
     if (!skipFields.includes(key)) {
-      // Priority: 
-      // 1. Exact normalized key (articleno)
-      // 2. Snake_case key (article_no)
-      // 3. Original field name as key (Article No)
-      // 4. Config default
-      const val = product?.domain_data?.[key] ||
-        product?.domain_data?.[field.toLowerCase().replace(/\s+/g, '_')] ||
-        product?.[key] ||
-        product?.domain_data?.[field];
+      const val =
+        readDomainFieldValue(product?.domain_data, field, category) ??
+        product?.[key] ??
+        product?.[normalizeKey(field)];
 
       defaults[key] = val || (knowledge?.fieldConfig?.[key]?.default ?? '');
     }
@@ -299,14 +300,8 @@ export function validateDomainProduct(
     const optionalFields = ['HSN Code', 'SAC Code', 'Description'];
     if (!optionalFields.includes(field)) {
       // Use normalized key for lookup
-      const fieldKey = normalizeKey(field);
-
-      // product might use raw keys or flattened keys. 
-      // ProductForm uses field.toLowerCase().replace(/\s+/g, '') which is NOT fully normalized (it keeps parens).
-      // We should check both.
-      // Better: Check if we have the value under normalized key OR the form-generated key.
-      const formKey = field.toLowerCase().replace(/\s+/g, '');
-      const value = product[fieldKey as keyof Product] || product[formKey as keyof Product];
+      const fieldKey = resolveDomainFieldKey(field, category);
+      const value = product[fieldKey as keyof Product] || product[normalizeKey(field) as keyof Product];
 
       if ((value === undefined || value === '' || value === null) && fieldKey !== 'hsncode') {
         errors[fieldKey] = `${field} is required for ${category} products`;
@@ -412,6 +407,58 @@ export function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+/** Legacy / label aliases → canonical domain_data keys (vehicle verticals). */
+const DOMAIN_FIELD_KEY_ALIASES: Record<string, Record<string, string>> = {
+  'auto-marketplace': {
+    make: 'vehiclemake',
+    model: 'vehiclemodel',
+    listingtype: 'condition',
+  },
+  'vehicle-dealership': {
+    make: 'vehiclemake',
+    model: 'vehiclemodel',
+  },
+};
+
+/**
+ * Canonical domain_data key for a productFields label or config key.
+ */
+export function resolveDomainFieldKey(field: string, category: string): string {
+  const normalized = normalizeKey(field);
+  const vertical = resolveDomainKey(category);
+  const aliases = DOMAIN_FIELD_KEY_ALIASES[vertical] || {};
+  return aliases[normalized] || normalized;
+}
+
+function resolveFieldConfig(field: string, category: string, knowledge: any) {
+  const canonical = resolveDomainFieldKey(field, category);
+  return (
+    knowledge?.fieldConfig?.[field] ||
+    knowledge?.fieldConfig?.[field.toLowerCase()] ||
+    knowledge?.fieldConfig?.[normalizeKey(field)] ||
+    knowledge?.fieldConfig?.[canonical]
+  );
+}
+
+/**
+ * Read a domain_data value using canonical + legacy keys.
+ */
+export function readDomainFieldValue(
+  domainData: Record<string, unknown> | null | undefined,
+  field: string,
+  category: string
+): unknown {
+  if (!domainData || typeof domainData !== 'object') return undefined;
+  const canonical = resolveDomainFieldKey(field, category);
+  const legacy = normalizeKey(field);
+  return (
+    domainData[canonical] ??
+    domainData[legacy] ??
+    domainData[field] ??
+    domainData[field.toLowerCase().replace(/\s+/g, '_')]
+  );
+}
+
 /**
  * Get field label for domain-specific field
  * Maps internal field names to display labels
@@ -422,14 +469,10 @@ export function normalizeKey(key: string): string {
  */
 export function getFieldLabel(field: string, category: string): string {
   const knowledge: any = getDomainKnowledge(category);
-  // Check if domain-specific config exists for this field
-  // Normalize key to match config keys (articleno, widtharz, etc.)
-  const normalized = normalizeKey(field);
-  const config = knowledge?.fieldConfig?.[field] ||
-    knowledge?.fieldConfig?.[field.toLowerCase()] ||
-    knowledge?.fieldConfig?.[normalized];
+  const config = resolveFieldConfig(field, category, knowledge);
 
   if (config?.label) return config.label;
+  const normalized = normalizeKey(field);
 
   const fieldLabels: Record<string, string> = {
     // ... (existing mapping)
@@ -460,44 +503,44 @@ export function getFieldLabel(field: string, category: string): string {
 export function getFieldInputType(field: string, category: string): string {
   const knowledge: any = getDomainKnowledge(category);
   const normalized = normalizeKey(field);
-
-  // Check if domain-specific config exists for this field
-  const config = knowledge?.fieldConfig?.[field] ||
-    knowledge?.fieldConfig?.[field.toLowerCase()] ||
-    knowledge?.fieldConfig?.[normalized];
+  const config = resolveFieldConfig(field, category, knowledge);
 
   if (config?.type) return config.type;
 
-  // const f = field.toLowerCase(); // unused
-  const n = normalized;
+  const canonical = resolveDomainFieldKey(field, category);
+  /** Match raw label keys (e.g. `make`) and canonical domain_data keys (e.g. `vehiclemake`). */
+  const matches = (keys: string[]) => keys.includes(canonical) || keys.includes(normalized);
 
   const dateFields = [
     'expirydate', 'manufacturingdate', 'purchasedate', 'warrantystartdate', 'warrantyenddate',
-    'consumptiondate', 'eventdate', 'validity'
+    'consumptiondate', 'eventdate', 'validity',
   ];
   const numberFields = [
     'price', 'stock', 'mrp', 'weight', 'warrantyperiod', 'gsm', 'carat', 'area',
     'weightlimit', 'duration', 'unitcost', 'preptime', 'consultationfee', 'commissionrate',
-    'quantity', 'rate', 'amount', 'taxpercent', 'discountpercent'
+    'quantity', 'rate', 'amount', 'taxpercent', 'discountpercent',
+    'mileage', 'depreciation',
   ];
   const selectFields = [
     'marketlocation', 'paymentterms', 'paymentmethod', 'brokername', 'agentname',
     'qualitygrade', 'korafinished', 'fabrictype', 'sizetype', 'unit', 'status',
-    'province', 'type', 'category'
+    'province', 'type', 'category',
+    'vehiclemake', 'make', 'modelyear', 'fueltype', 'bodytype', 'condition', 'transmission',
+    'listingtype',
   ];
   const compatibilityFields = ['vehiclecompatibility', 'compatibility', 'models'];
   const oemFields = ['oemnumber', 'oemspec', 'originalpartnumber'];
   const partFields = ['partnumber', 'internalid', 'makernumber'];
   const warrantyFields = ['warrantyperiod', 'warranty'];
 
-  if (compatibilityFields.includes(n)) return 'vehicle-compatibility';
-  if (oemFields.includes(n)) return 'oem-number';
-  if (partFields.includes(n)) return 'part-number';
-  if (warrantyFields.includes(n)) return 'warranty';
+  if (matches(compatibilityFields)) return 'vehicle-compatibility';
+  if (matches(oemFields)) return 'oem-number';
+  if (matches(partFields)) return 'part-number';
+  if (matches(warrantyFields)) return 'warranty';
 
-  if (dateFields.includes(n)) return 'date';
-  if (numberFields.includes(n)) return 'number';
-  if (selectFields.includes(n)) return 'select';
+  if (matches(dateFields)) return 'date';
+  if (matches(numberFields)) return 'number';
+  if (matches(selectFields)) return 'select';
 
   return 'text';
 }
@@ -512,11 +555,7 @@ export function getFieldInputType(field: string, category: string): string {
 export function getSelectOptions(field: string, category: string): any[] {
   const knowledge: any = getDomainKnowledge(category);
   const normalized = normalizeKey(field);
-
-  // 1. Check fieldConfig first
-  const config = knowledge?.fieldConfig?.[field] ||
-    knowledge?.fieldConfig?.[field.toLowerCase()] ||
-    knowledge?.fieldConfig?.[normalized];
+  const config = resolveFieldConfig(field, category, knowledge);
 
   if (config?.options && Array.isArray(config.options)) {
     return config.options;
@@ -545,12 +584,7 @@ export function isFieldRequired(field: string, category: string): boolean {
   const knowledge: any = getDomainKnowledge(category);
   if (!knowledge) return false;
 
-  const normalized = normalizeKey(field);
-
-  // 1. Check explicit config first
-  const config = knowledge.fieldConfig?.[field] ||
-    knowledge.fieldConfig?.[field.toLowerCase()] ||
-    knowledge.fieldConfig?.[normalized];
+  const config = resolveFieldConfig(field, category, knowledge);
 
   if (config && typeof config.required === 'boolean') {
     return config.required;

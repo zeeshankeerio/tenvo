@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
 import { MarketingPageHeader, MarketingSection } from '@/components/marketing/layout/MarketingSection';
+import { MARKETING_BODY } from '@/lib/utils/marketingLayout';
+import { getSalesMeetingUrl } from '@/lib/marketing/salesLinks';
 
 export const metadata = {
   title: 'Documentation',
@@ -12,14 +14,14 @@ export default function DocsPage() {
     <MarketingLayout>
       <MarketingPageHeader title="Documentation" />
       <MarketingSection className="bg-neutral-50/50" padding="default" width="narrow">
-        <div className="space-y-5 text-sm font-medium leading-relaxed text-neutral-700 sm:space-y-6">
+        <div className={MARKETING_BODY}>
           <p>
             Product tours and capability pages live under{' '}
-            <Link href="/features" className="font-bold text-brand-primary underline-offset-2 hover:underline">
+            <Link href="/features" className="font-semibold text-brand-primary underline-offset-2 hover:underline">
               Features
             </Link>{' '}
             and{' '}
-            <Link href="/integrations" className="font-bold text-brand-primary underline-offset-2 hover:underline">
+            <Link href="/integrations" className="font-semibold text-brand-primary underline-offset-2 hover:underline">
               Integrations
             </Link>
             . For tenant-specific REST access, authenticated routes are available under{' '}
@@ -28,11 +30,16 @@ export default function DocsPage() {
           </p>
           <p>
             Need a tailored integration map for your stack?{' '}
-            <Link href="/demo" className="font-bold text-brand-primary underline-offset-2 hover:underline">
-              Book a demo
-            </Link>{' '}
+            <a
+              href={getSalesMeetingUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-brand-primary underline-offset-2 hover:underline"
+            >
+              Book a meeting
+            </a>{' '}
             or{' '}
-            <Link href="/contact" className="font-bold text-brand-primary underline-offset-2 hover:underline">
+            <Link href="/contact" className="font-semibold text-brand-primary underline-offset-2 hover:underline">
               contact sales
             </Link>
             .

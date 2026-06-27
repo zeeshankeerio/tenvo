@@ -12,8 +12,22 @@ import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { formatCurrency } from '@/lib/currency';
 import { cn } from '@/lib/utils';
+import {
+  STORE_PRODUCT_RAIL_TRACK_CLASS,
+  STORE_PRODUCT_RAIL_ITEM_CLASS,
+  ensureRailProducts,
+  resolveRailProductId,
+} from '@/lib/utils/storefrontProductRail';
 import { toast } from 'react-hot-toast';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+
+/** @type {Record<string, string>} */
+const GRID_DENSITY_CLASSES = {
+  default: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4',
+  catalog: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4',
+  /** Professional storefront, 6 cards per row on xl (Glovida / Amazon-style density) */
+  showcase: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-3.5',
+};
 
 function ProductListItem({ product, businessDomain }) {
   const [isAdding, setIsAdding] = useState(false);
@@ -99,9 +113,18 @@ export function ProductGrid({
   filters = {},
   view = 'grid',
   showResultsCount = true,
+  density = 'default',
+  cardVariant,
+  layout = 'grid',
+  catalogPool,
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const displayProducts = useMemo(() => {
+    if (layout !== 'rail') return products;
+    return ensureRailProducts(products, catalogPool ?? products, 6, 12);
+  }, [layout, products, catalogPool]);
 
   const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
   const showPagination = totalPages > 1;
@@ -114,7 +137,10 @@ export function ProductGrid({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (!products || products.length === 0) {
+  const gridClass = GRID_DENSITY_CLASSES[density] || GRID_DENSITY_CLASSES.default;
+  const resolvedVariant = cardVariant || (density === 'showcase' ? 'dense' : 'default');
+
+  if (!displayProducts || displayProducts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -142,7 +168,7 @@ export function ProductGrid({
         <p className="text-sm text-gray-500">
           Showing{' '}
           <span className="font-semibold text-gray-900">
-            {(currentPage - 1) * limit + 1}–{Math.min(currentPage * limit, total)}
+            {(currentPage - 1) * limit + 1}-{Math.min(currentPage * limit, total)}
           </span>{' '}
           of <span className="font-semibold text-gray-900">{total}</span> products
         </p>
@@ -155,10 +181,27 @@ export function ProductGrid({
             <ProductListItem key={product.id} product={product} businessDomain={businessDomain} />
           ))}
         </div>
+      ) : layout === 'rail' ? (
+        <div className={STORE_PRODUCT_RAIL_TRACK_CLASS}>
+          {displayProducts.map((product) => (
+            <div key={resolveRailProductId(product)} className={STORE_PRODUCT_RAIL_ITEM_CLASS}>
+              <ProductCard
+                product={product}
+                businessDomain={businessDomain}
+                variant={resolvedVariant}
+              />
+            </div>
+          ))}
+        </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-5">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} businessDomain={businessDomain} />
+        <div className={cn('grid', gridClass)}>
+          {displayProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              businessDomain={businessDomain}
+              variant={resolvedVariant}
+            />
           ))}
         </div>
       )}

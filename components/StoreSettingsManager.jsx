@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,12 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { BRAND_PRIMARY } from '@/lib/theme/brandTokens';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Store, Globe, Link2, Palette, Truck, CreditCard, 
   Save, ExternalLink, ArrowRight, Upload, Image, RefreshCw,
-  CheckCircle2, XCircle, Package, Info
+  CheckCircle2, XCircle, Package, Info, Megaphone
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -24,19 +25,33 @@ import {
 } from '@/lib/actions/storefront/admin';
 import { MobileTabHeader } from '@/components/mobile/MobileTabHeader';
 import { useStorefrontEmbedded } from '@/lib/context/StorefrontMobileContext';
+import { getRegionalStandards } from '@/lib/utils/regionalHelpers';
+import { MarketingSectionsEditor } from '@/components/storefront/admin/MarketingSectionsEditor';
+import { isAutoMarketplaceStore } from '@/lib/storefront/autoMarketplace';
+import { isAutoDealershipStore } from '@/lib/storefront/autoDealership';
+import { isAutoPartsStore } from '@/lib/storefront/autoParts';
+import { isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
+import { isPharmacyElevatedStore } from '@/lib/storefront/pharmacyStorefront';
+import { isFurnitureElevatedStore } from '@/lib/storefront/furnitureStorefront';
+import { canConfigureTenantMeetingUrl, normalizeTenantMeetingUrl } from '@/lib/storefront/storefrontBooking';
 
 // ── Image Upload Field ────────────────────────────────────────────────────────
-function ImageUploadField({ label, hint, value, onChange }) {
+function ImageUploadField({ label, hint, value, onChange, businessId }) {
   const inputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!businessId) {
+      toast.error('Business context is required to upload images');
+      return;
+    }
     setUploading(true);
     try {
       const fd = new FormData();
       fd.append('file', file);
+      fd.append('businessId', businessId);
       const res = await fetch('/api/upload/product-image', { method: 'POST', body: fd });
       const data = await res.json();
       if (data.success) {
@@ -99,6 +114,7 @@ function ImageUploadField({ label, hint, value, onChange }) {
 export function StoreSettingsManager({ business, category }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [loadedPlanTier, setLoadedPlanTier] = useState(null);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [domainSaving, setDomainSaving] = useState(false);
@@ -113,20 +129,117 @@ export function StoreSettingsManager({ business, category }) {
     freeShippingThreshold: 2000,
     returnPolicyDays: 7,
     heroTitle: '',
+    heroSubtitle: '',
     announcement: '',
+    pageSections: [],
     brand: { primaryColor: '' },
     socialLinks: { facebook: '', instagram: '', twitter: '', youtube: '' },
-    // business core fields
     logoUrl: '',
     coverImageUrl: '',
     description: '',
+    publicEmail: '',
     phone: '',
+    whatsapp: '',
     address: '',
-    // resolved from DB
+    city: '',
+    country: '',
+    postalCode: '',
+    businessHours: '',
+    website: '',
     storeDomain: null,
     storeUrl: null,
     products: { total: 0, active: 0 },
+    setupStatus: null,
+    ownerLoginEmail: '',
+    marketplace: {
+      heroPromo: { eyebrow: '', title: '', subtitle: '', ctaLabel: '', ctaHref: '', image: '' },
+      coeTicker: { label: '', value: '', change: '', href: '' },
+      showForum: false,
+      showArticles: false,
+      showEShop: true,
+    },
+    dealership: {
+      profile: 'tenvo-vehicles',
+      tagline: '',
+      welcomeTitle: '',
+      uan: '',
+      videoUrl: '',
+      showTrustStrip: true,
+      showMarketingBanners: true,
+      trustStrip: { hours: '', shippingLabel: '', ratingLabel: '' },
+    },
+    autoParts: {
+      showPromoCards: true,
+      showFeaturedCategories: true,
+      showFeaturedDeals: true,
+      showVehicleBrands: true,
+      showTrending: true,
+      showTrustSection: true,
+      showCategoryRails: true,
+      showMarketingBanners: true,
+      trustTitle: '',
+      trustSubtitle: '',
+      ctaTitle: '',
+      ctaSubtitle: '',
+      ctaLabel: '',
+    },
+    restaurant: {
+      showCuisineCarousel: true,
+      showSuperPicks: true,
+      showOrderModes: true,
+      showRewardsCta: false,
+      showDeliveryInfo: true,
+      locationLabel: 'Deliver to',
+      defaultLocation: '',
+      searchPlaceholder: '',
+      cateringLabel: 'Catering',
+      featuredRailTitle: '',
+      featuredRailSubtitle: '',
+    },
+    pharmacy: {
+      showRefillPromo: true,
+      showBrandsRow: true,
+      showSeoBlock: false,
+      locationLabel: 'Deliver to',
+      defaultLocation: '',
+      searchPlaceholder: '',
+      featuredRailTitle: '',
+      featuredRailSubtitle: '',
+    },
+    furniture: {
+      showRoomTiles: true,
+      showTestimonials: false,
+      showShowroomCta: true,
+      locationLabel: 'Deliver to',
+      defaultLocation: '',
+      searchPlaceholder: '',
+      showroomLabel: 'Visit showroom',
+      featuredRailTitle: '',
+      featuredRailSubtitle: '',
+    },
+    booking: {
+      meetingUrl: '',
+    },
   });
+
+  const marketplaceStore = isAutoMarketplaceStore(category || business?.category);
+  const dealershipStore = isAutoDealershipStore(category || business?.category);
+  const autoPartsStore = isAutoPartsStore(category || business?.category);
+  const restaurantStore = isRestaurantElevatedStore(category || business?.category);
+  const pharmacyStore = isPharmacyElevatedStore(category || business?.category);
+  const furnitureStore = isFurnitureElevatedStore(category || business?.category);
+  const businessForBookingGate = useMemo(
+    () => ({
+      ...business,
+      plan_tier: loadedPlanTier || business?.plan_tier || business?.planTier || 'free',
+      settings: business?.settings,
+    }),
+    [business, loadedPlanTier]
+  );
+  const showMeetingUrlField = canConfigureTenantMeetingUrl(
+    businessForBookingGate,
+    category || business?.category
+  );
 
   useEffect(() => { loadSettings(); }, [business?.id]);
 
@@ -138,6 +251,7 @@ export function StoreSettingsManager({ business, category }) {
       if (result.success && result.data) {
         setSettings(prev => ({ ...prev, ...result.data }));
         setNewDomain(result.data.storeDomain || '');
+        setLoadedPlanTier(result.data.planTier || null);
       }
     } catch (err) {
       console.error('Failed to load store settings:', err);
@@ -147,11 +261,67 @@ export function StoreSettingsManager({ business, category }) {
   };
 
   const set = (key, val) => setSettings(prev => ({ ...prev, [key]: val }));
+  const setMarketplace = (section, key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      marketplace: {
+        ...prev.marketplace,
+        [section]: { ...(prev.marketplace?.[section] || {}), [key]: val },
+      },
+    }));
+  const setMarketplaceFlag = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      marketplace: { ...prev.marketplace, [key]: val },
+    }));
+  const setDealership = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      dealership: { ...prev.dealership, [key]: val },
+    }));
+  const setDealershipTrust = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      dealership: {
+        ...prev.dealership,
+        trustStrip: { ...(prev.dealership?.trustStrip || {}), [key]: val },
+      },
+    }));
+  const setAutoParts = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      autoParts: { ...(prev.autoParts || {}), [key]: val },
+    }));
+  const setRestaurant = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      restaurant: { ...(prev.restaurant || {}), [key]: val },
+    }));
+  const setPharmacy = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      pharmacy: { ...(prev.pharmacy || {}), [key]: val },
+    }));
+  const setFurniture = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      furniture: { ...(prev.furniture || {}), [key]: val },
+    }));
+  const setBooking = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      booking: { ...(prev.booking || {}), [key]: val },
+    }));
   const setSocialLink = (key, val) => setSettings(prev => ({ ...prev, socialLinks: { ...prev.socialLinks, [key]: val } }));
   const setBrand = (key, val) => setSettings(prev => ({ ...prev, brand: { ...prev.brand, [key]: val } }));
 
   const handleSave = async () => {
     if (!business?.id) return;
+    const rawMeetingUrl = settings.booking?.meetingUrl?.trim();
+    if (showMeetingUrlField && rawMeetingUrl && !normalizeTenantMeetingUrl(rawMeetingUrl)) {
+      toast.error('Scheduling URL must start with http:// or https://');
+      return;
+    }
     setSaving(true);
     try {
       const result = await updateBusinessSettings(business.id, settings);
@@ -209,6 +379,9 @@ export function StoreSettingsManager({ business, category }) {
   const fullStoreUrl = storeUrl && typeof window !== 'undefined'
     ? `${window.location.origin}${storeUrl}`
     : storeUrl || null;
+  const regional = getRegionalStandards(settings.country || business?.country);
+  const phonePlaceholder = `${regional.phoneCode} …`;
+  const setup = settings.setupStatus;
 
   if (loading) {
     return (
@@ -316,11 +489,39 @@ export function StoreSettingsManager({ business, category }) {
         </div>
       </div>
 
+      {setup && setup.percent < 100 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold text-amber-900">Complete your storefront profile</p>
+                <Badge variant="outline" className="border-amber-300 text-amber-800">
+                  {setup.percent}% ready
+                </Badge>
+              </div>
+              <p className="text-xs text-amber-800/90">
+                Customers only see what you enter here, your login email stays private unless you add a public support address.
+              </p>
+              <ul className="space-y-1">
+                {setup.nextSteps.map((step) => (
+                  <li key={step.id} className="flex items-center gap-2 text-xs text-amber-900">
+                    <ArrowRight className="h-3 w-3 shrink-0" />
+                    {step.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Tabs ────────────────────────────────────────────────────────── */}
       <Tabs defaultValue="branding" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
+          <TabsTrigger value="marketing">Marketing</TabsTrigger>
           <TabsTrigger value="domain">Domain</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="shipping">Shipping</TabsTrigger>
@@ -341,6 +542,7 @@ export function StoreSettingsManager({ business, category }) {
                 hint="Shown in header and emails. Recommended: 200×200px square."
                 value={settings.logoUrl}
                 onChange={(v) => set('logoUrl', v)}
+                businessId={business?.id}
               />
               <Separator />
               <ImageUploadField
@@ -348,6 +550,7 @@ export function StoreSettingsManager({ business, category }) {
                 hint="Full-width banner on your store homepage. Recommended: 1440×500px."
                 value={settings.coverImageUrl}
                 onChange={(v) => set('coverImageUrl', v)}
+                businessId={business?.id}
               />
             </CardContent>
           </Card>
@@ -363,12 +566,12 @@ export function StoreSettingsManager({ business, category }) {
               <div className="flex items-center gap-3">
                 <input
                   type="color"
-                  value={settings.brand?.primaryColor || '#e34242'}
+                  value={settings.brand?.primaryColor || BRAND_PRIMARY}
                   onChange={(e) => setBrand('primaryColor', e.target.value)}
                   className="w-10 h-10 rounded-lg border cursor-pointer"
                 />
                 <Input
-                  placeholder="#e34242"
+                  placeholder={BRAND_PRIMARY}
                   value={settings.brand?.primaryColor || ''}
                   onChange={(e) => setBrand('primaryColor', e.target.value)}
                   className="w-32"
@@ -419,50 +622,162 @@ export function StoreSettingsManager({ business, category }) {
                 />
                 <p className="text-xs text-gray-400">Shown on your store page and used for SEO meta description.</p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Contact Phone</Label>
-                  <Input
-                    placeholder="+92 300 1234567"
-                    value={settings.phone || ''}
-                    onChange={(e) => set('phone', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Store Address</Label>
-                  <Input
-                    placeholder="123 Main St, Karachi"
-                    value={settings.address || ''}
-                    onChange={(e) => set('address', e.target.value)}
-                  />
-                </div>
-              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-4">
+              <CardTitle className="text-sm font-semibold">Public Contact</CardTitle>
+              <CardDescription>
+                Phone, email, and location shown in your store header, footer, and contact page.
+                {settings.ownerLoginEmail ? (
+                  <span className="mt-1 block text-amber-700">
+                    Login email ({settings.ownerLoginEmail}) is not shown publicly.
+                  </span>
+                ) : null}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Public support email</Label>
+                  <Input
+                    type="email"
+                    placeholder="support@yourbusiness.com"
+                    value={settings.publicEmail || ''}
+                    onChange={(e) => set('publicEmail', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Customer phone</Label>
+                  <Input
+                    placeholder={phonePlaceholder}
+                    value={settings.phone || ''}
+                    onChange={(e) => set('phone', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>WhatsApp (optional)</Label>
+                  <Input
+                    placeholder={phonePlaceholder}
+                    value={settings.whatsapp || ''}
+                    onChange={(e) => set('whatsapp', e.target.value)}
+                  />
+                  <p className="text-xs text-gray-400">Leave blank to use the customer phone number.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Website (optional)</Label>
+                  <Input
+                    placeholder="https://yourbusiness.com"
+                    value={settings.website || ''}
+                    onChange={(e) => set('website', e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Street address</Label>
+                <Input
+                  placeholder="Building, street, area"
+                  value={settings.address || ''}
+                  onChange={(e) => set('address', e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label>City</Label>
+                  <Input
+                    placeholder="City"
+                    value={settings.city || ''}
+                    onChange={(e) => set('city', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Country</Label>
+                  <Input
+                    placeholder="Country"
+                    value={settings.country || ''}
+                    onChange={(e) => set('country', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Postal code</Label>
+                  <Input
+                    placeholder="Postal / ZIP"
+                    value={settings.postalCode || ''}
+                    onChange={(e) => set('postalCode', e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Business hours</Label>
+                <Textarea
+                  placeholder={'Mon-Sat: 9:00 AM - 6:00 PM\nSun: Closed'}
+                  value={settings.businessHours || ''}
+                  onChange={(e) => set('businessHours', e.target.value)}
+                  rows={3}
+                />
+                <p className="text-xs text-gray-400">Shown on your contact page and store footer when provided.</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {showMeetingUrlField ? (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-semibold">Meeting / scheduling link</CardTitle>
+                <CardDescription>
+                  Add your Calendly or scheduling page for test drives, appointments, and consultations.
+                  Customers open it in a new tab; your contact form stays available as a fallback.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Label htmlFor="store-meeting-url">Scheduling URL</Label>
+                <Input
+                  id="store-meeting-url"
+                  type="url"
+                  placeholder="https://calendly.com/your-business/30min"
+                  value={settings.booking?.meetingUrl || ''}
+                  onChange={(e) => setBooking('meetingUrl', e.target.value)}
+                />
+                <p className="text-xs text-gray-400">
+                  Shown on your storefront when visitors book test drives, showroom visits, or similar services.
+                  Requires Business plan or higher (Appointment Booking).
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          <Card>
+            <CardHeader className="pb-4">
               <CardTitle className="text-sm font-semibold">Hero & Announcement</CardTitle>
-              <CardDescription>Text displayed prominently on your homepage</CardDescription>
+              <CardDescription>Main homepage headline (cover image is under Branding)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
-                <Label>Hero Tagline</Label>
+                <Label>Hero headline</Label>
                 <Input
                   placeholder="e.g. Shop the best products"
                   value={settings.heroTitle || ''}
                   onChange={(e) => set('heroTitle', e.target.value)}
                 />
-                <p className="text-xs text-gray-400">Main headline in the hero banner.</p>
               </div>
               <div className="space-y-1.5">
-                <Label>Announcement Banner</Label>
+                <Label>Hero subtext</Label>
+                <Textarea
+                  placeholder="Short line under the headline on your store homepage"
+                  value={settings.heroSubtitle || ''}
+                  onChange={(e) => set('heroSubtitle', e.target.value)}
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Top announcement strip</Label>
                 <Input
                   placeholder="e.g. Free shipping on orders over Rs. 2,000"
                   value={settings.announcement || ''}
                   onChange={(e) => set('announcement', e.target.value)}
                 />
-                <p className="text-xs text-gray-400">Shown at the very top of your store.</p>
+                <p className="text-xs text-gray-400">Thin bar at the very top on mobile.</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -476,6 +791,8 @@ export function StoreSettingsManager({ business, category }) {
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="GBP">GBP (£)</option>
+                    <option value="AED">AED</option>
+                    <option value="SGD">SGD</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">
@@ -491,6 +808,498 @@ export function StoreSettingsManager({ business, category }) {
                   </select>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── Marketing Tab ─────────────────────────────────────────── */}
+        <TabsContent value="marketing" className="space-y-4 mt-5">
+          {marketplaceStore ? (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Megaphone className="w-4 h-4" /> Marketplace portal
+                </CardTitle>
+                <CardDescription>
+                  Hero promo strip and marketplace ticker text on your Tenvo Auto Marketplace homepage (static copy, no live government feeds).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Hero promo</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label>Eyebrow</Label>
+                      <Input
+                        value={settings.marketplace?.heroPromo?.eyebrow || ''}
+                        onChange={(e) => setMarketplace('heroPromo', 'eyebrow', e.target.value)}
+                        placeholder="Tenvo Auto Marketplace"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>CTA label</Label>
+                      <Input
+                        value={settings.marketplace?.heroPromo?.ctaLabel || ''}
+                        onChange={(e) => setMarketplace('heroPromo', 'ctaLabel', e.target.value)}
+                        placeholder="Explore deals"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Headline</Label>
+                    <Input
+                      value={settings.marketplace?.heroPromo?.title || ''}
+                      onChange={(e) => setMarketplace('heroPromo', 'title', e.target.value)}
+                      placeholder="Drive home your next car with exclusive deals"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Subtext</Label>
+                    <Textarea
+                      rows={2}
+                      value={settings.marketplace?.heroPromo?.subtitle || ''}
+                      onChange={(e) => setMarketplace('heroPromo', 'subtitle', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Promo image URL</Label>
+                    <Input
+                      value={settings.marketplace?.heroPromo?.image || ''}
+                      onChange={(e) => setMarketplace('heroPromo', 'image', e.target.value)}
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+                <Separator />
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">COE ticker</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="space-y-1.5">
+                      <Label>Label</Label>
+                      <Input
+                        value={settings.marketplace?.coeTicker?.label || ''}
+                        onChange={(e) => setMarketplace('coeTicker', 'label', e.target.value)}
+                        placeholder="Cat A COE"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Value</Label>
+                      <Input
+                        value={settings.marketplace?.coeTicker?.value || ''}
+                        onChange={(e) => setMarketplace('coeTicker', 'value', e.target.value)}
+                        placeholder="$128,000"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Change text</Label>
+                      <Input
+                        value={settings.marketplace?.coeTicker?.change || ''}
+                        onChange={(e) => setMarketplace('coeTicker', 'change', e.target.value)}
+                        placeholder="▼ $2,001"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-6 pt-1">
+                  {[
+                    ['showEShop', 'Show e-shop section', false],
+                    ['showForum', 'Show forum section', false],
+                    ['showArticles', 'Show articles section', false],
+                    ['showMarketingBanners', 'Show marketing banners', false],
+                    ['showTrustStrip', 'Show trust strip', false],
+                  ].map(([key, label]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Switch
+                        checked={settings.marketplace?.[key] !== false}
+                        onCheckedChange={(v) => setMarketplaceFlag(key, v)}
+                      />
+                      <Label className="text-sm">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {dealershipStore ? (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Megaphone className="w-4 h-4" /> Tenvo Vehicles showroom
+                </CardTitle>
+                <CardDescription>
+                  Customize trust strip, tagline, UAN, and hero video for your vehicle dealership storefront.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Tagline</Label>
+                    <Input
+                      value={settings.dealership?.tagline || ''}
+                      onChange={(e) => setDealership('tagline', e.target.value)}
+                      placeholder="Your trusted automotive partner"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>UAN / hotline</Label>
+                    <Input
+                      value={settings.dealership?.uan || ''}
+                      onChange={(e) => setDealership('uan', e.target.value)}
+                      placeholder="111 734 425"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Welcome headline</Label>
+                  <Input
+                    value={settings.dealership?.welcomeTitle || ''}
+                    onChange={(e) => setDealership('welcomeTitle', e.target.value)}
+                    placeholder="Welcome to your ultimate car destination"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Showroom video URL (YouTube embed)</Label>
+                  <Input
+                    value={settings.dealership?.videoUrl || ''}
+                    onChange={(e) => setDealership('videoUrl', e.target.value)}
+                    placeholder="https://www.youtube.com/embed/..."
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label>Trust strip hours</Label>
+                    <Input
+                      value={settings.dealership?.trustStrip?.hours || ''}
+                      onChange={(e) => setDealershipTrust('hours', e.target.value)}
+                      placeholder="10 am - 07 pm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Shipping label</Label>
+                    <Input
+                      value={settings.dealership?.trustStrip?.shippingLabel || ''}
+                      onChange={(e) => setDealershipTrust('shippingLabel', e.target.value)}
+                      placeholder="Nationwide shipping"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Rating label</Label>
+                    <Input
+                      value={settings.dealership?.trustStrip?.ratingLabel || ''}
+                      onChange={(e) => setDealershipTrust('ratingLabel', e.target.value)}
+                      placeholder="4.5+ Google ratings"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-6">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={settings.dealership?.showTrustStrip !== false}
+                      onCheckedChange={(v) => setDealership('showTrustStrip', v)}
+                    />
+                    <Label className="text-sm">Show trust strip</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={settings.dealership?.showMarketingBanners !== false}
+                      onCheckedChange={(v) => setDealership('showMarketingBanners', v)}
+                    />
+                    <Label className="text-sm">Show marketing banners</Label>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Logo and cover image are set under Branding. Hero slide images use your cover image on slide one, with template defaults for the rest until you add custom marketing sections.
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {autoPartsStore ? (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Megaphone className="w-4 h-4" /> Auto parts storefront
+                </CardTitle>
+                <CardDescription>
+                  Toggle homepage sections below the parts finder hero: promo cards, categories, deals, and trust strip.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ['showPromoCards', 'Promo card carousel'],
+                    ['showFeaturedCategories', 'Featured categories grid'],
+                    ['showFeaturedDeals', 'Featured deals'],
+                    ['showVehicleBrands', 'Shop by car brand'],
+                    ['showTrending', 'Top trending products'],
+                    ['showTrustSection', 'Why choose us strip'],
+                    ['showCategoryRails', 'Category product rails'],
+                    ['showMarketingBanners', 'Custom marketing banners'],
+                  ].map(([key, label]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Switch
+                        checked={settings.autoParts?.[key] !== false}
+                        onCheckedChange={(v) => setAutoParts(key, v)}
+                      />
+                      <Label className="text-sm">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Trust section title</Label>
+                    <Input
+                      value={settings.autoParts?.trustTitle || ''}
+                      onChange={(e) => setAutoParts('trustTitle', e.target.value)}
+                      placeholder="Why choose us"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Trust subtitle</Label>
+                    <Input
+                      value={settings.autoParts?.trustSubtitle || ''}
+                      onChange={(e) => setAutoParts('trustSubtitle', e.target.value)}
+                      placeholder="Your trusted auto parts partner"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Bottom CTA title</Label>
+                  <Input
+                    value={settings.autoParts?.ctaTitle || ''}
+                    onChange={(e) => setAutoParts('ctaTitle', e.target.value)}
+                    placeholder="Need help finding the right part?"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Bottom CTA subtitle</Label>
+                  <Textarea
+                    rows={2}
+                    value={settings.autoParts?.ctaSubtitle || ''}
+                    onChange={(e) => setAutoParts('ctaSubtitle', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Bottom CTA button label</Label>
+                  <Input
+                    value={settings.autoParts?.ctaLabel || ''}
+                    onChange={(e) => setAutoParts('ctaLabel', e.target.value)}
+                    placeholder="Browse all parts"
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Hero slides use your cover image on slide one, with template defaults for the rest. Product metadata (part number, OEM, fitment) is edited per SKU in inventory.
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
+
+
+          {pharmacyStore ? (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Megaphone className="w-4 h-4" /> Pharmacy storefront
+                </CardTitle>
+                <CardDescription>
+                  Toggle homepage sections below the pharmacy hero. Categories and products come from live inventory.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ['showRefillPromo', 'Refill reminder CTA', false],
+                    ['showBrandsRow', 'Trusted brands row', false],
+                    ['showSeoBlock', 'SEO content block', true],
+                  ].map(([key, label, optIn]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Switch
+                        checked={optIn ? settings.pharmacy?.[key] === true : settings.pharmacy?.[key] !== false}
+                        onCheckedChange={(v) => setPharmacy(key, v)}
+                      />
+                      <Label className="text-sm">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Search placeholder</Label>
+                    <Input
+                      value={settings.pharmacy?.searchPlaceholder || ''}
+                      onChange={(e) => setPharmacy('searchPlaceholder', e.target.value)}
+                      placeholder="Search medicines, vitamins, brands…"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Featured rail title</Label>
+                    <Input
+                      value={settings.pharmacy?.featuredRailTitle || ''}
+                      onChange={(e) => setPharmacy('featuredRailTitle', e.target.value)}
+                      placeholder="Top selling"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {furnitureStore ? (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Megaphone className="w-4 h-4" /> Furniture storefront
+                </CardTitle>
+                <CardDescription>
+                  Toggle homepage sections below the furniture hero. Room tiles and rails use your catalog categories.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ['showRoomTiles', 'Room collection tiles', false],
+                    ['showTestimonials', 'Customer testimonials', true],
+                    ['showShowroomCta', 'Showroom CTA in hero', false],
+                  ].map(([key, label, optIn]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Switch
+                        checked={optIn ? settings.furniture?.[key] === true : settings.furniture?.[key] !== false}
+                        onCheckedChange={(v) => setFurniture(key, v)}
+                      />
+                      <Label className="text-sm">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Search placeholder</Label>
+                    <Input
+                      value={settings.furniture?.searchPlaceholder || ''}
+                      onChange={(e) => setFurniture('searchPlaceholder', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Showroom link label</Label>
+                    <Input
+                      value={settings.furniture?.showroomLabel || ''}
+                      onChange={(e) => setFurniture('showroomLabel', e.target.value)}
+                      placeholder="Visit showroom"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {restaurantStore ? (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Megaphone className="w-4 h-4" /> Restaurant storefront
+                </CardTitle>
+                <CardDescription>
+                  Toggle homepage sections below the food hero. Categories and menu items come from your live inventory.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ['showCuisineCarousel', 'Category carousel', false],
+                    ['showSuperPicks', 'Featured picks rail', false],
+                    ['showOrderModes', 'Delivery / pickup / dine-in tiles', false],
+                    ['showRewardsCta', 'Rewards signup CTA', true],
+                    ['showDeliveryInfo', 'Hours & delivery info strip', false],
+                  ].map(([key, label, optIn]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Switch
+                        checked={optIn ? settings.restaurant?.[key] === true : settings.restaurant?.[key] !== false}
+                        onCheckedChange={(v) => setRestaurant(key, v)}
+                      />
+                      <Label className="text-sm">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Location label</Label>
+                    <Input
+                      value={settings.restaurant?.locationLabel || ''}
+                      onChange={(e) => setRestaurant('locationLabel', e.target.value)}
+                      placeholder="Deliver to"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Default location hint</Label>
+                    <Input
+                      value={settings.restaurant?.defaultLocation || ''}
+                      onChange={(e) => setRestaurant('defaultLocation', e.target.value)}
+                      placeholder="Uses store city when empty"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Search placeholder</Label>
+                    <Input
+                      value={settings.restaurant?.searchPlaceholder || ''}
+                      onChange={(e) => setRestaurant('searchPlaceholder', e.target.value)}
+                      placeholder="Search dishes, categories, or specials…"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Catering link label</Label>
+                    <Input
+                      value={settings.restaurant?.cateringLabel || ''}
+                      onChange={(e) => setRestaurant('cateringLabel', e.target.value)}
+                      placeholder="Catering"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Featured rail title</Label>
+                    <Input
+                      value={settings.restaurant?.featuredRailTitle || ''}
+                      onChange={(e) => setRestaurant('featuredRailTitle', e.target.value)}
+                      placeholder="Featured picks"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Featured rail subtitle</Label>
+                    <Input
+                      value={settings.restaurant?.featuredRailSubtitle || ''}
+                      onChange={(e) => setRestaurant('featuredRailSubtitle', e.target.value)}
+                      placeholder="Popular dishes from your menu"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Hero slides use your cover image and featured menu items. Cuisine icons and promo banners are built from your product categories and catalog unless you add custom arrays in advanced settings.
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Megaphone className="w-4 h-4" /> Homepage marketing sections
+              </CardTitle>
+              <CardDescription>
+                Add promotional banners between your hero and product rows. Upload a photo or design with your brand colors.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MarketingSectionsEditor
+                sections={settings.pageSections || []}
+                brandColor={settings.brand?.primaryColor}
+                onChange={(pageSections) => set('pageSections', pageSections)}
+                businessId={business?.id}
+              />
             </CardContent>
           </Card>
         </TabsContent>

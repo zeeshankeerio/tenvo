@@ -25,6 +25,8 @@ import {
 import { formatCurrency } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import { MARKETING_CONTAINER } from '@/lib/utils/marketingLayout';
+import { getBookMeetingHref, getBookDemoPageHref } from '@/lib/marketing/salesLinks';
+import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
 
 const TIER_KEYS = getOrderedPlanTierKeys();
 
@@ -70,7 +72,7 @@ const MATRIX_FEATURES = [
 
 function tierCtaHref({ user, tierKey }) {
   if (tierKey === 'enterprise') {
-    return '/demo?source=pricing&planTier=enterprise';
+    return getBookMeetingHref();
   }
   if (tierKey === 'free') {
     return user ? '/multi-business' : '/register';
@@ -85,7 +87,7 @@ function tierCtaHref({ user, tierKey }) {
 
 function tierCtaLabel(tierKey) {
   if (tierKey === 'free') return 'Get started';
-  if (tierKey === 'enterprise') return 'Book demo';
+  if (tierKey === 'enterprise') return 'Book a meeting';
   return 'Choose plan';
 }
 
@@ -119,11 +121,11 @@ export default function PricingPage() {
     () => [
       {
         q: 'Can we pay locally in Pakistan (PKR) or by bank transfer?',
-        a: 'Yes. You can subscribe with Stripe when cards are enabled, or pay by bank transfer / local rails. For offline payment, book a demo or contact sales—we activate your plan and record the payment on your account (see Billing FAQ below).',
+        a: 'Yes. You can subscribe with Stripe when cards are enabled, or pay by bank transfer / local rails. For offline payment, book a demo or contact sales - we activate your plan and record the payment on your account (see Billing FAQ below).',
       },
       {
         q: 'How do demo, manual billing, and Stripe work together?',
-        a: 'Self-serve: workspace owners use Settings → Billing with Stripe Checkout when price IDs are configured. Sales-assisted: book a demo, agree on a plan, pay offline—we apply the tier in Platform Admin and record the payment in subscription history (manual_payment_active). Development: BILLING_MODE=manual skips Stripe for testing.',
+        a: 'Self-serve: workspace owners use Settings → Billing with Stripe Checkout when price IDs are configured. Sales-assisted: book a demo, agree on a plan, pay offline - we apply the tier in Platform Admin and record the payment in subscription history (manual_payment_active). Development: BILLING_MODE=manual skips Stripe for testing.',
       },
       {
         q: 'What happens if we exceed plan limits?',
@@ -141,12 +143,12 @@ export default function PricingPage() {
     <MarketingLayout transparentNav={false}>
       <section className="border-b border-neutral-200/80 bg-white py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 min-[380px]:px-5 sm:px-6 lg:px-12 text-center space-y-4 sm:space-y-6">
-          <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-brand-primary sm:px-4 sm:text-[11px] sm:tracking-[0.25em]">
+          <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary sm:px-4 sm:text-[11px] sm:tracking-[0.25em]">
             <ShieldCheck className="h-4 w-4 shrink-0" />
             Plans aligned with the product
           </div>
-          <h1 className="mx-auto max-w-4xl text-balance text-3xl font-extrabold leading-tight tracking-tight text-neutral-900 min-[400px]:text-4xl sm:text-5xl lg:text-6xl">
-            Same packages everywhere — <br className="hidden sm:inline" />
+          <h1 className="mx-auto max-w-4xl text-balance text-3xl font-semibold leading-tight tracking-tight text-neutral-900 min-[400px]:text-4xl sm:text-5xl lg:text-6xl">
+            Same packages everywhere - <br className="hidden sm:inline" />
             register, billing, and checkout.
           </h1>
           <p className="mx-auto max-w-2xl text-pretty text-base font-medium leading-relaxed text-neutral-500 sm:text-lg">
@@ -160,7 +162,7 @@ export default function PricingPage() {
                 type="button"
                 onClick={() => setBillingInterval('monthly')}
                 className={cn(
-                  'px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all',
+                  'px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all',
                   billingInterval === 'monthly' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-800'
                 )}
               >
@@ -170,19 +172,19 @@ export default function PricingPage() {
                 type="button"
                 onClick={() => setBillingInterval('yearly')}
                 className={cn(
-                  'px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5',
+                  'px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-1.5',
                   billingInterval === 'yearly' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-800'
                 )}
               >
                 Yearly
-                <span className="bg-emerald-100 text-emerald-800 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-normal">
+                <span className="bg-emerald-100 text-emerald-800 text-[8px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-normal">
                   −15%
                 </span>
               </button>
             </div>
 
             <div className="bg-neutral-100 border border-neutral-200 p-1.5 rounded-2xl flex items-center gap-2.5 shadow-sm">
-              <span className="text-xs font-black uppercase tracking-wider text-neutral-500 pl-3">Show prices in</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500 pl-3">Show prices in</span>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
@@ -196,16 +198,16 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Payment rails — Stripe, offline, demo + manual admin */}
+      {/* Payment rails - Stripe, offline, demo + manual admin */}
       <section className="bg-neutral-50 py-10 sm:py-12 border-b border-neutral-200/80">
         <div className={MARKETING_CONTAINER}>
-          <p className="text-center text-[11px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-8">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400 mb-8">
             How you can pay
           </p>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
               <CreditCard className="w-8 h-8 text-brand-primary mb-3" />
-              <h3 className="font-black text-neutral-900 text-sm uppercase tracking-wide mb-2">Stripe Checkout</h3>
+              <h3 className="font-semibold text-neutral-900 text-sm uppercase tracking-wide mb-2">Stripe Checkout</h3>
               <p className="text-xs text-neutral-600 leading-relaxed">
                 Cards and wallets where Stripe is configured. After checkout, your workspace tier updates automatically
                 via webhooks.
@@ -213,7 +215,7 @@ export default function PricingPage() {
             </div>
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
               <Landmark className="w-8 h-8 text-brand-primary mb-3" />
-              <h3 className="font-black text-neutral-900 text-sm uppercase tracking-wide mb-2">Bank / local transfer</h3>
+              <h3 className="font-semibold text-neutral-900 text-sm uppercase tracking-wide mb-2">Bank / local transfer</h3>
               <p className="text-xs text-neutral-600 leading-relaxed">
                 We can invoice you in PKR or USD. Once funds are confirmed, our team records the subscription payment
                 against your business (same entitlement as Stripe).
@@ -221,15 +223,15 @@ export default function PricingPage() {
             </div>
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
               <Headphones className="w-8 h-8 text-brand-primary mb-3" />
-              <h3 className="font-black text-neutral-900 text-sm uppercase tracking-wide mb-2">Demo → manual activate</h3>
+              <h3 className="font-semibold text-neutral-900 text-sm uppercase tracking-wide mb-2">Demo → manual activate</h3>
               <p className="text-xs text-neutral-600 leading-relaxed mb-3">
                 Book a demo, agree on a package, then we enable your plan and log the payment in Platform Admin (
                 <code className="text-[10px] bg-neutral-100 px-1 rounded">recordManualSubscriptionPayment</code>
                 ).
               </p>
-              <Link href="/demo?source=pricing" className="text-xs font-black text-brand-primary hover:underline">
-                Book a demo →
-              </Link>
+              <MarketingCtaLink href={getBookMeetingHref()} className="text-xs font-semibold text-brand-primary hover:underline">
+                Book a meeting →
+              </MarketingCtaLink>
             </div>
           </div>
           <p className="text-center text-[10px] text-neutral-400 mt-8 max-w-2xl mx-auto">
@@ -283,7 +285,7 @@ export default function PricingPage() {
                       <div className="py-2 border-b border-neutral-100 min-w-0">
                         {tierKey === 'free' ? (
                           <>
-                            <span className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight tabular-nums">
+                            <span className="text-2xl sm:text-3xl font-semibold text-neutral-900 tracking-tight tabular-nums">
                               {currency === 'pkr' ? formatCurrency(0, 'PKR') : formatCurrency(0, 'USD')}
                             </span>
                             <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wide block mt-1">
@@ -292,7 +294,7 @@ export default function PricingPage() {
                           </>
                         ) : (
                           <>
-                            <span className="text-xl sm:text-2xl lg:text-xl xl:text-2xl font-black text-neutral-900 block leading-tight tracking-tight tabular-nums break-words">
+                            <span className="text-xl sm:text-2xl lg:text-xl xl:text-2xl font-semibold text-neutral-900 block leading-tight tracking-tight tabular-nums break-words">
                               {currency === 'pkr'
                                 ? formatCurrency(prices.pkr, 'PKR')
                                 : formatCurrency(prices.usd, 'USD')}
@@ -307,7 +309,7 @@ export default function PricingPage() {
                             </span>
                             {tierKey === 'enterprise' && (
                               <span className="text-[10px] text-amber-800 font-semibold block mt-2 leading-snug">
-                                Volume, SLA, and white-label — final quote after scoping.
+                                Volume, SLA, and white-label - final quote after scoping.
                               </span>
                             )}
                           </>
@@ -341,14 +343,14 @@ export default function PricingPage() {
                           : 'bg-neutral-900 hover:bg-neutral-800 text-white'
                       )}
                     >
-                      <Link
+                      <MarketingCtaLink
                         href={href}
                         className="flex items-center justify-center gap-1.5 text-center"
-                        aria-label={tierKey === 'enterprise' ? 'Book enterprise demo' : `${ctaLabel} — ${tier.name}`}
+                        aria-label={tierKey === 'enterprise' ? 'Book enterprise meeting' : `${ctaLabel} - ${tier.name}`}
                       >
                         {ctaLabel}
                         {tierKey !== 'free' && <ArrowRight className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />}
-                      </Link>
+                      </MarketingCtaLink>
                     </Button>
                   </div>
                 </div>
@@ -362,14 +364,14 @@ export default function PricingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="bg-neutral-50 border-2 border-neutral-200/90 rounded-[2.5rem] p-8 sm:p-12 shadow-sm space-y-10">
             <div className="text-center space-y-3">
-              <h3 className="text-2xl sm:text-3xl font-black text-neutral-900">Estimate operational ROI</h3>
+              <h3 className="text-2xl sm:text-3xl font-semibold text-neutral-900">Estimate operational ROI</h3>
               <p className="text-sm text-neutral-500 font-semibold">Illustrative savings from automation and fewer errors.</p>
             </div>
             <div className="grid md:grid-cols-2 gap-8 items-start">
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between mb-2">
-                    <label className="text-xs font-black uppercase tracking-wider text-neutral-500">Staff on ops / billing</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Staff on ops / billing</label>
                     <span className="text-xs font-bold text-neutral-800">{employees}</span>
                   </div>
                   <input
@@ -384,7 +386,7 @@ export default function PricingPage() {
                 </div>
                 <div>
                   <div className="flex justify-between mb-2">
-                    <label className="text-xs font-black uppercase tracking-wider text-neutral-500">Orders / month</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Orders / month</label>
                     <span className="text-xs font-bold text-neutral-800">{monthlyOrders.toLocaleString()}</span>
                   </div>
                   <input
@@ -399,7 +401,7 @@ export default function PricingPage() {
                 </div>
                 <div className="flex items-center justify-between p-4 bg-white border border-neutral-200 rounded-2xl shadow-sm">
                   <div>
-                    <label className="text-xs font-black uppercase tracking-wider text-neutral-700 block">Compliance risk factor</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-700 block">Compliance risk factor</label>
                     <span className="text-[10px] text-neutral-400 font-semibold">Include estimated filing / audit risk reduction</span>
                   </div>
                   <button
@@ -417,8 +419,8 @@ export default function PricingPage() {
                 </div>
               </div>
               <div className="bg-white border border-neutral-200 rounded-2xl p-6 text-center space-y-4 shadow-sm flex flex-col justify-center">
-                <p className="text-xs font-black uppercase tracking-widest text-neutral-400">Monthly savings estimate</p>
-                <div className="text-3xl sm:text-4xl font-black text-emerald-600">
+                <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Monthly savings estimate</p>
+                <div className="text-3xl sm:text-4xl font-semibold text-emerald-600">
                 {formatCurrency(totalMonthlyROI, 'PKR')}
               </div>
               <p className="text-[10px] text-neutral-400">Estimate shown in PKR (illustrative).</p>
@@ -434,12 +436,12 @@ export default function PricingPage() {
       <section className="bg-neutral-50 py-10 sm:py-16 lg:py-28 border-b border-neutral-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 space-y-8">
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <h3 className="text-2xl sm:text-3xl font-black text-neutral-900">Feature matrix by tier</h3>
+            <h3 className="text-2xl sm:text-3xl font-semibold text-neutral-900">Feature matrix by tier</h3>
             <p className="text-sm text-neutral-500 font-semibold">Same capability flags used inside the app.</p>
             <button
               type="button"
               onClick={() => setShowComparison(!showComparison)}
-              className="px-6 py-3 bg-white border border-neutral-200 rounded-xl text-xs font-black uppercase tracking-wider text-neutral-800 hover:border-brand-primary inline-flex items-center gap-2 shadow-sm transition-all"
+              className="px-6 py-3 bg-white border border-neutral-200 rounded-xl text-xs font-semibold uppercase tracking-wider text-neutral-800 hover:border-brand-primary inline-flex items-center gap-2 shadow-sm transition-all"
             >
               {showComparison ? 'Hide matrix' : 'Show matrix'}
               <ChevronDown className={cn('w-4 h-4 transition-transform duration-300', showComparison && 'rotate-180')} />
@@ -450,7 +452,7 @@ export default function PricingPage() {
             <div className="bg-white border border-neutral-200/80 rounded-[2.5rem] p-6 lg:p-10 overflow-x-auto shadow-sm">
               <table className="w-full text-left border-collapse min-w-[720px]">
                 <thead>
-                  <tr className="border-b border-neutral-100 font-black text-[9px] uppercase tracking-wider text-neutral-400">
+                  <tr className="border-b border-neutral-100 font-semibold text-[9px] uppercase tracking-wider text-neutral-400">
                     <th className="p-3 w-[28%]">Capability</th>
                     {TIER_KEYS.map((k) => (
                       <th key={k} className={cn('p-3 text-center', k === 'professional' && 'text-brand-primary')}>
@@ -467,7 +469,7 @@ export default function PricingPage() {
                         const on = !!PLAN_TIERS[k]?.features[row.key];
                         return (
                           <td key={k} className={cn('p-3 text-center', k === 'professional' && 'text-brand-primary font-bold')}>
-                            {on ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <span className="text-neutral-300 font-black">—</span>}
+                            {on ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <span className="text-neutral-300 font-semibold">-</span>}
                           </td>
                         );
                       })}
@@ -483,8 +485,8 @@ export default function PricingPage() {
       <section className="bg-white py-10 sm:py-16 lg:py-28 border-b border-neutral-200/80">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.25em]">Billing & payments FAQ</h2>
-            <h3 className="text-3xl sm:text-4xl font-black text-neutral-900 tracking-tight">Common questions</h3>
+            <h2 className="text-[11px] font-semibold text-brand-primary uppercase tracking-[0.25em]">Billing & payments FAQ</h2>
+            <h3 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">Common questions</h3>
           </div>
           <div className="space-y-4">
             {faqs.map((item, index) => (
@@ -494,7 +496,7 @@ export default function PricingPage() {
                   onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
                   className="w-full flex items-center justify-between p-6 text-left"
                 >
-                  <span className="font-black text-neutral-800 text-sm sm:text-base pr-4">{item.q}</span>
+                  <span className="font-semibold text-neutral-800 text-sm sm:text-base pr-4">{item.q}</span>
                   <ChevronDown className={cn('w-5 h-5 text-neutral-400 flex-shrink-0 transition-transform', expandedFaq === index && 'rotate-180')} />
                 </button>
                 {expandedFaq === index && (
@@ -512,18 +514,18 @@ export default function PricingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
           <div className="bg-white border border-neutral-200/80 rounded-[3rem] p-8 sm:p-12 lg:p-16 text-center space-y-6 relative overflow-hidden shadow-sm">
             <Building2 className="w-10 h-10 text-brand-primary mx-auto" />
-            <h3 className="text-3xl sm:text-5xl font-black text-neutral-900 tracking-tight max-w-4xl mx-auto">Ready when you are</h3>
+            <h3 className="text-3xl sm:text-5xl font-semibold text-neutral-900 tracking-tight max-w-4xl mx-auto">Ready when you are</h3>
             <p className="max-w-2xl mx-auto text-sm sm:text-base text-neutral-600 font-medium leading-relaxed">
               Create a workspace, or talk to us first - we will match you to the right tier and payment method.
             </p>
             <div className="pt-4 flex flex-col sm:flex-row justify-center gap-4">
-              <Button asChild size="lg" className="h-14 rounded-xl bg-brand-primary hover:bg-brand-primary-dark text-white px-8 text-base font-black uppercase tracking-[0.12em] shadow-md">
+              <Button asChild size="lg" className="h-14 rounded-xl bg-brand-primary hover:bg-brand-primary-dark text-white px-8 text-base font-semibold uppercase tracking-[0.12em] shadow-md">
                 <Link href={user ? '/multi-business' : '/register'}>Start free</Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="h-14 rounded-xl border-neutral-300 bg-white px-8 text-base font-black uppercase tracking-[0.12em]">
-                <Link href="/demo?source=pricing-footer">Book demo</Link>
+              <Button asChild size="lg" variant="outline" className="h-14 rounded-xl border-neutral-300 bg-white px-8 text-base font-semibold uppercase tracking-[0.12em]">
+                <MarketingCtaLink href={getBookMeetingHref()}>Book a meeting</MarketingCtaLink>
               </Button>
-              <Button asChild size="lg" variant="outline" className="h-14 rounded-xl border-neutral-300 bg-white px-8 text-base font-black uppercase tracking-[0.12em]">
+              <Button asChild size="lg" variant="outline" className="h-14 rounded-xl border-neutral-300 bg-white px-8 text-base font-semibold uppercase tracking-[0.12em]">
                 <Link href="/contact?topic=subscription">Contact sales</Link>
               </Button>
             </div>

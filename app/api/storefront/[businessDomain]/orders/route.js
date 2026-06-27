@@ -421,7 +421,7 @@ export async function POST(request, { params }) {
 
 /**
  * GET /api/storefront/[businessDomain]/orders?email=&orderNumber=
- * Public buyer order tracking — email required; optional order number filter.
+ * Public buyer order tracking, email required; optional order number filter.
  */
 export async function GET(request, { params }) {
   const { businessDomain } = await params;

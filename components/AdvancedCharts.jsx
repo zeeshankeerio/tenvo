@@ -18,8 +18,9 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { formatCurrency } from '@/lib/currency';
+import { BRAND_PRIMARY, CHART_PALETTE } from '@/lib/theme/brandTokens';
 
-const COLORS = ['#e34242', '#c49c3b', '#0F172A', '#10B981', '#C69214', '#e8c051'];
+const COLORS = CHART_PALETTE;
 
 /**
  * Monthly trend: invoice revenue + GL-based profit on the left axis (currency).
@@ -31,14 +32,14 @@ const COLORS = ['#e34242', '#c49c3b', '#0F172A', '#10B981', '#C69214', '#e8c051'
  * @param {string} [props.currency]
  */
 export function SalesChart({ data = [], colors, currency = 'PKR' }) {
-  const primary = colors?.primary || '#e34242';
-  const secondary = colors?.primaryLight || '#c49c3b';
+  const primary = colors?.primary || BRAND_PRIMARY;
+  const profitColor = CHART_PALETTE[3] || '#10B981';
   const volumeStroke = '#64748b';
 
   const volumeKey = (() => {
     if (!data.length) return null;
     if (data.some((d) => d.orderCount != null)) return 'orderCount';
-    // SalesManager / legacy: `sales` is invoice count, not currency — only use as volume when values look like counts
+    // SalesManager / legacy: `sales` is invoice count, not currency, only use as volume when values look like counts
     const maxRev = Math.max(...data.map((d) => Number(d.revenue) || 0), 1);
     const maxSales = Math.max(...data.map((d) => Number(d.sales) || 0), 0);
     if (maxSales > 0 && maxSales <= Math.max(500, maxRev / 100)) return 'sales';
@@ -89,8 +90,9 @@ export function SalesChart({ data = [], colors, currency = 'PKR' }) {
           type="monotone"
           dataKey="profit"
           name="GL profit (net)"
-          stroke={secondary}
+          stroke={profitColor}
           strokeWidth={2}
+          strokeDasharray="6 4"
           dot={{ r: 3 }}
           activeDot={{ r: 6 }}
         />
@@ -118,7 +120,7 @@ export function SalesChart({ data = [], colors, currency = 'PKR' }) {
  * @param {string} [props.currency]
  */
 export function RevenueBarChart({ data = [], colors, currency = 'PKR' }) {
-  const primary = colors?.primary || '#e34242';
+  const primary = colors?.primary || BRAND_PRIMARY;
   const secondary = colors?.primaryLight || '#c49c3b';
   const xKey = data[0] && Object.prototype.hasOwnProperty.call(data[0], 'date') ? 'date' : 'name';
 
@@ -154,7 +156,7 @@ export function CategoryPieChart({ data }) {
           labelLine={false}
           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
           outerRadius={80}
-          fill="#e34242"
+          fill={BRAND_PRIMARY}
           dataKey="value"
         >
           {data.map((entry, index) => (
@@ -173,7 +175,7 @@ export function CategoryPieChart({ data }) {
  * @param {any} [props.colors]
  */
 export function RevenueAreaChart({ data, colors }) {
-  const primary = colors?.primary || '#e34242';
+  const primary = colors?.primary || BRAND_PRIMARY;
   const secondary = colors?.primaryLight || '#c49c3b';
 
   return (
@@ -207,7 +209,7 @@ export function RevenueAreaChart({ data, colors }) {
  * @param {any} [props.colors]
  */
 export function TopProductsChart({ data, colors, currency = 'PKR' }) {
-  const primary = colors?.primary || '#e34242';
+  const primary = colors?.primary || BRAND_PRIMARY;
 
   return (
     <ResponsiveContainer width="100%" height={300}>

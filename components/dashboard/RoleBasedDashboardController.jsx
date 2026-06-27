@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useBusiness } from '@/lib/context/BusinessContext';
 import { getDomainKnowledge } from '@/lib/domainKnowledge';
 
 // Role-based dashboard templates
@@ -32,7 +33,7 @@ export function RoleBasedDashboardController({
 }) {
   const userRole = user?.role || 'owner';
   const userId = user?.id;
-  const currency = 'PKR';
+  const { currency } = useBusiness();
 
   // Map role -> dashboard component
   const DashboardComponent = useMemo(() => {

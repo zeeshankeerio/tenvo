@@ -6,7 +6,7 @@ import {
     ChevronDown, ChevronRight, MoreVertical, RefreshCcw,
     TrendingUp, UserPlus, Clock, AlertTriangle, Check, X,
     Crown, ArrowUpRight, Eye, Edit2, Trash2, Ban,
-    Activity, BarChart3, Layers, Mail, Calendar, Flag
+    Activity, BarChart3, Layers, Mail, Calendar, Flag, LayoutGrid, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
     listAllBusinesses,
     listAllUsers,
@@ -21,13 +22,21 @@ import {
     updateBusinessPlan,
     recordManualSubscriptionPayment,
     updateBusinessPackaging,
+    updateBusinessLimitOverrides,
     changeUserRole,
     deactivateBusinessUser,
     getSubscriptionStats,
     extendTrial,
     setPlatformRole,
 } from '@/lib/actions/admin/platform';
-import { PLAN_TIERS } from '@/lib/config/plans';
+import { PLAN_TIERS, PLAN_FEATURE_TOGGLE_KEYS, FEATURE_LABELS, resolvePlanTier, FEATURE_MIN_PLAN } from '@/lib/config/plans';
+import { getPackagingFromSettings } from '@/lib/subscription/effectivePlanAccess';
+import {
+    PLAN_LIMIT_OVERRIDE_KEYS,
+    LIMIT_OVERRIDE_LABELS,
+    formatPlanLimitValue,
+    resolveEffectiveBusinessLimits,
+} from '@/lib/utils/businessLimitOverrides';
 import { ROLE_DESCRIPTIONS, TRIAL_CONFIG } from '@/lib/config/platform';
 import { FeatureFlagManager } from './FeatureFlagManager';
 import { UserManagement } from './UserManagement';
@@ -79,7 +88,7 @@ function OverviewPanel({ stats, isLoading }) {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{kpi.label}</p>
-                                    <p className="text-3xl font-black text-gray-900 mt-1">{kpi.value}</p>
+                                    <p className="text-3xl font-semibold text-gray-900 mt-1">{kpi.value}</p>
                                 </div>
                                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${kpi.color}`}>
                                     <kpi.icon className="w-6 h-6" />
@@ -351,6 +360,16 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
     const [manualAmount, setManualAmount] = useState('');
     const [manualTier, setManualTier] = useState('__current__');
     const [manualSaving, setManualSaving] = useState(false);
+    const [adminPackagingMode, setAdminPackagingMode] = useState('tier');
+    const [adminFeatureOverrides, setAdminFeatureOverrides] = useState({});
+    const [packagingSaving, setPackagingSaving] = useState(false);
+    const [adminLimitInputs, setAdminLimitInputs] = useState({});
+    const [limitSaving, setLimitSaving] = useState(false);
+
+    const limitSnapshot = React.useMemo(
+        () => resolveEffectiveBusinessLimits(business),
+        [business]
+    );
 
     const paidTierKeys = Object.keys(PLAN_TIERS).filter((k) => k !== 'free');
 
@@ -400,6 +419,52 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
         return typeof s === 'object' && !Array.isArray(s) ? s : {};
     }, [business?.settings]);
 
+    useEffect(() => {
+        const pkg = getPackagingFromSettings(bizSettings);
+        const tier = resolvePlanTier(business?.plan_tier || 'free');
+        const tierFeatures = PLAN_TIERS[tier]?.features || {};
+        const seeded = Object.fromEntries(
+            PLAN_FEATURE_TOGGLE_KEYS.map((key) => [key, Boolean(tierFeatures[key])])
+        );
+        if (pkg?.mode === 'custom') {
+            setAdminPackagingMode('custom');
+            setAdminFeatureOverrides({
+                ...seeded,
+                ...(pkg.feature_overrides || {}),
+            });
+        } else {
+            setAdminPackagingMode('tier');
+            setAdminFeatureOverrides(seeded);
+        }
+    }, [business?.id, business?.plan_tier, bizSettings]);
+
+    useEffect(() => {
+        const { effective, overriddenKeys } = limitSnapshot;
+        const inputs = {};
+        for (const key of PLAN_LIMIT_OVERRIDE_KEYS) {
+            inputs[key] = overriddenKeys[key] !== undefined ? String(effective[key]) : '';
+        }
+        setAdminLimitInputs(inputs);
+    }, [business?.id, business?.plan_tier, business?.plan_seats, business?.max_products, business?.max_warehouses, limitSnapshot]);
+
+    const handleSaveAdminPackaging = async () => {
+        setPackagingSaving(true);
+        try {
+            const res = await updateBusinessPackaging(business.id, {
+                mode: adminPackagingMode,
+                featureOverrides: adminPackagingMode === 'custom' ? adminFeatureOverrides : undefined,
+            });
+            if (res.success) {
+                toast.success('Module packaging updated');
+                onRefresh();
+            } else {
+                toast.error(res.error || 'Failed to save packaging');
+            }
+        } finally {
+            setPackagingSaving(false);
+        }
+    };
+
     const handleResetPackaging = async () => {
         const res = await updateBusinessPackaging(business.id, { mode: 'tier' });
         if (res.success) {
@@ -409,6 +474,44 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
             toast.error(res.error || 'Failed to update packaging');
         }
     };
+
+    const handleSaveLimitOverrides = async () => {
+        setLimitSaving(true);
+        try {
+            const res = await updateBusinessLimitOverrides(business.id, adminLimitInputs);
+            if (res.success) {
+                toast.success('Plan limits updated');
+                onRefresh();
+            } else {
+                toast.error(res.error || 'Failed to save limit overrides');
+            }
+        } finally {
+            setLimitSaving(false);
+        }
+    };
+
+    const handleResetLimitOverrides = async () => {
+        const cleared = Object.fromEntries(PLAN_LIMIT_OVERRIDE_KEYS.map((k) => [k, '']));
+        setLimitSaving(true);
+        try {
+            const res = await updateBusinessLimitOverrides(business.id, cleared);
+            if (res.success) {
+                toast.success('Limits reset to plan tier defaults');
+                onRefresh();
+            } else {
+                toast.error(res.error || 'Failed to reset limits');
+            }
+        } finally {
+            setLimitSaving(false);
+        }
+    };
+
+    const enterpriseOnlyFeatureKeys = React.useMemo(() => {
+        const freeKeys = new Set(Object.keys(PLAN_TIERS.free.features));
+        return new Set(
+            Object.keys(PLAN_TIERS.enterprise.features).filter((k) => !freeKeys.has(k))
+        );
+    }, []);
 
     const handleChangeRole = async (userId, newRole) => {
         const res = await changeUserRole(userId, business.id, newRole);
@@ -469,7 +572,7 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                     {bizSettings?.packaging?.mode === 'custom' && (
                         <div className="rounded-lg border border-amber-200 bg-amber-50/90 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <p className="text-xs text-amber-950">
-                                <span className="font-bold">Custom packaging</span> — per-feature overrides are active on this business. Reset to use only the subscription tier flags.
+                                <span className="font-bold">Custom packaging</span>, per-feature overrides are active on this business. Reset to use only the subscription tier flags.
                             </p>
                             <Button type="button" size="sm" variant="outline" className="shrink-0 border-amber-300" onClick={() => void handleResetPackaging()}>
                                 Reset to tier defaults
@@ -551,6 +654,169 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                         </Button>
                     </div>
 
+                    <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3 space-y-3">
+                        <div>
+                            <h4 className="font-bold text-sm text-slate-950 flex items-center gap-2">
+                                <LayoutGrid className="w-4 h-4" />
+                                Custom module packaging (admin)
+                            </h4>
+                            <p className="text-xs text-slate-700 mt-1">
+                                Override subscription tier feature flags for this business. Seat and inventory limits still follow plan tier.
+                            </p>
+                        </div>
+                        <div className={`space-y-3 ${packagingSaving ? 'pointer-events-none opacity-70' : ''}`}>
+                            <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2">
+                                <div>
+                                    <p className="text-xs font-semibold text-slate-900">Custom module toggles</p>
+                                    <p className="text-[11px] text-slate-500">Off = tier defaults only</p>
+                                </div>
+                                <Switch
+                                    checked={adminPackagingMode === 'custom'}
+                                    onCheckedChange={(checked) => {
+                                        if (checked) {
+                                            const t = resolvePlanTier(business?.plan_tier || 'free');
+                                            const tierFeatures = PLAN_TIERS[t]?.features || {};
+                                            const seeded = Object.fromEntries(
+                                                PLAN_FEATURE_TOGGLE_KEYS.map((key) => [
+                                                    key,
+                                                    Boolean(tierFeatures[key]),
+                                                ])
+                                            );
+                                            setAdminFeatureOverrides({ ...seeded, ...adminFeatureOverrides });
+                                            setAdminPackagingMode('custom');
+                                        } else {
+                                            setAdminPackagingMode('tier');
+                                        }
+                                    }}
+                                    aria-label="Enable custom module packaging"
+                                />
+                            </div>
+                            {adminPackagingMode === 'custom' ? (
+                                <div className="rounded-md border border-slate-200 bg-white max-h-48 overflow-y-auto divide-y divide-slate-100">
+                                    {PLAN_FEATURE_TOGGLE_KEYS.map((key) => {
+                                        const label = FEATURE_LABELS[key] || key.replace(/_/g, ' ');
+                                        const minPlan = FEATURE_MIN_PLAN[key];
+                                        const isEnterpriseOnly = enterpriseOnlyFeatureKeys.has(key);
+                                        return (
+                                            <div key={key} className="flex items-center justify-between gap-2 px-3 py-2">
+                                                <div className="min-w-0">
+                                                    <span className="text-xs font-medium text-slate-800">{label}</span>
+                                                    {isEnterpriseOnly ? (
+                                                        <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700">
+                                                            {minPlan === 'business' ? 'Business+' : 'Enterprise'}
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                                <Switch
+                                                    checked={!!adminFeatureOverrides[key]}
+                                                    onCheckedChange={(v) =>
+                                                        setAdminFeatureOverrides((prev) => ({ ...prev, [key]: v }))
+                                                    }
+                                                    aria-label={label}
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : null}
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    disabled={packagingSaving}
+                                    onClick={() => void handleSaveAdminPackaging()}
+                                >
+                                    {packagingSaving ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                                    Save packaging
+                                </Button>
+                                {bizSettings?.packaging?.mode === 'custom' ? (
+                                    <Button type="button" size="sm" variant="outline" onClick={() => void handleResetPackaging()}>
+                                        Reset to tier
+                                    </Button>
+                                ) : null}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-lg border border-indigo-200 bg-indigo-50/80 p-3 space-y-3">
+                        <div>
+                            <h4 className="font-bold text-sm text-indigo-950">Plan limit overrides (admin)</h4>
+                            <p className="text-xs text-indigo-900/80 mt-1">
+                                Override seat, catalog, and usage caps for this tenant. Leave blank to use the{' '}
+                                <strong>{PLAN_TIERS[limitSnapshot.tier]?.name || limitSnapshot.tier}</strong> tier
+                                default. Use <code className="text-[10px] bg-white/60 px-1 rounded">-1</code> for
+                                unlimited. Owners see effective limits read-only in Settings.
+                            </p>
+                        </div>
+                        <div className={`space-y-2 ${limitSaving ? 'pointer-events-none opacity-70' : ''}`}>
+                            <div className="hidden sm:grid sm:grid-cols-[1fr_5rem_6rem] gap-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-indigo-800/70">
+                                <span>Limit</span>
+                                <span>Tier default</span>
+                                <span>Override</span>
+                            </div>
+                            {PLAN_LIMIT_OVERRIDE_KEYS.map((key) => {
+                                const label = LIMIT_OVERRIDE_LABELS[key] || key.replace(/max_/, '').replace(/_/g, ' ');
+                                const tierDefault = limitSnapshot.tierDefaults[key];
+                                const effective = limitSnapshot.effective[key];
+                                const isOverridden = limitSnapshot.overriddenKeys[key] !== undefined;
+                                return (
+                                    <div
+                                        key={key}
+                                        className="grid grid-cols-1 sm:grid-cols-[1fr_5rem_6rem] gap-1 sm:gap-2 items-center rounded-md border border-indigo-100 bg-white px-2 py-2"
+                                    >
+                                        <div>
+                                            <p className="text-xs font-medium text-slate-900">{label}</p>
+                                            {isOverridden ? (
+                                                <p className="text-[10px] text-indigo-700 sm:hidden">
+                                                    Current: {formatPlanLimitValue(effective)}
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                        <span className="text-xs text-slate-500 sm:text-center">
+                                            {formatPlanLimitValue(tierDefault)}
+                                        </span>
+                                        <Input
+                                            className="h-8 text-xs"
+                                            type="number"
+                                            min={-1}
+                                            placeholder={formatPlanLimitValue(tierDefault)}
+                                            value={adminLimitInputs[key] ?? ''}
+                                            onChange={(e) =>
+                                                setAdminLimitInputs((prev) => ({
+                                                    ...prev,
+                                                    [key]: e.target.value,
+                                                }))
+                                            }
+                                            aria-label={`${label} override`}
+                                        />
+                                    </div>
+                                );
+                            })}
+                            <div className="flex flex-wrap gap-2 pt-1">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    disabled={limitSaving}
+                                    onClick={() => void handleSaveLimitOverrides()}
+                                >
+                                    {limitSaving ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                                    Save limits
+                                </Button>
+                                {Object.keys(limitSnapshot.overriddenKeys).length > 0 ? (
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        disabled={limitSaving}
+                                        onClick={() => void handleResetLimitOverrides()}
+                                    >
+                                        Reset to tier defaults
+                                    </Button>
+                                ) : null}
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Team Members */}
                     <div>
                         <h4 className="font-bold text-sm mb-2">Team Members ({members?.length || 0})</h4>
@@ -579,7 +845,7 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded-full ${member.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded-full ${member.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                             {member.status}
                                         </span>
                                         {member.role !== 'owner' && member.status === 'active' && (
@@ -675,7 +941,7 @@ function UsersPanel() {
                                             <div className="flex items-center gap-2">
                                                 <p className="text-sm font-bold text-gray-900 truncate">{user.name || 'Unnamed'}</p>
                                                 {user.platform_role === 'admin' && (
-                                                    <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-wine-100 text-wine-700">
+                                                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-wine-100 text-wine-700">
                                                         Platform Admin
                                                     </span>
                                                 )}
@@ -684,7 +950,7 @@ function UsersPanel() {
                                             {user.businesses && user.businesses.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 mt-1">
                                                     {user.businesses.map((b, i) => (
-                                                        <span key={i} className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-gray-100 text-gray-600">
+                                                        <span key={i} className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-600">
                                                             {b.business_name} ({b.role})
                                                         </span>
                                                     ))}
@@ -750,7 +1016,7 @@ function SubscriptionsPanel({ stats, isLoading }) {
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between mb-3">
                                     <h4 className="font-bold text-sm">{plan.name}</h4>
-                                    <span className="text-lg font-black text-gray-900">{count}</span>
+                                    <span className="text-lg font-semibold text-gray-900">{count}</span>
                                 </div>
                                 <div className="space-y-1 text-xs">
                                     <div className="flex justify-between text-gray-500">
@@ -866,7 +1132,7 @@ export default function PlatformAdminPanel() {
                         <Shield className="w-5 h-5" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-black text-gray-900">Platform Administration</h2>
+                        <h2 className="text-xl font-semibold text-gray-900">Platform Administration</h2>
                         <p className="text-xs text-gray-500">Manage businesses, users, subscriptions, roles & access</p>
                     </div>
                 </div>

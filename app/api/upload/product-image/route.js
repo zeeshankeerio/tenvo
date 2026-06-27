@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
+import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -10,10 +11,14 @@ function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
+function sanitizeBusinessSegment(businessId) {
+  return String(businessId).replace(/[^a-zA-Z0-9-]/g, '');
+}
+
 /**
  * POST /api/upload/product-image
  *
- * Accepts multipart/form-data with a single `file` field.
+ * Accepts multipart/form-data with `file` and `businessId` (or `business_id`).
  * Client should resize to WebP (~800×800) before upload when possible.
  *
  * Storage: Supabase `products` bucket when configured; otherwise returns a
@@ -28,13 +33,30 @@ export async function POST(request) {
 
     const formData = await request.formData();
     const file = formData.get('file');
+    const businessId =
+      formData.get('businessId')?.toString() ||
+      formData.get('business_id')?.toString() ||
+      null;
+
+    if (!businessId) {
+      return NextResponse.json({ error: 'Business ID is required' }, { status: 400 });
+    }
+
+    const allowed = await assertUserHasBusinessAccess({
+      userId: session.user.id,
+      businessId,
+      sessionUser: session.user,
+    });
+    if (!allowed) {
+      return NextResponse.json({ error: 'Unauthorized: No access to this business' }, { status: 403 });
+    }
 
     if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
-    if (!allowed.includes(file.type)) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+    if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
         { error: 'Unsupported format. Allowed: JPEG, PNG, WebP, GIF' },
         { status: 400 }
@@ -51,6 +73,7 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const supabase = getSupabaseClient();
+    const tenantSegment = sanitizeBusinessSegment(businessId);
 
     if (!supabase) {
       if (buffer.length > 512 * 1024) {
@@ -75,7 +98,7 @@ export async function POST(request) {
     }
 
     const uniqueName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const filePath = `images/${uniqueName}`;
+    const filePath = `images/${tenantSegment}/${uniqueName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('products')
@@ -124,6 +147,11 @@ export async function POST(request) {
  */
 export async function GET(request) {
   try {
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q')?.trim();
     const category = searchParams.get('category')?.trim() || '';
@@ -132,20 +160,14 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Search query required' }, { status: 400 });
     }
 
-    // Build a clean search term
     const terms = [q, category].filter(Boolean).join(' ');
     const encoded = encodeURIComponent(terms);
-
-    // Unsplash Source API — no auth needed, returns redirect to a CDN image
-    // We use a fixed 800×800 size, optimized for product cards
     const unsplashUrl = `https://source.unsplash.com/800x800/?${encoded}`;
 
-    // Resolve the redirect to get the final stable CDN URL
     const res = await fetch(unsplashUrl, { method: 'HEAD', redirect: 'follow' });
     const finalUrl = res.url;
 
     if (!finalUrl || finalUrl.includes('unsplash.com/photo/') === false) {
-      // Fallback: try with just product name
       const fallbackUrl = `https://source.unsplash.com/800x800/?${encodeURIComponent(q)}`;
       return NextResponse.json({ success: true, url: fallbackUrl, source: 'unsplash' });
     }

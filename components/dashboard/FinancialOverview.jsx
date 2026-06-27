@@ -134,13 +134,13 @@ export function FinancialOverview({
                             <div className="flex justify-between items-end">
                                 <div>
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Gross Profit</p>
-                                    <p className="text-3xl font-black text-gray-900 tracking-tight">
+                                    <p className="text-3xl font-semibold text-gray-900 tracking-tight">
                                         {formatCurrency(accountingSummary?.grossProfit || 0, currency)}
                                     </p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Margin</p>
-                                    <div className={`text-xl font-black flex items-center justify-end gap-1 ${accountingSummary?.margin >= 20 ? 'text-green-600' : 'text-orange-600'}`}>
+                                    <div className={`text-xl font-semibold flex items-center justify-end gap-1 ${accountingSummary?.margin >= 20 ? 'text-green-600' : 'text-orange-600'}`}>
                                         {Math.round(accountingSummary?.margin || 0)}%
                                     </div>
                                 </div>

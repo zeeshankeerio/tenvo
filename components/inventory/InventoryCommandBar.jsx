@@ -32,7 +32,7 @@ const VIEW_MODES = [
 ];
 
 /**
- * Single-row inventory toolbar — sync, view mode, and grouped actions.
+ * Single-row inventory toolbar, sync, view mode, and grouped actions.
  */
 export function InventoryCommandBar({
   activeTab = 'products',
@@ -69,7 +69,7 @@ export function InventoryCommandBar({
         <span className="text-[10px] font-semibold text-green-700">{syncLabel}</span>
       </div>
 
-      {/* Refresh — icon only */}
+      {/* Refresh, icon only */}
       <Button
         type="button"
         variant="outline"
@@ -97,7 +97,7 @@ export function InventoryCommandBar({
                 type="button"
                 onClick={() => onViewModeChange?.(mode.id)}
                 className={cn(
-                  'rounded-md px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition-colors',
+                  'rounded-md px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors',
                   viewMode === mode.id
                     ? 'bg-white text-brand-primary shadow-sm'
                     : 'text-gray-500 hover:text-gray-900'
@@ -110,13 +110,13 @@ export function InventoryCommandBar({
 
           <div className="mx-0.5 h-5 w-px shrink-0 bg-gray-200" aria-hidden />
 
-          {/* AI smart add — direct action */}
+          {/* AI smart add, direct action */}
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={onAiSmartAdd}
-            className="h-8 shrink-0 rounded-lg border-slate-200 bg-slate-900 px-2.5 text-[10px] font-black uppercase tracking-wide text-white hover:bg-slate-800"
+            className="h-8 shrink-0 rounded-lg border-slate-200 bg-slate-900 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-white hover:bg-slate-800"
             title="AI smart add"
           >
             <BrainCircuit className="mr-1.5 h-3.5 w-3.5 text-blue-300" />
@@ -129,7 +129,7 @@ export function InventoryCommandBar({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 shrink-0 rounded-lg border-gray-200 px-2.5 text-[10px] font-black uppercase tracking-wide text-gray-700"
+                className="h-8 shrink-0 rounded-lg border-gray-200 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-gray-700"
               >
                 <LayoutGrid className="mr-1.5 h-3.5 w-3.5" />
                 Data
@@ -137,7 +137,7 @@ export function InventoryCommandBar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-52 rounded-xl p-1.5">
-              <DropdownMenuLabel className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+              <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                 Spreadsheet
               </DropdownMenuLabel>
               <DropdownMenuItem onClick={onExcelMode} className="rounded-lg py-2">
@@ -161,7 +161,7 @@ export function InventoryCommandBar({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 shrink-0 rounded-lg border-gray-200 px-2.5 text-[10px] font-black uppercase tracking-wide text-gray-700"
+                className="h-8 shrink-0 rounded-lg border-gray-200 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-gray-700"
               >
                 <ScanBarcode className="mr-1.5 h-3.5 w-3.5" />
                 Stock
@@ -169,7 +169,7 @@ export function InventoryCommandBar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-52 rounded-xl p-1.5">
-              <DropdownMenuLabel className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+              <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                 Operations
               </DropdownMenuLabel>
               <DropdownMenuItem onClick={onScanBarcode} className="rounded-lg py-2">
@@ -194,7 +194,7 @@ export function InventoryCommandBar({
               variant="outline"
               size="sm"
               onClick={onOpenTemplates}
-              className="h-8 shrink-0 rounded-lg border-amber-200 bg-amber-50 px-2.5 text-[10px] font-black uppercase tracking-wide text-amber-800 hover:bg-amber-100"
+              className="h-8 shrink-0 rounded-lg border-amber-200 bg-amber-50 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 hover:bg-amber-100"
               title="Starter product templates"
             >
               <Sparkles className="mr-1.5 h-3.5 w-3.5" />
@@ -208,7 +208,7 @@ export function InventoryCommandBar({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 shrink-0 rounded-lg px-2 text-[10px] font-black uppercase tracking-wide text-gray-500"
+                className="h-8 shrink-0 rounded-lg px-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500"
               >
                 More
                 <ChevronDown className="ml-1 h-3 w-3 opacity-50" />

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 /**
  * POST /api/storefront/cart/sync
- * Lightweight cart sync endpoint — validates items still exist and are in stock.
+ * Lightweight cart sync endpoint, validates items still exist and are in stock.
  * Returns updated stock info so the client can correct stale quantities.
  */
 export async function POST(request) {
@@ -58,7 +58,7 @@ export async function POST(request) {
     }
   } catch (error) {
     console.error('[cart sync]', error);
-    // Non-critical — return success so cart still works offline
+    // Non-critical, return success so cart still works offline
     return NextResponse.json({ synced: true, items: [] });
   }
 }

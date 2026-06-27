@@ -115,7 +115,7 @@ export function DataTable({
         <div className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[min(100vw-1.5rem,28rem)] -translate-x-1/2 animate-in fade-in slide-in-from-bottom-4 duration-300 lg:bottom-8">
           <div className="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-6 border border-slate-700 backdrop-blur-md bg-opacity-95">
             <div className="flex items-center gap-2 border-r border-slate-700 pr-6">
-              <span className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black">
+              <span className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold">
                 {selectedRows.length}
               </span>
               <span className="text-sm font-bold tracking-tight uppercase">Selected</span>
@@ -130,7 +130,7 @@ export function DataTable({
                     table.resetRowSelection();
                   }
                 }}
-                className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-300 transition-all hover:scale-105 active:scale-95"
+                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-400 hover:text-red-300 transition-all hover:scale-105 active:scale-95"
               >
                 <Trash2 className="w-4 h-4" />
                 Bulk Delete
@@ -142,7 +142,7 @@ export function DataTable({
                     onExport(selectedRows.map(r => r.original));
                   }
                 }}
-                className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-all hover:scale-105 active:scale-95"
+                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-all hover:scale-105 active:scale-95"
               >
                 <Download className="w-4 h-4" />
                 Export {selectedRows.length} items
@@ -239,7 +239,7 @@ export function DataTable({
                     <th
                       key={header.id}
                       className={cn(
-                        "px-3 py-2 text-left text-[9px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/80 transition-colors border-b-2 border-transparent",
+                        "px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/80 transition-colors border-b-2 border-transparent",
                         header.column.getIsSorted() && "border-blue-500 text-blue-600 bg-blue-50/30",
                         index === 0 && "sticky left-0 z-30 bg-gray-50/95 backdrop-blur-sm shadow-[2px_0_10px_-4px_rgba(0,0,0,0.1)]"
                       )}

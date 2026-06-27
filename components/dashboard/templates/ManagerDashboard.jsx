@@ -119,7 +119,7 @@ export function ManagerDashboard({
       {/* Manager Dashboard Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-gray-900">
+          <h2 className="text-2xl font-semibold text-gray-900">
             {t.manager_dashboard || 'Manager Dashboard'}
           </h2>
           <p className="text-sm text-gray-500">
@@ -170,7 +170,7 @@ export function ManagerDashboard({
                     {t.total_sales || 'Total Sales'}
                   </span>
                 </div>
-                <div className="text-xl font-black text-blue-900">
+                <div className="text-xl font-semibold text-blue-900">
                   {formatCurrency(teamProductivity.totalSales, currency)}
                 </div>
               </div>
@@ -182,7 +182,7 @@ export function ManagerDashboard({
                     {t.total_orders || 'Total Orders'}
                   </span>
                 </div>
-                <div className="text-xl font-black text-green-900">
+                <div className="text-xl font-semibold text-green-900">
                   {teamProductivity.totalOrders}
                 </div>
               </div>
@@ -279,7 +279,7 @@ export function ManagerDashboard({
           <CardContent className="space-y-3">
             {/* Alert Summary */}
             <div className="p-4 rounded-lg bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200">
-              <div className="text-3xl font-black text-red-700 mb-1">
+              <div className="text-3xl font-semibold text-red-700 mb-1">
                 {inventoryAlerts.totalAlerts}
               </div>
               <div className="text-xs font-bold text-red-600 uppercase tracking-wider">
@@ -384,7 +384,7 @@ export function ManagerDashboard({
                   <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">
                     {t.monthly_target || 'Monthly Target'}
                   </div>
-                  <div className="text-2xl font-black text-green-900">
+                  <div className="text-2xl font-semibold text-green-900">
                     {salesTargets.monthly.achievement}%
                   </div>
                 </div>

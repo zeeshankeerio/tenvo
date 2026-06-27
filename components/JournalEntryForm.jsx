@@ -236,7 +236,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                             <BookOpen className="w-6 h-6" />
                         </div>
                         <div>
-                            <CardTitle className="text-2xl font-black uppercase tracking-tighter">Journal Entry</CardTitle>
+                            <CardTitle className="text-2xl font-semibold uppercase tracking-tighter">Journal Entry</CardTitle>
                             <p className="text-xs font-bold text-emerald-300/70 uppercase tracking-widest mt-1">
                                 {business?.name} * Double-Entry Posting
                             </p>
@@ -244,7 +244,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                     </div>
                     <div className="flex items-center gap-3">
                         {/* Balance Indicator */}
-                        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${totals.isBalanced
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-widest ${totals.isBalanced
                                 ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/40'
                                 : 'bg-red-500/20 text-red-300 ring-1 ring-red-400/40 animate-pulse'
                             }`}>
@@ -261,7 +261,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                     {/* Header Fields */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Journal Date *</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Journal Date *</Label>
                             <Input
                                 type="date"
                                 className="h-12 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 transition-all"
@@ -270,7 +270,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                             />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Description / Narration *</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Description / Narration *</Label>
                             <Input
                                 placeholder="e.g. Monthly depreciation entry for office equipment"
                                 className="h-12 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 transition-all"
@@ -282,7 +282,7 @@ export function JournalEntryForm({ onClose, onSave }) {
 
                     {/* Quick Templates */}
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Quick Templates</Label>
+                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Quick Templates</Label>
                         <div className="flex flex-wrap gap-2">
                             {JOURNAL_TEMPLATES.map((tpl, i) => (
                                 <button
@@ -304,7 +304,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                    <Label className="text-sm font-black text-gray-900 uppercase tracking-tighter">Debit</Label>
+                                    <Label className="text-sm font-semibold text-gray-900 uppercase tracking-tighter">Debit</Label>
                                     <Badge variant="outline" className="rounded-full px-2 h-5 text-[10px] font-bold bg-blue-50 text-blue-700 border-blue-200">
                                         {formatCurrency(totals.totalDebit, currency)}
                                     </Badge>
@@ -357,7 +357,7 @@ export function JournalEntryForm({ onClose, onSave }) {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                    <Label className="text-sm font-black text-gray-900 uppercase tracking-tighter">Credit</Label>
+                                    <Label className="text-sm font-semibold text-gray-900 uppercase tracking-tighter">Credit</Label>
                                     <Badge variant="outline" className="rounded-full px-2 h-5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border-emerald-200">
                                         {formatCurrency(totals.totalCredit, currency)}
                                     </Badge>
@@ -415,8 +415,8 @@ export function JournalEntryForm({ onClose, onSave }) {
                             <div className="flex items-center gap-4">
                                 <Scale className={`w-8 h-8 ${totals.isBalanced ? 'text-emerald-500' : 'text-red-500'}`} />
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Balance Check</p>
-                                    <p className={`text-lg font-black ${totals.isBalanced ? 'text-emerald-700' : 'text-red-700'}`}>
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Balance Check</p>
+                                    <p className={`text-lg font-semibold ${totals.isBalanced ? 'text-emerald-700' : 'text-red-700'}`}>
                                         {totals.isBalanced ? 'Entry is balanced -- ready to post' : `Difference: ${formatCurrency(totals.difference, currency)}`}
                                     </p>
                                 </div>
@@ -424,11 +424,11 @@ export function JournalEntryForm({ onClose, onSave }) {
                             <div className="text-right space-y-1">
                                 <div className="flex items-center gap-4 text-sm">
                                     <span className="text-gray-500 font-bold">Total Debit:</span>
-                                    <span className="font-black text-blue-700">{formatCurrency(totals.totalDebit, currency)}</span>
+                                    <span className="font-semibold text-blue-700">{formatCurrency(totals.totalDebit, currency)}</span>
                                 </div>
                                 <div className="flex items-center gap-4 text-sm">
                                     <span className="text-gray-500 font-bold">Total Credit:</span>
-                                    <span className="font-black text-emerald-700">{formatCurrency(totals.totalCredit, currency)}</span>
+                                    <span className="font-semibold text-emerald-700">{formatCurrency(totals.totalCredit, currency)}</span>
                                 </div>
                             </div>
                         </div>
@@ -436,7 +436,7 @@ export function JournalEntryForm({ onClose, onSave }) {
 
                     {/* Reference */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Reference / Voucher # (Optional)</Label>
+                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Reference / Voucher # (Optional)</Label>
                         <Input
                             placeholder="e.g. JV-2026-001"
                             className="h-12 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 transition-all max-w-md"
@@ -448,13 +448,13 @@ export function JournalEntryForm({ onClose, onSave }) {
 
                 {/* Footer */}
                 <div className="p-6 bg-white border-t flex justify-between items-center bg-gray-50/80 backdrop-blur-md flex-shrink-0">
-                    <Button variant="ghost" onClick={onClose} disabled={isSaving} className="font-black text-xs uppercase tracking-widest text-gray-400 hover:text-gray-900">
+                    <Button variant="ghost" onClick={onClose} disabled={isSaving} className="font-semibold text-xs uppercase tracking-widest text-gray-400 hover:text-gray-900">
                         Cancel & Close
                     </Button>
                     <Button
                         disabled={isSaving || !totals.isBalanced}
                         onClick={handleSave}
-                        className="h-12 px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-12 px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Post Journal Entry

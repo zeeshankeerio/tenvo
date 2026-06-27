@@ -61,7 +61,7 @@ async function loadPublicStoreProfile(businessId) {
 
 /**
  * POST /api/storefront/[businessDomain]/chat
- * Public buyer assistant — domain-scoped, no cross-tenant data access.
+ * Public buyer assistant, domain-scoped, no cross-tenant data access.
  */
 export async function POST(request, { params }) {
   const { businessDomain } = await params;

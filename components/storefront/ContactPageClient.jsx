@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   Mail,
   Phone,
@@ -17,10 +18,23 @@ import {
   Twitter,
   Youtube,
   AlertCircle,
+  Calendar,
 } from 'lucide-react';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { resolveStoreContact } from '@/lib/storefront/businessContact';
+import { isAutoDealershipStore, resolveDealershipContactIntent } from '@/lib/storefront/autoDealership';
+import {
+  getDealershipBookingSubjectOptions,
+  getDealershipShowroomLocations,
+  BOOKING_TIME_SLOTS,
+} from '@/lib/storefront/dealershipBooking';
+import {
+  getTenantMeetingUrl,
+  isStorefrontBookingSubject,
+  shouldOfferTenantMeetingLink,
+} from '@/lib/storefront/storefrontBooking';
+import { isPharmacyElevatedStore, resolvePharmacyContactIntent } from '@/lib/storefront/pharmacyStorefront';
 import { StoreBuyerPageShell } from '@/components/storefront/StoreBuyerPageShell';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +44,15 @@ const SUBJECT_OPTIONS = [
   { value: 'product', label: 'Product question' },
   { value: 'return', label: 'Return or exchange' },
   { value: 'wholesale', label: 'Wholesale / bulk' },
+  { value: 'other', label: 'Other' },
+];
+
+const PHARMACY_SUBJECT_OPTIONS = [
+  { value: 'prescription', label: 'Prescription upload' },
+  { value: 'refill', label: 'Refill reminder' },
+  { value: 'order', label: 'Order question' },
+  { value: 'product', label: 'Product / dosage question' },
+  { value: 'general', label: 'General inquiry' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -52,23 +75,74 @@ function ContactCard({ icon: Icon, label, children, accent }) {
 
 export function ContactPageClient() {
   const { businessDomain, business, settings } = useStorefront();
+  const searchParams = useSearchParams();
   const accent = getStoreAccentColor(settings, business?.category);
+  const isDealership = isAutoDealershipStore(business?.category);
+  const isPharmacy = isPharmacyElevatedStore(business?.category);
+  const intent = isDealership
+    ? resolveDealershipContactIntent(searchParams, { country: business?.country, settings })
+    : isPharmacy
+      ? resolvePharmacyContactIntent(searchParams)
+      : null;
+  const subjectOptions = isDealership
+    ? getDealershipBookingSubjectOptions(business, settings)
+    : isPharmacy
+      ? PHARMACY_SUBJECT_OPTIONS
+      : SUBJECT_OPTIONS;
+
+  const showroomLocations = isDealership
+    ? getDealershipShowroomLocations(business, settings)
+    : [];
+
+  const bookingSubjects = new Set([
+    'testdrive', 'visit', 'sell', 'finance', 'leasing', 'insurance', 'buy', 'ppf', 'conversion', 'service',
+  ]);
+
   const contact = useMemo(
     () => resolveStoreContact({ business, settings }),
     [business, settings]
   );
 
+  const tenantMeetingUrl = useMemo(() => {
+    if (!shouldOfferTenantMeetingLink(business, business?.category, settings)) return null;
+    return getTenantMeetingUrl(business, settings);
+  }, [business, settings]);
+
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
-    subject: 'general',
+    subject: intent?.subject || 'general',
     orderNumber: '',
+    preferredDate: '',
+    preferredTime: '',
+    showroomLocation: '',
+    vehicleInterest: intent?.vehiclePrefill || searchParams.get('vehicle') || '',
     message: '',
   });
+  const isBookingForm = isDealership && bookingSubjects.has(form.subject);
+  const showPickTimeCta =
+    Boolean(tenantMeetingUrl) &&
+    (isBookingForm || isStorefrontBookingSubject(business?.category, form.subject) || Boolean(intent));
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const vehicleParam = searchParams.get('vehicle') || '';
+
+  useEffect(() => {
+    const vehicle = intent?.vehiclePrefill || vehicleParam || '';
+    setForm((f) => ({
+      ...f,
+      subject: intent?.subject || f.subject,
+      vehicleInterest: vehicle || f.vehicleInterest,
+    }));
+  }, [intent?.subject, intent?.vehiclePrefill, vehicleParam]);
+
+  const pageTitle = intent?.title || 'Contact us';
+  const pageSubtitle = intent?.subtitle
+    || `Reach ${contact.storeName}, we typically reply within 1-2 business days.`;
+  const messagePlaceholder = intent?.messagePlaceholder || 'How can we help?';
 
   const mapQuery = contact.fullAddress
     ? encodeURIComponent(contact.fullAddress)
@@ -107,8 +181,8 @@ export function ContactPageClient() {
   return (
     <StoreBuyerPageShell
       businessDomain={businessDomain}
-      title="Contact us"
-      subtitle={`Reach ${contact.storeName} — we typically reply within 1–2 business days.`}
+      title={pageTitle}
+      subtitle={pageSubtitle}
     >
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8">
         {/* Store info */}
@@ -242,8 +316,12 @@ export function ContactPageClient() {
                       name: '',
                       email: '',
                       phone: '',
-                      subject: 'general',
+                      subject: intent?.subject || 'general',
                       orderNumber: '',
+                      preferredDate: '',
+                      preferredTime: '',
+                      showroomLocation: '',
+                      vehicleInterest: intent?.vehiclePrefill || '',
                       message: '',
                     });
                   }}
@@ -255,6 +333,26 @@ export function ContactPageClient() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {showPickTimeCta ? (
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 sm:p-5">
+                    <p className="text-sm font-semibold text-gray-900">Prefer to pick a time?</p>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Schedule online, or send the form below and we will confirm by email or phone.
+                    </p>
+                    <a
+                      href={tenantMeetingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition hover:opacity-90 sm:w-auto sm:px-6"
+                      style={{ backgroundColor: accent }}
+                    >
+                      <Calendar className="h-4 w-4" aria-hidden />
+                      Pick a time
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                    </a>
+                  </div>
+                ) : null}
+
                 {!contact.hasAnyContact ? (
                   <div className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 sm:text-sm">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -303,7 +401,8 @@ export function ContactPageClient() {
                       value={form.phone}
                       onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                       className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
-                      placeholder="Optional"
+                      placeholder={isDealership ? 'Required for callback' : 'Optional'}
+                      required={isDealership}
                     />
                   </div>
                   <div>
@@ -316,7 +415,7 @@ export function ContactPageClient() {
                       onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
                       className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
                     >
-                      {SUBJECT_OPTIONS.map((opt) => (
+                      {subjectOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.label}
                         </option>
@@ -325,7 +424,69 @@ export function ContactPageClient() {
                   </div>
                 </div>
 
-                {form.subject === 'order' || form.subject === 'return' ? (
+                {isDealership ? (
+                  <div className="space-y-4 rounded-xl border border-gray-100 bg-gray-50/80 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      {isBookingForm ? 'Appointment details' : 'Vehicle details (optional)'}
+                    </p>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                          Preferred date{isBookingForm ? ' *' : ''}
+                        </label>
+                        <input
+                          type="date"
+                          required={isBookingForm}
+                          value={form.preferredDate}
+                          onChange={(e) => setForm((f) => ({ ...f, preferredDate: e.target.value }))}
+                          className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Preferred time</label>
+                        <select
+                          value={form.preferredTime}
+                          onChange={(e) => setForm((f) => ({ ...f, preferredTime: e.target.value }))}
+                          className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
+                        >
+                          <option value="">Any time</option>
+                          {BOOKING_TIME_SLOTS.map((slot) => (
+                            <option key={slot.id} value={slot.id}>{slot.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {showroomLocations.length > 0 ? (
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-gray-700">Showroom branch</label>
+                          <select
+                            value={form.showroomLocation}
+                            onChange={(e) => setForm((f) => ({ ...f, showroomLocation: e.target.value }))}
+                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
+                          >
+                            <option value="">Select branch</option>
+                            {showroomLocations.map((loc) => (
+                              <option key={loc.id} value={loc.id}>{loc.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : null}
+                      <div className={showroomLocations.length > 0 ? '' : 'sm:col-span-2'}>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Vehicle interest</label>
+                        <input
+                          type="text"
+                          value={form.vehicleInterest}
+                          onChange={(e) => setForm((f) => ({ ...f, vehicleInterest: e.target.value }))}
+                          className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
+                          placeholder="e.g. Toyota Hilux Revo, GAC E9"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {!isDealership && (form.subject === 'order' || form.subject === 'return') ? (
                   <div>
                     <label className="mb-1 block text-sm font-medium text-gray-700">Order number</label>
                     <input
@@ -348,7 +509,7 @@ export function ContactPageClient() {
                     value={form.message}
                     onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
                     className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
-                    placeholder="How can we help?"
+                    placeholder={messagePlaceholder}
                     minLength={10}
                   />
                 </div>
@@ -371,7 +532,7 @@ export function ContactPageClient() {
                   {submitting ? 'Sending…' : (
                     <>
                       <Send className="h-4 w-4" aria-hidden />
-                      Send message
+                      {isBookingForm ? 'Submit booking request' : 'Send message'}
                     </>
                   )}
                 </button>

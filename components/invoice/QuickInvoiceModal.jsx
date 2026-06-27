@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '@/lib/currency';
-import { getDomainKnowledge } from '@/lib/domainKnowledge';
+import { useFormRegionalContext } from '@/lib/hooks/useFormRegionalContext';
 import { cn } from '@/lib/utils';
 import { MOBILE_OVERLAY, MOBILE_OVERLAY_CARD, MOBILE_FORM_FOOTER } from '@/lib/utils/formMobileStyles';
 
@@ -43,10 +43,11 @@ export function QuickInvoiceModal({
     products = [],
     customers = [],
     recentTransactions = [],
-    currency = 'PKR',
+    currency: currencyProp,
 }) {
-    const domainKnowledge = getDomainKnowledge(category);
-    const defaultTax = domainKnowledge?.defaultTax || 17;
+    const { currency: ctxCurrency, defaultTaxRate, domainKnowledge } = useFormRegionalContext(category);
+    const currency = currencyProp || ctxCurrency;
+    const defaultTax = defaultTaxRate;
     
     // Focus refs for keyboard navigation
     const customerInputRef = useRef(null);
@@ -438,7 +439,7 @@ export function QuickInvoiceModal({
                             <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         <div className="min-w-0">
-                            <CardTitle className="text-base font-black sm:text-xl">Quick Checkout</CardTitle>
+                            <CardTitle className="text-base font-semibold sm:text-xl">Quick Checkout</CardTitle>
                             <p className="mt-0.5 hidden text-xs text-gray-500 sm:block">Hotkey: Ctrl+I | Load Last: Ctrl+L | Close: Esc | Sale: Shift+Enter</p>
                         </div>
                     </div>
@@ -453,7 +454,7 @@ export function QuickInvoiceModal({
                 <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-3 sm:p-6">
                     {/* Customer Section */}
                     <div className="space-y-2">
-                        <Label className="text-xs font-black uppercase text-gray-400 tracking-widest">Customer</Label>
+                        <Label className="text-xs font-semibold uppercase text-gray-400 tracking-widest">Customer</Label>
                         <Input
                             ref={customerInputRef}
                             type="text"
@@ -530,7 +531,7 @@ export function QuickInvoiceModal({
 
                     {/* Product Add Section */}
                     <div className="space-y-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
-                        <Label className="text-xs font-black uppercase text-gray-400 tracking-widest">Add Items</Label>
+                        <Label className="text-xs font-semibold uppercase text-gray-400 tracking-widest">Add Items</Label>
                         <div className="flex gap-2">
                             <div className="flex-1">
                                 <Input
@@ -653,7 +654,7 @@ export function QuickInvoiceModal({
                                 <span>Tax ({defaultTax}%):</span>
                                 <span className="font-semibold">{formatCurrency(totals.tax, currency)}</span>
                             </div>
-                            <div className="flex justify-between border-t pt-2 text-lg font-black text-wine">
+                            <div className="flex justify-between border-t pt-2 text-lg font-semibold text-wine">
                                 <span>TOTAL:</span>
                                 <span>{formatCurrency(totals.total, currency)}</span>
                             </div>
@@ -662,7 +663,7 @@ export function QuickInvoiceModal({
 
                     {/* Payment Method */}
                     <div className="space-y-2">
-                        <Label className="text-xs font-black uppercase text-gray-400 tracking-widest">Payment Method</Label>
+                        <Label className="text-xs font-semibold uppercase text-gray-400 tracking-widest">Payment Method</Label>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                             {['cash', 'card', 'check', 'transfer'].map(method => (
                                 <button
@@ -685,7 +686,7 @@ export function QuickInvoiceModal({
                     </div>
                 </CardContent>
 
-                {/* Footer — pinned on mobile */}
+                {/* Footer, pinned on mobile */}
                 <div className={cn(MOBILE_FORM_FOOTER, 'border-t bg-gray-50')}>
                     <div className="flex flex-col-reverse gap-2 sm:flex-row">
                         <Button

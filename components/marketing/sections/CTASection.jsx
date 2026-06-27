@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
 import * as LucideIcons from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackEvent, EVENTS } from '@/lib/analytics/tracking';
@@ -76,12 +76,12 @@ export default function CTASection({
               <div className={`flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:gap-4 ${buttonAlignment[alignment]}`}>
                 {primaryCTA && (
                   <Button asChild size="lg" className="bg-white hover:bg-neutral-100 text-brand-primary px-8 py-6 text-lg font-semibold rounded-xl" onClick={() => handleCTAClick('primary', primaryCTA.href)}>
-                    <Link href={primaryCTA.href}>{primaryCTA.text}</Link>
+                    <MarketingCtaLink href={primaryCTA.href}>{primaryCTA.text}</MarketingCtaLink>
                   </Button>
                 )}
                 {secondaryCTA && (
                   <Button asChild variant="outline" size="lg" className="border-2 border-white/30 hover:border-white text-white px-8 py-6 text-lg font-semibold rounded-xl" onClick={() => handleCTAClick('secondary', secondaryCTA.href)}>
-                    <Link href={secondaryCTA.href}>{secondaryCTA.text}</Link>
+                    <MarketingCtaLink href={secondaryCTA.href}>{secondaryCTA.text}</MarketingCtaLink>
                   </Button>
                 )}
               </div>
@@ -103,12 +103,12 @@ export default function CTASection({
             <div className={`flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:gap-4 ${buttonAlignment[alignment]}`}>
               {primaryCTA && (
                 <Button asChild size="lg" className="bg-brand-primary hover:bg-brand-primary-dark text-white px-8 py-6 text-lg font-semibold rounded-xl" onClick={() => handleCTAClick('primary', primaryCTA.href)}>
-                  <Link href={primaryCTA.href}>{primaryCTA.text}</Link>
+                  <MarketingCtaLink href={primaryCTA.href}>{primaryCTA.text}</MarketingCtaLink>
                 </Button>
               )}
               {secondaryCTA && (
                 <Button asChild variant="outline" size="lg" className="border-2 border-neutral-300 hover:border-brand-primary px-8 py-6 text-lg font-semibold rounded-xl" onClick={() => handleCTAClick('secondary', secondaryCTA.href)}>
-                  <Link href={secondaryCTA.href}>{secondaryCTA.text}</Link>
+                  <MarketingCtaLink href={secondaryCTA.href}>{secondaryCTA.text}</MarketingCtaLink>
                 </Button>
               )}
             </div>

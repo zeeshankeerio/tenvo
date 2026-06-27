@@ -18,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import { MOBILE_DIALOG_SHELL, MOBILE_INPUT_CLASS, MOBILE_LABEL_CLASS } from '@/lib/utils/formMobileStyles';
 import { MobileFormFooter } from '@/components/mobile/MobileFormShell';
@@ -201,7 +201,7 @@ export function PaymentModal({
                             <Label htmlFor="amount" className={MOBILE_LABEL_CLASS}>Payment Amount *</Label>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
-                                    {currency === 'PKR' ? '₨' : '$'}
+                                    {getCurrencySymbol(currency)}
                                 </span>
                                 <Input
                                     id="amount"

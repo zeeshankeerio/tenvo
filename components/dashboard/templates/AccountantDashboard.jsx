@@ -186,7 +186,7 @@ export function AccountantDashboard({
       {/* Accountant Dashboard Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-gray-900">
+          <h2 className="text-2xl font-semibold text-gray-900">
             {t.accountant_dashboard || 'Accountant Dashboard'}
           </h2>
           <p className="text-sm text-gray-500">
@@ -231,7 +231,7 @@ export function AccountantDashboard({
                   +{financialSummary.trend.revenue}%
                 </Badge>
               </div>
-              <div className="text-2xl font-black text-green-900">
+              <div className="text-2xl font-semibold text-green-900">
                 {formatCurrency(financialSummary.revenue, currency)}
               </div>
               <div className="text-xs text-green-700 mt-1">
@@ -251,7 +251,7 @@ export function AccountantDashboard({
                   +{financialSummary.trend.expenses}%
                 </Badge>
               </div>
-              <div className="text-2xl font-black text-red-900">
+              <div className="text-2xl font-semibold text-red-900">
                 {formatCurrency(financialSummary.expenses, currency)}
               </div>
               <div className="text-xs text-red-700 mt-1">
@@ -271,7 +271,7 @@ export function AccountantDashboard({
                   +{financialSummary.trend.profit}%
                 </Badge>
               </div>
-              <div className="text-2xl font-black text-blue-900">
+              <div className="text-2xl font-semibold text-blue-900">
                 {formatCurrency(financialSummary.profit, currency)}
               </div>
               <div className="text-xs text-blue-700 mt-1">
@@ -338,7 +338,7 @@ export function AccountantDashboard({
               <div className="text-xs font-bold text-orange-700 uppercase tracking-wider mb-1">
                 {t.total_expenses || 'Total Expenses'}
               </div>
-              <div className="text-2xl font-black text-orange-900">
+              <div className="text-2xl font-semibold text-orange-900">
                 {formatCurrency(expenseTracking.totalExpenses, currency)}
               </div>
             </div>
@@ -410,7 +410,7 @@ export function AccountantDashboard({
           {/* Reconciliation Summary */}
           <div className="grid grid-cols-3 gap-3">
             <div className="p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200">
-              <div className="text-2xl font-black text-blue-700">
+              <div className="text-2xl font-semibold text-blue-700">
                 {bankReconciliation.totalAccounts}
               </div>
               <div className="text-xs font-bold text-blue-600 uppercase tracking-wider">
@@ -419,7 +419,7 @@ export function AccountantDashboard({
             </div>
             
             <div className="p-3 rounded-lg bg-gradient-to-br from-green-50 to-green-100/50 border border-green-200">
-              <div className="text-2xl font-black text-green-700">
+              <div className="text-2xl font-semibold text-green-700">
                 {bankReconciliation.reconciledAccounts}
               </div>
               <div className="text-xs font-bold text-green-600 uppercase tracking-wider">
@@ -428,7 +428,7 @@ export function AccountantDashboard({
             </div>
             
             <div className="p-3 rounded-lg bg-gradient-to-br from-yellow-50 to-yellow-100/50 border border-yellow-200">
-              <div className="text-2xl font-black text-yellow-700">
+              <div className="text-2xl font-semibold text-yellow-700">
                 {bankReconciliation.pendingAccounts}
               </div>
               <div className="text-xs font-bold text-yellow-600 uppercase tracking-wider">

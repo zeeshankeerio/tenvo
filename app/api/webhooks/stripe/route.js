@@ -16,7 +16,7 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
  */
 export async function POST(request) {
   if (!stripe || !webhookSecret) {
-    console.error('[Stripe Webhook] Not configured — set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET');
+    console.error('[Stripe Webhook] Not configured, set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET');
     return NextResponse.json(
       { error: 'Stripe webhook not configured' },
       { status: 503 }

@@ -1,12 +1,26 @@
 'use client';
 
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
-import { MARKETING_CONTAINER } from '@/lib/utils/marketingLayout';
+import { CheckCircle, Calendar } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import Hero from '@/components/marketing/sections/Hero';
 import { DemoRequestForm } from '@/components/marketing/forms/DemoRequestForm';
+import { DemoStoreGallery } from '@/components/marketing/sections/DemoStoreGallery';
+import HomeTrustStrip from '@/components/marketing/sections/HomeTrustStrip';
 import TestimonialsSection from '@/components/marketing/sections/TestimonialsSection';
 import { TrustBadges } from '@/components/marketing/ui/TrustBadges';
-import { CheckCircle } from 'lucide-react';
+import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
+import { Button } from '@/components/ui/button';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
+import { MARKETING_HONEST_STATS } from '@/lib/marketing/homeVisualThemes';
+import {
+  MARKETING_CONTAINER,
+  MARKETING_H2,
+  MARKETING_H3,
+  MARKETING_LEAD,
+  MARKETING_STAT_LABEL,
+  MARKETING_STAT_VALUE,
+} from '@/lib/utils/marketingLayout';
 
 export default function DemoPage() {
   return (
@@ -23,24 +37,46 @@ export default function DemoPage() {
         }
         subtitle="Get a personalized demo tailored to your industry and business needs. See how TENVO can transform your operations."
         primaryCTA={{
-          text: 'Request Demo',
-          href: '#demo-form'
+          text: 'Pick a time',
+          href: getBookMeetingHref(),
         }}
         secondaryCTA={{
-          text: 'View Features',
-          href: '/features'
+          text: 'Request callback',
+          href: '#demo-form',
         }}
       />
+
+      <DemoStoreGallery variant="featured" />
+
+      <HomeTrustStrip />
+
+      <section className="border-b border-neutral-200/80 bg-brand-50/40 py-8 sm:py-10">
+        <div className={`${MARKETING_CONTAINER} flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left`}>
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Instant scheduling</p>
+            <h2 className="text-lg font-semibold text-neutral-900 sm:text-xl">Book a 30-minute walkthrough</h2>
+            <p className="text-sm text-neutral-600">
+              Choose a slot that works for you. We tailor the session to your vertical and rollout goals.
+            </p>
+          </div>
+          <Button asChild size="lg" className="h-12 shrink-0 rounded-xl bg-brand-primary px-6 font-semibold text-white hover:bg-brand-primary-dark">
+            <MarketingCtaLink href={getBookMeetingHref()} className="inline-flex items-center gap-2">
+              <Calendar className="h-4 w-4" aria-hidden />
+              Open scheduler
+            </MarketingCtaLink>
+          </Button>
+        </div>
+      </section>
 
       {/* Demo Form and Benefits */}
       <section id="demo-form" className="bg-white py-10 sm:py-14 lg:py-16">
         <div className={MARKETING_CONTAINER}>
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
             <div className="min-w-0">
-              <h2 className="mb-3 text-2xl font-bold text-gray-900 sm:mb-4 sm:text-3xl">
+              <h2 className={cn(MARKETING_H2, 'mb-3 sm:mb-4')}>
                 Request Your Demo
               </h2>
-              <p className="mb-6 text-sm font-medium leading-relaxed text-gray-600 sm:mb-8 sm:text-base">
+              <p className={cn(MARKETING_LEAD, 'mb-6 sm:mb-8')}>
                 Fill out the form and our team will contact you within 24 hours to schedule your personalized demo.
               </p>
               <DemoRequestForm />
@@ -48,10 +84,10 @@ export default function DemoPage() {
 
             <div className="min-w-0 space-y-6 sm:space-y-8">
               <div>
-                <h2 className="mb-3 text-2xl font-bold text-gray-900 sm:mb-4 sm:text-3xl">
+                <h2 className={cn(MARKETING_H2, 'mb-3 sm:mb-4')}>
                   What to Expect
                 </h2>
-                <p className="text-sm font-medium text-gray-600 sm:text-base">
+                <p className={MARKETING_LEAD}>
                   Your demo will be customized to your specific needs
                 </p>
               </div>
@@ -67,34 +103,23 @@ export default function DemoPage() {
 
               {/* Trust Badges */}
               <div className="pt-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                <h3 className={cn(MARKETING_H3, 'mb-3')}>
                   Trusted &amp; Compliant
                 </h3>
                 <TrustBadges variant="vertical" />
               </div>
 
-              {/* Stats */}
-              <div className="mt-6 rounded-2xl border border-gray-200/80 bg-gray-50 p-6 sm:p-7">
-                <h3 className="text-xl font-bold text-gray-900 mb-5">
-                  Join Thousands of Businesses
+              <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50 p-6 sm:p-7">
+                <h3 className={cn(MARKETING_H3, 'mb-5')}>
+                  What you can explore today
                 </h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                  <div>
-                    <div className="text-3xl font-bold text-brand-primary mb-1">450k+</div>
-                    <div className="text-sm text-gray-600">Active Users</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-brand-primary mb-1">55+</div>
-                    <div className="text-sm text-gray-600">Industries</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-brand-primary mb-1">99.9%</div>
-                    <div className="text-sm text-gray-600">Uptime</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-brand-primary mb-1">24/7</div>
-                    <div className="text-sm text-gray-600">Support</div>
-                  </div>
+                  {MARKETING_HONEST_STATS.map((stat) => (
+                    <div key={stat.label}>
+                      <div className={cn(MARKETING_STAT_VALUE, 'mb-1 text-brand-primary')}>{stat.value}</div>
+                      <div className={MARKETING_STAT_LABEL}>{stat.label}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -115,10 +140,10 @@ export default function DemoPage() {
       <section className="bg-white py-10 sm:py-14 lg:py-16">
         <div className={`${MARKETING_CONTAINER} max-w-4xl`}>
           <div className="mb-8 space-y-3 text-center sm:mb-10 sm:space-y-4 lg:mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+            <h2 className={MARKETING_H2}>
               Demo FAQs
             </h2>
-            <p className="text-sm text-gray-600 sm:text-base">
+            <p className={MARKETING_LEAD}>
               Common questions about our demo process
             </p>
           </div>
@@ -159,7 +184,7 @@ function BenefitItem({ text }) {
 function FAQItem({ question, answer }) {
   return (
     <div className="rounded-2xl bg-gray-50 p-4 sm:p-6">
-      <h3 className="mb-2 text-base font-bold text-gray-900 sm:text-lg">{question}</h3>
+      <h3 className={cn(MARKETING_H3, 'mb-2')}>{question}</h3>
       <p className="text-sm leading-relaxed text-gray-600">{answer}</p>
     </div>
   );

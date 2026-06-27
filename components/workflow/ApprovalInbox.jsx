@@ -122,7 +122,7 @@ export function ApprovalInbox({
                                     {req.amount && (
                                         <span className="text-xs font-bold text-gray-600">{currency}{parseFloat(req.amount).toLocaleString()}</span>
                                     )}
-                                    <Badge className={cn('text-[9px] border', STATUS_BADGE[req.status])}>
+                                    <Badge className={cn('text-[10px] border', STATUS_BADGE[req.status])}>
                                         {req.status}
                                     </Badge>
                                 </div>

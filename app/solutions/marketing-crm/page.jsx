@@ -1,40 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { Megaphone, Heart, Brain, TrendingUp, ClipboardList, CheckSquare, Users, BarChart3 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import { TrendingUp, CheckSquare, Users, BarChart3, ClipboardList } from 'lucide-react';
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
-import { MARKETING_CONTAINER, MARKETING_SECTION } from '@/lib/utils/marketingLayout';
+import {
+  MARKETING_CONTAINER,
+  MARKETING_EYEBROW,
+  MARKETING_H3,
+  MARKETING_LEAD,
+  MARKETING_SECTION,
+  MARKETING_SECTION_HEADING,
+} from '@/lib/utils/marketingLayout';
+import { MARKETING_CRM_PILLARS } from '@/lib/marketing/homeVisualThemes';
 import { cn } from '@/lib/utils';
 import Hero from '@/components/marketing/sections/Hero';
 import CTASection from '@/components/marketing/sections/CTASection';
+import MarketingPillarCard from '@/components/marketing/ui/MarketingPillarCard';
+import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 import { Button } from '@/components/ui/button';
-
-const PILLARS = [
-  {
-    id: 'campaigns',
-    icon: Megaphone,
-    title: 'Campaigns & marketing',
-    body:
-      'Run promotions and customer journeys without exporting lists to a separate email tool. Segments and offers stay tied to real purchase history, storefront activity, and POS - closer to how Zoho Campaigns or Shopify Email sit on top of real commerce data.',
-    bullets: ['Promotion windows and outreach hooks', 'Business+ when campaigns flag is enabled', 'Same customer record as invoices & POS'],
-  },
-  {
-    id: 'crm',
-    icon: Heart,
-    title: 'Loyalty & CRM',
-    body:
-      'Reward repeat buyers, track preferences, and give frontline staff context at checkout or on the phone. Designed for retail and hospitality teams who outgrow spreadsheets but do not want yet another disconnected CRM.',
-    bullets: ['Loyalty alongside POS and web orders', 'Customer 360 tied to sales history', 'Works with your existing roles & permissions'],
-  },
-  {
-    id: 'analytics',
-    icon: Brain,
-    title: 'Analytics & AI',
-    body:
-      'Dashboards and reports draw from one ledger: inventory, orders, payments, and tax. Ask better questions without stitching exports from five silos - the same promise buyers expect from enterprise analytics, without a separate BI stack for day-one operators.',
-    bullets: ['Operational and financial signals together', 'Roadmap: guided insights with human approval', 'Drill from summary to underlying documents'],
-  },
-];
 
 const SALES_OPS = [
   {
@@ -42,12 +27,16 @@ const SALES_OPS = [
     title: 'Quotations & Sales Manager',
     body:
       'B2B quotes, follow-ups, and pipeline-style tracking live next to inventory availability and credit exposure, so sales teams stop promising SKUs you cannot fulfil.',
+    accent: 'border-sky-200/80 bg-gradient-to-br from-sky-50/70 to-white',
+    iconClass: 'bg-sky-600 text-white',
   },
   {
     icon: CheckSquare,
     title: 'Approvals & governance',
     body:
       'Discounts, refunds, and high-impact changes can follow approval paths so growing teams keep control like they would in larger ERPs, without slowing honest day-to-day selling.',
+    accent: 'border-emerald-200/80 bg-gradient-to-br from-emerald-50/70 to-white',
+    iconClass: 'bg-emerald-600 text-white',
   },
 ];
 
@@ -70,40 +59,32 @@ export default function MarketingCrmSolutionsPage() {
       <section className={cn(MARKETING_SECTION, 'border-b border-neutral-200/80 bg-white')}>
         <div className={MARKETING_CONTAINER}>
           <div className="mx-auto mb-8 max-w-3xl text-center sm:mb-10 lg:mb-14">
-            <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-brand-primary sm:text-[11px] sm:tracking-[0.28em]">Why this page exists</p>
-            <h2 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl lg:text-4xl">
+            <p className={cn(MARKETING_EYEBROW, 'mb-3')}>Why this page exists</p>
+            <h2 className={MARKETING_SECTION_HEADING}>
               Subscribers choose suites that cover operations and growth
             </h2>
-            <p className="mt-4 text-lg font-medium text-neutral-600">
+            <p className={cn(MARKETING_LEAD, 'mt-4')}>
               Shopify wins on storefront + apps; Zoho wins on breadth. TENVO&apos;s story is{' '}
-              <strong className="text-neutral-800">one hub</strong>: when campaigns and CRM read the same stock and
-              invoices as finance, you reduce double entry, reconciliation drama, and “which system is right?”
-              arguments.
+              <strong className="font-semibold text-neutral-800">one hub</strong>: when campaigns and CRM read the same stock and
+              arguments about which system is right.
             </p>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 sm:gap-6 md:gap-8">
-            {PILLARS.map(({ id, icon: Icon, title, body, bullets }) => (
-              <article
-                key={id}
-                id={id}
-                className="scroll-mt-28 rounded-2xl border border-neutral-200/90 bg-neutral-50/60 p-5 shadow-sm transition-shadow hover:shadow-md sm:rounded-3xl sm:p-6 lg:p-8"
-              >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary text-white">
-                  <Icon className="h-6 w-6" aria-hidden />
-                </div>
-                <h3 className="text-xl font-black text-neutral-900">{title}</h3>
-                <p className="mt-3 text-sm font-medium leading-relaxed text-neutral-600">{body}</p>
-                <ul className="mt-5 space-y-2.5 text-sm font-semibold text-neutral-700">
-                  {bullets.map((b) => (
-                    <li key={b} className="flex gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary" aria-hidden />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
+            {MARKETING_CRM_PILLARS.map((pillar) => {
+              const Icon = LucideIcons[pillar.icon];
+              return (
+                <MarketingPillarCard
+                  key={pillar.id}
+                  id={pillar.id}
+                  title={pillar.title}
+                  body={pillar.body}
+                  bullets={pillar.bullets}
+                  icon={Icon}
+                  accent={pillar.accent}
+                />
+              );
+            })}
           </div>
         </div>
       </section>
@@ -111,23 +92,27 @@ export default function MarketingCrmSolutionsPage() {
       <section id="sales-suite" className={cn(MARKETING_SECTION, 'scroll-mt-28 border-b border-neutral-200/80 bg-neutral-50')}>
         <div className={MARKETING_CONTAINER}>
           <div className="mx-auto mb-8 max-w-3xl text-center sm:mb-10 lg:mb-12">
-            <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-brand-primary sm:text-[11px] sm:tracking-[0.28em]">Sales & operations</p>
-            <h2 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl lg:text-4xl">What else sits next to campaigns</h2>
-            <p className="mt-4 text-lg font-medium text-neutral-600">
+            <p className={cn(MARKETING_EYEBROW, 'mb-3')}>Sales & operations</p>
+            <h2 className={MARKETING_SECTION_HEADING}>What else sits next to campaigns</h2>
+            <p className={cn(MARKETING_LEAD, 'mt-4')}>
               These modules mirror what power users see in the Enterprise Hub sidebar - so marketing promises match the
               product surface.
             </p>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 sm:gap-6 md:gap-8">
-            {SALES_OPS.map(({ icon: Icon, title, body }) => (
+            {SALES_OPS.map(({ icon: Icon, title, body, accent, iconClass }) => (
               <article
                 key={title}
-                className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:rounded-3xl sm:p-6 lg:p-8"
+                className={cn(
+                  'rounded-2xl border p-5 shadow-sm sm:rounded-3xl sm:p-6 lg:p-8',
+                  'motion-safe:transition-[box-shadow,transform] motion-safe:duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-md',
+                  accent
+                )}
               >
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-900 text-white">
+                <div className={cn('mb-4 flex h-11 w-11 items-center justify-center rounded-xl', iconClass)}>
                   <Icon className="h-5 w-5" aria-hidden />
                 </div>
-                <h3 className="text-lg font-black text-neutral-900">{title}</h3>
+                <h3 className="text-lg font-semibold text-neutral-900">{title}</h3>
                 <p className="mt-2 text-sm font-medium leading-relaxed text-neutral-600">{body}</p>
               </article>
             ))}
@@ -139,9 +124,9 @@ export default function MarketingCrmSolutionsPage() {
                 <Users className="h-5 w-5" aria-hidden />
               </div>
               <div>
-                <h3 className="text-base font-black text-neutral-900">Payroll & HR</h3>
+                <h3 className="text-base font-semibold text-neutral-900">Payroll & HR</h3>
                 <p className="mt-1 text-sm font-medium text-neutral-600">
-                  Payroll runs on Business+. Attendance and shift scheduling surfaces are early — confirm HR depth on a demo before buying for workforce management.
+                  Payroll runs on Business+. Attendance and shift scheduling surfaces are early - confirm HR depth on a demo before buying for workforce management.
                 </p>
               </div>
             </div>
@@ -150,9 +135,9 @@ export default function MarketingCrmSolutionsPage() {
                 <BarChart3 className="h-5 w-5" aria-hidden />
               </div>
               <div>
-                <h3 className="text-base font-black text-neutral-900">Audit trail</h3>
+                <h3 className="text-base font-semibold text-neutral-900">Audit trail</h3>
                 <p className="mt-1 text-sm font-medium text-neutral-600">
-                  Who changed prices, approved a refund, or edited tax settings — audit logs on Business+ alongside
+                  Who changed prices, approved a refund, or edited tax settings - audit logs on Business+ alongside
                   export-oriented tax summaries.
                 </p>
               </div>
@@ -160,10 +145,10 @@ export default function MarketingCrmSolutionsPage() {
           </div>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Button asChild className="rounded-xl bg-brand-primary font-black text-white hover:bg-brand-primary-dark">
+            <Button asChild className="rounded-xl bg-brand-primary font-semibold text-white hover:bg-brand-primary-dark">
               <Link href="/features#analytics">Explore analytics on Features</Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-xl font-bold">
+            <Button asChild variant="outline" className="rounded-xl font-semibold">
               <Link href="/integrations">View integrations</Link>
             </Button>
           </div>
@@ -173,18 +158,18 @@ export default function MarketingCrmSolutionsPage() {
       <section className="bg-white py-10 sm:py-12 lg:py-14">
         <div className="mx-auto max-w-3xl px-4 text-center min-[380px]:px-5 sm:px-6">
           <ClipboardList className="mx-auto mb-4 h-10 w-10 text-brand-primary" aria-hidden />
-          <h2 className="text-2xl font-black text-neutral-900">Plans & domain fit</h2>
+          <h2 className={MARKETING_H3}>Plans & domain fit</h2>
           <p className="mt-3 text-sm font-medium leading-relaxed text-neutral-600">
-            Campaigns and some automation surfaces are <strong>tiered by plan</strong> and <strong>business domain</strong>{' '}
+            Campaigns and some automation surfaces are <strong className="font-semibold">tiered by plan</strong> and <strong className="font-semibold">business domain</strong>{' '}
             (for example hospitality vs pure wholesale). Always confirm exact entitlements on{' '}
-            <Link href="/pricing" className="font-bold text-brand-primary underline-offset-2 hover:underline">
+            <Link href="/pricing" className="font-semibold text-brand-primary underline-offset-2 hover:underline">
               Pricing
             </Link>{' '}
             or a{' '}
-            <Link href="/demo" className="font-bold text-brand-primary underline-offset-2 hover:underline">
-              demo call
-            </Link>{' '}
-             we prefer accurate expectations over overselling.
+            <MarketingCtaLink href={getBookMeetingHref()} className="font-semibold text-brand-primary underline-offset-2 hover:underline">
+              meeting call
+            </MarketingCtaLink>
+            {' '}we prefer accurate expectations over overselling.
           </p>
         </div>
       </section>
@@ -193,7 +178,7 @@ export default function MarketingCrmSolutionsPage() {
         variant="split"
         title="Show growth and operations in one walkthrough"
         subtitle="Book a demo to map campaigns, CRM, and storefront data to how your team already works."
-        primaryCTA={{ text: 'Book a demo', href: '/demo' }}
+        primaryCTA={{ text: 'Book a meeting', href: getBookMeetingHref() }}
         secondaryCTA={{ text: 'View pricing', href: '/pricing' }}
       />
     </MarketingLayout>

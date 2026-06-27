@@ -407,7 +407,7 @@ export function OrdersManager({ business, category }) {
         </Card>
       </div>
 
-      {/* Mobile filters — single compact block */}
+      {/* Mobile filters, single compact block */}
       <div className="space-y-1.5 lg:hidden">
         <div className="flex gap-1.5">
           <div className="relative min-w-0 flex-1">
@@ -528,7 +528,7 @@ export function OrdersManager({ business, category }) {
                   <p className="truncate font-mono text-xs font-bold text-gray-900">{order.order_number}</p>
                   <p className="mt-0.5 text-[10px] text-gray-400">{formatDate(order.created_at)}</p>
                 </div>
-                <p className="shrink-0 text-sm font-black text-gray-900">
+                <p className="shrink-0 text-sm font-semibold text-gray-900">
                   {formatCurrency(parseFloat(order.total), business.currency || 'PKR')}
                 </p>
               </div>
@@ -629,7 +629,7 @@ export function OrdersManager({ business, category }) {
       {totalPages > 1 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-center text-xs text-gray-500 sm:text-left sm:text-sm">
-            {((currentPage - 1) * limit) + 1}–{Math.min(currentPage * limit, totalOrders)} of {totalOrders}
+            {((currentPage - 1) * limit) + 1}-{Math.min(currentPage * limit, totalOrders)} of {totalOrders}
           </p>
           <div className="flex items-center justify-center gap-2">
             <Button

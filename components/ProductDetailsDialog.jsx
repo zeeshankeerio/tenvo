@@ -43,7 +43,7 @@ const DetailSection = ({ title, icon: Icon, children }) => (
             <div className="p-1.5 bg-gray-100 rounded-lg">
                 {Icon && <Icon className="w-3.5 h-3.5 text-gray-500" />}
             </div>
-            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{title}</h4>
+            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em]">{title}</h4>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 px-1">
             {children}
@@ -56,7 +56,7 @@ const DetailItem = ({ label, value, className = "", fullWidth = false, isCurrenc
 
     return (
         <div className={`group flex flex-col gap-1.5 ${fullWidth ? 'col-span-full' : ''}`}>
-            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                 {label}
                 {isCurrency && value > 0 && <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />}
             </label>
@@ -140,11 +140,11 @@ export function ProductDetailsDialog({
                                     <Package className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <DialogTitle className="text-2xl font-black text-gray-950 tracking-tight leading-tight">
+                                    <DialogTitle className="text-2xl font-semibold text-gray-950 tracking-tight leading-tight">
                                         {isEditing ? `Edit: ${product.name}` : product.name}
                                     </DialogTitle>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <Badge variant={isLowStock ? "destructive" : "outline"} className={`text-[10px] uppercase font-black px-2 py-0 border-none ${isLowStock ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
+                                        <Badge variant={isLowStock ? "destructive" : "outline"} className={`text-[10px] uppercase font-semibold px-2 py-0 border-none ${isLowStock ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
                                             {isLowStock ? "Low Stock Alert" : "Stable Inventory"}
                                         </Badge>
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
@@ -160,12 +160,12 @@ export function ProductDetailsDialog({
 
                         {!isEditing && (
                             <div className="text-right flex flex-col items-end">
-                                <div className={`text-3xl font-black tracking-tighter ${product.price > 0 ? 'text-gray-950' : 'text-gray-300'}`}>
+                                <div className={`text-3xl font-semibold tracking-tighter ${product.price > 0 ? 'text-gray-950' : 'text-gray-300'}`}>
                                     {product.price > 0 ? formatCurrency(product.price, standards.currency) : '---'}
                                 </div>
                                 <div className="flex items-center gap-1.5 mt-1 justify-end">
                                     <Tag className="w-3 h-3 text-emerald-500" />
-                                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.15em]">Official Selling Price</span>
+                                    <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-[0.15em]">Official Selling Price</span>
                                 </div>
                             </div>
                         )}
@@ -194,9 +194,9 @@ export function ProductDetailsDialog({
                                         { label: 'Growth', value: product.price && product.cost_price ? `${(((product.price - product.cost_price) / (product.cost_price || 1)) * 100).toFixed(0)}%` : '0%', color: 'text-emerald-600', sub: 'Gross Margin' }
                                     ].map((card, i) => (
                                         <div key={i} className="p-4 bg-gray-50/50 border border-gray-100 rounded-3xl group hover:bg-white hover:shadow-lg transition-all duration-300">
-                                            <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 group-hover:text-blue-400 transition-colors">{card.label}</div>
-                                            <div className={`text-lg font-black tracking-tight ${card.color}`}>{card.value}</div>
-                                            <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-0.5">{card.sub}</div>
+                                            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1 group-hover:text-blue-400 transition-colors">{card.label}</div>
+                                            <div className={`text-lg font-semibold tracking-tight ${card.color}`}>{card.value}</div>
+                                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mt-0.5">{card.sub}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -222,17 +222,17 @@ export function ProductDetailsDialog({
                                         <DetailSection title="Logistics & Tracking" icon={Layers}>
                                             {product.batches?.length > 0 && (
                                                 <div className="col-span-full space-y-3">
-                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Active Batches ({product.batches.length})</label>
+                                                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Active Batches ({product.batches.length})</label>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                         {product.batches.map((batch, idx) => (
                                                             <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl border border-gray-100 hover:border-blue-100 transition-colors">
                                                                 <div>
-                                                                    <div className="font-mono font-black text-gray-950 text-xs">{batch.batch_number}</div>
-                                                                    <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                                                                    <div className="font-mono font-semibold text-gray-950 text-xs">{batch.batch_number}</div>
+                                                                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-0.5">
                                                                         Expiry: {batch.expiry_date ? new Date(batch.expiry_date).toLocaleDateString() : 'N/A'}
                                                                     </div>
                                                                 </div>
-                                                                <div className="px-3 py-1 bg-white border border-gray-100 rounded-xl shadow-sm text-xs font-black text-gray-900">
+                                                                <div className="px-3 py-1 bg-white border border-gray-100 rounded-xl shadow-sm text-xs font-semibold text-gray-900">
                                                                     Qt: {batch.quantity}
                                                                 </div>
                                                             </div>
@@ -242,10 +242,10 @@ export function ProductDetailsDialog({
                                             )}
                                             {product.serial_numbers?.length > 0 && (
                                                 <div className="col-span-full space-y-3 mt-4">
-                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Serial Assets ({product.serial_numbers.length})</label>
+                                                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Serial Assets ({product.serial_numbers.length})</label>
                                                     <div className="flex flex-wrap gap-2">
                                                         {product.serial_numbers.map((serial, idx) => (
-                                                            <Badge key={idx} variant="secondary" className="font-mono text-[9px] font-black py-1 px-3 border-gray-200 text-gray-600 bg-gray-50 rounded-xl">
+                                                            <Badge key={idx} variant="secondary" className="font-mono text-[10px] font-semibold py-1 px-3 border-gray-200 text-gray-600 bg-gray-50 rounded-xl">
                                                                 {typeof serial === 'string' ? serial : (serial.serial_number || serial.number)}
                                                             </Badge>
                                                         ))}
@@ -254,19 +254,19 @@ export function ProductDetailsDialog({
                                             )}
                                             {product.variants?.length > 0 && (
                                                 <div className="col-span-full space-y-3 mt-4">
-                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Product Variations ({product.variants.length})</label>
+                                                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Product Variations ({product.variants.length})</label>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                                         {product.variants.map((v, idx) => (
                                                             <div key={idx} className="p-3 bg-gray-50 rounded-2xl border border-gray-100 flex justify-between items-center">
                                                                 <div>
-                                                                    <div className="text-[10px] font-black text-gray-900 leading-tight">
+                                                                    <div className="text-[10px] font-semibold text-gray-900 leading-tight">
                                                                         {v.sku}
                                                                     </div>
-                                                                    <div className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">
+                                                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                                                         {v.size || 'N/A'} <Dot className="w-3 h-3 inline mx-1 text-gray-300" /> {v.color || 'N/A'}
                                                                     </div>
                                                                 </div>
-                                                                <Badge className="bg-white border-gray-100 text-gray-600 font-black text-[9px] px-2 py-0.5">
+                                                                <Badge className="bg-white border-gray-100 text-gray-600 font-semibold text-[10px] px-2 py-0.5">
                                                                     {v.stock}
                                                                 </Badge>
                                                             </div>
@@ -293,18 +293,18 @@ export function ProductDetailsDialog({
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={() => copyToClipboard(product.sku || product.name, "Product info")} className="rounded-xl bg-white border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 shadow-sm transition-all active:scale-95 px-3">
                             <Copy className="w-3.5 h-3.5 mr-2" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Copy SKU</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-widest">Copy SKU</span>
                         </Button>
                         <Button variant="outline" size="sm" onClick={handlePrint} className="rounded-xl bg-white border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 shadow-sm transition-all active:scale-95 px-3">
                             <Printer className="w-3.5 h-3.5 mr-2" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Print Tag</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-widest">Print Tag</span>
                         </Button>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Button variant="ghost" onClick={isEditing ? () => setIsEditing(false) : onClose} className="rounded-xl font-black uppercase text-[10px] tracking-widest px-6 hover:bg-gray-200 hover:text-gray-900 transition-all active:scale-95">
+                        <Button variant="ghost" onClick={isEditing ? () => setIsEditing(false) : onClose} className="rounded-xl font-semibold uppercase text-[10px] tracking-widest px-6 hover:bg-gray-200 hover:text-gray-900 transition-all active:scale-95">
                             {isEditing ? 'Cancel' : 'Close'}
                         </Button>
-                        <Button onClick={() => setIsEditing(!isEditing)} className="rounded-xl font-black uppercase tracking-widest px-6 shadow-lg shadow-blue-100 transition-all active:scale-95 border-none bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Button onClick={() => setIsEditing(!isEditing)} className="rounded-xl font-semibold uppercase tracking-widest px-6 shadow-lg shadow-blue-100 transition-all active:scale-95 border-none bg-emerald-600 hover:bg-emerald-700 text-white">
                             {isEditing ? (
                                 <React.Fragment>
                                     <Eye className="w-3.5 h-3.5 mr-2" />

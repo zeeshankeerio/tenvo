@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '@/lib/currency';
+import { useBusiness } from '@/lib/context/BusinessContext';
+import { getBusinessRegionalPack } from '@/lib/utils/businessRegionalContext';
 
 /**
  * MobileOptimizedPOS Component
@@ -25,9 +27,13 @@ export function MobileOptimizedPOS({
     products = [],
     customers = [],
     onCompleteSale,
-    currency = 'PKR',
-    defaultTax = 17,
+    currency: currencyProp,
+    defaultTax: defaultTaxProp,
 }) {
+    const { business, currency: ctxCurrency } = useBusiness();
+    const pack = getBusinessRegionalPack(business);
+    const currency = currencyProp || ctxCurrency || pack.currency;
+    const defaultTax = defaultTaxProp ?? pack.defaultTaxRate ?? 0;
     const [isPortrait, setIsPortrait] = useState(true);
     const [cartItems, setCartItems] = useState([]);
     const [customerName, setCustomerName] = useState('');
@@ -244,7 +250,7 @@ export function MobileOptimizedPOS({
                             >
                                 −
                             </Button>
-                            <div className="flex-1 h-10 border-2 border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 text-lg font-black">
+                            <div className="flex-1 h-10 border-2 border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 text-lg font-semibold">
                                 {quantity}
                             </div>
                             <Button
@@ -295,7 +301,7 @@ export function MobileOptimizedPOS({
                                 >
                                     <div className="font-bold text-sm line-clamp-2">{product.name}</div>
                                     <div className="text-xs text-gray-500 mt-1">{product.sku}</div>
-                                    <div className="text-lg font-black text-wine mt-2">
+                                    <div className="text-lg font-semibold text-wine mt-2">
                                         {formatCurrency(product.selling_price || 0, currency)}
                                     </div>
                                     <div className="text-xs text-gray-400 mt-1">
@@ -309,7 +315,7 @@ export function MobileOptimizedPOS({
 
                 {/* Cart & Checkout - Always Visible on Mobile */}
                 <div className={`${isPortrait ? 'order-1' : 'w-3/5 flex flex-col'} bg-white rounded-xl border-2 border-green-100 p-3 shadow-md flex flex-col`}>
-                    <div className="font-black text-lg text-gray-900 mb-3 flex items-center gap-2">
+                    <div className="font-semibold text-lg text-gray-900 mb-3 flex items-center gap-2">
                         <Zap className="w-5 h-5 text-wine" />
                         Cart ({cartItems.length})
                     </div>
@@ -373,7 +379,7 @@ export function MobileOptimizedPOS({
                                 <span>Tax:</span>
                                 <span className="font-semibold">{formatCurrency(taxAmount, currency)}</span>
                             </div>
-                            <div className="flex justify-between border-t pt-2 text-xl font-black text-wine">
+                            <div className="flex justify-between border-t pt-2 text-xl font-semibold text-wine">
                                 <span>TOTAL:</span>
                                 <span>{formatCurrency(total, currency)}</span>
                             </div>
@@ -384,7 +390,7 @@ export function MobileOptimizedPOS({
                     <Button
                         onClick={handleCompleteSale}
                         disabled={cartItems.length === 0 || !customerName.trim()}
-                        className="w-full h-12 bg-wine hover:bg-wine/90 text-white font-black text-lg rounded-xl"
+                        className="w-full h-12 bg-wine hover:bg-wine/90 text-white font-semibold text-lg rounded-xl"
                     >
                         ✓ COMPLETE SALE
                     </Button>

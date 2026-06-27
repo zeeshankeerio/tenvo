@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, useMemo } from 'react';
+import { CHART_PALETTE } from '@/lib/theme/brandTokens';
 import { Portlet } from '@/components/ui/portlet';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,7 +18,7 @@ interface TopSellingItemsProps {
     isLoading?: boolean;
 }
 
-const COLORS = ['#e34242', '#c49c3b', '#334155', '#64748b', '#10b981', '#c69214'];
+const COLORS = CHART_PALETTE;
 
 export const TopSellingItems = memo(function TopSellingItems({
     data = [],
@@ -55,11 +56,11 @@ export const TopSellingItems = memo(function TopSellingItems({
             <div className="h-[280px] w-full mt-6 relative">
                 {/* Center KPI */}
                 <div className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center pointer-events-none pb-6">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Total Units</span>
-                    <span className="text-2xl font-black text-slate-900 leading-none mt-1">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.15em]">Total Units</span>
+                    <span className="text-2xl font-semibold text-slate-900 leading-none mt-1">
                         {totalUnits.toLocaleString()}
                     </span>
-                    <div className="flex items-center gap-1 mt-1 text-[9px] font-bold text-emerald-500 uppercase">
+                    <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-500 uppercase">
                         <TrendingUp className="w-2.5 h-2.5" />
                         <span>Top 5 Items</span>
                     </div>
@@ -106,7 +107,7 @@ export const TopSellingItems = memo(function TopSellingItems({
                             iconType="circle"
                             iconSize={6}
                             formatter={(value: string) => (
-                                <span className="text-[9px] font-black text-slate-600 uppercase tracking-tight">
+                                <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-tight">
                                     {value.length > 12 ? `${value.substring(0, 12)}...` : value}
                                 </span>
                             )}

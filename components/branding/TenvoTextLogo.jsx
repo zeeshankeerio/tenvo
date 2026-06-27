@@ -1,8 +1,9 @@
 import { cn } from '@/lib/utils';
+import { TenvoIcon } from '@/components/branding/TenvoIcon';
 
 /**
- * Centralized TENVO text logo.
- * Use this component everywhere instead of ad-hoc brand text blocks.
+ * Centralized TENVO wordmark + icon.
+ * Icon is always public/tenvo.svg (built-in red tile + mark).
  */
 export function TenvoTextLogo({
   compact = false,
@@ -10,25 +11,30 @@ export function TenvoTextLogo({
   textClassName,
   taglineClassName,
   iconClassName,
-  iconTextClassName,
-  tagline = 'Enterprise Hub'
+  tagline = 'Enterprise Hub',
 }) {
+  const iconSize = compact ? 32 : 36;
+
   return (
     <div className={cn('flex items-center gap-3', compact && 'gap-2', className)}>
       <div
         className={cn(
-          'w-9 h-9 rounded-xl flex items-center justify-center font-black text-lg shadow-lg shrink-0',
-          'bg-brand-primary text-white shadow-md shadow-brand-primary/20 border border-brand-primary/20',
-          compact && 'w-8 h-8 text-base rounded-lg',
+          'relative shrink-0 overflow-hidden',
+          compact ? 'h-8 w-8' : 'h-9 w-9',
           iconClassName
         )}
       >
-        <span className={cn('leading-none', iconTextClassName)}>T</span>
+        <TenvoIcon
+          size={iconSize}
+          className="h-full w-full"
+          alt={compact ? 'TENVO' : ''}
+          priority
+        />
       </div>
 
       {!compact && (
         <div className="flex flex-col justify-center gap-0.5 leading-none">
-          <span className={cn('font-black text-gray-900 text-xl tracking-tight uppercase', textClassName)}>
+          <span className={cn('font-semibold text-gray-900 text-xl tracking-tight uppercase', textClassName)}>
             TENVO
           </span>
           <span

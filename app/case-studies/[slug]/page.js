@@ -2,6 +2,7 @@
 
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
 import CTASection from '@/components/marketing/sections/CTASection';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 import CaseStudyCard from '@/components/marketing/cards/CaseStudyCard';
 import { caseStudies } from '@/lib/marketing/case-studies';
 import { useParams } from 'next/navigation';
@@ -188,8 +189,8 @@ export default function CaseStudyDetailPage() {
         }
         subtitle="See how TENVO can transform your business operations"
         primaryCTA={{
-          text: 'Schedule Demo',
-          href: '/demo'
+          text: 'Book a meeting',
+          href: getBookMeetingHref(),
         }}
         secondaryCTA={{
           text: 'Start Free Trial',

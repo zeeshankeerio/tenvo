@@ -1,17 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useBusiness } from '@/lib/context/BusinessContext';
 import { getDomainKnowledge } from '@/lib/domainKnowledge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle2, Package, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { getDomainColors } from '@/lib/domainColors';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
-import { seedRegistrationInventoryAction } from '@/lib/actions/basic/business';
-import { formatCurrency } from '@/lib/currency';
+import { loadBusinessSampleDataAction } from '@/lib/actions/basic/business';
 
 /**
  * SetupWizard Component
@@ -28,48 +25,41 @@ export function SetupWizard({ onComplete, category = 'retail-shop' }) {
 
     const [step, setStep] = useState('welcome');
     const [loading, setLoading] = useState(false);
-    const [seedingSelection, setSeedingSelection] = useState([]);
 
-    const setupTemplate = domainKnowledge?.setupTemplate || {};
-    const suggestedProducts = setupTemplate.suggestedProducts || setupTemplate.suggestedItems || [];
     const taxLabel = regionalStandards?.taxLabel || 'Tax';
 
-    useEffect(() => {
-        if (suggestedProducts.length > 0) {
-            setSeedingSelection(suggestedProducts.map(p => p.name));
-        }
-    }, [suggestedProducts]);
-
-    const toggleProduct = (name) => {
-        setSeedingSelection(prev =>
-            prev.includes(name)
-                ? prev.filter(n => n !== name)
-                : [...prev, name]
-        );
-    };
+    const setupTemplate = domainKnowledge?.setupTemplate || {};
 
     const handleSeed = async () => {
         setLoading(true);
         try {
-            const result = await seedRegistrationInventoryAction({
+            const result = await loadBusinessSampleDataAction({
                 businessId: business?.id,
                 domainKey: category,
                 countryIso,
-                itemNames: seedingSelection,
+                replace: false,
             });
 
-            if (result.success) {
-                toast.success(`Successfully initialized ${result.count} products!`);
+            if (result.success && !result.data?.skipped) {
+                toast.success(result.data?.message || 'Sample workspace loaded, explore the hub, then remove sample data in Settings when ready.');
+                setStep('finish');
+            } else if (result.success && result.data?.skipped) {
+                toast.success('Sample data is already loaded.');
                 setStep('finish');
             } else {
                 throw new Error(result.error);
             }
         } catch (error) {
             console.error('Seeding failed:', error);
-            toast.error('Failed to initialize inventory');
+            toast.error(error.message || 'Failed to load sample workspace');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSkip = () => {
+        setStep('finish');
+        onComplete?.();
     };
 
     if (step === 'welcome') {
@@ -82,12 +72,12 @@ export function SetupWizard({ onComplete, category = 'retail-shop' }) {
                     >
                         <Sparkles className="w-10 h-10" />
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+                    <h2 className="text-3xl font-semibold text-gray-900 tracking-tight">
                         Welcome to {business?.business_name || business?.name || 'Your Business'}
                     </h2>
                     <p className="text-gray-500 text-lg max-w-md mx-auto">
-                        We&apos;ve calibrated your <span className="font-bold" style={{ color: colors.primary }}>{category.replace(/-/g, ' ')}</span> workspace for{' '}
-                        <span className="font-bold">{regionalStandards?.countryName || countryIso}</span> — {taxLabel}, local brands, and starter SKUs.
+                        Your <span className="font-bold" style={{ color: colors.primary }}>{category.replace(/-/g, ' ')}</span> workspace is ready for{' '}
+                        <span className="font-bold">{regionalStandards?.countryName || countryIso}</span>, tax, intelligence, and category templates are configured.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left mt-8">
@@ -103,8 +93,8 @@ export function SetupWizard({ onComplete, category = 'retail-shop' }) {
                         </div>
                         <div className="p-4 rounded-xl border transition-all hover:shadow-md" style={{ backgroundColor: `${colors.primary}05`, borderColor: `${colors.primary}20` }}>
                             <CheckCircle2 className="w-5 h-5 mb-2" style={{ color: colors.primary }} />
-                            <h3 className="font-bold text-sm">Starter Inventory</h3>
-                            <p className="text-xs text-gray-500">{suggestedProducts.length} market-aware templates</p>
+                            <h3 className="font-bold text-sm">Optional sample data</h3>
+                            <p className="text-xs text-gray-500">Load a full demo workspace to learn, then remove it in Settings</p>
                         </div>
                     </div>
 
@@ -114,14 +104,14 @@ export function SetupWizard({ onComplete, category = 'retail-shop' }) {
                             className="w-full h-12 text-lg font-bold text-white shadow-xl transition-all active:scale-95"
                             style={{ backgroundColor: colors.primary, boxShadow: `0 10px 20px -5px ${colors.primary}40` }}
                         >
-                            Get Started <ArrowRight className="w-5 h-5 ml-2" />
+                            Choose setup path <ArrowRight className="w-5 h-5 ml-2" />
                         </Button>
                         <Button
                             variant="ghost"
-                            onClick={onComplete}
+                            onClick={handleSkip}
                             className="text-gray-400 hover:text-gray-600 transition-colors"
                         >
-                            Skip setup for now
+                            Start empty, go to dashboard
                         </Button>
                     </div>
                 </CardContent>
@@ -131,75 +121,37 @@ export function SetupWizard({ onComplete, category = 'retail-shop' }) {
 
     if (step === 'seed') {
         return (
-            <Card className="max-w-3xl mx-auto border-none shadow-2xl bg-white/90 backdrop-blur-xl">
+            <Card className="max-w-2xl mx-auto border-none shadow-2xl bg-white/90 backdrop-blur-xl">
                 <CardHeader>
-                    <CardTitle className="text-2xl font-black">Quick Start Inventory</CardTitle>
+                    <CardTitle className="text-2xl font-semibold">How would you like to start?</CardTitle>
                     <CardDescription>
-                        Select standard items for {regionalStandards?.countryName || countryIso} — prices and tax use your registration defaults
+                        Learn with a full sample workspace, or stay empty and add your own products, you can change this anytime in Settings → Tools.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    {suggestedProducts.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400">
-                            <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p>No templates available for this category yet.</p>
-                            <Button variant="outline" onClick={() => setStep('finish')} className="mt-4">
-                                Skip Setup
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-2">
-                            {suggestedProducts.map((product) => (
-                                <div
-                                    key={product.name}
-                                    onClick={() => toggleProduct(product.name)}
-                                    className={cn(
-                                        "cursor-pointer p-4 rounded-xl border-2 transition-all flex items-start gap-3",
-                                        seedingSelection.includes(product.name)
-                                            ? "shadow-sm"
-                                            : "border-gray-100 bg-gray-50 hover:border-gray-200"
-                                    )}
-                                    style={seedingSelection.includes(product.name) ? { borderColor: colors.primary, backgroundColor: `${colors.primary}05` } : {}}
-                                >
-                                    <div
-                                        className={cn(
-                                            "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors",
-                                            seedingSelection.includes(product.name) ? "text-white" : "border-gray-300"
-                                        )}
-                                        style={seedingSelection.includes(product.name) ? { backgroundColor: colors.primary, borderColor: colors.primary } : {}}
-                                    >
-                                        {seedingSelection.includes(product.name) && <CheckCircle2 className="w-3.5 h-3.5" />}
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-sm text-gray-900">{product.name}</h4>
-                                        <p className="text-xs text-gray-500 line-clamp-2">{product.description}</p>
-                                        {product.defaultPrice != null && (
-                                            <Badge variant="secondary" className="mt-2 text-[10px] font-bold">
-                                                {formatCurrency(product.defaultPrice, regionalStandards?.currency || 'PKR')}
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="flex items-center justify-between border-t pt-6">
-                        <div className="text-sm text-gray-500">
-                            Selected <span className="font-bold text-gray-900">{seedingSelection.length}</span> items
-                        </div>
-                        <div className="flex gap-3">
-                            <Button variant="ghost" onClick={() => setStep('finish')}>Skip</Button>
-                            <Button
-                                onClick={handleSeed}
-                                disabled={loading || seedingSelection.length === 0}
-                                className="text-white font-bold px-8 shadow-lg active:scale-95 transition-all"
-                                style={{ backgroundColor: colors.primary, boxShadow: `0 8px 16px -4px ${colors.primary}40` }}
-                            >
-                                {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Package className="w-5 h-5 mr-2" />}
-                                Import Selected
-                            </Button>
-                        </div>
+                <CardContent className="space-y-4 pb-8">
+                    <div className="p-5 rounded-2xl border-2 border-gray-100 bg-gray-50/80">
+                        <h4 className="font-bold text-gray-900 mb-1">Load sample workspace (recommended for new users)</h4>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Products with images, customers, warehouses, invoices, POS sales, payroll, and transfers, all tagged as sample data and removable in one click.
+                        </p>
+                        <Button
+                            onClick={handleSeed}
+                            disabled={loading}
+                            className="text-white font-bold shadow-lg"
+                            style={{ backgroundColor: colors.primary }}
+                        >
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Sparkles className="w-5 h-5 mr-2" />}
+                            Load sample data
+                        </Button>
+                    </div>
+                    <div className="p-5 rounded-2xl border border-gray-100">
+                        <h4 className="font-bold text-gray-900 mb-1">Start empty</h4>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Keep category templates only and build your catalog from scratch.
+                        </p>
+                        <Button variant="outline" onClick={handleSkip}>
+                            Continue without sample data
+                        </Button>
                     </div>
                 </CardContent>
             </Card>
@@ -213,7 +165,7 @@ export function SetupWizard({ onComplete, category = 'retail-shop' }) {
                     <CheckCircle2 className="w-12 h-12" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-black text-gray-900">Setup Complete!</h2>
+                    <h2 className="text-2xl font-semibold text-gray-900">Setup Complete!</h2>
                     <p className="text-gray-500 mt-2">
                         Your {category.replace(/-/g, ' ')} workspace is ready for action.
                     </p>

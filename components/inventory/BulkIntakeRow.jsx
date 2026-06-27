@@ -181,7 +181,7 @@ export function BulkIntakeRow({
 
             {/* Cost Price */}
             <div className="flex-1 relative max-w-[120px]">
-                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">₨</div>
+                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-gray-400">₨</div>
                 <Input
                     ref={costRef}
                     type="number"
@@ -196,7 +196,7 @@ export function BulkIntakeRow({
 
             {/* Selling Price */}
             <div className="flex-1 relative max-w-[120px]">
-                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-indigo-400">₨</div>
+                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-indigo-400">₨</div>
                 <Input
                     ref={priceRef}
                     type="number"
@@ -223,7 +223,7 @@ export function BulkIntakeRow({
                     placeholder="Stock"
                     selectOnFocus
                     className={cn(
-                        "h-10 rounded-xl bg-transparent border-transparent focus:border-indigo-200 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 font-black text-center text-gray-900",
+                        "h-10 rounded-xl bg-transparent border-transparent focus:border-indigo-200 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 font-semibold text-center text-gray-900",
                         errors.stock && "border-red-200"
                     )}
                 />

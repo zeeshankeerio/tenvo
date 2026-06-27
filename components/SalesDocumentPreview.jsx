@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo } from 'react';
 import { X, Printer, Download, Mail, Building2, User, Calendar } from 'lucide-react';
@@ -46,7 +46,7 @@ export function SalesDocumentPreview({
                             <Building2 className={`w-5 h-5 text-gray-900`} />
                         </div>
                         <div>
-                            <CardTitle className="text-lg font-black tracking-tight uppercase">
+                            <CardTitle className="text-lg font-semibold tracking-tight uppercase">
                                 Preview: {TYPE_LABELS[type]}
                             </CardTitle>
                             <p className="text-xs text-gray-400 font-bold tracking-widest uppercase">{docNumber}</p>
@@ -57,7 +57,7 @@ export function SalesDocumentPreview({
                             <Printer className="w-4 h-4 mr-2" />
                             Print
                         </Button>
-                        <Button variant="outline" size="sm" onClick={handlePrint} className="rounded-xl font-bold border-gray-100" title="Use Print dialog → Save as PDF">
+                        <Button variant="outline" size="sm" onClick={handlePrint} className="rounded-xl font-bold border-gray-100" title="Use Print dialog ? Save as PDF">
                             <Download className="w-4 h-4 mr-2" />
                             PDF
                         </Button>
@@ -74,7 +74,7 @@ export function SalesDocumentPreview({
                         <div className="flex justify-between items-start mb-12">
                             <div className="space-y-4">
                                 <div className="space-y-1">
-                                    <h1 className="text-4xl font-black text-wine-600 tracking-tighter uppercase italic">
+                                    <h1 className="text-4xl font-semibold text-wine-600 tracking-tighter uppercase italic">
                                         {business?.business_name || 'FINANCIAL HUB'}
                                     </h1>
                                     <p className="text-xs text-gray-500 font-bold tracking-[0.2em] uppercase">Professional Business Solution</p>
@@ -87,21 +87,21 @@ export function SalesDocumentPreview({
                                 </div>
                             </div>
                             <div className="text-right space-y-2">
-                                <h2 className={`text-5xl font-black text-gray-100 uppercase tracking-tighter`}>
+                                <h2 className={`text-5xl font-semibold text-gray-100 uppercase tracking-tighter`}>
                                     {TYPE_LABELS[type]}
                                 </h2>
                                 <div className="inline-block bg-gray-50 border border-gray-100 p-4 rounded-2xl text-left space-y-1">
                                     <div className="flex gap-4 justify-between min-w-[180px]">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Document #</span>
-                                        <span className="text-sm font-black text-gray-900">{docNumber}</span>
+                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Document #</span>
+                                        <span className="text-sm font-semibold text-gray-900">{docNumber}</span>
                                     </div>
                                     <div className="flex gap-4 justify-between">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</span>
+                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Date</span>
                                         <span className="text-sm font-bold text-gray-900">{docDate}</span>
                                     </div>
                                     {extraDate && (
                                         <div className="flex gap-4 justify-between border-t border-dashed border-gray-200 pt-1 mt-1">
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                                                 {type === 'quotation' ? 'Valid Till' : 'Delivery By'}
                                             </span>
                                             <span className="text-sm font-bold text-gray-700">{extraDate}</span>
@@ -114,12 +114,12 @@ export function SalesDocumentPreview({
                         {/* Addresses */}
                         <div className="grid grid-cols-2 gap-12 mb-12">
                             <div className="space-y-3">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                     <User className="w-3 h-3 text-wine-600" />
                                     Bill To
                                 </p>
                                 <div className="space-y-1">
-                                    <p className="text-xl font-black text-gray-900">{document.customer_name || 'Customer Name'}</p>
+                                    <p className="text-xl font-semibold text-gray-900">{document.customer_name || 'Customer Name'}</p>
                                     <div className="text-sm text-gray-600 font-medium italic">
                                         <p>{document.customer_address || 'Address not specified'}</p>
                                         <p>{document.customer_phone}</p>
@@ -129,7 +129,7 @@ export function SalesDocumentPreview({
                             </div>
                             {type === 'delivery_challan' && document.delivery_address && (
                                 <div className="space-y-3">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                         <Calendar className="w-3 h-3 text-wine-600" />
                                         Ship To
                                     </p>
@@ -147,13 +147,13 @@ export function SalesDocumentPreview({
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b-2 border-wine-600/20">
-                                        <th className="py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest px-4">#</th>
-                                        <th className="py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Item Description</th>
-                                        <th className="py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Qty</th>
+                                        <th className="py-4 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-4">#</th>
+                                        <th className="py-4 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Item Description</th>
+                                        <th className="py-4 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Qty</th>
                                         {type !== 'delivery_challan' && (
                                             <>
-                                                <th className="py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Unit Price</th>
-                                                <th className="py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest px-4">Amount</th>
+                                                <th className="py-4 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Unit Price</th>
+                                                <th className="py-4 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-4">Amount</th>
                                             </>
                                         )}
                                     </tr>
@@ -168,30 +168,30 @@ export function SalesDocumentPreview({
                                                     {item.description && <p className="text-xs text-gray-600">{item.description}</p>}
                                                     <div className="flex gap-2">
                                                         {item.batch_number && (
-                                                            <span className="text-[9px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                                                            <span className="text-[10px] font-semibold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded uppercase tracking-tighter">
                                                                 Batch: {item.batch_number}
                                                             </span>
                                                         )}
                                                         {item.serial_number && (
-                                                            <span className="text-[9px] font-black bg-wine-50 text-wine-600 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                                                            <span className="text-[10px] font-semibold bg-wine-50 text-wine-600 px-1.5 py-0.5 rounded uppercase tracking-tighter">
                                                                 Serial: {item.serial_number}
                                                             </span>
                                                         )}
                                                         {item.article_no && (
-                                                            <span className="text-[9px] font-black bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                                                            <span className="text-[10px] font-semibold bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded uppercase tracking-tighter">
                                                                 Art: {item.article_no} / Des: {item.design_no}
                                                             </span>
                                                         )}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="py-5 text-center text-sm font-black text-gray-700">{item.quantity}</td>
+                                            <td className="py-5 text-center text-sm font-semibold text-gray-700">{item.quantity}</td>
                                             {type !== 'delivery_challan' && (
                                                 <>
                                                     <td className="py-5 text-right text-sm font-bold text-gray-600">
                                                         {formatCurrency(item.unit_price, currency)}
                                                     </td>
-                                                    <td className="py-5 text-right text-sm font-black text-gray-900 px-4">
+                                                    <td className="py-5 text-right text-sm font-semibold text-gray-900 px-4">
                                                         {formatCurrency(item.quantity * item.unit_price, currency)}
                                                     </td>
                                                 </>
@@ -207,7 +207,7 @@ export function SalesDocumentPreview({
                             <div className="space-y-6">
                                 {document.notes && (
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Terms & Notes</p>
+                                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Terms & Notes</p>
                                         <p className="text-xs text-gray-500 leading-relaxed font-medium italic bg-gray-50 p-4 rounded-xl border border-gray-100">
                                             {document.notes}
                                         </p>
@@ -215,7 +215,7 @@ export function SalesDocumentPreview({
                                 )}
                                 <div className="pt-12">
                                     <div className="border-t border-gray-200 w-48 mb-2"></div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Authorized Signature</p>
+                                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Authorized Signature</p>
                                 </div>
                             </div>
 
@@ -230,8 +230,8 @@ export function SalesDocumentPreview({
                                         <span className="font-bold text-gray-700">{formatCurrency(document.tax_total, currency)}</span>
                                     </div>
                                     <div className="flex justify-between border-t-2 border-wine-600/20 pt-3 mt-3">
-                                        <span className="text-wine-600 font-black uppercase tracking-tighter text-lg">Grand Total</span>
-                                        <span className="text-wine-600 font-black text-2xl">
+                                        <span className="text-wine-600 font-semibold uppercase tracking-tighter text-lg">Grand Total</span>
+                                        <span className="text-wine-600 font-semibold text-2xl">
                                             {formatCurrency(document.total_amount || document.grand_total, currency)}
                                         </span>
                                     </div>

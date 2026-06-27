@@ -22,7 +22,7 @@ export default async function PrivacyPage({ params }) {
   const sections = [
     {
       title: '1. Information We Collect',
-      content: `When you shop with ${storeName} we collect information you provide directly — such as your name, email address, phone number, and delivery address — as well as transaction data needed to process your orders. We may also collect usage data (pages visited, products viewed) to improve your experience.`,
+      content: `When you shop with ${storeName} we collect information you provide directly, such as your name, email address, phone number, and delivery address, as well as transaction data needed to process your orders. We may also collect usage data (pages visited, products viewed) to improve your experience.`,
     },
     {
       title: '2. How We Use Your Information',

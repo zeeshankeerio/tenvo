@@ -72,7 +72,7 @@ export function BusyGrid({
     const gridRef = useRef(null);
     const inputRef = useRef(null);
     const scrollRef = useRef(null);
-    /** Enter/Tab already committed — ignore the blur that follows so we do not double-fire `onCellEdit`. */
+    /** Enter/Tab already committed, ignore the blur that follows so we do not double-fire `onCellEdit`. */
     const skipNextBlurSaveRef = useRef(false);
     /** Latest grid dimensions for Tab/Enter navigation without stale closures. */
     const navContextRef = useRef({ columns, sortedData: [], getValue: () => '', onCellEdit: null, isExcel: false });
@@ -498,10 +498,10 @@ export function BusyGrid({
             {/* Liquid-Style Formula Bar (Busy Mode Only) */}
             {isBusyMode && (
                 <div className={cn('bg-slate-50 border-b border-slate-200 p-1.5 flex items-center gap-2 shadow-inner', isExcel ? 'h-8' : 'h-10')}>
-                    <div className="bg-white border px-3 h-7 flex items-center font-black text-[10px] text-indigo-600 rounded shadow-sm">
+                    <div className="bg-white border px-3 h-7 flex items-center font-semibold text-[10px] text-indigo-600 rounded shadow-sm">
                         {headerLetters[selectedCell.col]}{selectedCell.row + 1}
                     </div>
-                    <div className="text-slate-400 font-black px-1 italic flex items-center gap-1">
+                    <div className="text-slate-400 font-semibold px-1 italic flex items-center gap-1">
                         <FunctionSquare className="w-3.5 h-3.5" />
                         <span>=</span>
                     </div>
@@ -520,7 +520,7 @@ export function BusyGrid({
                     </div>
                     <div className="flex items-center gap-2 px-2">
                         <Zap className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-indigo-400 uppercase tracking-tighter">Command Engine Active</span>
+                        <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-tighter">Command Engine Active</span>
                     </div>
                 </div>
             )}
@@ -538,7 +538,7 @@ export function BusyGrid({
                                 className={cn(
                                     'sticky left-0 z-40 box-border shrink-0 border-r border-b text-center font-mono font-bold leading-none text-gray-600',
                                     isExcel
-                                        ? 'h-7 w-8 min-w-[32px] max-w-[32px] border-gray-300 bg-[#dfe4ea] p-0 text-[9px]'
+                                        ? 'h-7 w-8 min-w-[32px] max-w-[32px] border-gray-300 bg-[#dfe4ea] p-0 text-[10px]'
                                         : 'h-10 w-10 border-gray-300 bg-gray-200/80 text-[10px] text-gray-500'
                                 )}
                                 style={isExcel ? { width: 32, minWidth: 32, maxWidth: 32 } : undefined}
@@ -565,7 +565,7 @@ export function BusyGrid({
                                                 onClick={(e) => e.stopPropagation()}
                                             >
                                                 <span
-                                                    className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border border-gray-400 bg-white font-mono text-[9px] font-bold leading-none text-gray-700"
+                                                    className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border border-gray-400 bg-white font-mono text-[10px] font-bold leading-none text-gray-700"
                                                     title={`Column ${headerLetters[idx]}`}
                                                 >
                                                     {headerLetters[idx]}
@@ -582,11 +582,11 @@ export function BusyGrid({
                                                 )}
                                                 onClick={() => col.accessorKey && handleSort(col.accessorKey)}
                                             >
-                                                <span className="text-[8px] font-bold text-gray-400 transition-colors group-hover:text-blue-600">
+                                                <span className="text-[10px] font-bold text-gray-400 transition-colors group-hover:text-blue-600">
                                                     {headerLetters[idx]}
                                                 </span>
                                                 <div className="flex min-w-0 items-center gap-2">
-                                                    <span className="truncate text-[10px] font-black uppercase tracking-widest text-gray-700">
+                                                    <span className="truncate text-[10px] font-semibold uppercase tracking-widest text-gray-700">
                                                         {headerLabel}
                                                     </span>
                                                     {sortConfig.key === col.accessorKey && (
@@ -637,7 +637,7 @@ export function BusyGrid({
                                         className={cn(
                                             'sticky left-0 z-20 box-border border-r border-b text-center font-mono font-bold text-gray-600 transition-colors',
                                             isExcel
-                                                ? 'h-[26px] min-h-[26px] max-h-[26px] w-8 min-w-[32px] max-w-[32px] border-gray-300 bg-[#dfe4ea] text-[9px] leading-none group-hover:text-blue-700'
+                                                ? 'h-[26px] min-h-[26px] max-h-[26px] w-8 min-w-[32px] max-w-[32px] border-gray-300 bg-[#dfe4ea] text-[10px] leading-none group-hover:text-blue-700'
                                                 : 'w-10 border-gray-100 bg-gray-50/50 text-[10px] text-gray-400 group-hover:text-blue-500'
                                         )}
                                         style={isExcel ? { width: 32, minWidth: 32, maxWidth: 32 } : undefined}
@@ -776,13 +776,13 @@ export function BusyGrid({
             >
                 <div className="flex flex-1 items-center gap-4 overflow-hidden px-3 sm:px-4">
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Items</span>
-                        <span className="font-mono text-[10px] font-black text-gray-900 tabular-nums">{sortedData.length}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Items</span>
+                        <span className="font-mono text-[10px] font-semibold text-gray-900 tabular-nums">{sortedData.length}</span>
                     </div>
                     <div className="h-3 w-px bg-gray-200" />
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Cell</span>
-                        <span className="font-mono text-[10px] font-black text-blue-600 tabular-nums">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Cell</span>
+                        <span className="font-mono text-[10px] font-semibold text-blue-600 tabular-nums">
                             {headerLetters[selectedCell.col]}
                             {selectedCell.row + 1}
                         </span>
@@ -790,13 +790,13 @@ export function BusyGrid({
                     {isExcel && (
                         <>
                             <div className="h-3 w-px bg-gray-200 hidden sm:block" />
-                            <span className="hidden text-[9px] text-gray-500 sm:inline">Sort disabled · row order = save order</span>
+                            <span className="hidden text-[10px] text-gray-500 sm:inline">Sort disabled · row order = save order</span>
                         </>
                     )}
                     {Object.keys(validationErrors).length > 0 && (
                         <div className="flex animate-pulse items-center gap-1.5 text-red-600">
                             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                            <span className="text-[9px] font-bold uppercase">{Object.keys(validationErrors).length} err</span>
+                            <span className="text-[10px] font-bold uppercase">{Object.keys(validationErrors).length} err</span>
                         </div>
                     )}
                 </div>
@@ -809,10 +809,10 @@ export function BusyGrid({
                         { k: 'Bksp', l: 'Clear' },
                     ].map((btn) => (
                         <div key={btn.k} className="flex items-center gap-0.5 opacity-70">
-                            <kbd className="rounded border border-gray-200 bg-white px-1 font-mono text-[8px] font-bold text-gray-600">
+                            <kbd className="rounded border border-gray-200 bg-white px-1 font-mono text-[10px] font-bold text-gray-600">
                                 {btn.k}
                             </kbd>
-                            <span className="text-[8px] font-bold uppercase tracking-tight text-gray-500">{btn.l}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-tight text-gray-500">{btn.l}</span>
                         </div>
                     ))}
                 </div>

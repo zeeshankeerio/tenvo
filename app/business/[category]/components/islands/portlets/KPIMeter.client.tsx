@@ -1,5 +1,6 @@
 'use client';
 
+import { BRAND_PRIMARY } from '@/lib/theme/brandTokens';
 import { memo } from 'react';
 import { Portlet } from '@/components/ui/portlet';
 import {
@@ -8,6 +9,8 @@ import {
     RadialBar
 } from 'recharts';
 import { TrendingUp } from 'lucide-react';
+import { HUB_MICRO_LABEL, HUB_STAT_VALUE } from '@/lib/utils/typography';
+import { cn } from '@/lib/utils';
 
 interface KPIMeterProps {
     title?: string;
@@ -26,7 +29,7 @@ export const KPIMeter = memo(function KPIMeter({
     target = 100,
     prefix = "",
     suffix = "%",
-    color = "#e34242",
+    color = BRAND_PRIMARY,
     trendValue = 0,
     trendLabel = "vs previous period"
 }: KPIMeterProps) {
@@ -62,12 +65,12 @@ export const KPIMeter = memo(function KPIMeter({
 
                     {/* Centered Value */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
-                        <span className="text-3xl font-black text-gray-900 leading-none">
+                        <span className="text-3xl font-semibold text-gray-900 leading-none">
                             {prefix}{safeValue}{suffix}
                         </span>
                         <div className="flex items-center gap-1 mt-1">
                             <TrendingUp className={`w-3 h-3 ${trendValue >= 0 ? 'text-emerald-500' : 'text-red-500 rotate-180'}`} />
-                            <span className={`text-[9px] font-black uppercase tracking-wide ${trendValue >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            <span className={`text-[10px] font-semibold uppercase tracking-wide ${trendValue >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                 {trendValue >= 0 ? '+' : ''}{trendValue}% {trendLabel}
                             </span>
                         </div>
@@ -76,12 +79,12 @@ export const KPIMeter = memo(function KPIMeter({
 
                 <div className="w-full grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
                     <div className="text-center">
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Current</p>
-                        <p className="text-sm font-black text-gray-800 tracking-tight">{prefix}{safeValue}{suffix}</p>
+                        <p className={cn(HUB_MICRO_LABEL, 'mb-1 text-neutral-400')}>Current</p>
+                        <p className={cn(HUB_STAT_VALUE, 'text-sm text-neutral-800')}>{prefix}{safeValue}{suffix}</p>
                     </div>
                     <div className="text-center">
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Target</p>
-                        <p className="text-sm font-black text-gray-800 tracking-tight">{prefix}{target}{suffix}</p>
+                        <p className={cn(HUB_MICRO_LABEL, 'mb-1 text-neutral-400')}>Target</p>
+                        <p className={cn(HUB_STAT_VALUE, 'text-sm text-neutral-800')}>{prefix}{target}{suffix}</p>
                     </div>
                 </div>
             </div>

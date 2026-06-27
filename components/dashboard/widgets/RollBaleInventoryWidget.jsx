@@ -187,7 +187,7 @@ export function RollBaleInventoryWidget({ businessId, onViewDetails }) {
                             {rollData.totalRolls.toLocaleString()}
                         </Badge>
                     </div>
-                    <div className="text-2xl font-black text-indigo-900">
+                    <div className="text-2xl font-semibold text-indigo-900">
                         {rollData.totalRolls.toLocaleString()} {t.rolls || 'Rolls'}
                     </div>
                 </div>
@@ -196,7 +196,7 @@ export function RollBaleInventoryWidget({ businessId, onViewDetails }) {
                 <div className="grid grid-cols-3 gap-2">
                     <div className="text-center p-2 rounded-lg bg-blue-50">
                         <Ruler className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-                        <div className="text-lg font-black text-blue-600">
+                        <div className="text-lg font-semibold text-blue-600">
                             {rollData.totalLength.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </div>
                         <div className="text-[10px] font-bold text-blue-700 uppercase tracking-wide">
@@ -205,7 +205,7 @@ export function RollBaleInventoryWidget({ businessId, onViewDetails }) {
                     </div>
                     <div className="text-center p-2 rounded-lg bg-green-50">
                         <Weight className="w-4 h-4 text-green-600 mx-auto mb-1" />
-                        <div className="text-lg font-black text-green-600">
+                        <div className="text-lg font-semibold text-green-600">
                             {rollData.totalWeight.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </div>
                         <div className="text-[10px] font-bold text-green-700 uppercase tracking-wide">
@@ -214,7 +214,7 @@ export function RollBaleInventoryWidget({ businessId, onViewDetails }) {
                     </div>
                     <div className="text-center p-2 rounded-lg bg-wine-50">
                         <Grid3x3 className="w-4 h-4 text-wine-600 mx-auto mb-1" />
-                        <div className="text-lg font-black text-wine-600">
+                        <div className="text-lg font-semibold text-wine-600">
                             {rollData.totalArea.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </div>
                         <div className="text-[10px] font-bold text-wine-700 uppercase tracking-wide">
@@ -226,7 +226,7 @@ export function RollBaleInventoryWidget({ businessId, onViewDetails }) {
                 {/* Top Fabric Types */}
                 {rollData.topFabricTypes.length > 0 && (
                     <div className="space-y-2">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                             {t.top_fabric_types || 'Top Fabric Types'}
                         </div>
                         {rollData.topFabricTypes.map((fabric, idx) => {

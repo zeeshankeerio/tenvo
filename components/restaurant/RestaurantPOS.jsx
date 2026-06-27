@@ -87,7 +87,7 @@ function CategoryBar({ categories, active, onSelect }) {
 
 function MenuItemCard({ product, onAdd, currency }) {
     // Only show LOW badge if stock is explicitly tracked (stock > 0 previously, now <= 5)
-    // Items with stock=0 that have never been stocked are untracked menu items — no badge
+    // Items with stock=0 that have never been stocked are untracked menu items, no badge
     const stockTracked = product.stock_status === 'low_stock' || (product.stock !== null && product.stock !== undefined && product.stock > 0 && product.stock <= 5);
     const isLow = stockTracked;
     return (
@@ -99,7 +99,7 @@ function MenuItemCard({ product, onAdd, currency }) {
             className="bg-white rounded-xl border border-gray-100 p-3 text-left hover:shadow-md hover:border-indigo-200 transition-all group relative"
         >
             {isLow && (
-                <span className="absolute -top-1 -right-1 text-[8px] px-1.5 py-0.5 bg-red-500 text-white font-black rounded-full">LOW</span>
+                <span className="absolute -top-1 -right-1 text-[10px] px-1.5 py-0.5 bg-red-500 text-white font-semibold rounded-full">LOW</span>
             )}
             <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
@@ -110,7 +110,7 @@ function MenuItemCard({ product, onAdd, currency }) {
                     <Plus className="w-4 h-4 text-indigo-600" />
                 </div>
             </div>
-            <p className="text-base font-black text-indigo-600 mt-2">{currency} {Number(product.price || product.selling_price || 0).toLocaleString()}</p>
+            <p className="text-base font-semibold text-indigo-600 mt-2">{currency} {Number(product.price || product.selling_price || 0).toLocaleString()}</p>
         </motion.button>
     );
 }
@@ -136,7 +136,7 @@ function OrderItemRow({ item, onQty, onRemove, currency }) {
                 <button onClick={() => onQty(item.id, -1)} className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
                     <Minus className="w-3 h-3 text-gray-500" />
                 </button>
-                <span className="w-7 text-center text-sm font-black text-gray-800">{item.quantity}</span>
+                <span className="w-7 text-center text-sm font-semibold text-gray-800">{item.quantity}</span>
                 <button onClick={() => onQty(item.id, 1)} className="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center hover:bg-indigo-100 transition-colors">
                     <Plus className="w-3 h-3 text-indigo-600" />
                 </button>
@@ -277,7 +277,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
         if (orderType === 'delivery' && !deliveryAddress.trim()) {
             toast.error('Delivery address is required'); return;
         }
-        // Dine-in validation — only enforce table selection if tables are configured
+        // Dine-in validation, only enforce table selection if tables are configured
         if (orderType === 'dine-in' && tables.length > 0 && !selectedTable) {
             toast.error('Please select a table for dine-in orders'); return;
         }
@@ -334,7 +334,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
 
             if (result.success) {
                 toast.success('Payment processed!', { icon: '✅' });
-                // Notify parent for dashboard refresh only — do NOT call onCompleteSale
+                // Notify parent for dashboard refresh only, do NOT call onCompleteSale
                 // (that triggers POS invoice logic which is incompatible with restaurant orders)
                 onOrderComplete?.(result);
                 // Reset all state for next order
@@ -482,8 +482,8 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                                             table.status === 'occupied' && 'opacity-50 cursor-not-allowed'
                                         )}
                                     >
-                                        <span className="text-xs font-black">{table.table_number || table.name}</span>
-                                        <span className="text-[8px] font-bold mt-0.5">{table.capacity || 4} seats</span>
+                                        <span className="text-xs font-semibold">{table.table_number || table.name}</span>
+                                        <span className="text-[10px] font-bold mt-0.5">{table.capacity || 4} seats</span>
                                     </button>
                                 );
                             })}
@@ -531,7 +531,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                 <div className="p-4 border-b border-gray-100">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-sm font-black text-gray-900">Current Order</h3>
+                            <h3 className="text-sm font-semibold text-gray-900">Current Order</h3>
                             <p className="text-[10px] text-gray-400 mt-0.5">
                                 {orderType === 'dine-in' && selectedTable ? `Table ${selectedTable.table_number || selectedTable.name} * ${covers} covers` :
                                     orderType === 'takeaway' ? 'Takeaway Order' : 'Delivery Order'}
@@ -606,7 +606,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                             <span className="font-bold">{currency} {deliveryFee.toLocaleString()}</span>
                         </div>
                     )}
-                    <div className="flex justify-between text-base font-black text-gray-900 pt-1 border-t border-gray-100">
+                    <div className="flex justify-between text-base font-semibold text-gray-900 pt-1 border-t border-gray-100">
                         <span>Total</span>
                         <span>{currency} {total.toLocaleString()}</span>
                     </div>
@@ -646,7 +646,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                         <button
                             onClick={handlePayment}
                             disabled={!paymentMethod || isProcessing}
-                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isProcessing ? (
                                 <span className="animate-spin">⏳</span>
@@ -663,7 +663,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                         <button
                             onClick={handleSendToKitchen}
                             disabled={orderItems.length === 0 || isProcessing}
-                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isProcessing ? <span className="animate-spin">⏳</span> : <Send className="w-4 h-4" />}
                             {orderType === 'delivery' ? 'Place Delivery Order' : orderType === 'takeaway' ? 'Place Takeaway Order' : 'Send to Kitchen'}

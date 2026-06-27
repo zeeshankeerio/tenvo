@@ -103,7 +103,7 @@ export function StatsCards({ stats, currency = 'PKR', onQuickAction }: StatsCard
                             </div>
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
-                            <div className="text-lg font-black tracking-tight">{card.value}</div>
+                            <div className="text-lg font-semibold tracking-tight">{card.value}</div>
                             {card.trend && (
                                 <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                                     <span className="text-emerald-600 font-bold">{card.trend}</span>

@@ -118,7 +118,7 @@ export function UserManager({ trigger }) {
                             <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Building2 className="w-3.5 h-3.5 text-wine" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Current Shop</span>
+                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Current Shop</span>
                                 </div>
                                 <Badge variant="outline" className="text-[10px] font-bold border-wine/20 text-wine h-5">
                                     {business.business_name}
@@ -181,7 +181,7 @@ export function UserManager({ trigger }) {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Sparkles className="w-3.5 h-3.5 text-brand-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Interface</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Interface</span>
                             </div>
                             <div className="flex bg-white border border-gray-100 rounded-lg p-0.5 shadow-sm">
                                 <button
@@ -192,7 +192,7 @@ export function UserManager({ trigger }) {
                                     className={cn(
                                         "px-2.5 py-0.5 text-[10px] font-bold rounded-md transition-all",
                                         isEasyMode
-                                            ? "bg-brand-primary text-white shadow-sm font-black"
+                                            ? "bg-brand-primary text-white shadow-sm font-semibold"
                                             : "text-gray-500 hover:text-gray-700"
                                     )}
                                 >
@@ -206,7 +206,7 @@ export function UserManager({ trigger }) {
                                     className={cn(
                                         "px-2.5 py-0.5 text-[10px] font-bold rounded-md transition-all",
                                         !isEasyMode
-                                            ? "bg-brand-primary text-white shadow-sm font-black"
+                                            ? "bg-brand-primary text-white shadow-sm font-semibold"
                                             : "text-gray-500 hover:text-gray-700"
                                     )}
                                 >
@@ -219,7 +219,7 @@ export function UserManager({ trigger }) {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Globe className="w-3.5 h-3.5 text-gray-400" />
-                                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Language</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Language</span>
                             </div>
                             <button
                                 onClick={(e) => {
@@ -254,14 +254,14 @@ export function UserManager({ trigger }) {
             <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
                 <DialogContent className="sm:max-w-md rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
                     <div className="h-24 bg-gradient-to-r from-wine to-wine-light p-6">
-                        <DialogTitle className="text-white text-xl font-black">Account Settings</DialogTitle>
+                        <DialogTitle className="text-white text-xl font-semibold">Account Settings</DialogTitle>
                         <DialogDescription className="text-white/70 text-sm font-medium">Manage your personal ERP access profile</DialogDescription>
                     </div>
 
                     <form onSubmit={handleUpdateProfile} className="p-6 space-y-6 bg-white">
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Full Name</Label>
+                                <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Full Name</Label>
                                 <div className="relative group">
                                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-wine transition-colors" />
                                     <Input
@@ -274,7 +274,7 @@ export function UserManager({ trigger }) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Phone Number</Label>
+                                <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Phone Number</Label>
                                 <div className="relative group">
                                     <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-wine transition-colors" />
                                     <Input
@@ -287,7 +287,7 @@ export function UserManager({ trigger }) {
                             </div>
 
                             <div className="space-y-2 opacity-60">
-                                <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Registered Email</Label>
+                                <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Registered Email</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <Input
@@ -305,7 +305,7 @@ export function UserManager({ trigger }) {
                                 <Shield className="w-5 h-5 text-wine" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-black text-gray-900">Enterprise Security</h4>
+                                <h4 className="text-sm font-semibold text-gray-900">Enterprise Security</h4>
                                 <p className="text-xs text-gray-500 font-medium">Your account is secured with end-to-end encryption and Row Level Security.</p>
                             </div>
                         </div>

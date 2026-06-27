@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { Warehouse, MapPin, TrendingUp, Package } from 'lucide-react';
@@ -171,7 +171,7 @@ export function WarehouseDistributionWidget({ businessId, currency = 'PKR', onVi
                             {stats.warehouseCount} {t.locations || 'Locations'}
                         </Badge>
                     </div>
-                    <div className="text-2xl font-black text-wine-900">
+                    <div className="text-2xl font-semibold text-wine-900">
                         {formatCurrency(stats.totalValue, currency)}
                     </div>
                     <div className="text-[10px] text-wine-700 font-medium mt-1">
@@ -182,7 +182,7 @@ export function WarehouseDistributionWidget({ businessId, currency = 'PKR', onVi
                 {/* Top Warehouses */}
                 {stats.topWarehouses.length > 0 && (
                     <div className="space-y-2">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                             {t.top_locations || 'Top Locations'}
                         </div>
                         {stats.topWarehouses.map((warehouse, idx) => {
@@ -199,7 +199,7 @@ export function WarehouseDistributionWidget({ businessId, currency = 'PKR', onVi
                                                 <div className="text-xs font-bold text-gray-900 truncate">
                                                     {warehouse.name}
                                                     {warehouse.is_primary && (
-                                                        <Badge className="ml-1 text-[8px] bg-blue-100 text-blue-700">
+                                                        <Badge className="ml-1 text-[10px] bg-blue-100 text-blue-700">
                                                             {t.primary || 'Primary'}
                                                         </Badge>
                                                     )}

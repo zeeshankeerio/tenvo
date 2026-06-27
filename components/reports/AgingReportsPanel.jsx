@@ -15,9 +15,9 @@ import toast from 'react-hot-toast';
 
 const BUCKET_COLUMNS = [
     { key: 'current_amount', label: 'Current' },
-    { key: 'days_1_30', label: '1–30 Days' },
-    { key: 'days_31_60', label: '31–60 Days' },
-    { key: 'days_61_90', label: '61–90 Days' },
+    { key: 'days_1_30', label: '1-30 Days' },
+    { key: 'days_31_60', label: '31-60 Days' },
+    { key: 'days_61_90', label: '61-90 Days' },
     { key: 'days_over_90', label: '90+ Days' },
 ];
 
@@ -25,9 +25,9 @@ function AgingSummaryCards({ summary, currency }) {
     const cards = [
         { label: 'Total Outstanding', value: summary?.total_balance, accent: 'text-gray-900' },
         { label: 'Current', value: summary?.total_current, accent: 'text-emerald-600' },
-        { label: '1–30 Days', value: summary?.total_1_30, accent: 'text-amber-600' },
-        { label: '31–60 Days', value: summary?.total_31_60, accent: 'text-orange-600' },
-        { label: '61–90 Days', value: summary?.total_61_90, accent: 'text-red-500' },
+        { label: '1-30 Days', value: summary?.total_1_30, accent: 'text-amber-600' },
+        { label: '31-60 Days', value: summary?.total_31_60, accent: 'text-orange-600' },
+        { label: '61-90 Days', value: summary?.total_61_90, accent: 'text-red-500' },
         { label: '90+ Days', value: summary?.total_over_90, accent: 'text-red-700' },
     ];
     return (
@@ -35,7 +35,7 @@ function AgingSummaryCards({ summary, currency }) {
             {cards.map(({ label, value, accent }) => (
                 <div key={label} className="rounded-lg border bg-white p-3 shadow-sm">
                     <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">{label}</p>
-                    <p className={`text-base font-black mt-1 ${accent}`}>{formatCurrency(value || 0, currency)}</p>
+                    <p className={`text-base font-semibold mt-1 ${accent}`}>{formatCurrency(value || 0, currency)}</p>
                 </div>
             ))}
         </div>
@@ -50,7 +50,7 @@ function AgingTable({ rows, currency, type }) {
     return (
         <div className="overflow-x-auto border rounded-lg">
             <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-500 tracking-wider">
+                <thead className="bg-gray-50 text-[10px] font-semibold uppercase text-gray-500 tracking-wider">
                     <tr>
                         <th className="px-4 py-3 text-left">{type === 'ar' ? 'Customer' : 'Vendor'}</th>
                         <th className="px-4 py-3 text-left">Document</th>
@@ -72,15 +72,15 @@ function AgingTable({ rows, currency, type }) {
                                 {type === 'ar' ? row.invoice_number : row.purchase_number}
                             </td>
                             <td className="px-4 py-2.5 text-gray-600">
-                                {row.date ? new Date(row.date).toLocaleDateString() : '—'}
+                                {row.date ? new Date(row.date).toLocaleDateString() : ', '}
                             </td>
                             <td className="px-4 py-2.5 text-right font-medium">{row.days_overdue ?? 0}</td>
                             {BUCKET_COLUMNS.map((c) => (
                                 <td key={c.key} className="px-3 py-2.5 text-right font-mono text-xs">
-                                    {Number(row[c.key] || 0) > 0 ? formatCurrency(row[c.key], currency) : '—'}
+                                    {Number(row[c.key] || 0) > 0 ? formatCurrency(row[c.key], currency) : ', '}
                                 </td>
                             ))}
-                            <td className="px-4 py-2.5 text-right font-black">{formatCurrency(row.balance, currency)}</td>
+                            <td className="px-4 py-2.5 text-right font-semibold">{formatCurrency(row.balance, currency)}</td>
                         </tr>
                     ))}
                 </tbody>

@@ -1,21 +1,18 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getDashboardKPIs, getRecentActivity, getSalesTrend, getTopCustomers, getTopProducts } from '@/lib/actions/basic/dashboard';
+import { withApiAuth } from '@/lib/api/_shared/middleware';
 
 /**
  * GET /api/v1/dashboard?businessId=xxx&period=month
  * Returns comprehensive dashboard KPIs
  */
-export async function GET(request) {
+export const GET = withApiAuth(async (request, { businessId }) => {
     try {
         const { searchParams } = new URL(request.url);
-        const businessId = searchParams.get('businessId');
-        if (!businessId) return NextResponse.json({ error: 'businessId required' }, { status: 400 });
-
         const period = searchParams.get('period') || 'month';
         const section = searchParams.get('section') || 'all';
 
-        // Allow fetching specific sections for lazy loading
         switch (section) {
             case 'kpis': {
                 const kpis = await getDashboardKPIs(businessId, { period });
@@ -43,7 +40,6 @@ export async function GET(request) {
                 return NextResponse.json(result);
             }
             default: {
-                // Return all sections for full dashboard load
                 const [kpis, activity, trend, topCustomers, topProducts] = await Promise.all([
                     getDashboardKPIs(businessId, { period }),
                     getRecentActivity(businessId, 15),
@@ -66,5 +62,4 @@ export async function GET(request) {
         console.error('GET /api/v1/dashboard error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
-}
-
+});

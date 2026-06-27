@@ -10,7 +10,8 @@ import { UsersIcon, Loader2, Sparkles, Building2, Smartphone, Wallet, Globe, X }
 import toast from 'react-hot-toast';
 import { getDomainCustomerFields, normalizeKey } from '@/lib/utils/domainHelpers';
 import { DomainFieldRenderer } from './domain/DomainFieldRenderer';
-import { useBusiness } from '@/lib/context/BusinessContext';
+import { useFormRegionalContext } from '@/lib/hooks/useFormRegionalContext';
+import { getRegionalStandards, getPhoneCountryCodeOptions } from '@/lib/utils/regionalHelpers';
 import { CityAutocomplete } from '@/components/CityAutocomplete';
 import { MarketLocationSelector } from '@/components/MarketLocationSelector';
 import { useAppMode } from '@/lib/context/BusyModeContext';
@@ -23,18 +24,7 @@ import { isEntitlementError, getEntitlementErrorMessage, isEntitlementErrorHandl
 import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 import { MOBILE_FORM_BODY, MOBILE_FORM_FOOTER, MOBILE_INPUT_CLASS, MOBILE_LABEL_CLASS } from '@/lib/utils/formMobileStyles';
 
-const COUNTRY_CODES = [
-    { code: '+92', label: 'PK (+92)' },
-    { code: '+1', label: 'US (+1)' },
-    { code: '+44', label: 'UK (+44)' },
-    { code: '+971', label: 'UAE (+971)' },
-    { code: '+966', label: 'SA (+966)' },
-    { code: '+91', label: 'IN (+91)' },
-    { code: '+86', label: 'CN (+86)' },
-];
-
-const inputClass = MOBILE_INPUT_CLASS;
-const labelClass = MOBILE_LABEL_CLASS;
+const PHONE_COUNTRY_CODES = getPhoneCountryCodeOptions();
 
 export function CustomerForm({
     onSave,
@@ -44,7 +34,14 @@ export function CustomerForm({
     category = 'retail-shop',
     embedded = false,
 }) {
-    const { business } = useBusiness();
+    const {
+        business,
+        currency,
+        taxIdLabel,
+        isPakistanMarket,
+        registry,
+    } = useFormRegionalContext(category);
+    const standards = registry || getRegionalStandards('PK');
     const { isEasyMode } = useAppMode();
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('basic');
@@ -66,7 +63,7 @@ export function CustomerForm({
         ...initialData
     });
 
-    const [countryCode, setCountryCode] = useState('+92');
+    const [countryCode, setCountryCode] = useState(standards.phoneCode || '+92');
     const [localPhone, setLocalPhone] = useState('');
 
     useEffect(() => {
@@ -75,7 +72,7 @@ export function CustomerForm({
             setLocalPhone('');
             return;
         }
-        const matcheCode = COUNTRY_CODES.find(c => phone.startsWith(c.code));
+        const matcheCode = PHONE_COUNTRY_CODES.find(c => phone.startsWith(c.code));
         if (matcheCode) {
             setCountryCode(matcheCode.code);
             setLocalPhone(phone.slice(matcheCode.code.length).trim());
@@ -177,7 +174,6 @@ export function CustomerForm({
                 return;
             }
 
-            toast.success(`Customer ${initialData ? 'updated' : 'created'} successfully`);
             onClose?.();
         } catch (error) {
             console.error('Customer save error:', error);
@@ -187,7 +183,11 @@ export function CustomerForm({
                 }
                 onEntitlementError?.(error);
             } else {
-                toast.error(error.message || 'Failed to save customer');
+                showActionError({
+                    success: false,
+                    error: error.message || 'Failed to save customer',
+                    code: error.code || null,
+                });
             }
         } finally {
             setIsLoading(false);
@@ -237,7 +237,7 @@ export function CustomerForm({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleFillDemo}
-                                    className="h-7 px-2 text-[10px] font-black uppercase tracking-tight border-wine/20 text-wine hover:bg-wine/5"
+                                    className="h-7 px-2 text-[10px] font-semibold uppercase tracking-tight border-wine/20 text-wine hover:bg-wine/5"
                                 >
                                     <Sparkles className="mr-1 h-3 w-3" /> Magic Fill
                                 </Button>
@@ -301,7 +301,7 @@ export function CustomerForm({
                                             <SelectValue placeholder="Code" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {COUNTRY_CODES.map((c) => (
+                                            {PHONE_COUNTRY_CODES.map((c) => (
                                                 <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>
                                             ))}
                                         </SelectContent>
@@ -334,11 +334,11 @@ export function CustomerForm({
                         {isEasyMode && (
                             <div className="grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 md:grid-cols-2">
                                 <div className="space-y-1.5">
-                                    <Label className={labelClass}>Credit Limit (PKR)</Label>
+                                    <Label className={labelClass}>Credit Limit ({currency})</Label>
                                     <Input type="number" value={formData.credit_limit || ''} onChange={(e) => handleInputChange('credit_limit', e.target.value)} placeholder="0" className={inputClass} />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label className={labelClass}>Opening Balance (PKR)</Label>
+                                    <Label className={labelClass}>Opening Balance ({currency})</Label>
                                     <Input type="number" value={formData.opening_balance || ''} onChange={(e) => handleInputChange('opening_balance', e.target.value)} placeholder="0" className={inputClass} />
                                 </div>
                             </div>
@@ -347,34 +347,44 @@ export function CustomerForm({
 
                     <TabsContent value="tax" className="mt-0 space-y-4">
                         <div className="grid grid-cols-1 gap-4 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4 md:grid-cols-2">
+                            {isPakistanMarket ? (
+                                <>
+                                    <div className="space-y-1.5">
+                                        <Label className={labelClass}>CNIC</Label>
+                                        <Input value={formData.cnic || ''} onChange={handleCNICChange} placeholder="42201-1234567-1" className={cn(inputClass, 'font-mono')} maxLength={15} />
+                                        {errors?.cnic && <FormError message={errors.cnic} />}
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className={labelClass}>{taxIdLabel || 'NTN'}</Label>
+                                        <Input value={formData.ntn || ''} onChange={handleNTNChange} placeholder="1234567-8" className={cn(inputClass, 'font-mono')} maxLength={9} />
+                                        {errors?.ntn && <FormError message={errors.ntn} />}
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className={labelClass}>SRN</Label>
+                                        <Input value={formData.srn || ''} onChange={(e) => handleInputChange('srn', e.target.value)} placeholder="12-34-5678-910-1" className={cn(inputClass, 'font-mono')} />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className={labelClass}>FBR Filer Status</Label>
+                                        <select className={cn(inputClass, 'w-full border border-input bg-background px-3')} value={formData.filer_status || 'none'} onChange={(e) => handleInputChange('filer_status', e.target.value)}>
+                                            <option value="none">Not Verified</option>
+                                            <option value="active">Active (Filer)</option>
+                                            <option value="inactive">Inactive (Non-Filer)</option>
+                                        </select>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="space-y-1.5 md:col-span-2">
+                                    <Label className={labelClass}>{taxIdLabel}</Label>
+                                    <Input value={formData.ntn || ''} onChange={(e) => handleInputChange('ntn', e.target.value)} placeholder={`${taxIdLabel} / registration number`} className={inputClass} />
+                                    {errors?.ntn && <FormError message={errors.ntn} />}
+                                </div>
+                            )}
                             <div className="space-y-1.5">
-                                <Label className={labelClass}>CNIC</Label>
-                                <Input value={formData.cnic || ''} onChange={handleCNICChange} placeholder="42201-1234567-1" className={cn(inputClass, 'font-mono')} maxLength={15} />
-                                {errors?.cnic && <FormError message={errors.cnic} />}
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className={labelClass}>NTN</Label>
-                                <Input value={formData.ntn || ''} onChange={handleNTNChange} placeholder="1234567-8" className={cn(inputClass, 'font-mono')} maxLength={9} />
-                                {errors?.ntn && <FormError message={errors.ntn} />}
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className={labelClass}>SRN</Label>
-                                <Input value={formData.srn || ''} onChange={(e) => handleInputChange('srn', e.target.value)} placeholder="12-34-5678-910-1" className={cn(inputClass, 'font-mono')} />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className={labelClass}>FBR Filer Status</Label>
-                                <select className={cn(inputClass, 'w-full border border-input bg-background px-3')} value={formData.filer_status || 'none'} onChange={(e) => handleInputChange('filer_status', e.target.value)}>
-                                    <option value="none">Not Verified</option>
-                                    <option value="active">Active (Filer)</option>
-                                    <option value="inactive">Inactive (Non-Filer)</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className={labelClass}>Credit Limit (PKR)</Label>
+                                <Label className={labelClass}>Credit Limit ({currency})</Label>
                                 <Input type="number" value={formData.credit_limit || ''} onChange={(e) => handleInputChange('credit_limit', e.target.value)} placeholder="0" className={inputClass} />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className={labelClass}>Opening Balance (PKR)</Label>
+                                <Label className={labelClass}>Opening Balance ({currency})</Label>
                                 <Input type="number" value={formData.opening_balance || ''} onChange={(e) => handleInputChange('opening_balance', e.target.value)} placeholder="0" className={inputClass} />
                             </div>
                         </div>

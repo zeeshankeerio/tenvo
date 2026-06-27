@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { resolveStoreContact } from '@/lib/storefront/businessContact';
 import { RotateCcw, CheckCircle, XCircle, Package, Clock } from 'lucide-react';
 
 export async function generateMetadata({ params }) {
@@ -19,6 +20,10 @@ export default async function ReturnsPage({ params }) {
   const { business, settings } = result;
   const accent = getStoreAccentColor(settings, business.category);
   const returnDays = settings?.returnPolicyDays || 7;
+  const contact = resolveStoreContact({ business, settings });
+  const contactLine = contact.email
+    ? `Email us at ${contact.email} or use the Contact page with your order number and reason for return.`
+    : 'Use the Contact page with your order number and reason for return.';
 
   const eligible = [
     'Item is unused and in original condition',
@@ -92,10 +97,10 @@ export default async function ReturnsPage({ params }) {
             </h2>
             <ol className="space-y-4">
               {[
-                { step: '1', title: 'Contact Us', desc: `Email us at ${business.email || 'support@example.com'} or use the Contact page with your order number and reason for return.` },
-                { step: '2', title: 'Get Approval', desc: 'Our team will review your request and send a return authorisation within 1–2 business days.' },
+                { step: '1', title: 'Contact Us', desc: contactLine },
+                { step: '2', title: 'Get Approval', desc: 'Our team will review your request and send a return authorisation within 1-2 business days.' },
                 { step: '3', title: 'Ship the Item', desc: 'Pack the item securely and send it to our return address provided in the authorisation email.' },
-                { step: '4', title: 'Refund Processed', desc: 'Once we receive and inspect the item, your refund will be processed within 5–7 business days to the original payment method.' },
+                { step: '4', title: 'Refund Processed', desc: 'Once we receive and inspect the item, your refund will be processed within 5-7 business days to the original payment method.' },
               ].map((s) => (
                 <li key={s.step} className="flex gap-4">
                   <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-0.5"

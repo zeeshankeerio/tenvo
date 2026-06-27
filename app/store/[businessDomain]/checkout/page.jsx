@@ -74,7 +74,7 @@ export default function CheckoutPage({ params }) {
   const tax = subtotal * taxRate;
   const total = subtotal + shippingCost + tax;
 
-  // Redirect empty cart — only after localStorage hydration to avoid false redirect
+  // Redirect empty cart, only after localStorage hydration to avoid false redirect
   useEffect(() => {
     if (!hydrated) return;
     if (!orderDone && cart.items.length === 0) {
@@ -179,7 +179,7 @@ export default function CheckoutPage({ params }) {
     }
   };
 
-  // ── Pre-hydration loading state — prevents premature empty-cart redirect
+  // ── Pre-hydration loading state, prevents premature empty-cart redirect
   if (!hydrated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -277,7 +277,7 @@ export default function CheckoutPage({ params }) {
             <Card className="rounded-2xl shadow-sm border-0">
               <CardContent className="p-6 sm:p-8">
 
-                {/* Step 0 — Contact */}
+                {/* Step 0, Contact */}
                 {step === 0 && (
                   <div className="space-y-5">
                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -313,7 +313,7 @@ export default function CheckoutPage({ params }) {
                   </div>
                 )}
 
-                {/* Step 1 — Shipping */}
+                {/* Step 1, Shipping */}
                 {step === 1 && (
                   <div className="space-y-5">
                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -348,8 +348,8 @@ export default function CheckoutPage({ params }) {
                         onValueChange={v => set('shippingMethod', v)}
                         className="space-y-2">
                         {[
-                          { id: 'standard', label: 'Standard Delivery', sub: '3–5 business days', price: subtotal >= freeShippingThreshold ? 'FREE' : formatCurrency(150, currency) },
-                          { id: 'express', label: 'Express Delivery', sub: '1–2 business days', price: formatCurrency(300, currency) },
+                          { id: 'standard', label: 'Standard Delivery', sub: '3-5 business days', price: subtotal >= freeShippingThreshold ? 'FREE' : formatCurrency(150, currency) },
+                          { id: 'express', label: 'Express Delivery', sub: '1-2 business days', price: formatCurrency(300, currency) },
                           { id: 'pickup', label: 'Store Pickup', sub: 'Ready in 2 hours', price: 'FREE' },
                         ].map(opt => (
                           <label key={opt.id}
@@ -374,7 +374,7 @@ export default function CheckoutPage({ params }) {
                   </div>
                 )}
 
-                {/* Step 2 — Payment */}
+                {/* Step 2, Payment */}
                 {step === 2 && (
                   <div className="space-y-5">
                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -442,7 +442,7 @@ export default function CheckoutPage({ params }) {
                   </div>
                 )}
 
-                {/* Step 3 — Review */}
+                {/* Step 3, Review */}
                 {step === 3 && (
                   <div className="space-y-5">
                     <h2 className="text-lg font-bold text-gray-900">Review Your Order</h2>

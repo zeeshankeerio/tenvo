@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Bot,
   ChefHat,
+  ExternalLink,
   LayoutGrid,
   MonitorSmartphone,
   ShoppingBag,
@@ -14,21 +15,130 @@ import {
   Truck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MARKETING_CONTAINER, MARKETING_SECTION, MARKETING_SECTION_LOOSE } from '@/lib/utils/marketingLayout';
+import {
+  getDemoStoreHeroByDomain,
+  getDemoStoreHref,
+} from '@/lib/marketing/demoStoreGalleryMeta';
+import {
+  MARKETING_CONTAINER,
+  MARKETING_EYEBROW,
+  MARKETING_H2,
+  MARKETING_LEAD,
+  MARKETING_SECTION_LOOSE,
+} from '@/lib/utils/marketingLayout';
 import { cn } from '@/lib/utils';
 
-const IMG = {
-  storefront:
-    'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1200&q=80',
-  pos: 'https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=1200&q=80',
-  restaurant:
-    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
-  orders:
-    'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+const DEMO = {
+  storefront: 'demo-boutique',
+  pos: 'demo-supermarket',
+  restaurant: 'demo-restaurant',
+  orders: 'demo-pharmacy',
 };
 
+const PILLARS = [
+  {
+    id: 'storefront',
+    icon: Store,
+    eyebrow: 'Public brand store',
+    title: 'Branded online storefront',
+    description:
+      'Launch a professional shop under your business name. Catalog, cart, checkout, and customer care pages ship on day one with regional tax and currency defaults.',
+    demoDomain: DEMO.storefront,
+    demoName: 'Boutique demo',
+    className: 'lg:col-span-5',
+    imageClassName: 'aspect-[5/4] sm:aspect-[4/3]',
+  },
+  {
+    id: 'pos',
+    icon: MonitorSmartphone,
+    eyebrow: 'Retail & checkout',
+    title: 'POS aligned with your back office',
+    description:
+      'Ring up sales, returns, and exchanges at the counter while inventory and accounts stay in sync. Built for busy shops that cannot afford end-of-day stock surprises.',
+    demoDomain: DEMO.pos,
+    demoName: 'Supermarket demo',
+    className: 'lg:col-span-7',
+    imageClassName: 'aspect-[5/4] sm:aspect-[16/10]',
+  },
+  {
+    id: 'restaurant',
+    icon: ChefHat,
+    eyebrow: 'Cafés & dining',
+    title: 'Hospitality-ready workflows',
+    description:
+      'Table service, kitchen coordination, and front-of-house selling connect to the same product and revenue picture as retail. Kitchen display on supported Business+ plans.',
+    demoDomain: DEMO.restaurant,
+    demoName: 'Kitchen demo',
+    className: 'lg:col-span-4',
+    imageClassName: 'aspect-[4/3]',
+  },
+  {
+    id: 'orders',
+    icon: Truck,
+    eyebrow: 'Order hub',
+    title: 'One queue for every channel',
+    description:
+      'Web orders, counter sales, and B2B requests flow into a single operational queue. Pack, ship, reconcile, and support customers without retyping data.',
+    demoDomain: DEMO.orders,
+    demoName: 'Pharmacy demo',
+    className: 'lg:col-span-4',
+    imageClassName: 'aspect-[4/3]',
+  },
+];
+
+function CommercePillarCard({ pillar }) {
+  const Icon = pillar.icon;
+  const heroImage = getDemoStoreHeroByDomain(pillar.demoDomain);
+  const demoHref = getDemoStoreHref(pillar.demoDomain);
+
+  return (
+    <article
+      className={cn(
+        'group flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm',
+        'motion-safe:transition-shadow motion-safe:duration-300 motion-safe:hover:shadow-md',
+        pillar.className
+      )}
+    >
+      <div className={cn('relative w-full overflow-hidden bg-slate-100', pillar.imageClassName)}>
+        {heroImage ? (
+          <Image
+            src={heroImage}
+            alt=""
+            fill
+            className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-[1.03]"
+            sizes="(max-width: 1024px) 100vw, 33vw"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-slate-900/10 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between gap-3 p-4 sm:p-5">
+          <div className="flex items-center gap-2 text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <Icon className="h-4 w-4" aria-hidden />
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">{pillar.eyebrow}</span>
+          </div>
+          <Link
+            href={demoHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold text-slate-800 shadow-sm motion-safe:transition-colors hover:bg-white"
+          >
+            {pillar.demoName}
+            <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
+          </Link>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <h3 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{pillar.title}</h3>
+        <p className="mt-2 flex-1 text-sm font-medium leading-relaxed text-slate-600">{pillar.description}</p>
+      </div>
+    </article>
+  );
+}
+
 /**
- * Storefront, POS, hospitality, orders, automation & roadmap: business-first copy.
+ * Storefront, POS, hospitality, orders, automation: business-first copy with live demo imagery.
  */
 export default function CommerceAndIntelligenceSection({ variant = 'homepage' }) {
   const isCompact = variant === 'compact';
@@ -36,229 +146,107 @@ export default function CommerceAndIntelligenceSection({ variant = 'homepage' })
   return (
     <section
       className={cn(
-        'relative overflow-hidden border-b border-neutral-200/80',
-        isCompact ? cn(MARKETING_SECTION, 'bg-white') : cn(MARKETING_SECTION_LOOSE, 'bg-neutral-950 text-white')
+        'relative overflow-hidden border-b border-slate-200/80',
+        isCompact ? 'bg-white py-14 sm:py-16' : cn(MARKETING_SECTION_LOOSE, 'bg-gradient-to-b from-white via-slate-50/80 to-white')
       )}
     >
-      {!isCompact && (
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(227,66,66,0.22),transparent)]" />
-      )}
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_0%_0%,rgba(210,43,43,0.07),transparent_55%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_100%_100%,rgba(99,102,241,0.05),transparent_50%)]"
+        aria-hidden
+      />
 
       <div className={MARKETING_CONTAINER}>
-        <div className={cn('max-w-3xl', isCompact ? 'mb-8 sm:mb-10 lg:mb-12' : 'mb-10 sm:mb-12 lg:mb-16')}>
-          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-brand-primary sm:mb-4 sm:text-[11px] sm:tracking-[0.28em]">
-            Storefront · POS · Hospitality
-          </p>
-          <h2
-            className={cn(
-              'text-2xl font-black leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-5xl',
-              isCompact ? 'text-neutral-900' : 'text-white'
-            )}
-          >
-            Sell everywhere your customers are - without juggling five different systems.
+        <div className={cn('relative max-w-3xl', isCompact ? 'mb-8 sm:mb-10' : 'mb-10 sm:mb-12 lg:mb-14')}>
+          <p className={cn('mb-3 text-brand-primary sm:mb-4', MARKETING_EYEBROW)}>Storefront · POS · Hospitality</p>
+          <h2 className={cn(MARKETING_H2, 'text-slate-900')}>
+            Sell everywhere your customers are, without juggling five different systems.
           </h2>
-          <p
-            className={cn(
-              'mt-3 text-base font-medium leading-relaxed sm:mt-4 sm:text-lg',
-              isCompact ? 'text-neutral-600' : 'text-neutral-300'
-            )}
-          >
+          <p className={cn('mt-3 sm:mt-4', MARKETING_LEAD)}>
             Your online brand store, in-store checkout, and café or restaurant service share one product catalog.
-            Pricing and fulfilment stay aligned when your team uses the same hub — confirm multi-location stock rules with onboarding.
+            Pricing and fulfilment stay aligned when your team uses the same hub. Confirm multi-location stock rules
+            with onboarding.
           </p>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-12 lg:gap-6">
-          <article className="lg:col-span-5 group relative min-h-[280px] rounded-[2rem] border border-white/10 bg-neutral-900/60 overflow-hidden shadow-[0_40px_100px_-40px_rgba(0,0,0,0.65)]">
-            <Image
-              src={IMG.storefront}
-              alt=""
-              fill
-              className="object-cover opacity-55 transition duration-700 group-hover:scale-105 group-hover:opacity-65"
-              sizes="(max-width: 1024px) 100vw, 40vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-            <div className="relative h-full flex flex-col justify-end p-8 lg:p-10">
-              <div className="flex items-center gap-2 text-white/90 mb-3">
-                <Store className="w-5 h-5" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Public brand store</span>
-              </div>
-              <h3 className="text-2xl font-black text-white tracking-tight">Branded online storefront</h3>
-              <p className="mt-2 text-sm text-neutral-200 font-medium leading-relaxed max-w-md">
-                Launch a professional shop under your business name. Catalog, cart, checkout, and customer
-                care pages work together so web sales feel as trustworthy as walking into your flagship outlet.
-              </p>
-            </div>
-          </article>
-
-          <article className="lg:col-span-7 group relative min-h-[280px] rounded-[2rem] border border-white/10 bg-neutral-900/60 overflow-hidden shadow-[0_40px_100px_-40px_rgba(0,0,0,0.65)]">
-            <Image
-              src={IMG.pos}
-              alt=""
-              fill
-              className="object-cover opacity-50 transition duration-700 group-hover:scale-105 group-hover:opacity-60"
-              sizes="(max-width: 1024px) 100vw, 55vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/45 to-transparent" />
-            <div className="relative h-full flex flex-col justify-center p-8 lg:p-10 max-w-xl">
-              <div className="flex items-center gap-2 text-white/90 mb-3">
-                <MonitorSmartphone className="w-5 h-5" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Retail & checkout</span>
-              </div>
-              <h3 className="text-2xl font-black text-white tracking-tight">POS that speaks the same language as your back office</h3>
-              <p className="mt-2 text-sm text-neutral-200 font-medium leading-relaxed">
-                Ring up sales, returns, and exchanges at the counter while inventory and accounts stay accurate.
-                Built for busy shops that cannot afford “end-of-day surprises” or mismatched stock between the
-                till and the warehouse.
-              </p>
-            </div>
-          </article>
-
-          <article className="lg:col-span-4 group relative min-h-[260px] rounded-[2rem] border border-white/10 bg-neutral-900/60 overflow-hidden">
-            <Image
-              src={IMG.restaurant}
-              alt=""
-              fill
-              className="object-cover opacity-45 transition duration-700 group-hover:scale-105 group-hover:opacity-55"
-              sizes="(max-width: 1024px) 100vw, 33vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-            <div className="relative h-full flex flex-col justify-end p-8">
-              <div className="flex items-center gap-2 text-white/90 mb-2">
-                <ChefHat className="w-5 h-5" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Cafés & dining</span>
-              </div>
-              <h3 className="text-xl font-black text-white">Hospitality-ready workflows</h3>
-              <p className="mt-2 text-xs text-neutral-200 font-semibold leading-relaxed">
-                Tables, kitchen coordination, and front-of-house selling connect to the same product and
-                revenue picture as retail - ideal for growing food brands that also sell retail or online.
-              </p>
-            </div>
-          </article>
-
-          <article className="lg:col-span-4 group relative min-h-[260px] rounded-[2rem] border border-white/10 bg-neutral-900/60 overflow-hidden">
-            <Image
-              src={IMG.orders}
-              alt=""
-              fill
-              className="object-cover opacity-45 transition duration-700 group-hover:scale-105 group-hover:opacity-55"
-              sizes="(max-width: 1024px) 100vw, 33vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-            <div className="relative h-full flex flex-col justify-end p-8">
-              <div className="flex items-center gap-2 text-white/90 mb-2">
-                <Truck className="w-5 h-5" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Order hub</span>
-              </div>
-              <h3 className="text-xl font-black text-white">One place for every order</h3>
-              <p className="mt-2 text-xs text-neutral-200 font-semibold leading-relaxed">
-                Web orders, counter sales, and B2B requests flow into a single operational queue - pack, ship,
-                reconcile, and support customers without switching tools or retyping data.
-              </p>
-            </div>
-          </article>
-
-          <article
-            className={`lg:col-span-4 rounded-[2rem] border p-8 flex flex-col justify-between ${
-              isCompact
-                ? 'border-neutral-200 bg-gradient-to-br from-brand-50 to-white'
-                : 'border-brand-primary/30 bg-gradient-to-br from-brand-primary/20 to-neutral-900'
-            }`}
+          <Link
+            href="/demo"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-primary underline-offset-2 hover:underline"
           >
+            Browse live demo stores
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+        </div>
+
+        <div className="relative grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-12">
+          {PILLARS.map((pillar) => (
+            <CommercePillarCard key={pillar.id} pillar={pillar} />
+          ))}
+
+          <article className="flex flex-col justify-between rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-indigo-50/40 p-6 shadow-sm lg:col-span-4 sm:p-7">
             <div>
-              <div className="flex items-center gap-2 mb-3 text-brand-primary">
-                <LayoutGrid className="w-5 h-5" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Automation</span>
+              <div className="mb-3 flex items-center gap-2 text-brand-primary">
+                <LayoutGrid className="h-5 w-5" aria-hidden />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">Automation</span>
               </div>
-              <h3 className={`text-xl font-black tracking-tight ${isCompact ? 'text-neutral-900' : 'text-white'}`}>
-                Guided setup & ongoing management
+              <h3 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+                Guided setup and ongoing management
               </h3>
-              <p
-                className={`mt-2 text-xs font-semibold leading-relaxed ${
-                  isCompact ? 'text-neutral-600' : 'text-neutral-200'
-                }`}
-              >
-                Industry presets, bulk onboarding from spreadsheets, and sensible defaults mean you spend less
-                time configuring - and more time selling. Your storefront and channels stay aligned as you grow.
+              <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">
+                Industry presets, spreadsheet import, and sensible defaults mean less time configuring and more time
+                selling. Your storefront and channels stay aligned as you grow.
               </p>
             </div>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <span
-                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider border ${
-                  isCompact
-                    ? 'bg-white text-brand-primary border-brand-primary/20'
-                    : 'bg-white/10 text-white border-white/10'
-                }`}
-              >
-                <ShoppingBag className="w-3.5 h-3.5" /> Auto-provisioned store
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full border border-brand-200/80 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-brand-primary">
+                <ShoppingBag className="h-3.5 w-3.5" aria-hidden />
+                Auto-provisioned store
               </span>
-              <span
-                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider border ${
-                  isCompact
-                    ? 'bg-white text-brand-primary border-brand-primary/20'
-                    : 'bg-white/10 text-white border-white/10'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5" /> Smart restock signals
+              <span className="inline-flex items-center gap-1 rounded-full border border-brand-200/80 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-brand-primary">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                Smart restock signals
               </span>
             </div>
           </article>
         </div>
 
-        {/* Roadmap strip */}
-        <div
-          className={`mt-10 rounded-[2rem] border p-8 lg:p-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 ${
-            isCompact
-              ? 'border-neutral-200 bg-neutral-50'
-              : 'border-white/10 bg-white/[0.04] backdrop-blur-md'
-          }`}
-        >
-          <div className="flex items-start gap-4 max-w-2xl">
-            <div
-              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
-                isCompact ? 'bg-brand-primary text-white' : 'bg-brand-primary text-white'
-              }`}
-            >
-              <Bot className="w-6 h-6" />
+        <div className="relative mt-8 flex flex-col gap-6 rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm sm:mt-10 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex max-w-2xl items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-primary text-white">
+              <Bot className="h-6 w-6" aria-hidden />
             </div>
             <div>
-              <h3 className={`text-lg font-black tracking-tight ${isCompact ? 'text-neutral-900' : 'text-white'}`}>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-primary">Roadmap</p>
+              <h3 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">
                 Agentic improvements: on the way
               </h3>
-              <p
-                className={`mt-1 text-sm font-medium leading-relaxed ${
-                  isCompact ? 'text-neutral-600' : 'text-neutral-300'
-                }`}
-              >
-                Soon, TENVO will surface proactive suggestions across purchasing, compliance checks, and
-                customer follow-ups - always under your control, with clear explanations so your team trusts every
+              <p className="mt-1 text-sm font-medium leading-relaxed text-slate-600">
+                Soon, TENVO will surface proactive suggestions across purchasing, compliance checks, and customer
+                follow-ups, always under your control, with clear explanations so your team trusts every
                 recommendation.
               </p>
             </div>
           </div>
           <Button
             asChild
-            className="shrink-0 bg-brand-primary hover:bg-brand-primary-dark text-white font-black rounded-xl h-12 px-6 uppercase tracking-wider"
+            className="h-12 shrink-0 rounded-xl bg-brand-primary px-6 font-semibold uppercase tracking-wider text-white hover:bg-brand-primary-dark"
           >
             <Link href="/register" className="inline-flex items-center gap-2">
-              Start free <ArrowRight className="w-4 h-4" />
+              Start free
+              <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </Button>
         </div>
-        <p
-          className={`mt-6 text-center text-xs font-semibold ${
-            isCompact ? 'text-neutral-600' : 'text-neutral-400'
-          }`}
-        >
+
+        <p className="relative mt-6 text-center text-xs font-semibold text-slate-500">
           <Link
             href="/solutions/marketing-crm"
-            className={`font-black underline-offset-2 hover:underline ${
-              isCompact ? 'text-brand-primary' : 'text-white'
-            }`}
+            className="font-semibold text-brand-primary underline-offset-2 hover:underline"
           >
-            Campaigns, loyalty &amp; analytics
+            Campaigns, loyalty and analytics
           </Link>{' '}
-           same customer and order data as this stack.
+          use the same customer and order data as this stack.
         </p>
       </div>
     </section>

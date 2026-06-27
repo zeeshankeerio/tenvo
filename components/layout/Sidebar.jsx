@@ -33,6 +33,7 @@ import { useAppMode } from '@/lib/context/BusyModeContext';
 import { UserManager } from '../auth/UserManager';
 import { LanguageToggle } from '../LanguageToggle';
 import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
+import { HUB_NAV_SECTION } from '@/lib/utils/typography';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BusinessSwitcherEnhanced } from './BusinessSwitcherEnhanced';
 
@@ -312,7 +313,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
     }
 
     // RBAC + Subscription check via the permissions system
-    return getNavItemAccess(item.key, effectiveRole, planTier, business?.settings);
+    return getNavItemAccess(item.key, effectiveRole, planTier, business?.settings, business?.platformFeatureOverrides);
   };
 
   return (
@@ -404,7 +405,8 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
                 <button
                   onClick={() => toggleSection(section.label)}
                   className={cn(
-                    "flex items-center w-full px-2.5 py-1.5 mt-2 mb-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-gray-400 hover:text-gray-600 transition-colors",
+                    "flex items-center w-full px-2.5 py-1.5 mt-2 mb-0.5 hover:text-neutral-600 transition-colors",
+                    HUB_NAV_SECTION,
                     isSidebarCollapsed && "justify-center"
                   )}
                 >
@@ -512,7 +514,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
                               <span className="relative group/lock">
                                 <Lock className="w-3.5 h-3.5 text-gray-300" />
                                 {/* Tooltip */}
-                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-[9px] font-semibold bg-gray-900 text-white rounded-md whitespace-nowrap opacity-0 group-hover/lock:opacity-100 transition-opacity pointer-events-none z-50">
+                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-[10px] font-semibold bg-gray-900 text-white rounded-md whitespace-nowrap opacity-0 group-hover/lock:opacity-100 transition-opacity pointer-events-none z-50">
                                   Requires {PLAN_TIERS[item.requiredPlan]?.name || 'upgrade'}
                                 </span>
                               </span>
@@ -520,7 +522,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
 
                             {/* Badge for non-locked items */}
                             {!isLocked && item.badge && !isSidebarCollapsed && (
-                              <span className="px-1.5 py-0.5 text-[8px] font-black rounded-full bg-emerald-100 text-emerald-700 leading-none">
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-100 text-emerald-700 leading-none">
                                 {item.badge}
                               </span>
                             )}
@@ -543,7 +545,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
                 <Crown className="w-4 h-4 text-amber-300" />
                 <span className="text-[11px] font-bold">Unlock more features</span>
               </div>
-              <p className="text-[9px] text-brand-100 leading-relaxed mb-2">
+              <p className="text-[10px] text-brand-100 leading-relaxed mb-2">
                 {hospitalityDomain
                   ? 'Hospitality Growth: move to Business plan for restaurant + marketing automations.'
                   : planTier === 'free'
@@ -565,7 +567,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">Domain Gaps</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-700">Domain Gaps</span>
               </div>
               <div className="space-y-2">
                 {domainGapSuggestions.slice(0, 2).map(gap => (

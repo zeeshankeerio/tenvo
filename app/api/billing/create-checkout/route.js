@@ -61,7 +61,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
     }
 
-    // Dev / UAT: apply plan locally — no Stripe (set BILLING_MODE=manual in .env)
+    // Dev / UAT: apply plan locally, no Stripe (set BILLING_MODE=manual in .env)
     if (isManualBillingMode()) {
       const tier = resolvePlanTier(planTier);
       const quota = getPlanTierQuotaUpdateData(tier);
@@ -84,7 +84,7 @@ export async function POST(request) {
         manual: true,
         code: 'MANUAL_BILLING_PLAN_APPLIED',
         message:
-          'Development billing: plan saved on this business. No payment processor — treat as manual/offline payment for testing.',
+          'Development billing: plan saved on this business. No payment processor, treat as manual/offline payment for testing.',
         planTier: tier,
       });
     }

@@ -46,7 +46,7 @@ export default async function TermsPage({ params }) {
     },
     {
       title: '7. Intellectual Property',
-      content: `All content on this store — including text, images, logos, and graphics — is the property of ${storeName} or its suppliers and is protected by applicable intellectual property laws. You may not reproduce or redistribute content without prior written consent.`,
+      content: `All content on this store, including text, images, logos, and graphics, is the property of ${storeName} or its suppliers and is protected by applicable intellectual property laws. You may not reproduce or redistribute content without prior written consent.`,
     },
     {
       title: '8. Limitation of Liability',

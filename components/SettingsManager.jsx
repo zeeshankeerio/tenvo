@@ -20,11 +20,22 @@ import {
 import { authClient, useSession } from '@/lib/auth-client';
 import { productAPI, businessAPI } from '@/lib/api';
 import { getDomainKnowledgeForBusiness } from '@/lib/utils/businessRegionalContext';
-import { seedRegistrationInventoryAction } from '@/lib/actions/basic/business';
+import {
+  loadBusinessSampleDataAction,
+  removeBusinessSampleDataAction,
+  getBusinessSampleDataStateAction,
+} from '@/lib/actions/basic/business';
 import { useBusiness } from '@/lib/context/BusinessContext';
-import { PLAN_TIERS, PLAN_FEATURE_TOGGLE_KEYS, resolvePlanTier, FEATURE_LABELS } from '@/lib/config/plans';
+import { PLAN_TIERS, PLAN_FEATURE_TOGGLE_KEYS, resolvePlanTier, FEATURE_LABELS, PLAN_ORDER, FEATURE_MIN_PLAN } from '@/lib/config/plans';
 import { getPackagingFromSettings } from '@/lib/subscription/effectivePlanAccess';
+import {
+  PLAN_LIMIT_OVERRIDE_KEYS,
+  LIMIT_OVERRIDE_LABELS,
+  formatPlanLimitValue,
+  resolveEffectiveBusinessLimits,
+} from '@/lib/utils/businessLimitOverrides';
 import { updateOwnerBusinessPackagingAction } from '@/lib/actions/basic/business';
+import useSubscription from '@/lib/hooks/useSubscription';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CityAutocomplete } from './CityAutocomplete';
 import {
@@ -32,6 +43,7 @@ import {
   HardDriveDownload, Save, Building2, Shield, Globe, Zap, CreditCard, Users, UserCog,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 
 function buildProfileFormData(b) {
   if (!b?.id) {
@@ -62,6 +74,7 @@ function buildProfileFormData(b) {
  */
 export function SettingsManager({ category }) {
   const { business, updateBusiness, role, isPlatformOwner, planTier, regionalStandards } = useBusiness();
+  const { initiateCheckout, isRedirecting, billingMode, fetchSubscription } = useSubscription();
 
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState(() => buildProfileFormData(business));
@@ -98,6 +111,9 @@ export function SettingsManager({ category }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [loadingTools, setLoadingTools] = useState(false);
+  const [sampleDataState, setSampleDataState] = useState(null);
+  const [loadSampleOpen, setLoadSampleOpen] = useState(false);
+  const [removeSampleOpen, setRemoveSampleOpen] = useState(false);
   const normalizedRole = role || 'viewer';
   const canManageUsers = isPlatformOwner || ['owner', 'admin'].includes(normalizedRole);
   const canManageBilling = isPlatformOwner || normalizedRole === 'owner';
@@ -105,6 +121,18 @@ export function SettingsManager({ category }) {
   const canManageAdvancedTools = canManageUsers;
   const roleLabel = normalizedRole.replace(/_/g, ' ');
   const activeTeamCount = team.filter(member => member.status === 'active').length;
+
+  const billingLimitSnapshot = useMemo(
+    () => resolveEffectiveBusinessLimits(business || {}),
+    [business]
+  );
+
+  const enterpriseOnlyFeatureKeys = useMemo(() => {
+    const freeKeys = new Set(Object.keys(PLAN_TIERS.free.features));
+    return new Set(
+      Object.keys(PLAN_TIERS.enterprise.features).filter((k) => !freeKeys.has(k))
+    );
+  }, []);
 
   const visibleSections = useMemo(() => {
     return [
@@ -246,15 +274,20 @@ export function SettingsManager({ category }) {
   useEffect(() => {
     const pkg = getPackagingFromSettings(business?.settings);
     const mode = pkg?.mode === 'custom' ? 'custom' : 'tier';
+    const tier = resolvePlanTier(business?.plan_tier || 'free');
+    const tierFeatures = PLAN_TIERS[tier]?.features || {};
+    const seeded = Object.fromEntries(
+      PLAN_FEATURE_TOGGLE_KEYS.map((key) => [key, Boolean(tierFeatures[key])])
+    );
     queueMicrotask(() => {
       setLocalPackagingMode(mode);
       if (mode === 'custom' && pkg?.feature_overrides) {
-        setLocalFeatureOverrides({ ...pkg.feature_overrides });
+        setLocalFeatureOverrides({ ...seeded, ...pkg.feature_overrides });
       } else {
-        setLocalFeatureOverrides({});
+        setLocalFeatureOverrides(seeded);
       }
     });
-  }, [business?.id, business?.settings]);
+  }, [business?.id, business?.settings, business?.plan_tier]);
 
   const handleSavePackaging = async () => {
     if (!business?.id) return;
@@ -284,13 +317,30 @@ export function SettingsManager({ category }) {
 
   const handlePlanUpdate = async (tier) => {
     if (!business?.id) return;
-    const currentTier = business.plan_tier || 'free';
-    if (currentTier === tier) return;
+    const currentTier = resolvePlanTier(business.plan_tier || 'free');
+    const targetTier = resolvePlanTier(tier);
+    if (currentTier === targetTier) return;
+
+    if (targetTier === 'enterprise') {
+      window.open(getBookMeetingHref(), '_blank', 'noopener,noreferrer');
+      toast.success('Opening enterprise scheduling. We will scope your package on the call.');
+      return;
+    }
+
+    const isElevation = (PLAN_ORDER[targetTier] ?? 0) > (PLAN_ORDER[currentTier] ?? 0);
+    const useStripeCheckout =
+      billingMode !== 'manual' && targetTier !== 'free' && isElevation && !isPlatformOwner;
+
     setPlanBusy(true);
     try {
-      const updated = await businessAPI.updatePlan(business.id, tier);
+      if (useStripeCheckout) {
+        await initiateCheckout({ planTier: targetTier });
+        return;
+      }
+      const updated = await businessAPI.updatePlan(business.id, targetTier);
       updateBusiness(updated);
-      toast.success(`Plan updated to ${tier}`);
+      toast.success(`Plan updated to ${PLAN_TIERS[targetTier]?.name || targetTier}`);
+      await fetchSubscription();
     } catch (error) {
       toast.error(error.message || 'Failed to update plan');
     } finally {
@@ -497,48 +547,69 @@ export function SettingsManager({ category }) {
     }
   };
 
-  const handleLoadTemplateData = async () => {
+  const refreshSampleDataState = useCallback(async () => {
     if (!business?.id) return;
+    const res = await getBusinessSampleDataStateAction(business.id);
+    if (res.success) setSampleDataState(res.data);
+  }, [business?.id]);
 
+  useEffect(() => {
+    refreshSampleDataState();
+  }, [refreshSampleDataState]);
+
+  const handleLoadSampleData = async (replace = false) => {
+    if (!business?.id) return;
     setLoadingTools(true);
     try {
       const countryIso = regionalStandards?.countryCode || 'PK';
-      const knowledge = getDomainKnowledgeForBusiness(category, countryIso);
-      const template = knowledge?.setupTemplate;
-
-      if (!template?.suggestedProducts?.length && !template?.suggestedItems?.length) {
-        toast.error('No template data available for this business category');
-        return;
-      }
-
-      const result = await seedRegistrationInventoryAction({
+      const result = await loadBusinessSampleDataAction({
         businessId: business.id,
         domainKey: category,
         countryIso,
-        force: typeof window !== 'undefined' && window.confirm(
-          'Reload industry template products? This adds template items again and may create duplicates if you already have matching product names.'
-        ),
+        replace,
       });
 
       if (!result.success) {
-        throw new Error(result.error || 'Seed failed');
+        throw new Error(result.error || 'Failed to load sample data');
       }
 
-      if (result.skipped) {
-        toast.success(result.message || 'Starter inventory is already loaded');
+      if (result.data?.skipped) {
+        toast(result.message || result.data.message || 'Sample data already loaded', { icon: 'ℹ️' });
+        setLoadSampleOpen(false);
         return;
       }
 
-      toast.success(
-        `Loaded ${result.count || 0} products${result.categoryCount ? ` and ${result.categoryCount} categories` : ''} for ${regionalStandards?.countryName || countryIso}`
-      );
+      toast.success(result.data?.message || 'Sample workspace loaded');
+      setLoadSampleOpen(false);
+      await refreshSampleDataState();
     } catch (error) {
-      console.error('Template loading error:', error);
-      toast.error('Failed to load template data');
+      console.error('Sample data load error:', error);
+      toast.error(error.message || 'Failed to load sample data');
     } finally {
       setLoadingTools(false);
     }
   };
+
+  const handleRemoveSampleData = async () => {
+    if (!business?.id) return;
+    setLoadingTools(true);
+    try {
+      const result = await removeBusinessSampleDataAction({ businessId: business.id });
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to remove sample data');
+      }
+      toast.success(result.data?.message || 'Sample data removed');
+      setRemoveSampleOpen(false);
+      await refreshSampleDataState();
+    } catch (error) {
+      console.error('Sample data remove error:', error);
+      toast.error(error.message || 'Failed to remove sample data');
+    } finally {
+      setLoadingTools(false);
+    }
+  };
+
+  const handleLoadTemplateData = () => setLoadSampleOpen(true);
 
   if (business?.id !== formSyncedBusinessId) {
     setFormSyncedBusinessId(business?.id ?? null);
@@ -551,7 +622,7 @@ export function SettingsManager({ category }) {
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-bold tracking-tight text-gray-900">Enterprise Settings</h2>
           <p className="mt-1 text-sm text-gray-500 font-medium leading-snug">
-            Configure your cloud ERP, compliance, billing, and team — scoped to this business.
+            Configure your cloud ERP, compliance, billing, and team, scoped to this business.
           </p>
         </div>
         <div
@@ -681,7 +752,7 @@ export function SettingsManager({ category }) {
             <CardContent className="pt-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Legal Business Name</Label>
+                  <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Legal Business Name</Label>
                   <Input
                     value={formData.businessName}
                     onChange={e => setFormData({ ...formData, businessName: e.target.value })}
@@ -689,7 +760,7 @@ export function SettingsManager({ category }) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Support Email</Label>
+                  <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Support Email</Label>
                   <Input
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
@@ -697,7 +768,7 @@ export function SettingsManager({ category }) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Primary Phone</Label>
+                  <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Primary Phone</Label>
                   <Input
                     value={formData.phone}
                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
@@ -712,7 +783,7 @@ export function SettingsManager({ category }) {
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Registered Office Address</Label>
+                  <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Registered Office Address</Label>
                   <Input
                     value={formData.address}
                     onChange={e => setFormData({ ...formData, address: e.target.value })}
@@ -742,7 +813,7 @@ export function SettingsManager({ category }) {
             <CardContent className="pt-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">NTN (7+1 digits)</Label>
+                  <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">NTN (7+1 digits)</Label>
                   <Input
                     value={formData.ntn}
                     onChange={e => setFormData({ ...formData, ntn: e.target.value })}
@@ -751,7 +822,7 @@ export function SettingsManager({ category }) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">STRN / SRN (sales tax)</Label>
+                  <Label className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">STRN / SRN (sales tax)</Label>
                   <Input
                     value={formData.srn}
                     onChange={e => setFormData({ ...formData, srn: e.target.value })}
@@ -929,7 +1000,7 @@ export function SettingsManager({ category }) {
             <CardContent className="pt-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <h4 className="text-sm font-black text-gray-900 border-b pb-2 uppercase tracking-widest">GL Account Mapping</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 border-b pb-2 uppercase tracking-widest">GL Account Mapping</h4>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <Label className="text-xs font-bold text-gray-600">Cash Account Code</Label>
@@ -980,7 +1051,7 @@ export function SettingsManager({ category }) {
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="text-sm font-black text-gray-900 border-b pb-2 uppercase tracking-widest">Global Defaults</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 border-b pb-2 uppercase tracking-widest">Global Defaults</h4>
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold text-gray-600">Base Currency</Label>
@@ -1038,7 +1109,7 @@ export function SettingsManager({ category }) {
             <CardContent className="pt-6">
               <div className="space-y-6">
                 <div className="rounded-2xl border border-wine/10 bg-wine/5 px-4 py-3">
-                  <p className="text-xs font-black uppercase tracking-widest text-wine/70">Access Control</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-wine/70">Access Control</p>
                   <p className="mt-1 text-sm font-medium text-gray-700">
                     {canManageBilling
                       ? 'Owners can assign operational roles, manage active seats, and control who administers this business.'
@@ -1047,7 +1118,7 @@ export function SettingsManager({ category }) {
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest">Active Members</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest">Active Members</h4>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                     <Input
                       placeholder="member@company.com"
@@ -1068,7 +1139,7 @@ export function SettingsManager({ category }) {
                       size="sm"
                       onClick={handleInviteMember}
                       disabled={teamBusy}
-                      className="bg-wine hover:bg-wine/90 text-[10px] font-black uppercase"
+                      className="bg-wine hover:bg-wine/90 text-[10px] font-semibold uppercase"
                     >
                       Invite Member
                     </Button>
@@ -1079,10 +1150,10 @@ export function SettingsManager({ category }) {
                   <table className="w-full text-left">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400">User Email</th>
-                        <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400">Role</th>
-                        <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400">Status</th>
-                        <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400">Actions</th>
+                        <th className="px-6 py-4 text-[10px] font-semibold uppercase text-gray-400">User Email</th>
+                        <th className="px-6 py-4 text-[10px] font-semibold uppercase text-gray-400">Role</th>
+                        <th className="px-6 py-4 text-[10px] font-semibold uppercase text-gray-400">Status</th>
+                        <th className="px-6 py-4 text-[10px] font-semibold uppercase text-gray-400">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -1091,7 +1162,7 @@ export function SettingsManager({ category }) {
                           <td className="px-6 py-4 font-bold text-gray-900 text-sm">{member.user?.email || 'Unknown User'}</td>
                           <td className="px-6 py-4">
                             {member.role === 'owner' ? (
-                              <Badge variant="outline" className="capitalize font-black text-[10px] py-1 px-3 rounded-full border-wine/20 text-wine bg-wine/5">
+                              <Badge variant="outline" className="capitalize font-semibold text-[10px] py-1 px-3 rounded-full border-wine/20 text-wine bg-wine/5">
                                 {member.role}
                               </Badge>
                             ) : (
@@ -1115,14 +1186,14 @@ export function SettingsManager({ category }) {
                           </td>
                           <td className="px-6 py-4">
                             {member.role === 'owner' ? (
-                              <span className="text-[10px] font-black uppercase text-gray-400">Protected</span>
+                              <span className="text-[10px] font-semibold uppercase text-gray-400">Protected</span>
                             ) : (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 disabled={teamBusy}
                                 onClick={() => handleRemoveMember(member)}
-                                className="text-rose-600 font-black text-[10px] uppercase hover:bg-rose-50"
+                                className="text-rose-600 font-semibold text-[10px] uppercase hover:bg-rose-50"
                               >
                                 Remove
                               </Button>
@@ -1154,7 +1225,7 @@ export function SettingsManager({ category }) {
               <CardDescription>Select a plan based on seats and required capabilities</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4 relative">
-              <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${planBusy ? 'pointer-events-none opacity-70' : ''}`}>
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${planBusy || isRedirecting ? 'pointer-events-none opacity-70' : ''}`}>
                 {Object.entries(PLAN_TIERS).map(([tier, config]) => {
                   const selected = (business?.plan_tier || 'free') === tier;
                   return (
@@ -1162,7 +1233,7 @@ export function SettingsManager({ category }) {
                       key={tier}
                       type="button"
                       onClick={() => handlePlanUpdate(tier)}
-                      disabled={planBusy}
+                      disabled={planBusy || isRedirecting}
                       className={`text-left rounded-2xl border p-4 transition-all ${selected ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-200' : 'border-gray-200 bg-white hover:border-indigo-300 hover:bg-slate-50/80'}`}
                     >
                       <div className="flex items-center justify-between gap-2 mb-1">
@@ -1174,19 +1245,33 @@ export function SettingsManager({ category }) {
                         )}
                       </div>
                       <p className="text-xs text-gray-500">{config.tagline}</p>
-                      <p className="text-xs font-black text-indigo-700 mt-2">PKR {config.price_pkr}/mo</p>
+                      <p className="text-xs font-semibold text-indigo-700 mt-2">PKR {config.price_pkr}/mo</p>
                       <p className="text-[11px] text-gray-600 mt-2">Seats: {config.limits.max_users === -1 ? 'Unlimited' : config.limits.max_users}</p>
                     </button>
                   );
                 })}
               </div>
-              {planBusy ? (
+              {(planBusy || isRedirecting) ? (
                 <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-[1px]">
                   <Loader2 className="h-8 w-8 animate-spin text-indigo-600" aria-hidden />
                 </div>
               ) : null}
               <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm font-medium text-indigo-900">
-                Owner control: subscription changes immediately update seats, product caps, and feature access for the whole business.
+                {billingMode === 'manual'
+                  ? 'Development billing: plan changes apply immediately without Stripe. Use only for testing or assisted sales.'
+                  : 'Paid upgrades go through Stripe Checkout. Downgrades and the Free tier can be applied directly here.'}
+              </div>
+              <div className="rounded-2xl border border-amber-100 bg-amber-50/70 px-4 py-3 text-sm text-amber-950">
+                <span className="font-semibold">Enterprise or custom packaging?</span>{' '}
+                <a
+                  href={getBookMeetingHref()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-amber-900 underline underline-offset-2 hover:text-amber-950"
+                >
+                  Book a meeting
+                </a>{' '}
+                with sales to scope volume, SLA, and white-label options.
               </div>
             </CardContent>
           </Card>
@@ -1219,9 +1304,12 @@ export function SettingsManager({ category }) {
                       onCheckedChange={(checked) => {
                         if (checked) {
                           const t = resolvePlanTier(business?.plan_tier || 'free');
-                          const base = { ...PLAN_TIERS[t].features };
+                          const tierFeatures = PLAN_TIERS[t]?.features || {};
+                          const seeded = Object.fromEntries(
+                            PLAN_FEATURE_TOGGLE_KEYS.map((key) => [key, Boolean(tierFeatures[key])])
+                          );
                           const existing = getPackagingFromSettings(business?.settings)?.feature_overrides;
-                          setLocalFeatureOverrides({ ...base, ...(existing || {}) });
+                          setLocalFeatureOverrides({ ...seeded, ...(existing || {}) });
                           setLocalPackagingMode('custom');
                         } else {
                           setLocalPackagingMode('tier');
@@ -1237,12 +1325,21 @@ export function SettingsManager({ category }) {
                         {PLAN_FEATURE_TOGGLE_KEYS.map((key) => {
                           const label = FEATURE_LABELS[key] || key.replace(/_/g, ' ');
                           const val = !!localFeatureOverrides[key];
+                          const minPlan = FEATURE_MIN_PLAN[key];
+                          const isEnterpriseOnly = enterpriseOnlyFeatureKeys.has(key);
                           return (
                             <div
                               key={key}
                               className="flex items-center justify-between gap-3 px-3 py-2.5 bg-white/80"
                             >
-                              <span className="text-xs font-medium text-slate-800 capitalize">{label}</span>
+                              <div className="min-w-0">
+                                <span className="text-xs font-medium text-slate-800">{label}</span>
+                                {isEnterpriseOnly ? (
+                                  <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700">
+                                    {minPlan === 'business' ? 'Business+' : 'Enterprise'}
+                                  </span>
+                                ) : null}
+                              </div>
                               <Switch
                                 checked={val}
                                 onCheckedChange={(v) =>
@@ -1280,6 +1377,55 @@ export function SettingsManager({ category }) {
               </CardContent>
             </Card>
           ) : null}
+
+          <Card className="border-none shadow-xl">
+            <CardHeader className="bg-slate-50 border-b border-slate-100">
+              <CardTitle className="text-slate-900 flex items-center gap-2">
+                <Users className="w-5 h-5 text-slate-600" />
+                Plan usage limits
+              </CardTitle>
+              <CardDescription>
+                Effective caps for this workspace from your{' '}
+                <strong>{PLAN_TIERS[billingLimitSnapshot.tier]?.name || billingLimitSnapshot.tier}</strong>{' '}
+                subscription{Object.keys(billingLimitSnapshot.overriddenKeys).length > 0
+                  ? ', including platform adjustments'
+                  : ''}
+                . Contact support to request limit changes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="rounded-xl border border-slate-200 overflow-hidden">
+                <div className="hidden sm:grid sm:grid-cols-3 gap-2 px-4 py-2 bg-slate-100/80 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                  <span>Limit</span>
+                  <span>Plan default</span>
+                  <span>Your limit</span>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {PLAN_LIMIT_OVERRIDE_KEYS.map((key) => {
+                    const label = LIMIT_OVERRIDE_LABELS[key] || key.replace(/max_/, '').replace(/_/g, ' ');
+                    const tierDefault = billingLimitSnapshot.tierDefaults[key];
+                    const effective = billingLimitSnapshot.effective[key];
+                    const isOverridden = billingLimitSnapshot.overriddenKeys[key] !== undefined;
+                    return (
+                      <div
+                        key={key}
+                        className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 px-4 py-3 bg-white"
+                      >
+                        <span className="text-xs font-medium text-slate-800">{label}</span>
+                        <span className="text-xs text-slate-500">{formatPlanLimitValue(tierDefault)}</span>
+                        <span className={`text-xs font-semibold ${isOverridden ? 'text-indigo-700' : 'text-slate-800'}`}>
+                          {formatPlanLimitValue(effective)}
+                          {isOverridden ? (
+                            <span className="ml-1.5 text-[10px] font-normal text-indigo-600">(adjusted)</span>
+                          ) : null}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="tools" className="space-y-4 pt-4">
@@ -1297,31 +1443,54 @@ export function SettingsManager({ category }) {
                   <div className="p-3 bg-wine-100 rounded-xl text-wine-600">
                     <Sparkles className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Load Template Data</h4>
-                    <p className="text-xs text-slate-600 font-medium mt-1 mb-4">
-                      Instantly populate your inventory with domain-specific suggested products, categories, and tax settings for {category.replace(/-/g, ' ')}.
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h4 className="text-sm font-semibold text-slate-900 uppercase tracking-tighter">Learning workspace</h4>
+                      {sampleDataState?.loaded ? (
+                        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Sample data active</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-slate-600">Empty workspace</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-600 font-medium mt-1 mb-2">
+                      Load a full {category.replace(/-/g, ' ')} sample, products with images, customers, warehouses,
+                      invoices, payments, payroll, and transfers, to explore Tenvo before entering your own data.
+                      Your real records are never mixed in; sample rows are tagged and removable.
                     </p>
-                    <Button
-                      onClick={handleLoadTemplateData}
-                      disabled={loadingTools}
-                      className="bg-wine-600 hover:bg-wine-700 text-white font-bold h-11 px-6 rounded-xl shadow-lg shadow-wine-200"
-                    >
-                      {loadingTools ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <HardDriveDownload className="w-4 h-4 mr-2" />}
-                      Load Demo Data
-                    </Button>
+                    {sampleDataState?.loadedAt ? (
+                      <p className="text-[11px] text-slate-500 mb-3">
+                        Loaded {new Date(sampleDataState.loadedAt).toLocaleString()}
+                        {sampleDataState.sampleProductCount != null
+                          ? ` · ${sampleDataState.sampleProductCount} sample products`
+                          : ''}
+                      </p>
+                    ) : null}
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={() => setLoadSampleOpen(true)}
+                        disabled={loadingTools}
+                        className="bg-wine-600 hover:bg-wine-700 text-white font-bold h-11 px-6 rounded-xl shadow-lg shadow-wine-200"
+                      >
+                        {loadingTools ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <HardDriveDownload className="w-4 h-4 mr-2" />}
+                        {sampleDataState?.loaded ? 'Reload sample data' : 'Load sample data'}
+                      </Button>
+                      {sampleDataState?.canRemove ? (
+                        <Button
+                          variant="outline"
+                          onClick={() => setRemoveSampleOpen(true)}
+                          disabled={loadingTools}
+                          className="border-red-200 text-red-700 hover:bg-red-50 font-bold h-11 px-6 rounded-xl"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove sample data
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-                <div className="p-4 bg-red-50/30 rounded-2xl border border-red-100 flex items-start gap-4 opacity-70">
-                  <div className="p-3 bg-red-100 rounded-xl text-red-600">
-                    <Trash2 className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-red-900 uppercase tracking-tighter">Reset Inventory</h4>
-                    <p className="text-xs text-red-700 font-medium mt-1">
-                      Wipe all inventory records for this business. This action is irreversible.
-                    </p>
-                  </div>
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600">
+                  <strong className="text-slate-800">Tip:</strong> New accounts start empty with your industry categories and
+                  intelligence presets. Use sample data to learn the system, then remove it and add your own catalog when ready.
                 </div>
               </CardContent>
             </Card>
@@ -1340,7 +1509,7 @@ export function SettingsManager({ category }) {
                     <LayoutGrid className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-blue-900 uppercase tracking-tighter">Launch New Entity</h4>
+                    <h4 className="text-sm font-semibold text-blue-900 uppercase tracking-tighter">Launch New Entity</h4>
                     <p className="text-xs text-blue-700 font-medium mt-1 mb-4">
                       Create a new legal entity or branch. Every business gets its own independent database, domains, and team.
                     </p>
@@ -1359,7 +1528,7 @@ export function SettingsManager({ category }) {
                     <ArrowLeftRight className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-sm font-black text-gray-900 uppercase tracking-tighter">Switch Business</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-tighter">Switch Business</h4>
                     <p className="text-xs text-gray-500 font-medium mt-1 mb-4">
                       Seamlessly jump between your different business subsidiaries and domains.
                     </p>
@@ -1497,6 +1666,52 @@ export function SettingsManager({ category }) {
             </Button>
             <Button type="button" variant="destructive" className="rounded-xl" onClick={handleTwoFactorDisable} disabled={tfBusy}>
               {tfBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Disable 2FA'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={loadSampleOpen} onOpenChange={setLoadSampleOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Load sample workspace?</DialogTitle>
+            <DialogDescription>
+              This adds realistic {category.replace(/-/g, ' ')} demo products, customers, warehouses, invoices, payroll, and
+              more so you can explore every module. Sample rows are tagged, remove them anytime without affecting your settings
+              or chart of accounts.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" className="rounded-xl" onClick={() => setLoadSampleOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-xl bg-wine-600 hover:bg-wine-700"
+              disabled={loadingTools}
+              onClick={() => handleLoadSampleData(Boolean(sampleDataState?.loaded))}
+            >
+              {loadingTools ? <Loader2 className="w-4 h-4 animate-spin" /> : sampleDataState?.loaded ? 'Replace sample data' : 'Load sample data'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={removeSampleOpen} onOpenChange={setRemoveSampleOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove sample data?</DialogTitle>
+            <DialogDescription>
+              Deletes all tagged sample products, customers, transactions, warehouses, and payroll records. Your category
+              templates, domain settings, and GL accounts stay intact. Add your own data when you are ready.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" className="rounded-xl" onClick={() => setRemoveSampleOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" className="rounded-xl" disabled={loadingTools} onClick={handleRemoveSampleData}>
+              {loadingTools ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Remove sample data'}
             </Button>
           </DialogFooter>
         </DialogContent>

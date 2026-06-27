@@ -105,11 +105,11 @@ export function BrandPerformanceWidget({ businessId, currency = 'PKR', onViewDet
             <CardContent className="space-y-4">
                 <div className="p-3 rounded-lg bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200">
                     <div className="text-xs font-bold text-yellow-900 mb-1">{t.total_brand_value || 'Total Brand Value'}</div>
-                    <div className="text-2xl font-black text-yellow-900">{formatCurrency(brandData.totalRevenue, currency)}</div>
+                    <div className="text-2xl font-semibold text-yellow-900">{formatCurrency(brandData.totalRevenue, currency)}</div>
                 </div>
 
                 <div className="space-y-2">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t.top_brands || 'Top Brands'}</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">{t.top_brands || 'Top Brands'}</div>
                     {brandData.topBrands.map((brand, idx) => {
                         const percentage = brandData.totalRevenue > 0 ? Math.round((brand.revenue / brandData.totalRevenue) * 100) : 0;
                         return (

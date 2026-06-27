@@ -93,11 +93,11 @@ export const AgenticFloatingChatbot = memo(function AgenticFloatingChatbot() {
                                     <Bot className="w-5 h-5 text-white" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <h3 className="text-sm font-black tracking-wide uppercase flex items-center gap-1.5">
+                                    <h3 className="text-sm font-semibold tracking-wide uppercase flex items-center gap-1.5">
                                         AI Business Copilot
                                         <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                                     </h3>
-                                    <span className="text-[9px] text-white/80 font-bold uppercase tracking-wider">
+                                    <span className="text-[10px] text-white/80 font-bold uppercase tracking-wider">
                                         {businessName || 'Active Workspace'} · {businessCategory || 'General'}
                                     </span>
                                 </div>
@@ -151,7 +151,7 @@ export const AgenticFloatingChatbot = memo(function AgenticFloatingChatbot() {
                                     )}>
                                         {m.content}
                                         <div className={cn(
-                                            "text-[8px] mt-1 opacity-50 font-bold uppercase",
+                                            "text-[10px] mt-1 opacity-50 font-bold uppercase",
                                             m.role === 'user' ? "text-white" : "text-gray-400"
                                         )}>
                                             {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -166,7 +166,7 @@ export const AgenticFloatingChatbot = memo(function AgenticFloatingChatbot() {
                                         <Loader2 className="w-3.5 h-3.5 text-brand-primary animate-spin" />
                                     </div>
                                     <div className="p-3 rounded-2xl bg-white border border-slate-100 rounded-tl-none shadow-sm flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Running Analytics RAG</span>
+                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest animate-pulse">Running Analytics RAG</span>
                                     </div>
                                 </div>
                             )}
@@ -175,7 +175,7 @@ export const AgenticFloatingChatbot = memo(function AgenticFloatingChatbot() {
                         {/* Quick Prompts Panel */}
                         {messages.length === 1 && (
                             <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex flex-col gap-1.5">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
                                     <HelpCircle className="w-3 h-3 text-gray-400" />
                                     Quick Analytics Prompts
                                 </span>
@@ -220,11 +220,11 @@ export const AgenticFloatingChatbot = memo(function AgenticFloatingChatbot() {
                             <div className="mt-2 flex items-center gap-1.5 px-1 justify-between">
                                 <div className="flex items-center gap-1.5">
                                     <Sparkles className="w-3 h-3 text-brand-primary animate-pulse" />
-                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                                         Secure Tenant Scoped
                                     </span>
                                 </div>
-                                <span className="text-[8px] font-bold text-slate-300 uppercase">
+                                <span className="text-[10px] font-bold text-slate-300 uppercase">
                                     v2026.1
                                 </span>
                             </div>

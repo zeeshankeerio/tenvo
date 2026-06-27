@@ -510,7 +510,7 @@ export function ExcelModeModal({
                             <Table2 className="w-6 h-6 text-white" aria-hidden="true" />
                         </div>
                         <div className="flex flex-col">
-                            <h2 id="excel-modal-title" className="text-base font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                            <h2 id="excel-modal-title" className="text-base font-semibold uppercase tracking-wider text-slate-800 flex items-center gap-2">
                                 {title} <Sparkles className="w-4 h-4 text-amber-400 fill-amber-400" aria-hidden="true" />
                             </h2>
                             <div className="flex items-center gap-3 mt-0.5">
@@ -545,7 +545,7 @@ export function ExcelModeModal({
                         </div>
 
                         <Button variant="outline" size="sm" onClick={handlePasteFromExcel} className="h-10 px-4 font-bold border-2 text-slate-700 hover:bg-slate-50"><Copy className="w-4 h-4 mr-2" /> Smart Paste</Button>
-                        <Button variant="outline" size="sm" onClick={() => handleSave(false)} disabled={!hasUnsavedChanges || isSaving} className={cn("h-10 px-6 font-black border-2 transition-all shadow-sm", hasUnsavedChanges ? "bg-green-600 text-white border-green-700 hover:bg-green-700 hover:shadow-green-200" : "bg-white text-slate-400 border-slate-100")}>
+                        <Button variant="outline" size="sm" onClick={() => handleSave(false)} disabled={!hasUnsavedChanges || isSaving} className={cn("h-10 px-6 font-semibold border-2 transition-all shadow-sm", hasUnsavedChanges ? "bg-green-600 text-white border-green-700 hover:bg-green-700 hover:shadow-green-200" : "bg-white text-slate-400 border-slate-100")}>
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} SAVE
                         </Button>
 
@@ -563,7 +563,7 @@ export function ExcelModeModal({
                             </Button>
                             {showColPicker && (
                                 <div className="absolute right-0 top-full z-[10000] mt-1 max-h-72 w-60 overflow-auto rounded-xl border border-slate-200 bg-white p-2 text-left shadow-2xl">
-                                    <p className="px-2 pb-1 text-[9px] font-black uppercase tracking-wider text-slate-400">Visible columns</p>
+                                    <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Visible columns</p>
                                     {enhancedColumns
                                         .filter((c) => c.id !== 'status_dot')
                                         .map((col) => {
@@ -630,11 +630,11 @@ export function ExcelModeModal({
                         </div>
                         <div className="h-4 w-px bg-slate-700" />
                         <div className="flex items-center gap-2">
-                            <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[9px] text-slate-300">CTRL+S</kbd> Save
-                            <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[9px] text-slate-300 ml-2">Tab</kbd> Save + next
-                            <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[9px] text-slate-300 ml-2">F2</kbd> Edit
-                            <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[9px] text-slate-300 ml-2">CTRL+Z</kbd> Undo
-                            <kbd className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] text-slate-300">
+                            <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300">CTRL+S</kbd> Save
+                            <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300 ml-2">Tab</kbd> Save + next
+                            <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300 ml-2">F2</kbd> Edit
+                            <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300 ml-2">CTRL+Z</kbd> Undo
+                            <kbd className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-300">
                                 Ctrl+D
                             </kbd>
                             <span className="text-slate-500">Dup last</span>

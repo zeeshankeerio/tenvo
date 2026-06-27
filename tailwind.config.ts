@@ -1,4 +1,14 @@
 import type { Config } from "tailwindcss";
+import {
+    BRAND_PRIMARY,
+    BRAND_PRIMARY_LIGHT,
+    BRAND_PRIMARY_DARK,
+    BRAND_50,
+    BRAND_100,
+    HALF_WHITE,
+    SUPER_WHITE,
+    CANVAS_BG,
+} from "./lib/theme/brandTokens";
 
 const config: Config = {
     content: [
@@ -9,92 +19,97 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                // Brand Colors
                 brand: {
-                    primary: '#e34242',
-                    'primary-light': '#ef4444',
-                    'primary-dark': '#b91c1c',
-                    50: '#F8FAFC',
-                    100: '#F1F5F9',
+                    primary: BRAND_PRIMARY,
+                    "primary-light": BRAND_PRIMARY_LIGHT,
+                    "primary-dark": BRAND_PRIMARY_DARK,
+                    50: BRAND_50,
+                    100: BRAND_100,
                 },
-                // Neutral Scale
+                canvas: CANVAS_BG,
+                "half-white": HALF_WHITE,
+                "super-white": SUPER_WHITE,
                 neutral: {
-                    50: '#FAFAFA',
-                    100: '#F5F5F5',
-                    200: '#E5E5E5',
-                    300: '#D4D4D4',
-                    400: '#A3A3A3',
-                    500: '#737373',
-                    600: '#525252',
-                    700: '#404040',
-                    800: '#262626',
-                    900: '#171717',
+                    50: "#FAFAFA",
+                    100: "#F5F4F4",
+                    200: "#ECEAEA",
+                    300: "#D4D1D1",
+                    400: "#A8A4A4",
+                    500: "#717171",
+                    600: "#525252",
+                    700: "#3D3D3D",
+                    800: "#262626",
+                    900: "#171717",
                 },
-                // Semantic Colors
                 success: {
-                    DEFAULT: '#10B981',
-                    light: '#D1FAE5',
-                    dark: '#059669',
+                    DEFAULT: "#10B981",
+                    light: "#D1FAE5",
+                    dark: "#059669",
                 },
                 warning: {
-                    DEFAULT: '#F59E0B',
-                    light: '#FEF3C7',
-                    dark: '#D97706',
+                    DEFAULT: "#F59E0B",
+                    light: "#FEF3C7",
+                    dark: "#D97706",
                 },
                 error: {
-                    DEFAULT: '#EF4444',
-                    light: '#FEE2E2',
-                    dark: '#B91C1C',
+                    DEFAULT: "#DC2626",
+                    light: "#FEE2E2",
+                    dark: "#991B1B",
                 },
                 info: {
-                    DEFAULT: '#e34242',
-                    light: '#F8FAFC',
-                    dark: '#b91c1c',
+                    DEFAULT: "#2563EB",
+                    light: "#EFF6FF",
+                    dark: "#1D4ED8",
                 },
-                // Legacy wine alias preserved for backward compatibility
                 wine: {
-                    50: '#F8FAFC',
-                    100: '#F1F5F9',
-                    200: '#E2E8F0',
-                    300: '#CBD5E1',
-                    400: '#94A3B8',
-                    500: '#e34242',
-                    600: '#b91c1c',
-                    700: '#991b1b',
-                    800: '#7f1d1d',
-                    900: '#450a0a',
-                    950: '#450a0a',
-                    DEFAULT: '#e34242',
-                    light: '#ef4444',
-                    dark: '#b91c1c',
+                    50: BRAND_50,
+                    100: BRAND_100,
+                    200: "#F9D4D4",
+                    300: "#F0A8A8",
+                    400: "#E86B6B",
+                    500: BRAND_PRIMARY,
+                    600: BRAND_PRIMARY_DARK,
+                    700: "#8B1A1A",
+                    800: "#6B1414",
+                    900: "#450A0A",
+                    950: "#2E0707",
+                    DEFAULT: BRAND_PRIMARY,
+                    light: BRAND_PRIMARY_LIGHT,
+                    dark: BRAND_PRIMARY_DARK,
                 },
             },
             boxShadow: {
-                'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                sm: "0 1px 2px 0 rgba(23, 23, 23, 0.04)",
+                md: "0 4px 12px -2px rgba(23, 23, 23, 0.08), 0 2px 4px -2px rgba(23, 23, 23, 0.04)",
+                lg: "0 12px 24px -4px rgba(23, 23, 23, 0.1), 0 4px 8px -4px rgba(23, 23, 23, 0.06)",
+                xl: "0 20px 32px -6px rgba(23, 23, 23, 0.12), 0 8px 16px -6px rgba(23, 23, 23, 0.06)",
+                "2xl": "0 28px 48px -8px rgba(23, 23, 23, 0.16)",
+                brand: "0 4px 14px -2px rgba(210, 43, 43, 0.28)",
             },
             spacing: {
-                '0.5': '0.125rem',  // 2px
-                '1.5': '0.375rem',  // 6px
-                '2.5': '0.625rem',  // 10px
-                '3.5': '0.875rem',  // 14px
-                '4.5': '1.125rem',  // 18px
-                '5.5': '1.375rem',  // 22px
-                '6.5': '1.625rem',  // 26px
-                '7.5': '1.875rem',  // 30px
+                "0.5": "0.125rem",
+                "1.5": "0.375rem",
+                "2.5": "0.625rem",
+                "3.5": "0.875rem",
+                "4.5": "1.125rem",
+                "5.5": "1.375rem",
+                "6.5": "1.625rem",
+                "7.5": "1.875rem",
             },
             borderRadius: {
-                'sm': '0.375rem',
-                'md': '0.5rem',
-                'lg': '0.75rem',
-                'xl': '1rem',
-                '2xl': '1.5rem',
+                sm: "0.375rem",
+                md: "0.5rem",
+                lg: "0.75rem",
+                xl: "1rem",
+                "2xl": "1.25rem",
+            },
+            fontFamily: {
+                sans: ["var(--font-open-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+                mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
             },
         },
     },
     plugins: [],
 };
+
 export default config;

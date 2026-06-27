@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -135,7 +135,7 @@ export function ShiftScheduler({ businessId, employees: propEmployees = [] }) {
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => navigateWeek(-1)}>
                         <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <h3 className="text-sm font-black text-gray-900 min-w-[200px] text-center">{weekRange.label}</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 min-w-[200px] text-center">{weekRange.label}</h3>
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => navigateWeek(1)}>
                         <ChevronRight className="w-4 h-4" />
                     </Button>
@@ -205,7 +205,7 @@ export function ShiftScheduler({ businessId, employees: propEmployees = [] }) {
                                     <tr key={emp.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                                         <td className="p-2.5 sticky left-0 bg-white z-10">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-primary flex items-center justify-center text-[10px] font-black">
+                                                <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-primary flex items-center justify-center text-[10px] font-semibold">
                                                     {emp.name.split(' ').map(n => n[0]).join('')}
                                                 </div>
                                                 <div>
@@ -233,7 +233,7 @@ export function ShiftScheduler({ businessId, employees: propEmployees = [] }) {
                                                             {shift?.icon && <shift.icon className="w-3 h-3" />}
                                                             <span>{shift?.label || 'Off'}</span>
                                                         </div>
-                                                        <div className="text-[9px] opacity-60 mt-0.5">
+                                                        <div className="text-[10px] opacity-60 mt-0.5">
                                                             {shift?.time}
                                                         </div>
                                                     </button>
@@ -242,13 +242,13 @@ export function ShiftScheduler({ businessId, employees: propEmployees = [] }) {
                                         })}
                                         <td className="p-2 text-center">
                                             <span className={cn(
-                                                'font-black text-sm',
+                                                'font-semibold text-sm',
                                                 isOvertime ? 'text-amber-600' : 'text-gray-700'
                                             )}>
                                                 {weeklyHours}h
                                             </span>
                                             {isOvertime && (
-                                                <p className="text-[9px] text-amber-500 font-bold">OT</p>
+                                                <p className="text-[10px] text-amber-500 font-bold">OT</p>
                                             )}
                                         </td>
                                     </tr>
@@ -263,7 +263,7 @@ export function ShiftScheduler({ businessId, employees: propEmployees = [] }) {
             <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
                 <DialogContent className="sm:max-w-sm rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-lg font-black">Assign Shift</DialogTitle>
+                        <DialogTitle className="text-lg font-semibold">Assign Shift</DialogTitle>
                         <DialogDescription>
                             Select a shift for {employees.find(e => e.id === assignTarget.empId)?.name} on {assignTarget.day}
                         </DialogDescription>

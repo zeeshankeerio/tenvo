@@ -52,7 +52,7 @@ function TestimonialCard({
         isLarge && 'sm:p-10 lg:p-12'
       )}
     >
-      {/* Top bar: stars + decorative quote — same for every card */}
+      {/* Top bar: stars + decorative quote - same for every card */}
       <header className="relative z-10 mb-4 flex min-h-[1.75rem] items-start justify-between gap-3 sm:mb-5">
         <div className="min-w-0 flex-1 pt-0.5">
           {showRatings && rating > 0 ? <StarRating rating={rating} /> : null}
@@ -120,10 +120,10 @@ function TestimonialCard({
 }
 
 /**
- * TestimonialsSection — grid, carousel, or featured layouts.
+ * TestimonialsSection - grid, carousel, or featured layouts.
  *
- * @param {'grid'|'carousel'|'featured'} [layout] — primary layout prop
- * @param {'grid'|'carousel'|'featured'} [variant] — legacy alias (e.g. variant="grid")
+ * @param {'grid'|'carousel'|'featured'} [layout] - primary layout prop
+ * @param {'grid'|'carousel'|'featured'} [variant] - legacy alias (e.g. variant="grid")
  */
 export default function TestimonialsSection({
   title,

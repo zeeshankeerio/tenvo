@@ -13,6 +13,8 @@ import { Truck, Shield, RotateCcw } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { getOpenGraphProductImageUrl, getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { buildProductJsonLd } from '@/lib/storefront/jsonLd';
+import { isAutoDealershipStore } from '@/lib/storefront/autoDealership';
+import { DealershipProductActions } from '@/components/storefront/sections/dealership/DealershipProductActions';
 
 export async function generateMetadata({ params }) {
   const { businessDomain, slug } = await params;
@@ -106,7 +108,7 @@ function ProductContent({ product, relatedProducts, businessDomain, settings, bu
     currency: storeCurrency,
   });
 
-  // Prepare images array — merchant uploads first; else name-aware catalog fallback
+  // Prepare images array, merchant uploads first; else name-aware catalog fallback
   const images =
     product.images?.length > 0
       ? product.images
@@ -118,6 +120,7 @@ function ProductContent({ product, relatedProducts, businessDomain, settings, bu
   
   const threshold = settings?.freeShippingThreshold || 2000;
   const returnDays = settings?.returnPolicyDays || 7;
+  const isDealership = isAutoDealershipStore(business.category);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -163,8 +166,18 @@ function ProductContent({ product, relatedProducts, businessDomain, settings, bu
               product={product}
               businessDomain={businessDomain}
             />
+
+            {isDealership ? (
+              <DealershipProductActions
+                product={product}
+                businessDomain={businessDomain}
+                business={business}
+                settings={settings}
+                currency={storeCurrency}
+              />
+            ) : null}
             
-            {/* Trust Badges — dynamic from store settings */}
+            {/* Trust Badges, dynamic from store settings */}
             <div className="grid grid-cols-3 gap-4 pt-6 border-t">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -198,7 +211,7 @@ function ProductContent({ product, relatedProducts, businessDomain, settings, bu
         </div>
       </div>
       
-      {/* Product Details Tabs — client component with real interactivity */}
+      {/* Product Details Tabs, client component with real interactivity */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-12">
         <ProductTabs
           product={product}

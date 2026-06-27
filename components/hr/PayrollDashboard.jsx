@@ -54,7 +54,7 @@ export function PayrollDashboard({
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Active Employees</p>
-                                <p className="text-2xl font-black text-gray-900 mt-1">{activeEmployees.length}</p>
+                                <p className="text-2xl font-semibold text-gray-900 mt-1">{activeEmployees.length}</p>
                             </div>
                             <div className="p-2.5 bg-brand-50 rounded-lg">
                                 <Users className="w-5 h-5 text-brand-primary" />
@@ -67,7 +67,7 @@ export function PayrollDashboard({
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Monthly Gross</p>
-                                <p className="text-2xl font-black text-gray-900 mt-1">{currency}{totalBaseSalary.toLocaleString()}</p>
+                                <p className="text-2xl font-semibold text-gray-900 mt-1">{currency}{totalBaseSalary.toLocaleString()}</p>
                             </div>
                             <div className="p-2.5 bg-emerald-50 rounded-lg">
                                 <DollarSign className="w-5 h-5 text-emerald-600" />
@@ -80,7 +80,7 @@ export function PayrollDashboard({
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Last Run Net</p>
-                                <p className="text-2xl font-black text-brand-primary mt-1">
+                                <p className="text-2xl font-semibold text-brand-primary mt-1">
                                     {lastRun ? `${currency}${(parseFloat(lastRun.total_net) || 0).toLocaleString()}` : '--'}
                                 </p>
                             </div>
@@ -95,7 +95,7 @@ export function PayrollDashboard({
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Total Runs</p>
-                                <p className="text-2xl font-black text-gray-900 mt-1">{payrollRuns.length}</p>
+                                <p className="text-2xl font-semibold text-gray-900 mt-1">{payrollRuns.length}</p>
                             </div>
                             <div className="p-2.5 bg-wine-50 rounded-lg">
                                 <Calendar className="w-5 h-5 text-wine-600" />
@@ -139,7 +139,7 @@ export function PayrollDashboard({
                                         <p className="text-sm font-bold text-gray-900">{currency}{(parseFloat(emp.base_salary) || 0).toLocaleString()}</p>
                                         <p className="text-[10px] text-gray-400">{emp.employee_code}</p>
                                     </div>
-                                    <Badge variant={emp.tax_filer ? 'default' : 'secondary'} className="text-[9px]">
+                                    <Badge variant={emp.tax_filer ? 'default' : 'secondary'} className="text-[10px]">
                                         {emp.tax_filer ? 'Filer' : 'Non-Filer'}
                                     </Badge>
                                 </div>
@@ -175,7 +175,7 @@ export function PayrollDashboard({
                                         <p className="text-[10px] text-gray-400">{run.period_month}/{run.period_year} * {run.employee_count} staff</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xs font-black text-gray-900">{currency}{(parseFloat(run.total_net) || 0).toLocaleString()}</p>
+                                        <p className="text-xs font-semibold text-gray-900">{currency}{(parseFloat(run.total_net) || 0).toLocaleString()}</p>
                                     </div>
                                     <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                                 </button>

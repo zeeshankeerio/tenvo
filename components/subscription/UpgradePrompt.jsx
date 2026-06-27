@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { Crown, Sparkles, ArrowRight, Lock } from 'lucide-react';
@@ -35,7 +35,7 @@ export function UpgradePrompt({ currentPlan = 'free', featureName = '', required
                 <Lock className="w-7 h-7 text-white" />
             </div>
 
-            <h3 className="text-xl font-black text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {featureName || 'This feature'} requires the {requiredTier.name} plan
             </h3>
 

@@ -4,7 +4,36 @@
  */
 
 import { getSiteUrl } from '@/lib/marketing/site-url';
+import { getSalesMeetingUrl } from '@/lib/marketing/salesLinks';
 import { TENVO_PARENT_COMPANY } from '@/lib/marketing/tenvo-assistant-knowledge';
+
+/** Minimal FAQ shape for FAQPage JSON-LD. */
+export type FaqItem = {
+  question: string;
+  answer: string;
+  id?: string;
+  category?: string;
+};
+
+export type BreadcrumbItem = {
+  name: string;
+  url: string;
+};
+
+export type CaseStudyArticleInput = {
+  title?: string;
+  company?: string;
+  summary: string;
+  heroImage?: string;
+  publishedDate?: string;
+  modifiedDate?: string;
+};
+
+export type JsonLdObject = Record<string, unknown> & {
+  '@context'?: string;
+  '@type'?: string;
+  '@id'?: string;
+};
 
 /** US display phone → ITU-T style for JSON-LD (keep in sync with TENVO_PARENT_COMPANY.phone) */
 const parentTelephone = (() => {
@@ -15,18 +44,34 @@ const parentTelephone = (() => {
   return TENVO_PARENT_COMPANY.phone.replace(/\s/g, '');
 })();
 
-/**
- * Get Organization schema
- * @returns {Object} Organization JSON-LD
- */
-export function getOrganizationSchema() {
+function getOrganizationSameAs(): string[] {
+  const links = [
+    TENVO_PARENT_COMPANY.website,
+    process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN?.trim(),
+    process.env.NEXT_PUBLIC_SOCIAL_TWITTER?.trim(),
+    process.env.NEXT_PUBLIC_SOCIAL_FACEBOOK?.trim(),
+    process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE?.trim(),
+  ].filter((link): link is string => Boolean(link));
+  return [...new Set(links)];
+}
+
+export function getOrganizationSchema(): JsonLdObject {
   const site = getSiteUrl();
+  const sameAs = getOrganizationSameAs();
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${site}/#organization`,
     name: 'TENVO',
+    legalName: 'Mindscape Analytics LLC',
     url: site,
-    logo: `${site}/industrial_hero_image.png`,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${site}/tenvo.svg`,
+      width: 512,
+      height: 512,
+    },
+    image: `${site}/industrial_hero_image.png`,
     description:
       'TENVO is business operations software: inventory, warehouses, POS, branded storefront, orders, and accounting in one platform. Deep Pakistan fit at launch (FBR-aware positioning, Urdu, local payments); scaling globally. Parent: Mindscape Analytics LLC (Sheridan, WY, USA).',
     parentOrganization: {
@@ -59,7 +104,7 @@ export function getOrganizationSchema() {
       {
         '@type': 'ContactPoint',
         contactType: 'sales',
-        url: `${site}/demo`,
+        url: getSalesMeetingUrl(),
         areaServed: ['PK', 'AE', 'SA', 'IN', 'US', 'Worldwide'],
         availableLanguage: ['en'],
       },
@@ -73,21 +118,60 @@ export function getOrganizationSchema() {
       },
     ],
     foundingDate: '2023',
+    ...(sameAs.length ? { sameAs } : {}),
   };
 }
 
-/**
- * Get Software Application schema
- * @returns {Object} SoftwareApplication JSON-LD
- */
-export function getSoftwareApplicationSchema() {
+export function getWebSiteSchema(): JsonLdObject {
+  const site = getSiteUrl();
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${site}/#website`,
+    name: 'TENVO',
+    url: site,
+    description:
+      'Inventory, POS, branded storefront, orders, and accounting in one platform for growing businesses.',
+    publisher: { '@id': `${site}/#organization` },
+    inLanguage: ['en-PK', 'en'],
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${site}/help?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+export function getHomeWebPageSchema(): JsonLdObject {
+  const site = getSiteUrl();
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `${site}/#webpage`,
+    url: site,
+    name: 'TENVO — Inventory, POS, storefront, and accounting in one platform',
+    isPartOf: { '@id': `${site}/#website` },
+    about: { '@id': `${site}/#organization` },
+    description:
+      'Replace stitched apps with one connected platform for inventory, warehouses, POS, storefront, orders, and accounting.',
+    inLanguage: 'en-PK',
+  };
+}
+
+export function getSoftwareApplicationSchema(): JsonLdObject {
   const site = getSiteUrl();
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
+    '@id': `${site}/#software`,
     name: 'TENVO',
     applicationCategory: 'BusinessApplication',
-    operatingSystem: 'Web',
+    applicationSubCategory: 'ERP',
+    operatingSystem: 'Web Browser',
+    browserRequirements: 'Requires JavaScript. Modern evergreen browser.',
     url: site,
     description:
       'Inventory, POS, branded storefront, orders, accounting, and compliance-oriented workflows in one platform. Pakistan-first launch depth; global product roadmap.',
@@ -114,10 +198,29 @@ export function getSoftwareApplicationSchema() {
   };
 }
 
-/**
- * FAQs for /contact — drives on-page accordion + FAQPage JSON-LD (keep answers factual).
- */
-export const CONTACT_PAGE_FAQS = [
+export function getPricingAggregateOfferSchema(): JsonLdObject {
+  const site = getSiteUrl();
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'TENVO Business Operations Platform',
+    description:
+      'Subscription plans for inventory, POS, storefront, and accounting — from free trial to enterprise.',
+    brand: { '@type': 'Brand', name: 'TENVO' },
+    url: `${site}/pricing`,
+    offers: {
+      '@type': 'AggregateOffer',
+      lowPrice: '0',
+      highPrice: '99999',
+      priceCurrency: 'PKR',
+      offerCount: 5,
+      url: `${site}/pricing`,
+      availability: 'https://schema.org/InStock',
+    },
+  };
+}
+
+export const CONTACT_PAGE_FAQS: readonly FaqItem[] = [
   {
     id: 'contact-response-time',
     category: 'Support',
@@ -130,7 +233,7 @@ export const CONTACT_PAGE_FAQS = [
     category: 'Sales',
     question: 'Should I use this form or book a demo?',
     answer:
-      'Use this contact form for written questions, custom procurement, or when you need a paper trail. If you want a guided walkthrough of inventory, POS, storefront, and accounting flows in TENVO, book a live demo from the Pricing or Demo page — we will tailor the session to your vertical.',
+      'Use this contact form for written questions, custom procurement, or when you need a paper trail. If you want a guided walkthrough of inventory, POS, storefront, and accounting flows in TENVO, book a live meeting from Pricing or our scheduler - we will tailor the session to your vertical.',
   },
   {
     id: 'contact-mindscape',
@@ -162,13 +265,12 @@ export const CONTACT_PAGE_FAQS = [
   },
 ];
 
-/** JSON-LD WebPage describing the marketing contact route (complements global Organization schema). */
-export function getContactWebPageSchema() {
+export function getContactWebPageSchema(): JsonLdObject {
   const site = getSiteUrl();
   return {
     '@context': 'https://schema.org',
     '@type': 'ContactPage',
-    name: 'Contact TENVO — sales and support',
+    name: 'Contact TENVO - sales and support',
     description:
       'Contact TENVO for sales, demos, billing questions, and technical support. Built by Mindscape Analytics LLC (Sheridan, WY, USA).',
     url: `${site}/contact`,
@@ -186,105 +288,86 @@ export function getContactWebPageSchema() {
   };
 }
 
-/**
- * Get FAQ schema
- * @param {Array} faqs - Array of FAQ objects
- * @returns {Object} FAQPage JSON-LD
- */
-export function getFAQSchema(faqs) {
+export function getFAQSchema(faqs: readonly FaqItem[]): JsonLdObject {
   return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqs.map(faq => ({
-      "@type": "Question",
-      "name": faq.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": faq.answer
-      }
-    }))
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
   };
 }
 
-/**
- * Get Article schema (for case studies/blog posts)
- * @param {Object} article - Article data
- * @returns {Object} Article JSON-LD
- */
-export function getArticleSchema(article) {
+export function getArticleSchema(article: CaseStudyArticleInput): JsonLdObject {
   const site = getSiteUrl();
+  const headline = article.title || article.company || 'TENVO case study';
   return {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": article.title,
-    "description": article.summary,
-    "image": article.heroImage,
-    "datePublished": article.publishedDate,
-    "dateModified": article.modifiedDate || article.publishedDate,
-    "author": {
-      "@type": "Organization",
-      "name": "TENVO"
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline,
+    description: article.summary,
+    image: article.heroImage,
+    datePublished: article.publishedDate,
+    dateModified: article.modifiedDate || article.publishedDate,
+    author: {
+      '@type': 'Organization',
+      name: 'TENVO',
     },
-    "publisher": {
-      "@type": "Organization",
-      "name": "TENVO",
-      "logo": {
-        "@type": "ImageObject",
-        url: `${site}/industrial_hero_image.png`,
-      }
-    }
+    publisher: {
+      '@type': 'Organization',
+      name: 'TENVO',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${site}/tenvo.svg`,
+      },
+    },
   };
 }
 
-/**
- * Get Product schema (for pricing pages)
- * @param {Object} pricingTier - Pricing tier data
- * @returns {Object} Product JSON-LD
- */
-export function getProductSchema(pricingTier) {
+export function getProductSchema(pricingTier: {
+  name: string;
+  features: string[];
+  price: { amount?: string | number; currency: string };
+  ctaHref?: string;
+}): JsonLdObject {
   const site = getSiteUrl();
   return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": `TENVO ${pricingTier.name} Plan`,
-    "description": `TENVO ERP ${pricingTier.name} plan with ${pricingTier.features.join(', ')}`,
-    "brand": {
-      "@type": "Brand",
-      "name": "TENVO"
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `TENVO ${pricingTier.name} Plan`,
+    description: `TENVO ERP ${pricingTier.name} plan with ${pricingTier.features.join(', ')}`,
+    brand: {
+      '@type': 'Brand',
+      name: 'TENVO',
     },
-    "offers": {
-      "@type": "Offer",
-      "price": pricingTier.price.amount || "0",
-      "priceCurrency": pricingTier.price.currency,
-      "availability": "https://schema.org/InStock",
+    offers: {
+      '@type': 'Offer',
+      price: String(pricingTier.price.amount ?? '0'),
+      priceCurrency: pricingTier.price.currency,
+      availability: 'https://schema.org/InStock',
       url: `${site}${pricingTier.ctaHref || '/pricing'}`,
-    }
+    },
   };
 }
 
-/**
- * Get BreadcrumbList schema
- * @param {Array} breadcrumbs - Array of breadcrumb objects {name, url}
- * @returns {Object} BreadcrumbList JSON-LD
- */
-export function getBreadcrumbSchema(breadcrumbs) {
+export function getBreadcrumbSchema(breadcrumbs: readonly BreadcrumbItem[]): JsonLdObject {
   return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": breadcrumbs.map((crumb, index) => ({
-      "@type": "ListItem",
-      "position": index + 1,
-      "name": crumb.name,
-      "item": crumb.url
-    }))
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbs.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      item: crumb.url,
+    })),
   };
 }
 
-/**
- * Render JSON-LD script tag
- * @param {Object} schema - Schema object
- * @returns {string} Script tag HTML
- */
-export function renderJSONLD(schema) {
+export function renderJSONLD(schema: JsonLdObject): string {
   return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
 }

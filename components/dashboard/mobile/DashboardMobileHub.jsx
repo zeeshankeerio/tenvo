@@ -91,7 +91,7 @@ export function DashboardMobileHub({
   const lowStock = reminders.lowStock ?? 0;
   const overdue = reminders.overdueInvoices ?? 0;
 
-  /** Advanced mode uses header date picker — avoid duplicate preset row on mobile */
+  /** Advanced mode uses header date picker, avoid duplicate preset row on mobile */
   const showPresetPills = mode === 'easy' && presetOptions.length > 0;
 
   const displayName = (() => {
@@ -103,7 +103,7 @@ export function DashboardMobileHub({
 
   return (
     <div className="space-y-2.5 border-b border-gray-100 pb-2.5 lg:hidden">
-      {/* Compact greeting — no card chrome, no mode badge, no redundant period copy */}
+      {/* Compact greeting, no card chrome, no mode badge, no redundant period copy */}
       <div className="space-y-1.5">
         <h1 className="truncate text-sm font-bold leading-tight tracking-tight text-gray-900">
           {greeting}{displayName ? `, ${displayName}` : ''}
@@ -121,7 +121,7 @@ export function DashboardMobileHub({
       {/* KPI scroll */}
       <MobileKpiStrip items={kpiStrip} />
 
-      {/* Quick actions — 3-column tile grid */}
+      {/* Quick actions, 3-column tile grid */}
       {quickActions.length > 0 && (
         <div>
           <p className="mb-2 px-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Quick actions</p>
@@ -172,7 +172,7 @@ export function DashboardMobileHub({
         </div>
       </div>
 
-      {/* Operational pulse — compact 2×2 on mobile */}
+      {/* Operational pulse, compact 2×2 on mobile */}
       {healthPanels.length > 0 && (
         <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
           <div className="mb-2 flex items-center gap-2">
@@ -182,15 +182,15 @@ export function DashboardMobileHub({
           <div className="grid grid-cols-2 gap-2">
             {healthPanels.slice(0, 4).map((panel) => (
               <div key={panel.label} className="rounded-xl border border-gray-100 bg-gray-50/80 px-2.5 py-2">
-                <p className="text-[9px] font-bold uppercase tracking-wide text-gray-400 line-clamp-1">{panel.label}</p>
-                <p className={cn('mt-0.5 text-sm font-extrabold tabular-nums', panel.tone)}>{panel.value}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400 line-clamp-1">{panel.label}</p>
+                <p className={cn('mt-0.5 text-sm font-semibold tabular-nums', panel.tone)}>{panel.value}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Quick setup — compact mobile banner */}
+      {/* Quick setup, compact mobile banner */}
       {!hasCoreData && quickSetupSteps.length > 0 && (
         <div className="rounded-2xl border border-cyan-100 bg-cyan-50/60 p-3">
           <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-700">Quick setup</p>

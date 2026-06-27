@@ -269,8 +269,8 @@ export default function CartPage({ params }) {
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Shipping</p>
                     {[
-                      { id: 'standard', label: 'Standard (3–5 days)', price: subtotal >= freeShippingThreshold ? 'FREE' : formatCurrency(150, currency) },
-                      { id: 'express', label: 'Express (1–2 days)', price: formatCurrency(300, currency) },
+                      { id: 'standard', label: 'Standard (3-5 days)', price: subtotal >= freeShippingThreshold ? 'FREE' : formatCurrency(150, currency) },
+                      { id: 'express', label: 'Express (1-2 days)', price: formatCurrency(300, currency) },
                       { id: 'pickup', label: 'Store Pickup', price: 'FREE' },
                     ].map(opt => (
                       <label key={opt.id}

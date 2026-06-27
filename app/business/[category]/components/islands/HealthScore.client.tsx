@@ -49,13 +49,13 @@ export function HealthScore({ stats }: HealthScoreProps) {
                         />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-black text-gray-900">{score}</span>
+                        <span className="text-3xl font-semibold text-gray-900">{score}</span>
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Index</span>
                     </div>
                 </div>
 
                 <div className={`mt-6 w-full text-center p-3 rounded-2xl ${status.bg} border border-transparent`}>
-                    <p className={`font-black text-sm uppercase tracking-wider ${status.color}`}>{status.label}</p>
+                    <p className={`font-semibold text-sm uppercase tracking-wider ${status.color}`}>{status.label}</p>
                     <p className="text-[10px] text-gray-600 mt-1 leading-relaxed font-medium">
                         {status.description}
                     </p>

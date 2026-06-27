@@ -87,7 +87,7 @@ export function JournalEntryList({ businessId, currency, accounts = [], onNewEnt
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-black text-gray-900">Journal Entries</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Journal Entries</h3>
                     <p className="text-xs text-gray-400">
                         {total} entr{total === 1 ? 'y' : 'ies'} · double-entry GL posting
                     </p>
@@ -216,7 +216,7 @@ export function JournalEntryList({ businessId, currency, accounts = [], onNewEnt
                                     {formatCurrency(Number(je.total_credit), currency)}
                                 </span>
                                 <span>
-                                    <Badge className={`text-[8px] px-1.5 py-0.5 font-black rounded-full border-0 ${badgeCls}`}>
+                                    <Badge className={`text-[10px] px-1.5 py-0.5 font-semibold rounded-full border-0 ${badgeCls}`}>
                                         {refType.toUpperCase()}
                                     </Badge>
                                 </span>

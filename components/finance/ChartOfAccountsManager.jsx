@@ -214,7 +214,7 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
                         <div key={type} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                             <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
                                 <Layers className="w-4 h-4 text-gray-400" />
-                                <h4 className="text-xs font-black uppercase text-gray-600 tracking-wider flex-1">{type}s</h4>
+                                <h4 className="text-xs font-semibold uppercase text-gray-600 tracking-wider flex-1">{type}s</h4>
                                 <span className="text-[10px] font-bold text-gray-400 bg-white px-2 py-0.5 rounded-full border">{typeAccounts.length}</span>
                             </div>
                             <div className="divide-y divide-gray-100">
@@ -224,8 +224,8 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm font-semibold text-gray-800">{acc.name}</span>
-                                                {acc.is_system && <span className="text-[8px] uppercase tracking-widest font-black bg-brand-50 text-brand-primary px-1.5 py-0.5 rounded-sm">System</span>}
-                                                {!acc.is_active && <span className="text-[8px] uppercase tracking-widest font-black bg-red-50 text-red-600 px-1.5 py-0.5 rounded-sm">Inactive</span>}
+                                                {acc.is_system && <span className="text-[10px] uppercase tracking-widest font-semibold bg-brand-50 text-brand-primary px-1.5 py-0.5 rounded-sm">System</span>}
+                                                {!acc.is_active && <span className="text-[10px] uppercase tracking-widest font-semibold bg-red-50 text-red-600 px-1.5 py-0.5 rounded-sm">Inactive</span>}
                                             </div>
                                             {acc.description && <p className="text-[10px] text-gray-400 mt-0.5">{acc.description}</p>}
                                         </div>

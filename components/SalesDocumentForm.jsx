@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
-import { useBusiness } from '@/lib/context/BusinessContext';
+import { useFormRegionalContext } from '@/lib/hooks/useFormRegionalContext';
 import { formatCurrency } from '@/lib/currency';
 import {
     createQuotationAction,
@@ -73,7 +73,7 @@ export function SalesDocumentForm({
     initialData = null,
     category = 'retail-shop'
 }) {
-    const { business, currency } = useBusiness();
+    const { business, currency, countryIso, defaultTaxRate } = useFormRegionalContext(category);
     const { language } = useLanguage();
     const t = translations[language];
 
@@ -128,12 +128,12 @@ export function SalesDocumentForm({
             return sum + (item.quantity * item.unit_price);
         }, 0);
 
-        const domainTax = getDomainDefaultTax(domainCategory);
+        const domainTax = getDomainDefaultTax(domainCategory, { countryIso }) || defaultTaxRate;
         const tax_total = subtotal * (domainTax / 100);
         const total_amount = subtotal + tax_total;
 
         return { subtotal, tax_total, total_amount, taxRate: domainTax };
-    }, [formData.items, domainCategory]);
+    }, [formData.items, domainCategory, countryIso, defaultTaxRate]);
 
     const addItem = () => {
         setFormData(prev => ({
@@ -261,7 +261,7 @@ export function SalesDocumentForm({
                             <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold text-gray-500">
                                 <Link className="h-3 w-3 shrink-0 text-wine-600" />
                                 <span className="truncate">From source document</span>
-                                <Badge className="h-4 border-none bg-wine-600/10 px-1.5 text-[9px] font-bold uppercase text-wine-600">Linked</Badge>
+                                <Badge className="h-4 border-none bg-wine-600/10 px-1.5 text-[10px] font-bold uppercase text-wine-600">Linked</Badge>
                             </div>
                         )}
                     </div>
@@ -385,7 +385,7 @@ export function SalesDocumentForm({
                                                                 ? 'bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.5)]'
                                                                 : 'bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.5)]'
                                                                 }`} />
-                                                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
                                                                 In Stock: <span className="text-gray-900">{products.find(p => p.id === item.product_id)?.stock || 0}</span>
                                                             </span>
                                                         </div>

@@ -1,13 +1,16 @@
 import Link from 'next/link';
 import MarketingLayout from '@/components/marketing/layout/MarketingLayout';
 import { MarketingPageHeader, MarketingSection } from '@/components/marketing/layout/MarketingSection';
+import { buildMarketingMetadata } from '@/lib/marketing/seo';
 import { TENVO_PARENT_COMPANY } from '@/lib/marketing/tenvo-assistant-knowledge';
 
-export const metadata = {
+export const metadata = buildMarketingMetadata({
   title: 'Privacy Policy',
   description:
-    'How TENVO collects and uses information on this public website, forms, and analytics.',
-};
+    'How TENVO at www.tenvo.store collects and uses information on this public website, forms, and analytics.',
+  path: '/privacy',
+  noIndex: false,
+});
 
 export default function PrivacyPage() {
   const updated = new Date().toISOString().slice(0, 10);

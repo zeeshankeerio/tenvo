@@ -131,7 +131,7 @@ async function check() {
     
     if (!process.env.DATABASE_URL) {
       log('\n💡 Need help setting DATABASE_URL?', 'cyan');
-      log('   See: QUICK-SETUP.md', 'bright');
+      log('   See: docs/guides/WINDOWS_MIGRATION_SETUP.md', 'bright');
     }
     
     process.exit(1);

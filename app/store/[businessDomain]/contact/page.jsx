@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import { ContactPageClient } from '@/components/storefront/ContactPageClient';
@@ -17,5 +18,9 @@ export default async function ContactPage({ params }) {
   const result = await getBusinessByDomain(businessDomain);
   if (!result.success) notFound();
 
-  return <ContactPageClient />;
+  return (
+    <Suspense fallback={<div className="min-h-[40vh]" />}>
+      <ContactPageClient />
+    </Suspense>
+  );
 }

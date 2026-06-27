@@ -88,7 +88,7 @@ export function CustomersTab({
                 </div>
             </div>
 
-            {/* Customer Stats — desktop cards */}
+            {/* Customer Stats, desktop cards */}
             <div className="hidden grid-cols-1 gap-4 md:grid-cols-3 lg:grid">
                 <Card>
                     <CardHeader className="pb-2">

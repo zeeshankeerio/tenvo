@@ -78,7 +78,7 @@ export function TabGuard({
     }
 
     // -- Gate 3: Subscription Plan -------------------------------------------
-    if (featureKey && !planHasFeatureWithPackaging(planTier, featureKey, businessSettings)) {
+    if (featureKey && !planHasFeatureWithPackaging(planTier, featureKey, businessSettings, business?.platformFeatureOverrides)) {
         const resolvedRequired =
             requiredPlanOverride || (featureKey ? FEATURE_MIN_PLAN[featureKey] : null) || 'starter';
         return (

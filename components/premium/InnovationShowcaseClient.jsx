@@ -49,7 +49,7 @@ export function InnovationShowcaseClient() {
                         <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-lg">
                             <Rocket className="w-8 h-8" />
                         </div>
-                        <h1 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">
+                        <h1 className="text-4xl font-semibold tracking-tighter text-slate-900 dark:text-white uppercase">
                             Tenvo <span className="text-indigo-600">2026</span> Innovation
                         </h1>
                     </div>
@@ -61,7 +61,7 @@ export function InnovationShowcaseClient() {
 
                 <div className="flex items-center gap-6 bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-xl border border-white dark:border-slate-800">
                     <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Density Mode</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Global Density Mode</span>
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                             Currently: {isBusyMode ? 'High Density (Busy)' : 'Standard View'}
                         </span>
@@ -87,13 +87,13 @@ export function InnovationShowcaseClient() {
             <section className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-black text-slate-800 dark:text-white uppercase flex items-center gap-3">
+                        <h2 className="text-2xl font-semibold text-slate-800 dark:text-white uppercase flex items-center gap-3">
                             <LayoutGrid className="w-6 h-6 text-indigo-500" />
                             Command Center Data Engine
                         </h2>
                         <p className="text-sm text-slate-400 font-medium">Industry-leading performance with infinite-scroll & formula-bar support.</p>
                     </div>
-                    <Badge variant="outline" className="border-indigo-500 text-indigo-500 font-black px-4 py-1.5 rounded-full">
+                    <Badge variant="outline" className="border-indigo-500 text-indigo-500 font-semibold px-4 py-1.5 rounded-full">
                         ENTERPRISE GRADE
                     </Badge>
                 </div>

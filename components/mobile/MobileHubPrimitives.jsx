@@ -29,7 +29,7 @@ export function MobileHubTile({
       )}
     >
       {badge != null && badge > 0 && (
-        <span className="absolute right-1.5 top-1.5 rounded-full bg-red-500 px-1 py-0.5 text-[8px] font-bold text-white">
+        <span className="absolute right-1.5 top-1.5 rounded-full bg-red-500 px-1 py-0.5 text-[10px] font-bold text-white">
           {badge > 99 ? '99+' : badge}
         </span>
       )}
@@ -45,7 +45,7 @@ export function MobileHubTile({
       <div>
         <p className={cn('font-bold leading-tight', compact ? 'text-[10px]' : 'text-xs')}>{label}</p>
         {sublabel && (
-          <p className={cn('mt-0.5 leading-snug', compact ? 'text-[9px]' : 'text-[10px]', tone === 'primary' ? 'text-slate-300' : 'text-gray-500')}>
+          <p className={cn('mt-0.5 leading-snug', compact ? 'text-[10px]' : 'text-[10px]', tone === 'primary' ? 'text-slate-300' : 'text-gray-500')}>
             {sublabel}
           </p>
         )}
@@ -81,12 +81,12 @@ export function MobileKpiStrip({ items = [] }) {
           key={kpi.label}
           className="min-w-[96px] shrink-0 rounded-xl border border-gray-100 bg-white px-3 py-2 shadow-sm"
         >
-          <p className="text-[9px] font-bold uppercase tracking-wide text-gray-400">{kpi.label}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{kpi.label}</p>
           <p className={cn('mt-0.5 truncate text-sm font-bold tabular-nums', kpi.alert ? 'text-red-600' : kpi.tone || 'text-gray-900')}>
             {kpi.value}
           </p>
           {kpi.hint && (
-            <p className="mt-0.5 truncate text-[9px] font-medium text-gray-400">{kpi.hint}</p>
+            <p className="mt-0.5 truncate text-[10px] font-medium text-gray-400">{kpi.hint}</p>
           )}
         </div>
       ))}
@@ -106,7 +106,7 @@ export function MobilePresetPills({ options = [], activeId, onSelect, compact = 
           onClick={() => onSelect?.(preset.id)}
           className={cn(
             'shrink-0 rounded-full font-bold uppercase tracking-wide transition-all',
-            compact ? 'px-2 py-0.5 text-[9px]' : 'px-3 py-1 text-[10px]',
+            compact ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-[10px]',
             activeId === preset.id
               ? 'bg-slate-900 text-white shadow-sm'
               : 'border border-gray-200 bg-white text-gray-600'

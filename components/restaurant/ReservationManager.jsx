@@ -259,7 +259,7 @@ export function ReservationManager({ businessId, tables = [], onSave }) {
                                 <span className="text-[10px] font-bold uppercase">
                                     {new Intl.DateTimeFormat('en', { weekday: 'short' }).format(day)}
                                 </span>
-                                <span className="text-lg font-black">{day.getDate()}</span>
+                                <span className="text-lg font-semibold">{day.getDate()}</span>
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
@@ -319,7 +319,7 @@ export function ReservationManager({ businessId, tables = [], onSave }) {
                             <stat.icon className="w-4 h-4" />
                         </div>
                         <div>
-                            <p className="text-lg font-black text-gray-900">{stat.value}</p>
+                            <p className="text-lg font-semibold text-gray-900">{stat.value}</p>
                             <p className="text-[11px] text-gray-400 font-medium">{stat.label}</p>
                         </div>
                     </div>
@@ -447,7 +447,7 @@ export function ReservationManager({ businessId, tables = [], onSave }) {
             <Dialog open={showDialog} onOpenChange={setShowDialog}>
                 <DialogContent className="sm:max-w-md rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-lg font-black">
+                        <DialogTitle className="text-lg font-semibold">
                             {editingReservation ? 'Edit Reservation' : 'New Reservation'}
                         </DialogTitle>
                         <DialogDescription>

@@ -25,7 +25,7 @@ function resolveColumns(width) {
 }
 
 /**
- * Paginated product cards — shows 3 rows per page, responsive column count.
+ * Paginated product cards, shows 3 rows per page, responsive column count.
  */
 export function ProductCardGrid({
   products,
@@ -112,7 +112,7 @@ export function ProductCardGrid({
             >
               {inactive && (
                 <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-gray-100/60">
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
                     Inactive
                   </span>
                 </div>
@@ -150,8 +150,8 @@ export function ProductCardGrid({
 
               <div className="flex flex-1 flex-col gap-1 p-2.5">
                 <p className="line-clamp-2 text-[11px] font-bold leading-snug text-gray-900">{p.name}</p>
-                {p.sku && <p className="font-mono text-[9px] text-gray-400">{p.sku}</p>}
-                <p className="mt-auto text-[12px] font-black text-gray-800">
+                {p.sku && <p className="font-mono text-[10px] text-gray-400">{p.sku}</p>}
+                <p className="mt-auto text-[12px] font-semibold text-gray-800">
                   {currencySymbol}
                   {Number(p.price || 0).toLocaleString()}
                 </p>
@@ -197,7 +197,7 @@ export function ProductCardGrid({
       {totalPages > 1 && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-2">
           <p className="text-[11px] font-medium text-gray-500">
-            Showing {rangeStart}–{rangeEnd} of {products.length} products
+            Showing {rangeStart}-{rangeEnd} of {products.length} products
           </p>
           <div className="flex items-center gap-1">
             <Button

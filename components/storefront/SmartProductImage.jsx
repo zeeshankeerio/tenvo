@@ -1,39 +1,101 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { resolveBrandMonogramUrl } from '@/lib/storefront/storefrontImagePlaceholders';
 
 /**
- * SmartProductImage
- *
- * Renders a Next.js <Image> for real https:// URLs (with optimisation)
- * or a plain <img> for data: base64 URIs (Next/Image can't optimise those).
- *
- * Props mirror Next.js Image props: src, alt, fill, width, height, className, sizes
+ * Renders Next.js Image for https URLs, plain img for data: URIs and remote SVGs.
+ * On load error, optionally shows fallbackSrc then a monogram placeholder.
  */
-export function SmartProductImage({ src, alt, fill, width, height, className, sizes, style, priority }) {
-  if (!src) return null;
+export function SmartProductImage({
+  src,
+  alt,
+  fill,
+  width,
+  height,
+  className,
+  sizes,
+  style,
+  priority,
+  fallbackSrc,
+  placeholderLabel,
+}) {
+  const [currentSrc, setCurrentSrc] = useState(src || '');
+  const [failed, setFailed] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
 
-  const isDataUrl = src.startsWith('data:');
+  useEffect(() => {
+    setCurrentSrc(src || '');
+    setFailed(false);
+    setFallbackFailed(false);
+  }, [src]);
 
-  if (isDataUrl) {
+  const activeSrc = failed && fallbackSrc && !fallbackFailed ? fallbackSrc : currentSrc;
+  const monogramSrc =
+    placeholderLabel && !activeSrc
+      ? resolveBrandMonogramUrl(placeholderLabel)
+      : '';
+
+  const handleError = () => {
+    if (fallbackSrc && !failed) {
+      setFailed(true);
+      return;
+    }
+    if (fallbackSrc && failed && !fallbackFailed) {
+      setFallbackFailed(true);
+      setCurrentSrc('');
+      return;
+    }
+    setCurrentSrc('');
+  };
+
+  if (!activeSrc && !monogramSrc) {
+    return (
+      <div
+        className={cn(
+          'flex items-center justify-center bg-neutral-100 text-neutral-400',
+          fill && 'absolute inset-0 h-full w-full',
+          className
+        )}
+        style={style}
+        aria-hidden={!alt}
+      >
+        <span className="text-[10px] font-bold uppercase tracking-wide">
+          {(placeholderLabel || alt || 'Image').slice(0, 3)}
+        </span>
+      </div>
+    );
+  }
+
+  const renderSrc = activeSrc || monogramSrc;
+  const isDataUrl = renderSrc.startsWith('data:');
+  const isSvg = /\.svg(\?|$)/i.test(renderSrc);
+
+  if (isDataUrl || isSvg) {
     if (fill) {
       return (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={src}
-          alt={alt}
-          className={`absolute inset-0 w-full h-full ${className || ''}`}
-          style={{ objectFit: 'cover', ...style }}
+          src={renderSrc}
+          alt={alt || ''}
+          className={cn('absolute inset-0 h-full w-full object-cover', className)}
+          style={style}
+          onError={handleError}
         />
       );
     }
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={src}
-        alt={alt}
+        src={renderSrc}
+        alt={alt || ''}
         width={width}
         height={height}
-        className={className}
-        style={{ objectFit: 'cover', ...style }}
+        className={cn('object-cover', className)}
+        style={style}
+        onError={handleError}
       />
     );
   }
@@ -41,27 +103,29 @@ export function SmartProductImage({ src, alt, fill, width, height, className, si
   if (fill) {
     return (
       <Image
-        src={src}
-        alt={alt}
+        src={renderSrc}
+        alt={alt || ''}
         fill
         className={className}
         sizes={sizes || '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw'}
         style={style}
         priority={priority}
+        onError={handleError}
       />
     );
   }
 
   return (
     <Image
-      src={src}
-      alt={alt}
+      src={renderSrc}
+      alt={alt || ''}
       width={width || 400}
       height={height || 400}
       className={className}
       sizes={sizes}
       style={style}
       priority={priority}
+      onError={handleError}
     />
   );
 }

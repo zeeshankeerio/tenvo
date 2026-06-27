@@ -100,10 +100,9 @@ function BusinessDashboardContent() {
     updateBusiness,
     isLoading: businessLoading,
     switchBusinessByDomain,
-    regionalStandards,
+    currency,
   } = useBusiness();
 
-  const countryIso = regionalStandards?.countryCode || 'PK';
 
   // Use business domain for URL routing, but keep category for UI rendering logic
   const currentDomain = business?.domain || String(params?.category || 'retail-shop');
@@ -399,18 +398,18 @@ function BusinessDashboardContent() {
     if (domainConfig) return { name: domainConfig.name, icon: domainConfig.icon, color: domainConfig.color };
 
     // Dynamically derive from domainKnowledge
-    const knowledge = getDomainKnowledgeForBusiness(category, countryIso);
+    const knowledge = getDomainKnowledgeForBusiness(category, business);
     return {
       name: category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
       icon: knowledge.icon || '🚀',
       color: 'wine'
     };
-  }, [category, countryIso]);
+  }, [category, business]);
 
   const colors = getDomainColors(category);
   const domainKnowledge = useMemo(
-    () => getDomainKnowledgeForBusiness(category, countryIso),
-    [category, countryIso]
+    () => getDomainKnowledgeForBusiness(category, business),
+    [category, business]
   );
 
   // Auth context
@@ -512,7 +511,6 @@ function BusinessDashboardContent() {
   const [customerFormData, setCustomerFormData] = useState({ name: '', phone: '', email: '' });
   const [editingCustomer, setEditingCustomer] = useState(null);
 
-  const [currency] = useState('PKR');
   // Date Range and Search Filtering
   const { dateRange, setDateRange, searchQuery, setSearchQuery } = useFilters();
 
@@ -540,7 +538,7 @@ function BusinessDashboardContent() {
           setKitchenQueue(queueRes.value.queue || []);
         }
       } catch (err) {
-        // Non-critical — restaurant data will just be empty
+        // Non-critical, restaurant data will just be empty
         console.warn('[DashboardClient] Failed to fetch restaurant data:', err);
       }
     };
@@ -570,7 +568,7 @@ function BusinessDashboardContent() {
     hydrateActivePosSession();
   }, [business?.id]);
 
-  // Require auth — only after auth + business sync settle (avoids bouncing to /login
+  // Require auth, only after auth + business sync settle (avoids bouncing to /login
   // right after registration while session/context hydrate).
   useEffect(() => {
     if (authLoading || businessLoading) return;
@@ -643,7 +641,7 @@ function BusinessDashboardContent() {
 
   /**
    * @param {object} productData
-   * @param {{ skipFullWorkspaceRefresh?: boolean, silentToast?: boolean }} [options] — Busy grid / inline edits:
+   * @param {{ skipFullWorkspaceRefresh?: boolean, silentToast?: boolean }} [options], Busy grid / inline edits:
    *   refresh products only so optimistic UI is not overwritten by a concurrent full refetch.
    *   silentToast: do not toast here (InventoryManager BusyGrid / Excel already surfaces success).
    */
@@ -665,7 +663,7 @@ function BusinessDashboardContent() {
         return Number.isFinite(parsed) ? parsed : fallback;
       };
 
-      // Only send batch/serial payloads when the domain actually uses them — otherwise
+      // Only send batch/serial payloads when the domain actually uses them, otherwise
       // composite upsert treats any non-empty `batches` as batch-tracked and omits `stock` from UPDATE.
       const domainCat = business?.category || 'retail-shop';
       const allBatches = isBatchTrackingEnabled(domainCat)
@@ -779,16 +777,20 @@ function BusinessDashboardContent() {
       await fetchSales();
       setShowCustomerForm(false);
       setEditingCustomer(null);
+      return { success: true };
     } catch (error) {
       console.error('Error saving customer:', error);
       if (isEntitlementError(error)) {
         toast.error(getEntitlementErrorMessage(error, { action: 'save customer' }));
         markEntitlementErrorHandled(error);
         handleTabChange('settings');
-      } else {
-        toast.error('Failed to save customer: ' + (error.message || 'Unknown error'));
       }
-      throw error;
+      return {
+        success: false,
+        error: error.message || 'Failed to save customer',
+        code: error.code || null,
+        errors: error.validationErrors || null,
+      };
     }
   };
 
@@ -1299,28 +1301,54 @@ function BusinessDashboardContent() {
       toast.loading('Processing POS Checkout...', { id: 'pos' });
       const normalizedItems = (checkoutData.items || []).map(item => ({
         productId: item.productId || item.id,
-        productName: item.productName || item.name,
+        productName: item.productName || item.name || 'Item',
         quantity: Number(item.quantity) || 1,
         unitPrice: Number(item.unitPrice || item.price) || 0,
         taxPercent: Number(item.taxPercent) || 0,
         taxAmount: Number(item.taxAmount) || 0,
         discountAmount: Number(item.discountAmount) || 0,
       }));
+      const lineDiscountTotal = normalizedItems.reduce(
+        (sum, i) => sum + Number(i.discountAmount || 0),
+        0
+      );
       const subtotal = Number(checkoutData.subtotal) ||
         normalizedItems.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0);
       const taxAmount = Number(checkoutData.taxAmount) ||
         normalizedItems.reduce((sum, i) => sum + (i.taxAmount || 0), 0);
-      const discountAmount = Number(checkoutData.discountAmount) || 0;
-      const total = Number(checkoutData.total) || Math.round((subtotal + taxAmount - discountAmount) * 100) / 100;
+      const discountTotal = lineDiscountTotal > 0
+        ? lineDiscountTotal
+        : (Number(checkoutData.discountAmount) || 0);
+      const total = Number(checkoutData.total) ||
+        Math.round((subtotal + taxAmount - discountTotal) * 100) / 100;
 
-      // Prefer POS transaction flow when a session is open so refunds and session reporting stay consistent.
-      if (checkoutData.sessionId) {
+      let sessionId = checkoutData.sessionId || null;
+
+      // Auto-restore or open a POS session so sales use the transaction ledger (not invoice fallback).
+      if (!sessionId) {
+        const activeRes = await posAPI.getActiveSession(business.id);
+        if (activeRes?.success && activeRes.session?.id) {
+          sessionId = activeRes.session.id;
+          setPosSession({
+            ...activeRes.session,
+            startTime: activeRes.session.opened_at || activeRes.session.startTime || null,
+            terminalName: activeRes.session.terminal_name || null,
+          });
+        } else {
+          const started = await handleStartPosSession();
+          if (started?.success && started.session?.id) {
+            sessionId = started.session.id;
+          }
+        }
+      }
+
+      if (sessionId) {
         const posResult = await posAPI.checkout({
           businessId: business.id,
-          sessionId: checkoutData.sessionId,
+          sessionId,
           customerId: checkoutData.customerId || null,
           items: normalizedItems,
-          discountAmount,
+          discountAmount: lineDiscountTotal > 0 ? 0 : discountTotal,
           payments: checkoutData.payments?.length
             ? checkoutData.payments
             : [{ method: checkoutData.paymentMethod || 'cash', amount: total }],
@@ -1339,13 +1367,15 @@ function BusinessDashboardContent() {
         };
       }
 
-      // Compatibility fallback for environments with no active POS session.
+      // Compatibility fallback when session cannot be opened (e.g. plan limits).
       const invoiceItems = normalizedItems.map(item => ({
         product_id: item.productId,
         quantity: item.quantity,
         unit_price: item.unitPrice,
-        name: item.productName,
+        name: item.productName || 'Item',
+        tax_percent: item.taxPercent,
         tax_amount: item.taxAmount,
+        discount_amount: item.discountAmount,
       }));
 
       const invoiceData = {
@@ -1355,10 +1385,11 @@ function BusinessDashboardContent() {
         grand_total: total,
         subtotal,
         tax_total: taxAmount,
-        discount_total: discountAmount,
+        discount_total: discountTotal,
         status: 'paid',
         date: new Date().toISOString(),
         payment_status: 'paid',
+        domain_data: { source: 'pos', pos_fallback: true },
       };
 
       const createdInvoice = await invoiceAPI.create(invoiceData, invoiceItems);
@@ -1387,6 +1418,7 @@ function BusinessDashboardContent() {
         success: false,
         error,
         errorCode: error?.code || null,
+        validationErrors: error?.validationErrors || null,
         requiredPlan: error?.requiredPlan || null,
         limitKey: error?.limitKey || null,
         limit: Number.isFinite(Number(error?.limit)) ? Number(error?.limit) : null,

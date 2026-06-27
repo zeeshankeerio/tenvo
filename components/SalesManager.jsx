@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
     TrendingUp, DollarSign, ShoppingCart, Users,
     Target, Receipt, ChevronUp, ChevronDown, BarChart2,
-    Award, Clock, Package, CreditCard, Activity
+    Award, Clock, Package, CreditCard, Activity, RefreshCcw
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { getDomainColors } from '@/lib/domainColors';
@@ -12,6 +12,7 @@ import { SalesChart, RevenueBarChart } from './AdvancedCharts';
 import { aggregateMonthlyData, getTopCatalysts } from '@/lib/utils/analytics';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
 import { useStorefrontEmbedded } from '@/lib/context/StorefrontMobileContext';
+import { getSalesPerformanceAction } from '@/lib/actions/basic/dashboard';
 
 // ── Trend Badge ──────────────────────────────────────────────────────────────
 function TrendBadge({ value }) {
@@ -53,10 +54,39 @@ export function SalesManager({
 }) {
     const colors = getDomainColors(category);
     const [timeframe, setTimeframe] = useState('monthly');
+    const [loading, setLoading] = useState(false);
+    const [serverInsights, setServerInsights] = useState(null);
     const primaryColor = colors.primary || '#6366f1';
 
-    // ── Core metrics ─────────────────────────────────────────────────────────
-    const metrics = useMemo(() => {
+    const loadInsights = useCallback(async () => {
+        if (!businessId) {
+            setServerInsights(null);
+            return;
+        }
+        setLoading(true);
+        try {
+            const res = await getSalesPerformanceAction(businessId, { topLimit: 8 });
+            if (res?.success) {
+                setServerInsights({
+                    salesTrend: res.salesTrend,
+                    topProducts: res.topProducts,
+                    recentActivity: res.recentActivity,
+                    kpi: res.kpi,
+                });
+            }
+        } catch (err) {
+            console.error('Failed to load sales insights', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [businessId]);
+
+    useEffect(() => {
+        void loadInsights();
+    }, [loadInsights, invoices.length]);
+
+    // ── Client-side fallback metrics (invoices only) ─────────────────────────
+    const clientMetrics = useMemo(() => {
         const now = new Date();
         const curStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -109,14 +139,67 @@ export function SalesManager({
         };
     }, [invoices, customers, currency]);
 
-    const chartData = useMemo(() => aggregateMonthlyData(invoices, timeframe === 'monthly' ? 6 : 12), [invoices, timeframe]);
-    const topCatalysts = useMemo(() => getTopCatalysts(invoices, products, 8), [invoices, products]);
+    const serverKpi = serverInsights?.kpi;
+    const metrics = useMemo(() => {
+        if (serverKpi) {
+            const g = serverKpi.growth || {};
+            return {
+                total: serverKpi.grossTotal,
+                count: serverKpi.orderCount,
+                avg: serverKpi.avgOrder,
+                paid: serverKpi.collected,
+                outstanding: serverKpi.outstanding,
+                activeCustomers: serverKpi.activeCustomers,
+                profitEst: serverKpi.profitEst,
+                retentionRate: serverKpi.retentionRate,
+                totalFmt: formatCurrency(serverKpi.grossTotal, currency),
+                countFmt: String(serverKpi.orderCount),
+                avgFmt: formatCurrency(serverKpi.avgOrder, currency),
+                paidFmt: formatCurrency(serverKpi.collected, currency),
+                outstandingFmt: formatCurrency(serverKpi.outstanding, currency),
+                profitFmt: formatCurrency(serverKpi.profitEst, currency),
+                growth: {
+                    revenue: g.revenue ?? 0,
+                    count: g.count ?? 0,
+                    avg: g.avg ?? 0,
+                    customers: g.customers ?? 0,
+                    profit: g.profit ?? 0,
+                    retention: g.retention ?? 0,
+                },
+            };
+        }
+        return clientMetrics;
+    }, [serverKpi, clientMetrics, currency]);
 
-    // ── Recent transactions ──────────────────────────────────────────────────
-    const recentInvoices = useMemo(() =>
-        [...invoices].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8),
-        [invoices]
-    );
+    const chartData = useMemo(() => {
+        if (serverInsights?.salesTrend?.length) {
+            const months = timeframe === 'monthly' ? 6 : 12;
+            return serverInsights.salesTrend.slice(-months);
+        }
+        return aggregateMonthlyData(invoices, timeframe === 'monthly' ? 6 : 12);
+    }, [serverInsights, invoices, timeframe]);
+
+    const topCatalysts = useMemo(() => {
+        if (serverInsights?.topProducts?.length) {
+            return serverInsights.topProducts;
+        }
+        return getTopCatalysts(invoices, products, 8);
+    }, [serverInsights, invoices, products]);
+
+    const recentInvoices = useMemo(() => {
+        if (serverInsights?.recentActivity?.length) {
+            return serverInsights.recentActivity.map((row) => ({
+                source: row.source,
+                customer_name: row.party,
+                invoice_number: row.ref,
+                date: row.date,
+                grand_total: row.amount,
+                payment_status: row.paymentStatus,
+                status: row.status,
+            }));
+        }
+        return [...invoices].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+    }, [serverInsights, invoices]);
 
     // ── Top customers ────────────────────────────────────────────────────────
     const topCustomers = useMemo(() => {
@@ -208,6 +291,15 @@ export function SalesManager({
                             </button>
                         ))}
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => void loadInsights()}
+                        disabled={loading || !businessId}
+                        className="p-2 rounded-lg border border-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+                        title="Refresh sales data"
+                    >
+                        <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
                 </div>
             </div>
 
@@ -255,13 +347,13 @@ export function SalesManager({
                             <p className="text-xs text-gray-400 px-5 py-6 text-center">No sales data yet</p>
                         )}
                         {topCatalysts.slice(0, 6).map((p, i) => (
-                            <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+                            <div key={p.id || p.name || i} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
                                 <span className="text-xs font-bold text-gray-300 w-4 shrink-0">{i + 1}</span>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
-                                    <p className="text-[11px] text-gray-400">{p.sales} sold</p>
+                                    <p className="text-[11px] text-gray-400">{(p.sales ?? p.volume ?? 0)} sold</p>
                                 </div>
-                                <span className="text-sm font-semibold text-gray-800 shrink-0">{formatCurrency(p.revenue, currency)}</span>
+                                <span className="text-sm font-semibold text-gray-800 shrink-0">{formatCurrency(p.revenue ?? p.value ?? 0, currency)}</span>
                             </div>
                         ))}
                     </div>
@@ -274,7 +366,7 @@ export function SalesManager({
                 <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                     <div className="px-5 py-4 border-b border-gray-50">
                         <p className="text-sm font-semibold text-gray-800">Revenue Distribution</p>
-                        <p className="text-xs text-gray-400">By month — sales vs revenue</p>
+                        <p className="text-xs text-gray-400">By month, sales vs revenue</p>
                     </div>
                     <div className="p-4 h-[260px]">
                         <RevenueBarChart data={chartData} colors={colors} currency={currency} />
@@ -295,13 +387,18 @@ export function SalesManager({
                             <p className="text-xs text-gray-400 px-5 py-6 text-center">No transactions yet</p>
                         )}
                         {recentInvoices.map((inv, i) => (
-                            <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+                            <div key={inv.id || inv.invoice_number || i} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
                                 <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
                                     <Receipt className="w-3.5 h-3.5 text-gray-400" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-800 truncate">{inv.customer?.name || inv.customer_name || 'Walk-in'}</p>
-                                    <p className="text-[11px] text-gray-400">{inv.invoice_number} · {inv.date ? new Date(inv.date).toLocaleDateString('en', { month: 'short', day: 'numeric' }) : ''}</p>
+                                    <p className="text-[11px] text-gray-400">
+                                        {inv.invoice_number}
+                                        {inv.source && inv.source !== 'invoice' ? ` · ${inv.source}` : ''}
+                                        {' · '}
+                                        {inv.date ? new Date(inv.date).toLocaleDateString('en', { month: 'short', day: 'numeric' }) : ''}
+                                    </p>
                                 </div>
                                 <div className="text-right shrink-0">
                                     <p className="text-sm font-semibold text-gray-800">{formatCurrency(inv.grand_total, currency)}</p>

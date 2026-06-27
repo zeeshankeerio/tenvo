@@ -66,7 +66,7 @@ export const RecentActivityFeed = memo(function RecentActivityFeed({
         return (
             <Card className="flex h-full min-h-0 flex-col border border-slate-200 bg-white shadow-sm">
                 <CardHeader className="shrink-0 border-b border-slate-100 px-3.5 py-2.5">
-                    <CardTitle className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-500">
+                    <CardTitle className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
                         <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
                         Recent Activity
                     </CardTitle>
@@ -102,7 +102,7 @@ export const RecentActivityFeed = memo(function RecentActivityFeed({
         return (
             <Card className="flex h-full flex-col border border-slate-200 bg-white shadow-sm">
                 <CardHeader className="shrink-0 border-b border-slate-100 px-3.5 py-2.5">
-                    <CardTitle className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-500">
+                    <CardTitle className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
                         <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
                         Recent Activity
                     </CardTitle>
@@ -147,7 +147,7 @@ export const RecentActivityFeed = memo(function RecentActivityFeed({
     return (
         <Card className="flex min-h-0 flex-col border border-slate-200 bg-white shadow-sm">
             <CardHeader className="shrink-0 border-b border-slate-100 px-3.5 py-2.5">
-                <CardTitle className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-500">
+                <CardTitle className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
                     <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
                     Recent Activity
                 </CardTitle>
@@ -182,7 +182,7 @@ export const RecentActivityFeed = memo(function RecentActivityFeed({
                                         {formatRelativeDate(item.date)}
                                     </span>
                                     {Number(item.amount || 0) > 0 && (
-                                        <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black text-slate-600">
+                                        <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
                                             {item.status === 'warning'
                                                 ? Number(item.amount || 0)
                                                 : `PKR ${Number(item.amount || 0).toLocaleString()}`}

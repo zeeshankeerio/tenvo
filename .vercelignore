@@ -1,0 +1,24 @@
+# Development artifacts and historical files (kept in git, excluded from deploy)
+archive/
+backups/
+docs/
+.kiro/
+.agent/
+.cursor/
+e2e/
+tests/
+playwright-report/
+test-results/
+coverage/
+_maintenance/
+
+# Logs and local diagnostics
+*.log
+*.txt
+.build-out.txt
+build-output.*
+
+# Local env (Vercel uses project env vars)
+.env
+.env.*
+!.env.example

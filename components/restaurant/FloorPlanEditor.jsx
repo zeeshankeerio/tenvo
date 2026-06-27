@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -119,7 +119,7 @@ export function FloorPlanEditor({
                                 key={zone.id}
                                 onClick={() => setActiveZoneId(zone.id)}
                                 className={cn(
-                                    "px-4 py-2 rounded-lg text-xs font-black transition-all",
+                                    "px-4 py-2 rounded-lg text-xs font-semibold transition-all",
                                     activeZoneId === zone.id
                                         ? (ZONE_COLOR_CLASSES[zone.color] || 'bg-gray-600 text-white shadow-lg shadow-gray-200')
                                         : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
@@ -163,7 +163,7 @@ export function FloorPlanEditor({
                         <Button variant="ghost" size="icon" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="h-8 w-8 rounded-lg">
                             <ZoomOut className="w-4 h-4" />
                         </Button>
-                        <span className="text-[10px] font-black w-10 text-center">{Math.round(zoom * 100)}%</span>
+                        <span className="text-[10px] font-semibold w-10 text-center">{Math.round(zoom * 100)}%</span>
                         <Button variant="ghost" size="icon" onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="h-8 w-8 rounded-lg">
                             <ZoomIn className="w-4 h-4" />
                         </Button>
@@ -225,8 +225,8 @@ export function FloorPlanEditor({
                                 }}
                             >
                                 <UtensilsCrossed className={cn("w-4 h-4 mb-0.5", selectedTableId === table.id ? "text-indigo-500" : "text-gray-400")} />
-                                <span className="text-[10px] font-black text-gray-900">{table.name}</span>
-                                <div className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full px-1.5 py-0.5 shadow-sm text-[8px] font-bold text-gray-500">
+                                <span className="text-[10px] font-semibold text-gray-900">{table.name}</span>
+                                <div className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full px-1.5 py-0.5 shadow-sm text-[10px] font-bold text-gray-500">
                                     {table.capacity}
                                 </div>
                             </motion.div>
@@ -239,7 +239,7 @@ export function FloorPlanEditor({
                             <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mb-4">
                                 <Hand className="w-8 h-8 text-indigo-400 opacity-50" />
                             </div>
-                            <p className="text-sm font-black text-gray-900">Start Arranging</p>
+                            <p className="text-sm font-semibold text-gray-900">Start Arranging</p>
                             <p className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-widest">Select a table shape from above to begin</p>
                         </div>
                     )}
@@ -250,7 +250,7 @@ export function FloorPlanEditor({
                     {selectedTable ? (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Table Settings</h3>
+                                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-widest">Table Settings</h3>
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -263,7 +263,7 @@ export function FloorPlanEditor({
 
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Table Name</label>
+                                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Table Name</label>
                                     <Input
                                         value={selectedTable.name}
                                         onChange={(e) => handleUpdateTable(selectedTable.id, { name: e.target.value })}
@@ -273,7 +273,7 @@ export function FloorPlanEditor({
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Capacity</label>
+                                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Capacity</label>
                                         <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
                                             <button
                                                 onClick={() => handleUpdateTable(selectedTable.id, { capacity: Math.max(1, selectedTable.capacity - 1) })}
@@ -281,7 +281,7 @@ export function FloorPlanEditor({
                                             >
                                                 -
                                             </button>
-                                            <span className="flex-1 text-center text-xs font-black">{selectedTable.capacity}</span>
+                                            <span className="flex-1 text-center text-xs font-semibold">{selectedTable.capacity}</span>
                                             <button
                                                 onClick={() => handleUpdateTable(selectedTable.id, { capacity: selectedTable.capacity + 1 })}
                                                 className="w-8 h-8 flex items-center justify-center rounded-lg shadow-sm border border-gray-100 bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -291,7 +291,7 @@ export function FloorPlanEditor({
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Shape</label>
+                                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Shape</label>
                                         <div className="flex items-center gap-2 h-10 px-3 bg-gray-50 rounded-xl border border-gray-100 text-xs font-bold capitalize">
                                             {selectedTable.shape}
                                         </div>
@@ -300,7 +300,7 @@ export function FloorPlanEditor({
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Width (px)</label>
+                                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Width (px)</label>
                                         <Input
                                             type="number"
                                             value={selectedTable.width}
@@ -309,7 +309,7 @@ export function FloorPlanEditor({
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Height (px)</label>
+                                        <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Height (px)</label>
                                         <Input
                                             type="number"
                                             value={selectedTable.height}
@@ -322,7 +322,7 @@ export function FloorPlanEditor({
                                 <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-100 space-y-2">
                                     <div className="flex items-center gap-2 text-indigo-700">
                                         <Move className="w-4 h-4" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Positioning</span>
+                                        <span className="text-[10px] font-semibold uppercase tracking-widest">Positioning</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-[10px] text-indigo-600 font-bold">
                                         <p>X: {Math.round(selectedTable.x)}px</p>
@@ -336,7 +336,7 @@ export function FloorPlanEditor({
                             <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
                                 <MousePointer2 className="w-6 h-6 text-gray-300" />
                             </div>
-                            <h3 className="text-sm font-black text-gray-900">Selection Tool</h3>
+                            <h3 className="text-sm font-semibold text-gray-900">Selection Tool</h3>
                             <p className="text-[10px] text-gray-400 font-bold mt-1 px-4 leading-relaxed">
                                 CLICK A TABLE ON THE CANVAS TO MODIFY ITS SETTINGS OR MOVE IT AROUND
                             </p>

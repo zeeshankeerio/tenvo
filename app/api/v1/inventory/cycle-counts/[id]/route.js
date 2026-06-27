@@ -5,8 +5,8 @@ import { apiSuccess, apiError } from '@/lib/api/_shared/response';
 import { InventoryService } from '@/lib/services/InventoryService';
 
 /**
- * GET   /api/v1/inventory/cycle-counts/[id]  — Get cycle count with items
- * PATCH /api/v1/inventory/cycle-counts/[id]  — Submit counts and process variance
+ * GET   /api/v1/inventory/cycle-counts/[id], Get cycle count with items
+ * PATCH /api/v1/inventory/cycle-counts/[id], Submit counts and process variance
  *
  * Authentication: Required (withApiAuth middleware)
  */
@@ -84,7 +84,7 @@ export const PATCH = withApiAuth(async (request, { businessId, session, parsedBo
                     warehouseId: item.warehouse_id || null,
                     adjustmentType: adjustType,
                     quantity: Math.abs(variance),
-                    reason: `Cycle count variance — count ID: ${id}`,
+                    reason: `Cycle count variance, count ID: ${id}`,
                 }, session.user.id, client);
             }
         }

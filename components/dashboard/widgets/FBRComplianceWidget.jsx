@@ -232,7 +232,7 @@ export function FBRComplianceWidget({ businessId, currency = 'PKR', onViewDetail
 
                 {/* Tax Summary */}
                 <div className="space-y-2">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                         {t.current_month_tax || 'Current Month Tax'}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -240,7 +240,7 @@ export function FBRComplianceWidget({ businessId, currency = 'PKR', onViewDetail
                             <div className="text-xs text-blue-700 font-medium mb-1">
                                 {t.pst || 'PST'} (17%)
                             </div>
-                            <div className="text-lg font-black text-blue-900">
+                            <div className="text-lg font-semibold text-blue-900">
                                 {formatCurrency(complianceData.pst, currency)}
                             </div>
                         </div>
@@ -248,7 +248,7 @@ export function FBRComplianceWidget({ businessId, currency = 'PKR', onViewDetail
                             <div className="text-xs text-wine-700 font-medium mb-1">
                                 {t.fst || 'FST'} (1%)
                             </div>
-                            <div className="text-lg font-black text-wine-900">
+                            <div className="text-lg font-semibold text-wine-900">
                                 {formatCurrency(complianceData.fst, currency)}
                             </div>
                         </div>
@@ -258,7 +258,7 @@ export function FBRComplianceWidget({ businessId, currency = 'PKR', onViewDetail
                             <span className="text-xs font-bold text-green-900">
                                 {t.total_tax_liability || 'Total Tax Liability'}
                             </span>
-                            <span className="text-xl font-black text-green-900">
+                            <span className="text-xl font-semibold text-green-900">
                                 {formatCurrency(complianceData.totalTax, currency)}
                             </span>
                         </div>
@@ -267,7 +267,7 @@ export function FBRComplianceWidget({ businessId, currency = 'PKR', onViewDetail
 
                 {/* Compliance Score */}
                 <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-[10px] uppercase font-black tracking-widest text-gray-400">
+                    <div className="flex items-center justify-between text-[10px] uppercase font-semibold tracking-widest text-gray-400">
                         <span>{t.compliance_score || 'Compliance Score'}</span>
                         <span>{complianceScore}%</span>
                     </div>
@@ -284,7 +284,7 @@ export function FBRComplianceWidget({ businessId, currency = 'PKR', onViewDetail
                 {/* Recent Filings */}
                 {complianceData.recentFilings.length > 0 && (
                     <div className="space-y-2">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                             {t.recent_filings || 'Recent Filings'}
                         </div>
                         {complianceData.recentFilings.slice(0, 2).map((filing, idx) => (

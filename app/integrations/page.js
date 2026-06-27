@@ -28,6 +28,8 @@ import {
   CAPABILITY_STATUS_STYLE,
   MARKETING_DISCLAIMERS,
 } from '@/lib/marketing/capabilities';
+import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 
 const ICON_BY_NAME = {
   Stripe: CreditCard,
@@ -74,7 +76,7 @@ export default function IntegrationsPage() {
       </section>
 
       <IntegrationSection title="Available now" items={shipped} />
-      <IntegrationSection title="Partial — configure or scope with us" items={partial} muted />
+      <IntegrationSection title="Partial - configure or scope with us" items={partial} muted />
       <IntegrationSection title="Roadmap" items={roadmap} muted />
 
       <section className={cn(MARKETING_SECTION_LOOSE, 'border-b border-neutral-200/80 bg-white')}>
@@ -83,16 +85,16 @@ export default function IntegrationsPage() {
             <div className="absolute top-0 right-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-primary opacity-20 blur-[100px]" />
             <div className="relative z-10 space-y-6">
               <Zap className="mx-auto h-12 w-12 text-amber-400" />
-              <h2 className="text-3xl font-black tracking-tight text-white sm:text-5xl">Need a custom integration?</h2>
+              <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">Need a custom integration?</h2>
               <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-neutral-300 sm:text-base">
                 Business+ includes API access and webhook flags in the product. Talk to sales for bespoke connectors, legacy ERP bridges, or pilot marketplace sync.
               </p>
               <div className="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
-                <Button asChild size="lg" className="h-14 rounded-xl border-none bg-brand-primary px-8 text-base font-black uppercase tracking-[0.15em] text-white shadow-md transition-all hover:bg-brand-primary-dark">
+                <Button asChild size="lg" className="h-14 rounded-xl border-none bg-brand-primary px-8 text-base font-semibold uppercase tracking-[0.15em] text-white shadow-md transition-all hover:bg-brand-primary-dark">
                   <Link href={primaryHref}>{primaryText}</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="h-14 rounded-xl border-2 border-neutral-700 bg-transparent px-8 text-base font-black uppercase tracking-[0.15em] text-white transition-all hover:bg-neutral-800 hover:text-white">
-                  <Link href="/contact">TALK TO SALES</Link>
+                <Button asChild size="lg" variant="outline" className="h-14 rounded-xl border-2 border-neutral-700 bg-transparent px-8 text-base font-semibold uppercase tracking-[0.15em] text-white transition-all hover:bg-neutral-800 hover:text-white">
+                  <MarketingCtaLink href={getBookMeetingHref()}>Talk to sales</MarketingCtaLink>
                 </Button>
               </div>
             </div>
@@ -109,7 +111,7 @@ function IntegrationSection({ title, items, muted = false }) {
   return (
     <section className={cn(MARKETING_SECTION_LOOSE, muted ? 'bg-neutral-50' : 'bg-white')}>
       <div className={MARKETING_CONTAINER}>
-        <h2 className="mb-6 text-[10px] font-black uppercase tracking-[0.28em] text-brand-primary sm:mb-8">{title}</h2>
+        <h2 className="mb-6 text-[10px] font-semibold uppercase tracking-[0.28em] text-brand-primary sm:mb-8">{title}</h2>
         <div className="grid gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
           {items.map((integration) => {
             const Icon = ICON_BY_NAME[integration.name] || Plug;
@@ -124,7 +126,7 @@ function IntegrationSection({ title, items, muted = false }) {
                   </div>
                   <span
                     className={cn(
-                      'rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider',
+                      'rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider',
                       CAPABILITY_STATUS_STYLE[integration.status]
                     )}
                   >
@@ -133,8 +135,8 @@ function IntegrationSection({ title, items, muted = false }) {
                 </div>
                 <div className="flex-1 space-y-4">
                   <div>
-                    <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">{integration.category}</p>
-                    <h3 className="text-2xl font-black text-neutral-900">{integration.name}</h3>
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-400">{integration.category}</p>
+                    <h3 className="text-2xl font-semibold text-neutral-900">{integration.name}</h3>
                   </div>
                   <p className="text-sm font-medium leading-relaxed text-neutral-600">{integration.description}</p>
                 </div>

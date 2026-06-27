@@ -19,6 +19,7 @@ import { getDomainColors } from '@/lib/domainColors';
 import { useAppMode } from '@/lib/context/BusyModeContext';
 import toast from 'react-hot-toast';
 import { isEntitlementError, getEntitlementErrorMessage, isEntitlementErrorHandled } from '@/lib/utils/subscriptionErrors';
+import { useFormRegionalContext } from '@/lib/hooks/useFormRegionalContext';
 import { showActionError, formatValidationErrors, isValidationError } from '@/lib/utils/formErrorHandler';
 
 const inputClass = 'h-9 rounded-lg border-gray-200 text-sm';
@@ -34,6 +35,7 @@ export function VendorForm({
     embedded = false,
 }) {
     const colors = getDomainColors(category);
+    const { isPakistanMarket, taxIdLabel, registry } = useFormRegionalContext(category);
     const { isEasyMode } = useAppMode();
     const [activeTab, setActiveTab] = useState('identity');
     const [isLoading, setIsLoading] = useState(false);
@@ -139,7 +141,7 @@ export function VendorForm({
             ...prev,
             name: selectedName,
             contact_person: 'Demo Manager',
-            phone: '+92 300 ' + Math.floor(1000000 + Math.random() * 9000000),
+            phone: `${registry?.phoneCode || '+1'} 300 ${Math.floor(1000000 + Math.random() * 9000000)}`,
             email: `sales@${selectedName.toLowerCase().replace(/[^a-z0-9]/g, '')}.pk`,
             ntn: (Math.floor(Math.random() * 8999999) + 1000000) + '-' + Math.floor(Math.random() * 9),
             address: 'Plot ' + Math.floor(Math.random() * 100) + ', Industrial Area',
@@ -189,7 +191,7 @@ export function VendorForm({
                             <Building2 className="h-4 w-4 shrink-0" />
                             {initialData ? 'Update Supplier' : 'Register New Supplier'}
                             {!initialData && (
-                                <Button type="button" variant="outline" size="sm" onClick={handleFillDemo} className="h-7 px-2 text-[10px] font-black uppercase tracking-tight">
+                                <Button type="button" variant="outline" size="sm" onClick={handleFillDemo} className="h-7 px-2 text-[10px] font-semibold uppercase tracking-tight">
                                     <Sparkles className="mr-1 h-3 w-3" /> Magic Fill
                                 </Button>
                             )}
@@ -237,7 +239,7 @@ export function VendorForm({
                             </div>
                             <div className="space-y-1.5">
                                 <Label className={labelClass}>Official Phone *</Label>
-                                <Input value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: formatPakistaniPhone(e.target.value) })} placeholder="+92 300 1234567" className={inputClass} />
+                                <Input value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: isPakistanMarket ? formatPakistaniPhone(e.target.value) : e.target.value })} placeholder={`${registry?.phoneCode || '+1'} 300 1234567`} className={inputClass} />
                                 {errors?.phone && <FormError message={errors.phone} />}
                             </div>
                             <div className="space-y-1.5">
@@ -269,7 +271,7 @@ export function VendorForm({
                     <TabsContent value="tax" className="mt-0 space-y-4">
                         <div className="grid grid-cols-1 gap-4 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4 md:grid-cols-3">
                             <div className="space-y-1.5">
-                                <Label className={labelClass}>NTN Number</Label>
+                                <Label className={labelClass}>{taxIdLabel} Number</Label>
                                 <Input value={formData.ntn || ''} onChange={(e) => setFormData({ ...formData, ntn: e.target.value })} placeholder="1234567-8" className={cn(inputClass, 'font-mono')} />
                                 {errors?.ntn && <FormError message={errors.ntn} />}
                             </div>

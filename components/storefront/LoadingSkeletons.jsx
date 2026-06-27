@@ -3,27 +3,34 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export function ProductsSkeleton({ count = 12 }) {
+/** @param {{ count?: number; density?: 'default' | 'catalog' | 'showcase' }} props */
+export function ProductsSkeleton({ count = 12, density = 'default' }) {
+  const gridClass =
+    density === 'showcase'
+      ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3'
+      : density === 'catalog'
+        ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4'
+        : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4';
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className={gridClass}>
       {Array.from({ length: count }).map((_, i) => (
-        <ProductCardSkeleton key={i} />
+        <ProductCardSkeleton key={i} compact={density === 'showcase'} />
       ))}
     </div>
   );
 }
 
-export function ProductCardSkeleton() {
+export function ProductCardSkeleton({ compact = false }) {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden border-slate-100">
       <Skeleton className="aspect-square w-full" />
-      <CardContent className="p-4 space-y-3">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-1/2" />
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-5 w-20" />
-          <Skeleton className="h-8 w-24" />
-        </div>
+      <CardContent className={compact ? 'space-y-2 p-2' : 'space-y-3 p-4'}>
+        <Skeleton className={compact ? 'h-2.5 w-1/3' : 'h-4 w-3/4'} />
+        <Skeleton className={compact ? 'h-3 w-full' : 'h-4 w-3/4'} />
+        <Skeleton className={compact ? 'h-3 w-2/3' : 'h-3 w-1/2'} />
+        <Skeleton className={compact ? 'h-4 w-16' : 'h-5 w-20'} />
+        {compact ? <Skeleton className="h-7 w-full rounded-lg" /> : null}
       </CardContent>
     </Card>
   );

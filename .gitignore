@@ -17,7 +17,7 @@
 
 # production
 /build
-/archive
+/backups
 
 # misc
 .DS_Store
@@ -35,7 +35,7 @@ yarn-error.log*
 .env.production.local
 .env*.local
 # Allow a tracked, secret-free local defaults file (see .env.example).
-.env.local``
+.env.local
 
 # local MCP/tool secrets
 .vscode/mcp.json

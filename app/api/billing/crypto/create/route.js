@@ -104,7 +104,7 @@ export async function POST(request) {
       priceCurrency: String(currency).toLowerCase(),
       payCurrency: String(cryptoCurrency).toLowerCase(),
       orderId,
-      orderDescription: `Tenvo — ${business.business_name || 'Business'} (${businessId.slice(0, 8)}…)`,
+      orderDescription: `Tenvo, ${business.business_name || 'Business'} (${businessId.slice(0, 8)}…)`,
       customerEmail: business.email || undefined,
       customerName: business.business_name || undefined,
       callbackUrl: ipnCallbackUrl,

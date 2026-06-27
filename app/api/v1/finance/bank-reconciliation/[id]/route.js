@@ -9,7 +9,7 @@ import { apiSuccess, apiError } from '@/lib/api/_shared/response';
  * Fetch a session with all its statement lines and candidate GL entries.
  *
  * PATCH /api/v1/finance/bank-reconciliation/[id]
- * Update a reconciliation session — match/unmatch lines, or mark as completed.
+ * Update a reconciliation session, match/unmatch lines, or mark as completed.
  * Body: { matched_lines?: [{line_id, gl_entry_id, matched}], status?: 'completed'|'in_progress' }
  *
  * Authentication: Required (withApiAuth middleware)

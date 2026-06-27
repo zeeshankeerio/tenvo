@@ -211,7 +211,7 @@ export function ExcelImportModal({
           <Button
             variant="outline"
             size="sm"
-            className="h-9 shrink-0 whitespace-nowrap rounded-lg border-gray-200 px-3 text-[10px] font-black uppercase tracking-wider text-gray-700 hover:bg-gray-50"
+            className="h-9 shrink-0 whitespace-nowrap rounded-lg border-gray-200 px-3 text-[10px] font-semibold uppercase tracking-wider text-gray-700 hover:bg-gray-50"
           >
             <Upload className="mr-2 h-4 w-4 shrink-0" />
             Import

@@ -9,7 +9,7 @@ import {
 export const maxDuration = 60;
 
 /**
- * Default: Gemini 3.1 Flash-Lite (preview) — low-latency / low-cost tier per Google model list.
+ * Default: Gemini 3.1 Flash-Lite (preview), low-latency / low-cost tier per Google model list.
  * @see https://ai.google.dev/gemini-api/docs/models/gemini
  * If this 404s in your region, set GOOGLE_GENERATIVE_AI_MODEL to one of:
  *   gemini-flash-lite-latest  (alias → current Flash-Lite)

@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 import {
   ShoppingBag, Search, Menu, User, Heart,
   Phone, MapPin, X, ChevronDown,
-  Truck, Shield, RotateCcw, HelpCircle, Mail,
+  Truck, Shield, RotateCcw, HelpCircle, Mail, FileUp,
+  Gauge, Percent, Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -15,17 +16,36 @@ import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
 import { SearchBar } from './SearchBar';
 import { MobileNav } from './MobileNav';
+import { FashionMobileNav } from './FashionMobileNav';
 import { getDomainConfig, getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { getStoreHomeCopy } from '@/lib/storefront/storeCopy';
+import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
+import { isAutoDealershipStore, getDealershipNavLinks, getDealershipNavGroups } from '@/lib/storefront/autoDealership';
+import { resolveTcdDealershipLogo } from '@/lib/storefront/tenvoCarDealershipBrand';
+import { isAutoMarketplaceStore, getMarketplaceNavLinks } from '@/lib/storefront/autoMarketplace';
+import { isPharmacyElevatedStore, getPharmacyNavLinks, formatPharmacyStoreName } from '@/lib/storefront/pharmacyStorefront';
+import { resolveDomainKey } from '@/lib/config/domainKeyAliases';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { formatCurrency } from '@/lib/currency';
+import { resolveStoreContact } from '@/lib/storefront/businessContact';
+
+function EditorialMenuIcon({ className }) {
+  return (
+    <span className={cn('flex flex-col justify-center gap-[5px]', className)} aria-hidden>
+      <span className="block h-[1.5px] w-[18px] bg-current" />
+      <span className="block h-[1.5px] w-[18px] bg-current" />
+    </span>
+  );
+}
 
 export function StoreHeader({ business, categories, settings }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const [dealershipMoreOpen, setDealershipMoreOpen] = useState(false);
   const categoryRef = useRef(null);
+  const dealershipMoreRef = useRef(null);
 
   const { cart } = useCart();
   const { wishlistCount } = useWishlist();
@@ -33,7 +53,7 @@ export function StoreHeader({ business, categories, settings }) {
 
   const cartItemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
-  // Derive accent color — settings override > domain default
+  // Derive accent color, settings override > domain default
   const accent = getStoreAccentColor(settings, business?.category);
   const domainCfg = getDomainConfig(business?.category);
   const storeCopy = getStoreHomeCopy(business, domainCfg);
@@ -42,8 +62,9 @@ export function StoreHeader({ business, categories, settings }) {
   const topBarEnabled = settings?.storefront?.showTopBar !== false;
   const showServiceStrip = settings?.storefront?.showServiceStrip !== false;
   const announcement = settings?.announcement || domainCfg.bannerText;
-  const contactPhone = settings?.contact?.phone || business?.phone;
-  const contactCity = settings?.contact?.address || business?.city;
+  const contact = resolveStoreContact({ business, settings });
+  const contactPhone = contact.phone;
+  const contactCity = contact.city || settings?.contact?.city;
   const freeShip = settings?.freeShippingThreshold;
   const returnDays = settings?.returnPolicyDays;
 
@@ -53,11 +74,14 @@ export function StoreHeader({ business, categories, settings }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close category dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const onClickOutside = (e) => {
       if (categoryRef.current && !categoryRef.current.contains(e.target)) {
         setCategoryMenuOpen(false);
+      }
+      if (dealershipMoreRef.current && !dealershipMoreRef.current.contains(e.target)) {
+        setDealershipMoreOpen(false);
       }
     };
     document.addEventListener('mousedown', onClickOutside);
@@ -68,19 +92,49 @@ export function StoreHeader({ business, categories, settings }) {
   const isActive = (href) => pathname === href || pathname.startsWith(href + '?');
   const storeRoot = `/store/${businessDomain}`;
   const isHome = pathname === storeRoot || pathname === `${storeRoot}/`;
+  const editorialNav = isFashionEditorialStore(business?.category);
+  const dealershipNav = isAutoDealershipStore(business?.category);
+  const marketplaceNav = isAutoMarketplaceStore(business?.category);
+  const pharmacyNav = isPharmacyElevatedStore(business?.category);
+  const immersiveNav = editorialNav || dealershipNav;
+  const editorialOnHome = editorialNav && isHome;
+  const dealershipOnHome = dealershipNav && isHome;
+  const marketplaceOnHome = marketplaceNav && isHome;
+  const pharmacyOnHome = pharmacyNav && isHome;
+  const transparentHeader = (editorialOnHome || dealershipOnHome) && !isScrolled;
+  const canonical = resolveDomainKey(business?.category);
+  const dealershipLinks = dealershipNav
+    ? getDealershipNavLinks(storeRoot, { country: business?.country, settings })
+    : [];
+  const dealershipNavGroups = dealershipNav
+    ? getDealershipNavGroups(storeRoot, { country: business?.country, settings })
+    : { primary: [], secondary: [] };
+  const dealershipPrimaryLinks = dealershipNavGroups.primary?.length
+    ? dealershipNavGroups.primary
+    : dealershipLinks;
+  const dealershipSecondaryLinks = dealershipNavGroups.secondary || [];
+  const marketplaceLinks = marketplaceNav ? getMarketplaceNavLinks(storeRoot) : [];
+  const pharmacyLinks = pharmacyNav ? getPharmacyNavLinks(storeRoot) : [];
+  const pharmacyDisplayName = pharmacyNav ? formatPharmacyStoreName(business?.business_name) : '';
+  const storeLogoUrl = resolveTcdDealershipLogo(business, settings, business?.logo_url);
 
   const visibleCategories = categories?.slice(0, 5) || [];
   const extraCategories = categories?.slice(5) || [];
 
   return (
-    <header className="sticky top-0 z-50">
+    <header
+        className={cn(
+          (editorialOnHome || dealershipOnHome) ? 'fixed top-0 inset-x-0' : marketplaceOnHome ? 'sticky top-0' : 'sticky top-0',
+          'z-50 transition-colors duration-300'
+        )}
+    >
       {/* ── Announcement / Top Bar ─────────────────────────────────────── */}
-      {topBarEnabled && (
+      {topBarEnabled && !(immersiveNav && isHome && !isScrolled) && (
         <div
           className="hidden md:block text-white text-xs py-2 px-4"
           style={{ backgroundColor: accent }}
         >
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
             {/* Left: contact info */}
             <div className="flex items-center gap-4 min-w-0">
               {contactPhone && (
@@ -121,12 +175,104 @@ export function StoreHeader({ business, categories, settings }) {
       {/* ── Main Header ────────────────────────────────────────────────── */}
       <div
         className={cn(
-          'bg-white border-b transition-all duration-200',
-          isScrolled ? 'shadow-md' : 'shadow-none'
+          'border-b transition-all duration-300',
+          transparentHeader
+            ? 'border-transparent bg-transparent'
+            : marketplaceNav
+              ? cn('bg-white border-neutral-200', isScrolled ? 'shadow-md' : '')
+              : cn(
+                'bg-white',
+                isScrolled ? 'shadow-md' : 'shadow-none'
+              )
         )}
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          {/* Mobile — single compact row (Daraz / Amazon style) */}
+        <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8">
+          {/* Mobile, Zellbury-style on editorial stores */}
+          {immersiveNav && (
+          <div className="flex h-14 items-center gap-2 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className={cn(
+                'flex h-10 w-10 shrink-0 items-center justify-center',
+                transparentHeader ? 'text-white' : 'text-gray-700'
+              )}
+              aria-label="Open menu"
+            >
+              <EditorialMenuIcon />
+            </button>
+
+            <Link
+              href={storeRoot}
+              className={cn(
+                'flex min-w-0 flex-1 items-center justify-center gap-2 truncate',
+                transparentHeader ? 'text-white' : 'text-gray-900'
+              )}
+              aria-label={business?.business_name || 'Store home'}
+            >
+              {dealershipNav && storeLogoUrl ? (
+                <SmartProductImage
+                  src={storeLogoUrl}
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 shrink-0 object-contain"
+                />
+              ) : null}
+              <span className={cn(
+                'truncate text-sm font-bold uppercase tracking-[0.22em]',
+                !(dealershipNav && storeLogoUrl) && 'flex-1 text-center'
+              )}>
+                {business?.business_name}
+              </span>
+            </Link>
+
+            <div className="flex shrink-0 items-center">
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                className={cn(
+                  'flex h-10 w-10 items-center justify-center',
+                  transparentHeader ? 'text-white' : 'text-gray-700'
+                )}
+                aria-label="Search"
+              >
+                <Search className="h-5 w-5" strokeWidth={1.75} />
+              </button>
+              <Link
+                href={`/store/${businessDomain}/orders`}
+                className={cn(
+                  'flex h-10 w-10 items-center justify-center',
+                  transparentHeader ? 'text-white' : 'text-gray-700'
+                )}
+                aria-label="My Orders"
+              >
+                <User className="h-5 w-5" strokeWidth={1.75} />
+              </Link>
+              <Link
+                href={`/store/${businessDomain}/cart`}
+                className={cn(
+                  'relative flex h-10 w-10 items-center justify-center',
+                  transparentHeader ? 'text-white' : 'text-gray-700'
+                )}
+                aria-label={`Cart (${cartItemCount} items)`}
+              >
+                <ShoppingBag className="h-5 w-5" strokeWidth={1.75} />
+                {cartItemCount > 0 && (
+                  <span
+                    className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-0.5 text-[9px] font-black text-white"
+                    style={{ backgroundColor: accent }}
+                  >
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
+                )}
+              </Link>
+            </div>
+          </div>
+          )}
+
+          {/* Mobile, default compact row */}
+          {!immersiveNav && (
           <div className="flex h-11 items-center gap-2 lg:hidden">
             <Link
               href={storeRoot}
@@ -186,14 +332,347 @@ export function StoreHeader({ business, categories, settings }) {
               <Menu className="h-[18px] w-[18px]" />
             </button>
           </div>
+          )}
 
           {/* Desktop */}
           <div
             className={cn(
-              'hidden items-center justify-between gap-4 transition-all duration-200 lg:flex',
-              isScrolled ? 'py-2.5' : 'py-4'
+              'relative hidden items-center justify-between gap-4 transition-all duration-200 lg:flex',
+              editorialNav ? 'py-4' : isScrolled ? 'py-2.5' : 'py-4'
             )}
           >
+            {dealershipNav ? (
+              <>
+                <Link href={storeRoot} className="flex shrink-0 items-center gap-2">
+                  {storeLogoUrl ? (
+                    <SmartProductImage
+                      src={storeLogoUrl}
+                      alt={business.business_name}
+                      width={120}
+                      height={36}
+                      className="h-9 w-9 object-contain sm:h-8 sm:w-auto"
+                    />
+                  ) : (
+                    <span
+                      className={cn(
+                        'text-sm font-bold uppercase tracking-[0.2em]',
+                        transparentHeader ? 'text-white' : 'text-gray-900'
+                      )}
+                    >
+                      {business?.business_name}
+                    </span>
+                  )}
+                </Link>
+
+                <nav className="hidden flex-1 items-center justify-center gap-0.5 lg:flex">
+                  {dealershipPrimaryLinks.map((link) => (
+                    <Link
+                      key={link.id}
+                      href={link.href}
+                      className={cn(
+                        'whitespace-nowrap px-2.5 py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors xl:px-3 xl:text-xs',
+                        transparentHeader
+                          ? 'text-white/90 hover:text-white'
+                          : 'text-gray-700 hover:text-gray-900'
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  {dealershipSecondaryLinks.length > 0 ? (
+                    <div className="relative" ref={dealershipMoreRef}>
+                      <button
+                        type="button"
+                        onClick={() => setDealershipMoreOpen((v) => !v)}
+                        className={cn(
+                          'inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors xl:px-3 xl:text-xs',
+                          transparentHeader
+                            ? 'text-white/90 hover:text-white'
+                            : 'text-gray-700 hover:text-gray-900'
+                        )}
+                        aria-expanded={dealershipMoreOpen}
+                      >
+                        More
+                        <ChevronDown
+                          className={cn(
+                            'h-3.5 w-3.5 transition-transform',
+                            dealershipMoreOpen && 'rotate-180'
+                          )}
+                        />
+                      </button>
+                      {dealershipMoreOpen ? (
+                        <div className="absolute left-1/2 top-full z-50 mt-1 w-52 -translate-x-1/2 rounded-xl border border-gray-100 bg-white py-2 shadow-xl">
+                          {dealershipSecondaryLinks.map((link) => (
+                            <Link
+                              key={link.id}
+                              href={link.href}
+                              onClick={() => setDealershipMoreOpen(false)}
+                              className="block px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-700 transition hover:bg-gray-50 hover:text-gray-900"
+                            >
+                              {link.label}
+                            </Link>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </nav>
+
+                <div className="ml-auto flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsSearchOpen(true)}
+                    className={cn(
+                      'p-2.5 transition-colors',
+                      transparentHeader ? 'text-white hover:text-white/80' : 'text-gray-700 hover:text-gray-900'
+                    )}
+                    aria-label="Search"
+                  >
+                    <Search className="w-5 h-5" strokeWidth={1.75} />
+                  </button>
+                  <Link
+                    href={`/store/${businessDomain}/orders`}
+                    className={cn(
+                      'p-2.5 transition-colors',
+                      transparentHeader ? 'text-white hover:text-white/80' : 'text-gray-700 hover:text-gray-900'
+                    )}
+                    aria-label="Account"
+                  >
+                    <User className="w-5 h-5" strokeWidth={1.75} />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    className={cn(
+                      'p-2.5 lg:hidden',
+                      transparentHeader ? 'text-white' : 'text-gray-700'
+                    )}
+                    aria-label="Open menu"
+                  >
+                    <Menu className="w-5 h-5" />
+                  </button>
+                </div>
+              </>
+            ) : marketplaceNav ? (
+              <>
+                <Link href={storeRoot} className="flex shrink-0 items-center gap-2">
+                  {business?.logo_url ? (
+                    <SmartProductImage
+                      src={business.logo_url}
+                      alt={business.business_name}
+                      width={140}
+                      height={40}
+                      className="h-9 w-auto object-contain"
+                    />
+                  ) : (
+                    <span className="text-base font-black tracking-tight text-[#E30613]">
+                      {business?.business_name}
+                    </span>
+                  )}
+                </Link>
+
+                <nav className="hidden flex-1 items-center justify-center gap-0.5 lg:flex" style={{ '--store-accent': accent }}>
+                  {marketplaceLinks.map((link) => (
+                    <Link
+                      key={link.id}
+                      href={link.href}
+                      className="px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-700 transition hover:text-[color:var(--store-accent)] xl:text-[11px]"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </nav>
+
+                <div className="ml-auto flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsSearchOpen(true)}
+                    className="p-2.5 text-neutral-700 transition hover:text-[#003DA5]"
+                    aria-label="Search"
+                  >
+                    <Search className="w-5 h-5" strokeWidth={1.75} />
+                  </button>
+                  <Link
+                    href={`/store/${businessDomain}/cart`}
+                    className="relative p-2.5 text-neutral-700 transition hover:text-[#003DA5]"
+                    aria-label={`Cart (${cartItemCount} items)`}
+                  >
+                    <ShoppingBag className="w-5 h-5" strokeWidth={1.75} />
+                    {cartItemCount > 0 && (
+                      <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#E30613] px-0.5 text-[9px] font-black text-white">
+                        {cartItemCount > 99 ? '99+' : cartItemCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    href={`/store/${businessDomain}/orders`}
+                    className="hidden p-2.5 text-neutral-700 transition hover:text-[#003DA5] sm:block"
+                    aria-label="Login / Dashboard"
+                  >
+                    <User className="w-5 h-5" strokeWidth={1.75} />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    className="p-2.5 text-neutral-700 transition lg:hidden"
+                    aria-label="Open menu"
+                  >
+                    <Menu className="w-5 h-5" />
+                  </button>
+                </div>
+              </>
+            ) : pharmacyNav ? (
+              <>
+                <Link href={storeRoot} className="flex shrink-0 items-center gap-2">
+                  {business?.logo_url ? (
+                    <SmartProductImage
+                      src={business.logo_url}
+                      alt={business.business_name}
+                      width={140}
+                      height={40}
+                      className="h-9 w-auto object-contain"
+                    />
+                  ) : (
+                    <span className="text-base font-bold tracking-tight text-emerald-700">
+                      {pharmacyDisplayName}
+                    </span>
+                  )}
+                </Link>
+
+                {!pharmacyOnHome ? (
+                  <div className="mx-auto hidden min-w-0 max-w-xl flex-1 px-4 lg:block">
+                    <SearchBar businessDomain={businessDomain} />
+                  </div>
+                ) : (
+                  <nav className="hidden flex-1 items-center justify-center gap-0.5 xl:flex">
+                    {pharmacyLinks.slice(0, 6).map((link) => (
+                      <Link
+                        key={link.id}
+                        href={link.href}
+                        className="px-2.5 py-2 text-[11px] font-semibold text-slate-700 transition hover:text-emerald-700"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </nav>
+                )}
+
+                <div className="ml-auto flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsSearchOpen(true)}
+                    className={cn('p-2.5 text-slate-700 transition hover:text-emerald-700', !pharmacyOnHome && 'lg:hidden')}
+                    aria-label="Search"
+                  >
+                    <Search className="w-5 h-5" strokeWidth={1.75} />
+                  </button>
+                  <Link
+                    href={`${storeRoot}/contact?prescription=1`}
+                    className="hidden items-center gap-1.5 rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:inline-flex"
+                  >
+                    <FileUp className="h-3.5 w-3.5" aria-hidden />
+                    Upload Rx
+                  </Link>
+                  <Link
+                    href={`/store/${businessDomain}/cart`}
+                    className="relative p-2.5 text-slate-700 transition hover:text-emerald-700"
+                    aria-label={`Cart (${cartItemCount} items)`}
+                  >
+                    <ShoppingBag className="w-5 h-5" strokeWidth={1.75} />
+                    {cartItemCount > 0 && (
+                      <span
+                        className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-0.5 text-[9px] font-black text-white"
+                        style={{ backgroundColor: accent }}
+                      >
+                        {cartItemCount > 99 ? '99+' : cartItemCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    href={`/store/${businessDomain}/orders`}
+                    className="hidden p-2.5 text-slate-700 transition hover:text-emerald-700 sm:block"
+                    aria-label="Account"
+                  >
+                    <User className="w-5 h-5" strokeWidth={1.75} />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    className="p-2.5 text-slate-700 xl:hidden"
+                    aria-label="Open menu"
+                  >
+                    <Menu className="w-5 h-5" />
+                  </button>
+                </div>
+              </>
+            ) : editorialNav ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className={cn(
+                    'flex h-10 w-10 items-center justify-center',
+                    transparentHeader ? 'text-white' : 'text-gray-800'
+                  )}
+                  aria-label="Open menu"
+                >
+                  <EditorialMenuIcon />
+                </button>
+
+                <Link
+                  href={storeRoot}
+                  className={cn(
+                    'absolute left-1/2 -translate-x-1/2 text-base font-bold uppercase tracking-[0.28em]',
+                    transparentHeader ? 'text-white' : 'text-gray-900'
+                  )}
+                >
+                  {business?.business_name}
+                </Link>
+
+                <div className="ml-auto flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsSearchOpen(true)}
+                    className={cn(
+                      'p-2.5 transition-colors',
+                      transparentHeader ? 'text-white hover:text-white/80' : 'text-gray-700 hover:text-gray-900'
+                    )}
+                    aria-label="Search"
+                  >
+                    <Search className="w-5 h-5" strokeWidth={1.75} />
+                  </button>
+                  <Link
+                    href={`/store/${businessDomain}/orders`}
+                    className={cn(
+                      'p-2.5 transition-colors',
+                      transparentHeader ? 'text-white hover:text-white/80' : 'text-gray-700 hover:text-gray-900'
+                    )}
+                    aria-label="My Orders"
+                  >
+                    <User className="w-5 h-5" strokeWidth={1.75} />
+                  </Link>
+                  <Link
+                    href={`/store/${businessDomain}/cart`}
+                    className={cn(
+                      'relative p-2.5 transition-colors',
+                      transparentHeader ? 'text-white hover:text-white/80' : 'text-gray-700 hover:text-gray-900'
+                    )}
+                    aria-label={`Cart (${cartItemCount} items)`}
+                  >
+                    <ShoppingBag className="w-5 h-5" strokeWidth={1.75} />
+                    {cartItemCount > 0 && (
+                      <span
+                        className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[10px] font-black px-1"
+                        style={{ backgroundColor: accent }}
+                      >
+                        {cartItemCount > 99 ? '99+' : cartItemCount}
+                      </span>
+                    )}
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
             {/* ── Logo ─────────────────────────────────────────────────── */}
             <Link
               href={`/store/${businessDomain}`}
@@ -310,7 +789,7 @@ export function StoreHeader({ business, categories, settings }) {
                 <Search className="w-5 h-5" />
               </button>
 
-              {/* Wishlist — desktop only */}
+              {/* Wishlist, desktop only */}
               <Link
                 href={`/store/${businessDomain}/account/wishlist`}
                 className="relative hidden sm:flex p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
@@ -327,7 +806,7 @@ export function StoreHeader({ business, categories, settings }) {
                 )}
               </Link>
 
-              {/* Account — desktop only */}
+              {/* Account, desktop only */}
               <Link
                 href={`/store/${businessDomain}/orders`}
                 className="hidden sm:flex p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
@@ -353,14 +832,16 @@ export function StoreHeader({ business, categories, settings }) {
                 )}
               </Link>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       {/* ── Service strip (desktop): shipping, returns, help, contact ─── */}
-      {showServiceStrip && (
+      {showServiceStrip && !dealershipNav && !marketplaceNav && !(editorialOnHome && !isScrolled) && (
         <div className="hidden md:block bg-slate-50/95 border-b border-slate-200/90">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <nav
               className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1.5 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-slate-600"
               aria-label="Store policies and help"
@@ -441,14 +922,63 @@ export function StoreHeader({ business, categories, settings }) {
         </div>
       )}
 
+      {marketplaceNav && showServiceStrip && (
+        <div className="hidden md:block border-b border-neutral-100 bg-white">
+          <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-2">
+            <nav
+              className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[11px] sm:text-xs font-semibold text-neutral-600"
+              aria-label="Motoring services"
+            >
+              <Link href={`${storeRoot}#resources`} className="inline-flex items-center gap-1.5 hover:text-neutral-900">
+                <Gauge className="h-3.5 w-3.5" style={{ color: accent }} aria-hidden />
+                COE results
+              </Link>
+              <span className="text-neutral-300" aria-hidden>|</span>
+              <Link href={`${storeRoot}/contact?sell=1`} className="inline-flex items-center gap-1.5 hover:text-neutral-900">
+                <Percent className="h-3.5 w-3.5" style={{ color: accent }} aria-hidden />
+                Free valuation
+              </Link>
+              <span className="text-neutral-300" aria-hidden>|</span>
+              <Link href={`${storeRoot}/contact?finance=1`} className="inline-flex items-center gap-1.5 hover:text-neutral-900">
+                <Calendar className="h-3.5 w-3.5" style={{ color: accent }} aria-hidden />
+                Car loan
+              </Link>
+              <span className="text-neutral-300" aria-hidden>|</span>
+              <Link href={`${storeRoot}/contact?insurance=1`} className="inline-flex items-center gap-1.5 hover:text-neutral-900">
+                <Shield className="h-3.5 w-3.5" style={{ color: accent }} aria-hidden />
+                Insurance
+              </Link>
+              <span className="text-neutral-300" aria-hidden>|</span>
+              <span className="inline-flex items-center gap-1.5 text-neutral-500">
+                <Shield className="h-3.5 w-3.5" style={{ color: accent }} aria-hidden />
+                Verified listings
+              </span>
+            </nav>
+          </div>
+        </div>
+      )}
+
       {/* ── Mobile Nav ─────────────────────────────────────────────────── */}
+      {editorialNav ? (
+        <FashionMobileNav
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+          businessDomain={businessDomain}
+          business={business}
+          categories={categories}
+          contact={contact}
+          canonical={canonical}
+        />
+      ) : (
       <MobileNav
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         categories={categories}
         businessDomain={businessDomain}
         accent={accent}
+        navLinks={dealershipNav ? dealershipLinks : marketplaceNav ? marketplaceLinks : undefined}
       />
+      )}
     </header>
   );
 }

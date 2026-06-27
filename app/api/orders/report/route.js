@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import pool from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { withGuard } from '@/lib/rbac/serverGuard';
 
 // Advanced reporting & analytics for orders
 export async function GET(request) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const businessId = searchParams.get('businessId');
     const period = searchParams.get('period') || '30d'; // 7d, 30d, 90d, 1y
@@ -18,6 +12,8 @@ export async function GET(request) {
     if (!businessId) {
       return NextResponse.json({ error: 'Business ID required' }, { status: 400 });
     }
+
+    await withGuard(businessId, { permission: 'orders.view' });
 
     const client = await pool.connect();
     
@@ -215,6 +211,12 @@ export async function GET(request) {
     }
   } catch (error) {
     console.error('Order report error:', error);
+    if (error?.code === 'UNAUTHENTICATED') {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+    if (error?.code === 'PERMISSION_DENIED' || error?.code === 'BUSINESS_ACCESS_DENIED') {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

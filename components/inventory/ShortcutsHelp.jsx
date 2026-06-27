@@ -57,7 +57,7 @@ export function ShortcutsHelp({ isOpen, onClose }) {
                     <div className="absolute top-0 right-0 p-8 opacity-10">
                         <Keyboard className="w-24 h-24" />
                     </div>
-                    <DialogTitle className="text-3xl font-black tracking-tight flex items-center gap-3">
+                    <DialogTitle className="text-3xl font-semibold tracking-tight flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-xl">
                             <Command className="w-6 h-6" />
                         </div>
@@ -71,7 +71,7 @@ export function ShortcutsHelp({ isOpen, onClose }) {
                 <div className="p-8 space-y-8 max-h-[60vh] overflow-auto custom-scrollbar">
                     {shortcutGroups.map((group, idx) => (
                         <div key={idx} className="space-y-4">
-                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
                                 {group.icon}
                                 {group.title}
                             </div>
@@ -84,7 +84,7 @@ export function ShortcutsHelp({ isOpen, onClose }) {
                                         <div className="flex items-center gap-1.5">
                                             {s.keys.map((key, kIdx) => (
                                                 <React.Fragment key={kIdx}>
-                                                    <kbd className="min-w-[24px] h-7 px-2 flex items-center justify-center bg-gray-100 border-b-2 border-gray-300 rounded-md font-mono text-[10px] font-black text-gray-600 shadow-sm leading-none">
+                                                    <kbd className="min-w-[24px] h-7 px-2 flex items-center justify-center bg-gray-100 border-b-2 border-gray-300 rounded-md font-mono text-[10px] font-semibold text-gray-600 shadow-sm leading-none">
                                                         {key}
                                                     </kbd>
                                                     {kIdx < s.keys.length - 1 && <span className="text-xs text-gray-300 font-bold">+</span>}
@@ -103,7 +103,7 @@ export function ShortcutsHelp({ isOpen, onClose }) {
                         <MousePointer2 className="w-3 h-3" />
                         Most shortcuts work in all views
                     </div>
-                    <Badge className="bg-wine/10 text-wine border-wine/20 font-black text-[10px] uppercase">
+                    <Badge className="bg-wine/10 text-wine border-wine/20 font-semibold text-[10px] uppercase">
                         Alpha v1.2
                     </Badge>
                 </div>

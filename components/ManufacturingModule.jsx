@@ -711,7 +711,7 @@ export function ManufacturingModule({
                   </div>
                 </div>
                 <div className="bg-wine-50/50 p-3 rounded-xl border border-wine-100/50 flex flex-col justify-center">
-                  <span className="text-[10px] font-black text-wine/60 uppercase tracking-widest mb-1">Domain Logic</span>
+                  <span className="text-[10px] font-semibold text-wine/60 uppercase tracking-widest mb-1">Domain Logic</span>
                   <p className="text-xs text-wine/80 font-medium leading-tight">
                     {(() => {
                         const product = products.find(p => p.id === bomData.finishedProduct);
@@ -809,17 +809,17 @@ export function ManufacturingModule({
                   )}
                   {bomHasQtyButZeroCost && (
                     <span className="block text-amber-800">
-                      Listed materials have quantity but <strong>cost price is 0</strong> on those products — set cost price in inventory for a realistic estimate.
+                      Listed materials have quantity but <strong>cost price is 0</strong> on those products, set cost price in inventory for a realistic estimate.
                     </span>
                   )}
                   {bomUsesVariantCostEstimate && (
                     <span className="block text-emerald-800">
-                      At least one line uses <strong>variant cost price</strong> because the SKU master cost is unset — set cost on the product for consistency.
+                      At least one line uses <strong>variant cost price</strong> because the SKU master cost is unset, set cost on the product for consistency.
                     </span>
                   )}
                   {bomUsesBatchCostEstimate && (
                     <span className="block text-emerald-800">
-                      At least one line uses <strong>average batch purchase cost</strong> because SKU and variant costs are unset — set cost on the product for a single source of truth.
+                      At least one line uses <strong>average batch purchase cost</strong> because SKU and variant costs are unset, set cost on the product for a single source of truth.
                     </span>
                   )}
                 </p>

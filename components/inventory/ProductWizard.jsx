@@ -14,7 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { getDomainDefaults } from '@/lib/domainKnowledge';
 import { DomainFieldRenderer } from '@/components/domain/DomainFieldRenderer';
-import { getDomainProductFields, getDomainFormLabels, isHighPrecisionDomain, sanitizeDomainData } from '@/lib/utils/domainHelpers';
+import { getDomainProductFields, getDomainFormLabels, isHighPrecisionDomain, sanitizeDomainData, resolveDomainFieldKey } from '@/lib/utils/domainHelpers';
 import { validateDomainData } from '@/lib/validation/domainSchemas';
 
 // --- Step Definitions --------------------------------------------------------
@@ -66,7 +66,7 @@ function StepBasics({ formData, onChange, category, errors }) {
     return (
         <div className="space-y-5">
             <div className="space-y-1.5">
-                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">{labels.name} *</label>
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">{labels.name} *</label>
                 <Input
                     value={formData.name || ''}
                     onChange={(e) => onChange('name', e.target.value)}
@@ -82,7 +82,7 @@ function StepBasics({ formData, onChange, category, errors }) {
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">SKU</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">SKU</label>
                     <Input
                         value={formData.sku || ''}
                         onChange={(e) => onChange('sku', e.target.value)}
@@ -92,7 +92,7 @@ function StepBasics({ formData, onChange, category, errors }) {
                     <p className="text-[10px] text-gray-400">Leave empty to auto-generate</p>
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Barcode</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Barcode</label>
                     <div className="relative">
                         <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <Input
@@ -106,7 +106,7 @@ function StepBasics({ formData, onChange, category, errors }) {
             </div>
 
             <div className="space-y-1.5">
-                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">{labels.category} *</label>
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">{labels.category} *</label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                     {categorySuggestions.map(cat => (
                         <button
@@ -134,7 +134,7 @@ function StepBasics({ formData, onChange, category, errors }) {
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Brand</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Brand</label>
                     <Input
                         value={formData.brand || ''}
                         onChange={(e) => onChange('brand', e.target.value)}
@@ -143,7 +143,7 @@ function StepBasics({ formData, onChange, category, errors }) {
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Unit</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Unit</label>
                     <select
                         value={formData.unit || 'pcs'}
                         onChange={(e) => onChange('unit', e.target.value)}
@@ -164,7 +164,7 @@ function StepBasics({ formData, onChange, category, errors }) {
             </div>
 
             <div className="space-y-1.5">
-                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Description</label>
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Description</label>
                 <textarea
                     value={formData.description || ''}
                     onChange={(e) => onChange('description', e.target.value)}
@@ -188,7 +188,7 @@ function StepPricing({ formData, onChange, currency, errors }) {
         <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Cost Price *</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Cost Price *</label>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">{currency}</span>
                         <Input
@@ -207,7 +207,7 @@ function StepPricing({ formData, onChange, currency, errors }) {
                     {errors.cost_price && <p className="text-[10px] text-red-500 font-bold">{errors.cost_price}</p>}
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Selling Price *</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Selling Price *</label>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">{currency}</span>
                         <Input
@@ -243,7 +243,7 @@ function StepPricing({ formData, onChange, currency, errors }) {
 
             {/* Tax Configuration */}
             <div className="space-y-1.5">
-                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Tax Rate</label>
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Tax Rate</label>
                 <div className="flex gap-2">
                     {TAX_PRESETS.map(preset => (
                         <button
@@ -274,7 +274,7 @@ function StepPricing({ formData, onChange, currency, errors }) {
             {/* Wholesale / Bulk Pricing */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Min Order Qty</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Min Order Qty</label>
                     <Input
                         type="number"
                         value={formData.min_order_qty || ''}
@@ -285,7 +285,7 @@ function StepPricing({ formData, onChange, currency, errors }) {
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Wholesale Price</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Wholesale Price</label>
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">{currency}</span>
                         <Input
@@ -312,7 +312,7 @@ function StepInventory({ formData, onChange, errors, category }) {
         <div className="space-y-5">
             <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">{labels.stock} *</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">{labels.stock} *</label>
                     <Input
                         type="number"
                         value={formData.stock ?? ''}
@@ -327,7 +327,7 @@ function StepInventory({ formData, onChange, errors, category }) {
                     {errors.stock && <p className="text-[10px] text-red-500 font-bold">{errors.stock}</p>}
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Reorder Level</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Reorder Level</label>
                     <Input
                         type="number"
                         value={formData.reorder_point || ''}
@@ -338,7 +338,7 @@ function StepInventory({ formData, onChange, errors, category }) {
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Max Stock</label>
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Max Stock</label>
                     <Input
                         type="number"
                         value={formData.max_stock || ''}
@@ -352,7 +352,7 @@ function StepInventory({ formData, onChange, errors, category }) {
 
             {/* Tracking Toggles */}
             <div className="space-y-2">
-                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Tracking Options</label>
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Tracking Options</label>
                 <div className="grid grid-cols-2 gap-2">
                     {[
                         { key: 'track_inventory', label: 'Track Inventory', desc: 'Monitor stock levels' },
@@ -387,7 +387,7 @@ function StepInventory({ formData, onChange, errors, category }) {
 
             {/* Warehouse Selection */}
             <div className="space-y-1.5">
-                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Warehouse / Location</label>
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Warehouse / Location</label>
                 <select
                     value={formData.warehouse_id || ''}
                     onChange={(e) => onChange('warehouse_id', e.target.value)}
@@ -425,7 +425,7 @@ function StepAttributes({ formData, onChange, category, errors }) {
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {domainFields.map(field => {
-                            const key = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const key = resolveDomainFieldKey(field, category);
                             return (
                                 <DomainFieldRenderer
                                     key={field}
@@ -494,7 +494,7 @@ function StepReview({ formData, currency }) {
             {sections.map(section => (
                 <div key={section.title} className="rounded-xl border border-gray-200 overflow-hidden">
                     <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
-                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{section.title}</span>
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">{section.title}</span>
                     </div>
                     <div className="divide-y divide-gray-100">
                         {section.items.map(item => (
@@ -655,7 +655,7 @@ export function ProductWizard({
                         <Package className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-black text-gray-900">
+                        <h2 className="text-sm font-semibold text-gray-900">
                             {isEditing ? 'Edit Product' : 'Add New Product'}
                         </h2>
                         <p className="text-[10px] text-gray-400 font-bold">
@@ -688,7 +688,7 @@ export function ProductWizard({
                                 )}
                             >
                                 <div className={cn(
-                                    "w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black",
+                                    "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold",
                                     isActive && "bg-indigo-600 text-white",
                                     isCompleted && "bg-emerald-500 text-white",
                                     !isActive && !isCompleted && "bg-gray-200 text-gray-400"
@@ -708,7 +708,7 @@ export function ProductWizard({
                 })}
             </div>
 
-            {/* Step Content — scrolls on short viewports */}
+            {/* Step Content, scrolls on short viewports */}
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-6">
                 <AnimatePresence mode="wait">
                     <motion.div

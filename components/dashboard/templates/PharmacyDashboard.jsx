@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { getDomainColors } from '@/lib/domainColors';
+import { BRAND_PRIMARY } from '@/lib/theme/brandTokens';
 import { getDomainKnowledge } from '@/lib/domainKnowledge';
 import { formatCurrency } from '@/lib/currency';
 import { format } from 'date-fns';
@@ -276,8 +277,8 @@ export function PharmacyDashboard({ businessId, category, onQuickAction }) {
                       className="h-full rounded-full transition-all duration-1000 ease-out"
                       style={{
                         width: `${progress}%`,
-                        backgroundColor: colors.primary || '#e34242',
-                        boxShadow: `0 0 8px ${colors.primary || '#e34242'}40`
+                        backgroundColor: colors.primary || BRAND_PRIMARY,
+                        boxShadow: `0 0 8px ${colors.primary || BRAND_PRIMARY}40`,
                       }}
                     />
                   </div>

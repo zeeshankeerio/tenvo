@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { formatCurrency } from '@/lib/currency';
+import { resolveStoreContact } from '@/lib/storefront/businessContact';
 import { Truck, Clock, MapPin, Package, AlertCircle } from 'lucide-react';
 
 export async function generateMetadata({ params }) {
@@ -24,6 +25,7 @@ export default async function ShippingPage({ params }) {
   const currency = settings?.currency || 'PKR';
   const standardFlat = settings?.shippingStandardFee ?? 150;
   const expressFlat = settings?.shippingExpressFee ?? 300;
+  const contact = resolveStoreContact({ business, settings });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -46,7 +48,7 @@ export default async function ShippingPage({ params }) {
             </div>
             <p className="text-gray-600">
               Enjoy free standard shipping on all orders over{' '}
-              <strong>{formatCurrency(freeShippingThreshold, currency)}</strong>. No promo code needed — the discount is applied automatically at checkout.
+              <strong>{formatCurrency(freeShippingThreshold, currency)}</strong>. No promo code needed, the discount is applied automatically at checkout.
             </p>
           </div>
 
@@ -62,12 +64,12 @@ export default async function ShippingPage({ params }) {
               {[
                 {
                   name: 'Standard Delivery',
-                  time: '3–5 business days',
+                  time: '3-5 business days',
                   price: `Free on orders over ${formatCurrency(freeShippingThreshold, currency)}, otherwise ${formatCurrency(standardFlat, currency)}`,
                 },
                 {
                   name: 'Express Delivery',
-                  time: '1–2 business days',
+                  time: '1-2 business days',
                   price: formatCurrency(expressFlat, currency),
                 },
                 { name: 'Store Pickup', time: 'Same day (during business hours)', price: 'Free' },
@@ -135,7 +137,16 @@ export default async function ShippingPage({ params }) {
         </div>
 
         <div className="mt-10 text-center text-sm text-gray-500">
-          Questions? <a href={`mailto:${business.email || 'support@example.com'}`} className="font-semibold" style={{ color: accent }}>Contact us</a>
+          Questions?{' '}
+          {contact.email ? (
+            <a href={`mailto:${contact.email}`} className="font-semibold" style={{ color: accent }}>
+              Contact us
+            </a>
+          ) : (
+            <Link href={`/store/${businessDomain}/contact`} className="font-semibold" style={{ color: accent }}>
+              Contact us
+            </Link>
+          )}
         </div>
       </div>
     </div>

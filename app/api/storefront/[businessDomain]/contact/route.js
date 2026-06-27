@@ -3,9 +3,13 @@ import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import { sendTransactionalEmail } from '@/lib/email/resend';
 import { StorefrontContactNotification } from '@/lib/email/templates/StorefrontContactNotification';
 import { resolveStoreContact } from '@/lib/storefront/businessContact';
+import { DEALERSHIP_CONTACT_SUBJECTS } from '@/lib/storefront/dealershipBooking';
 import pool from '@/lib/db';
 
-const SUBJECTS = new Set(['general', 'order', 'product', 'return', 'wholesale', 'other']);
+const SUBJECTS = new Set([
+  'general', 'order', 'product', 'return', 'wholesale', 'other',
+  ...DEALERSHIP_CONTACT_SUBJECTS,
+]);
 
 function clip(value, max) {
   if (typeof value !== 'string') return '';
@@ -28,6 +32,20 @@ export async function POST(request, { params }) {
   const subjectKey = clip(body.subject, 64) || 'general';
   const message = clip(body.message, 2000);
   const orderNumber = clip(body.orderNumber, 64);
+  const preferredDate = clip(body.preferredDate, 32);
+  const preferredTime = clip(body.preferredTime, 32);
+  const showroomLocation = clip(body.showroomLocation, 64);
+  const vehicleInterest = clip(body.vehicleInterest, 200);
+
+  let storedMessage = message;
+  const extras = [];
+  if (preferredDate) extras.push(`Preferred date: ${preferredDate}`);
+  if (preferredTime) extras.push(`Preferred time: ${preferredTime}`);
+  if (showroomLocation) extras.push(`Showroom branch: ${showroomLocation}`);
+  if (vehicleInterest) extras.push(`Vehicle interest: ${vehicleInterest}`);
+  if (extras.length) {
+    storedMessage = `${extras.join('\n')}\n\n${message}`;
+  }
 
   if (!name || name.length < 2) {
     return NextResponse.json({ error: 'Please enter your name' }, { status: 400 });
@@ -65,7 +83,7 @@ export async function POST(request, { params }) {
           email.toLowerCase(),
           phone || null,
           subjectKey,
-          message,
+          storedMessage,
           orderNumber || null,
         ]
       );
@@ -97,7 +115,7 @@ export async function POST(request, { params }) {
             email.toLowerCase(),
             phone || null,
             subjectKey,
-            message,
+            storedMessage,
             orderNumber || null,
           ]
         );
@@ -114,7 +132,7 @@ export async function POST(request, { params }) {
     const mail = await sendTransactionalEmail({
       to: ownerEmail,
       replyTo: email,
-      subject: `[${contact.storeName}] ${subjectLabel} — ${name}`,
+      subject: `[${contact.storeName}] ${subjectLabel}, ${name}`,
       react: StorefrontContactNotification({
         storeName: contact.storeName,
         name,
@@ -122,7 +140,7 @@ export async function POST(request, { params }) {
         phone,
         orderNumber,
         subjectLabel,
-        message,
+        message: storedMessage,
       }),
     });
 

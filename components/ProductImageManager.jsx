@@ -23,12 +23,12 @@ import { toast } from 'react-hot-toast';
  *  4. Live preview with remove
  *
  * Props:
- *  value       string  – current image_url
- *  onChange    fn      – called with new URL string
- *  productName string  – used for auto-fetch query
- *  category    string  – extra context for auto-fetch
+ *  value       string  - current image_url
+ *  onChange    fn      - called with new URL string
+ *  productName string  - used for auto-fetch query
+ *  category    string  - extra context for auto-fetch
  */
-export function ProductImageManager({ value, onChange, productName = '', category = '' }) {
+export function ProductImageManager({ value, onChange, productName = '', category = '', businessId = '' }) {
   const [tab, setTab] = useState('upload'); // 'upload' | 'url' | 'auto'
   const [urlInput, setUrlInput] = useState('');
   const [dragging, setDragging] = useState(false);
@@ -64,18 +64,26 @@ export function ProductImageManager({ value, onChange, productName = '', categor
       return;
     }
 
+    if (!businessId) {
+      toast.error('Business context is required to upload images');
+      return;
+    }
+
     // Client-side resize + convert to WebP via Canvas before upload
     let processedFile = file;
     try {
       processedFile = await resizeToWebP(file, 800, 800, 0.82);
     } catch {
-      // Canvas not available (SSR edge) — use original
+      // Canvas not available (SSR edge), use original
     }
 
     setUploading(true);
     try {
       const fd = new FormData();
       fd.append('file', processedFile);
+      if (businessId) {
+        fd.append('businessId', businessId);
+      }
 
       const res = await fetch('/api/upload/product-image', { method: 'POST', body: fd });
       const data = await res.json();
@@ -251,7 +259,7 @@ export function ProductImageManager({ value, onChange, productName = '', categor
                 {dragging ? 'Drop to upload' : 'Click or drag & drop'}
               </p>
               <p className="text-xs text-gray-400">
-                JPEG · PNG · WebP · GIF — max 5 MB
+                JPEG · PNG · WebP · GIF, max 5 MB
               </p>
               <p className="text-xs text-gray-400 mt-1">
                 Auto-converted to WebP · resized to 800×800
@@ -308,7 +316,7 @@ export function ProductImageManager({ value, onChange, productName = '', categor
             </p>
             <p className="text-xs text-purple-600 mb-3">
               Finds a relevant image from Unsplash using your product name
-              {productName ? <> — will search for <strong>"{productName}"</strong></> : ' (enter a product name first)'}
+              {productName ? <>, will search for <strong>"{productName}"</strong></> : ' (enter a product name first)'}
             </p>
             <Button
               type="button"

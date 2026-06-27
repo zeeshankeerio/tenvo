@@ -237,7 +237,7 @@ export function AutoReorderManager({
         </div>
       </div>
 
-      {/* Summary — lightweight stat tiles, no nested cards */}
+      {/* Summary, lightweight stat tiles, no nested cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-gray-50 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
@@ -245,7 +245,7 @@ export function AutoReorderManager({
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">To Reorder</p>
-            <p className="text-2xl font-black text-gray-900 leading-none mt-0.5">{reorderSuggestions.length}</p>
+            <p className="text-2xl font-semibold text-gray-900 leading-none mt-0.5">{reorderSuggestions.length}</p>
           </div>
         </div>
         <div className="bg-red-50 rounded-2xl p-4 flex items-center gap-3">
@@ -254,7 +254,7 @@ export function AutoReorderManager({
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-red-400">Critical</p>
-            <p className="text-2xl font-black text-red-600 leading-none mt-0.5">{criticalCount}</p>
+            <p className="text-2xl font-semibold text-red-600 leading-none mt-0.5">{criticalCount}</p>
           </div>
         </div>
         <div className="bg-blue-50 rounded-2xl p-4 flex items-center gap-3">
@@ -263,7 +263,7 @@ export function AutoReorderManager({
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Qty Needed</p>
-            <p className="text-2xl font-black text-blue-700 leading-none mt-0.5">
+            <p className="text-2xl font-semibold text-blue-700 leading-none mt-0.5">
               {reorderSuggestions.reduce((sum, s) => sum + s.suggestedQuantity, 0)}
             </p>
           </div>
@@ -274,7 +274,7 @@ export function AutoReorderManager({
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Est. Cost</p>
-            <p className="text-lg font-black text-emerald-700 leading-none mt-0.5">{formatCurrency(totalEstimatedCost, currency)}</p>
+            <p className="text-lg font-semibold text-emerald-700 leading-none mt-0.5">{formatCurrency(totalEstimatedCost, currency)}</p>
           </div>
         </div>
       </div>

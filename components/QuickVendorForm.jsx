@@ -8,16 +8,14 @@ import { Building2, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { vendorAPI } from '@/lib/api/vendors';
 import { isEntitlementError, getEntitlementErrorMessage, isEntitlementErrorHandled } from '@/lib/utils/subscriptionErrors';
-import { useBusiness } from '@/lib/context/BusinessContext';
-import { CityAutocomplete } from '@/components/CityAutocomplete';
-import { vendorSchema, validateWithSchema } from '@/lib/validation/schemas';
+import { useFormRegionalContext } from '@/lib/hooks/useFormRegionalContext';
 import { formatPakistaniPhone, formatNTN } from '@/lib/tax/pakistaniTax';
 import { FormError } from '@/components/ui/form-error';
 import { cn } from '@/lib/utils';
 import { MOBILE_GRID_FIELDS, MOBILE_INPUT_CLASS, MOBILE_LABEL_CLASS, MOBILE_FORM_FOOTER } from '@/lib/utils/formMobileStyles';
 
 export function QuickVendorForm({ onSave, onCancel }) {
-    const { business } = useBusiness();
+    const { business, isPakistanMarket, taxIdLabel, registry } = useFormRegionalContext();
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [formData, setFormData] = useState({
@@ -35,7 +33,7 @@ export function QuickVendorForm({ onSave, onCancel }) {
     const handleFillDemo = () => {
         setFormData({
             name: 'Quick Supplier ' + Math.floor(Math.random() * 1000),
-            phone: '+92 300 1234567',
+            phone: `${registry?.phoneCode || '+1'} 300 1234567`,
             email: `supplier${Math.floor(Math.random() * 1000)}@example.com`,
             contactPerson: 'Manager Name',
             ntn: '1234567-8',
@@ -60,12 +58,12 @@ export function QuickVendorForm({ onSave, onCancel }) {
     };
 
     const handlePhoneChange = (e) => {
-        const formatted = formatPakistaniPhone(e.target.value);
-        handleInputChange('phone', formatted);
+        const value = isPakistanMarket ? formatPakistaniPhone(e.target.value) : e.target.value;
+        handleInputChange('phone', value);
     };
 
     const handleNTNChange = (e) => {
-        const formatted = formatNTN(e.target.value);
+        const formatted = isPakistanMarket ? formatNTN(e.target.value) : e.target.value;
         handleInputChange('ntn', formatted);
     };
 
@@ -144,7 +142,7 @@ export function QuickVendorForm({ onSave, onCancel }) {
                     <Input
                         value={formData.phone}
                         onChange={handlePhoneChange}
-                        placeholder="+92 3XX XXXXXXX"
+                        placeholder={`${registry?.phoneCode || '+1'} 3XX XXXXXXX`}
                         className={errors.phone ? 'border-red-500' : ''}
                     />
                     {errors.phone && <FormError message={errors.phone} />}
@@ -172,7 +170,7 @@ export function QuickVendorForm({ onSave, onCancel }) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label>NTN (Tax Number)</Label>
+                    <Label>{taxIdLabel} (Tax Number)</Label>
                     <Input
                         value={formData.ntn}
                         onChange={handleNTNChange}

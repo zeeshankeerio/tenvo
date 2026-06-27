@@ -74,27 +74,27 @@ export default function StakeholderLedger({ entityId, entityType, businessId, cu
                     <CardContent className="p-4">
                         <div className="flex items-center gap-1.5 text-blue-600 mb-1">
                             <TrendingUp className="w-3 h-3" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Purchased</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider">Purchased</span>
                         </div>
-                        <p className="text-lg font-black text-blue-700">{formatCurrency(summary.totalDebit, currency)}</p>
+                        <p className="text-lg font-semibold text-blue-700">{formatCurrency(summary.totalDebit, currency)}</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-emerald-50/50 border-emerald-100 shadow-none">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-1.5 text-emerald-600 mb-1">
                             <TrendingDown className="w-3 h-3" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Paid</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider">Paid</span>
                         </div>
-                        <p className="text-lg font-black text-emerald-700">{formatCurrency(summary.totalCredit, currency)}</p>
+                        <p className="text-lg font-semibold text-emerald-700">{formatCurrency(summary.totalCredit, currency)}</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-wine/5 border-wine/10 shadow-none" style={{ backgroundColor: `${colors?.primary}08`, borderColor: `${colors?.primary}20` }}>
                     <CardContent className="p-4">
                         <div className="flex items-center gap-1.5 mb-1" style={{ color: colors?.primary }}>
                             <Wallet className="w-3 h-3" />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Balance</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider">Balance</span>
                         </div>
-                        <p className="text-lg font-black" style={{ color: colors?.primary }}>{formatCurrency(summary.balance, currency)}</p>
+                        <p className="text-lg font-semibold" style={{ color: colors?.primary }}>{formatCurrency(summary.balance, currency)}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -104,12 +104,12 @@ export default function StakeholderLedger({ entityId, entityType, businessId, cu
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-gray-50/80 hover:bg-gray-50/80">
-                                <TableHead className="w-[110px] text-[10px] font-black uppercase tracking-wider py-4 px-4 text-gray-400">Date</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-wider py-4 px-4 text-gray-400">Transaction</TableHead>
-                                <TableHead className="text-[10px] font-black uppercase tracking-wider py-4 px-4 text-gray-400">Ref</TableHead>
-                                <TableHead className="text-right text-[10px] font-black uppercase tracking-wider py-4 px-4 text-gray-400">Debit (+)</TableHead>
-                                <TableHead className="text-right text-[10px] font-black uppercase tracking-wider py-4 px-4 text-gray-400">Credit (-)</TableHead>
-                                <TableHead className="text-right text-[10px] font-black uppercase tracking-wider py-4 px-4 text-gray-400">Balance</TableHead>
+                                <TableHead className="w-[110px] text-[10px] font-semibold uppercase tracking-wider py-4 px-4 text-gray-400">Date</TableHead>
+                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider py-4 px-4 text-gray-400">Transaction</TableHead>
+                                <TableHead className="text-[10px] font-semibold uppercase tracking-wider py-4 px-4 text-gray-400">Ref</TableHead>
+                                <TableHead className="text-right text-[10px] font-semibold uppercase tracking-wider py-4 px-4 text-gray-400">Debit (+)</TableHead>
+                                <TableHead className="text-right text-[10px] font-semibold uppercase tracking-wider py-4 px-4 text-gray-400">Credit (-)</TableHead>
+                                <TableHead className="text-right text-[10px] font-semibold uppercase tracking-wider py-4 px-4 text-gray-400">Balance</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -136,19 +136,19 @@ export default function StakeholderLedger({ entityId, entityType, businessId, cu
                                         </TableCell>
                                         <TableCell className="px-4">
                                             <div className="flex flex-col">
-                                                <span className="text-xs font-black text-gray-700 capitalize tracking-tight">
+                                                <span className="text-xs font-semibold text-gray-700 capitalize tracking-tight">
                                                     {txn.transaction_type === 'invoice' ? 'Sales Invoice' :
                                                         txn.transaction_type === 'purchase' ? 'Purchase Bill' :
                                                             txn.transaction_type === 'payment' ? (entityType === 'customer' ? 'Receipt' : 'Payment') :
                                                                 txn.transaction_type}
                                                 </span>
                                                 {txn.payment_mode && (
-                                                    <span className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">{txn.payment_mode}</span>
+                                                    <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-tighter">{txn.payment_mode}</span>
                                                 )}
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-4">
-                                            <Badge variant="outline" className="font-mono text-[9px] bg-white border-gray-100 text-gray-500 font-bold px-1.5 py-0">
+                                            <Badge variant="outline" className="font-mono text-[10px] bg-white border-gray-100 text-gray-500 font-bold px-1.5 py-0">
                                                 {txn.invoice_number || txn.purchase_number || txn.reference_id?.slice(0, 8) || 'N/A'}
                                             </Badge>
                                         </TableCell>
@@ -158,7 +158,7 @@ export default function StakeholderLedger({ entityId, entityType, businessId, cu
                                         <TableCell className="text-right font-mono text-xs font-bold text-gray-800 px-4">
                                             {txn.credit > 0 ? formatCurrency(txn.credit, currency) : '-'}
                                         </TableCell>
-                                        <TableCell className="text-right font-mono text-xs font-black px-4" style={{ color: txn.balance >= 0 ? colors?.primary : '#059669' }}>
+                                        <TableCell className="text-right font-mono text-xs font-semibold px-4" style={{ color: txn.balance >= 0 ? colors?.primary : '#059669' }}>
                                             {formatCurrency(txn.balance, currency)}
                                         </TableCell>
                                     </TableRow>

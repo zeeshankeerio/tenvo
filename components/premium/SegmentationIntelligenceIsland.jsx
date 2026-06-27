@@ -42,15 +42,15 @@ export function SegmentationIntelligenceIsland({ businessId }) {
                             <Users className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white">Customer Clusters</h3>
+                            <h3 className="text-lg font-semibold uppercase tracking-tight text-slate-800 dark:text-white">Customer Clusters</h3>
                             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">AI Marketing Intelligence</p>
                         </div>
                     </LiquidItem>
 
                     <div className="flex items-center gap-2">
                         <div className="text-right">
-                            <div className="text-xs font-black text-slate-800 dark:text-white">216 Total</div>
-                            <div className="text-[8px] font-bold text-emerald-500 uppercase">+12% This Week</div>
+                            <div className="text-xs font-semibold text-slate-800 dark:text-white">216 Total</div>
+                            <div className="text-[10px] font-bold text-emerald-500 uppercase">+12% This Week</div>
                         </div>
                     </div>
                 </div>
@@ -66,13 +66,13 @@ export function SegmentationIntelligenceIsland({ businessId }) {
                                             <segment.icon className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <h4 className="font-black text-slate-800 dark:text-white text-sm uppercase">{segment.name}</h4>
-                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{segment.description}</p>
+                                            <h4 className="font-semibold text-slate-800 dark:text-white text-sm uppercase">{segment.name}</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{segment.description}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-lg font-black text-slate-800 dark:text-white">{segment.count}</div>
-                                        <Badge variant="outline" className="h-4 text-[8px] font-black border-slate-200">
+                                        <div className="text-lg font-semibold text-slate-800 dark:text-white">{segment.count}</div>
+                                        <Badge variant="outline" className="h-4 text-[10px] font-semibold border-slate-200">
                                             {segment.trend}
                                         </Badge>
                                     </div>
@@ -96,7 +96,7 @@ export function SegmentationIntelligenceIsland({ businessId }) {
                 </div>
 
                 {/* Global Action */}
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 h-12 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2">
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 h-12 rounded-2xl font-semibold uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2">
                     Sync Marketing Agent
                     <MessageSquare className="w-4 h-4 fill-white" />
                 </Button>

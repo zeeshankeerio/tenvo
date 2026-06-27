@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { getDomainKnowledge } from '@/lib/domainKnowledge';
 import { getRegionalStandards } from '@/lib/utils/regionalHelpers';
 
 /**
- * TaxCategorySelector — domain + country-aware tax categories.
+ * TaxCategorySelector, domain + country-aware tax categories.
  */
 export function TaxCategorySelector({
     category = 'retail-shop',
@@ -86,13 +86,13 @@ export function TaxCategorySelector({
     return (
         <div className={`space-y-2 ${className}`}>
             <div className="flex items-center justify-between">
-                <Label className="text-xs font-black uppercase text-gray-400 tracking-wider">
+                <Label className="text-xs font-semibold uppercase text-gray-400 tracking-wider">
                     Tax Category
                 </Label>
                 {selectedTaxInfo && (
                     <Badge
                         variant="outline"
-                        className={`text-[10px] font-black uppercase ${TAX_COLOR_CLASSES[selectedTaxInfo.color] || TAX_COLOR_CLASSES.gray}`}
+                        className={`text-[10px] font-semibold uppercase ${TAX_COLOR_CLASSES[selectedTaxInfo.color] || TAX_COLOR_CLASSES.gray}`}
                     >
                         {selectedTaxInfo.rate}%
                     </Badge>

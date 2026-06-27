@@ -8,7 +8,7 @@ import { getBrandPlaceholderExamples } from '@/lib/regionalMarket/index.js';
 import { t } from '@/lib/translations';
 
 /**
- * Brand Autocomplete — country- and domain-aware brand suggestions.
+ * Brand Autocomplete, country- and domain-aware brand suggestions.
  */
 export function BrandAutocomplete({
     value,
@@ -35,7 +35,7 @@ export function BrandAutocomplete({
 
     return (
         <div className={`space-y-2 ${className}`}>
-            <Label htmlFor="brand-autocomplete" className="text-xs font-black uppercase text-gray-400 tracking-wider">
+            <Label htmlFor="brand-autocomplete" className="text-xs font-semibold uppercase text-gray-400 tracking-wider">
                 {displayLabel}
                 {required && <span className="text-red-500 ml-1">*</span>}
             </Label>

@@ -39,6 +39,7 @@ import { formatCurrency } from '@/lib/utils/currency';
 import { DashboardLoadingSkeleton } from './DashboardLoadingSkeleton';
 import { ErrorState } from './ErrorState';
 import { EmptyState } from './EmptyState';
+import { BRAND_PRIMARY } from '@/lib/theme/brandTokens';
 
 const TIME_RANGES = [
   { value: '7d', label: 'Last 7 Days' },
@@ -53,8 +54,8 @@ export function RevenueChartSection({
   showExport = true,
   chartType = 'area', // 'area' or 'line'
   colors = {
-    primary: '#e34242',
-    secondary: '#c49c3b'
+    primary: BRAND_PRIMARY,
+    secondary: '#c49c3b',
   },
   className = ''
 }) {

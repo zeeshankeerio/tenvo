@@ -1,6 +1,6 @@
 /**
  * Verify country-aware brand catalogs cover all 62 verticals for PK, AE, US, CN, SA.
- * Run: node scripts/verify-regional-market.mjs
+ * Run: bun scripts/verify-regional-market.mjs  (or: bun run verify:regional-market)
  */
 import { DOMAIN_KNOWLEDGE_KEYS } from '../lib/domainKnowledge.js';
 import {

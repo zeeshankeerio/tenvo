@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useStorefrontMobileNav } from '@/lib/hooks/useStorefrontMobileNav';
 
 /**
- * Compact horizontal module rail — replaces sidebar STOREFRONT section on mobile.
+ * Compact horizontal module rail, replaces sidebar STOREFRONT section on mobile.
  * Icon + short label pills (~28px tall), not full hub tiles.
  *
  * @param {{ activeTab: string, pendingOrders?: number }} props

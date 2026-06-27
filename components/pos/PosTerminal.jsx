@@ -5,24 +5,39 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, Barcode, ShoppingCart, Plus, Minus, Trash2, X, CreditCard,
     Banknote, Smartphone, SplitSquareHorizontal, User, Clock, Hash,
-    Receipt, CheckCircle2, Star, Gift, ChevronDown, RotateCcw, Percent,
-    Calculator, Keyboard, ScanLine, Package, ArrowLeft
+    Receipt, CheckCircle2, ChevronDown, RotateCcw, Percent,
+    Calculator, Keyboard, ScanLine, Package, ArrowLeft, Maximize, Minimize, Printer, FileDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
-import { buildThermalReceiptHtml, printThermalReceiptHtml } from '@/lib/print/thermalReceipt';
 import {
     buildPosCheckoutPayload,
+    buildPosCategoryChips,
     findProductByScanCode,
     getPosUiConfig,
     getProductAvailableStock,
 } from '@/lib/utils/posHelpers';
+import { usePosFullscreen } from '@/lib/hooks/usePosFullscreen';
+import { usePosReceipt } from '@/lib/hooks/usePosReceipt';
+import {
+    getPosShellHeightClass,
+    POS_SCROLL_MIDDLE,
+    POS_SHELL_FOOTER,
+    POS_SHELL_HEADER,
+} from '@/lib/utils/posLayout';
 import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { ProductThumbnail } from '@/components/product/ProductThumbnail';
 import toast from 'react-hot-toast';
@@ -50,18 +65,11 @@ function PosProductGrid({
                 onSearchChange('');
                 searchInputRef.current?.focus();
             }
-            // Number keys 1-9 for quick category select
-            if (e.key >= '1' && e.key <= '9') {
-                const idx = parseInt(e.key) - 1;
-                if (categories[idx]) {
-                    onCategoryChange(categories[idx]);
-                }
-            }
         };
         
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [categories, onCategoryChange, onSearchChange]);
+    }, [onSearchChange]);
 
     // Barcode scan simulation (real implementation would use hardware scanner)
     const handleBarcodeClick = () => {
@@ -100,18 +108,47 @@ function PosProductGrid({
         return items;
     }, [products, activeCategory, searchTerm]);
 
+    const toolbarControlClass =
+        'h-10 rounded-xl border-gray-200 bg-gray-50 text-sm focus:bg-white';
+
     return (
-        <div className="flex flex-col h-full" role="region" aria-label="Product selection area">
-            {/* Search */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-white">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+        <div className="flex flex-col h-full min-h-0 overflow-hidden" role="region" aria-label="Product selection area">
+            {/* Category + search + scan, single compact toolbar */}
+            <div
+                className={cn(
+                    POS_SHELL_HEADER,
+                    'flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-gray-100 bg-white'
+                )}
+            >
+                <Select value={activeCategory} onValueChange={onCategoryChange}>
+                    <SelectTrigger
+                        className={cn(
+                            toolbarControlClass,
+                            'w-[7.25rem] sm:w-[8.5rem] shrink-0 px-3 py-0 font-medium text-xs shadow-none',
+                            'items-center leading-none [&>span:first-child]:min-w-0 [&>span:first-child]:truncate [&>span:first-child]:text-left'
+                        )}
+                        aria-label="Filter by category"
+                    >
+                        <SelectValue placeholder="All Items" />
+                    </SelectTrigger>
+                    <SelectContent align="start" className="max-h-64">
+                        <SelectItem value="all">All Items</SelectItem>
+                        {categories.map((cat) => (
+                            <SelectItem key={cat} value={cat}>
+                                {cat}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                <div className="relative flex-1 min-w-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" aria-hidden="true" />
                     <Input
                         ref={searchInputRef}
                         placeholder={barcodeFirst
-                            ? 'Scan barcode or search SKU / name… (Enter to add)'
-                            : 'Search products, SKU, or scan barcode… (Ctrl+F)'}
-                        className="pl-10 h-11 rounded-xl bg-gray-50 border-gray-200 focus:bg-white text-sm"
+                            ? 'Scan or search SKU / name… (Enter)'
+                            : 'Search SKU, name, or barcode… (Ctrl+F)'}
+                        className={cn(toolbarControlClass, 'pl-9 pr-3 w-full')}
                         value={searchTerm}
                         onChange={(e) => onSearchChange(e.target.value)}
                         onKeyDown={handleSearchKeyDown}
@@ -119,71 +156,34 @@ function PosProductGrid({
                         autoFocus
                     />
                 </div>
+
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button 
-                                variant="outline" 
-                                size="icon" 
+                            <Button
+                                variant="outline"
+                                size="icon"
                                 className={cn(
-                                    "h-11 w-11 rounded-xl border-gray-200 transition-all",
-                                    isScanning && "animate-pulse border-blue-500 text-blue-500"
+                                    toolbarControlClass,
+                                    'h-10 w-10 shrink-0 p-0 shadow-none',
+                                    isScanning && 'animate-pulse border-blue-500 text-blue-500 bg-blue-50'
                                 )}
                                 onClick={handleBarcodeClick}
                                 aria-label="Scan barcode"
                             >
-                                <ScanLine className="w-5 h-5" />
+                                <ScanLine className="w-4 h-4" />
                             </Button>
                         </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Scan barcode (or type and press Enter)</p>
+                        <TooltipContent side="bottom">
+                            <p>Scan barcode (type code and press Enter)</p>
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
             </div>
 
-            {/* Category Filters */}
-            <div 
-                className="flex items-center gap-2 px-4 py-2 overflow-x-auto scrollbar-thin bg-gray-50/50 border-b border-gray-100"
-                role="tablist"
-                aria-label="Product categories"
-            >
-                <button
-                    onClick={() => onCategoryChange('all')}
-                    className={cn(
-                        'px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all focus:ring-2 focus:ring-brand-primary focus:outline-none',
-                        activeCategory === 'all'
-                            ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/20'
-                            : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                    )}
-                    role="tab"
-                    aria-selected={activeCategory === 'all'}
-                    aria-label="Show all items"
-                >
-                    All Items
-                </button>
-                {categories.map((cat, idx) => (
-                    <button
-                        key={cat}
-                        onClick={() => onCategoryChange(cat)}
-                        className={cn(
-                            'px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all focus:ring-2 focus:ring-brand-primary focus:outline-none',
-                            activeCategory === cat
-                                ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/20'
-                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                        )}
-                        role="tab"
-                        aria-selected={activeCategory === cat}
-                        aria-label={`${cat} category (press ${idx + 1})`}
-                    >
-                        {cat}
-                    </button>
-                ))}
-            </div>
-
-            {/* Product Grid */}
-            <div 
-                className="flex-1 overflow-y-auto p-4"
+            {/* Product grid, scrollable middle */}
+            <div
+                className={cn(POS_SCROLL_MIDDLE, 'p-3 sm:p-4 bg-white')}
                 role="region"
                 aria-label="Product grid"
             >
@@ -230,7 +230,7 @@ function PosProductGrid({
                                     {product.sku || '--'}
                                 </p>
                                 <div className="flex items-center justify-between w-full mt-1.5">
-                                    <span className="text-sm font-black text-brand-primary">
+                                    <span className="text-sm font-semibold text-brand-primary">
                                         {currency}{parseFloat(product.selling_price || product.price || 0).toLocaleString()}
                                     </span>
                                     <span 
@@ -274,7 +274,7 @@ function PosCart({
     customer, onCustomerSelect, discount = 0, discountType = 'fixed',
     onDiscountChange, onDiscountTypeChange, onPaymentMethodSelect, onCompleteSale, isProcessing,
     loyaltyBalance = 0, currency = '₨', taxLabel = 'Tax', selectedPaymentMethod = 'cash',
-    onBack, hideKeyboardHint = false, businessCategory,
+    onBack, hideKeyboardHint = false, businessCategory, onPrintBill, onDownloadBillPdf,
 }) {
     const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
     
@@ -293,19 +293,16 @@ function PosCart({
         : Math.min(rawDiscount, subtotal);
     
     const total = Math.round((subtotal + taxAmount - discountAmount) * 100) / 100;
-    
-    // Calculate change due (would be set by payment input in real implementation)
-    const [amountTendered, setAmountTendered] = useState('');
-    const changeDue = amountTendered ? Math.max(0, parseFloat(amountTendered) - total) : 0;
+    const itemQty = items.reduce((sum, i) => sum + i.quantity, 0);
 
     return (
-        <div 
-            className="flex flex-col h-full bg-slate-900 text-white"
+        <div
+            className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-900 text-white"
             role="complementary"
             aria-label="Shopping cart and checkout"
         >
-            {/* Cart Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+            {/* Header, pinned */}
+            <header className={cn(POS_SHELL_HEADER, 'flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 border-b border-slate-700/80 bg-slate-900')}>
                 <div className="flex items-center gap-2 min-w-0">
                     {onBack ? (
                         <button
@@ -318,304 +315,259 @@ function PosCart({
                         </button>
                     ) : null}
                     <ShoppingCart className="w-4 h-4 text-brand-primary flex-shrink-0" aria-hidden="true" />
-                    <span className="text-sm font-bold">Cart</span>
-                    <Badge 
-                        variant="secondary" 
-                        className="bg-brand-primary/20 text-brand-primary text-[10px]"
-                        aria-label={`${items.length} items in cart`}
+                    <span className="text-sm font-bold tracking-tight">Cart</span>
+                    <Badge
+                        variant="secondary"
+                        className="bg-brand-primary/20 text-brand-primary text-[10px] font-semibold"
+                        aria-label={`${items.length} lines, ${itemQty} units`}
                     >
-                        {items.length} items
+                        {itemQty} {itemQty === 1 ? 'item' : 'items'}
                     </Badge>
                 </div>
                 {items.length > 0 && (
                     <Button
-                        variant="ghost" 
+                        variant="ghost"
                         size="sm"
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 text-xs"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 text-xs flex-shrink-0"
                         onClick={onClearCart}
                         aria-label="Clear all items from cart"
                     >
-                        <Trash2 className="w-3 h-3 mr-1" aria-hidden="true" /> Clear
+                        <Trash2 className="w-3.5 h-3.5 mr-1" aria-hidden="true" /> Clear
                     </Button>
                 )}
-            </div>
+            </header>
 
-            {/* Cart Items */}
-            <div 
-                className="flex-1 overflow-y-auto px-3 py-2 space-y-1 scrollbar-thin"
+            {/* Line items, scrollable middle only */}
+            <div
+                className={cn(POS_SCROLL_MIDDLE, 'px-2 sm:px-3 py-2 space-y-1.5')}
                 role="list"
                 aria-label="Cart items"
             >
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                     {items.map((item, idx) => (
                         <motion.div
-                            key={item.productId}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition-colors"
+                            key={`${item.productId}-${idx}`}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -12 }}
+                            className="grid grid-cols-[auto_1fr_auto] gap-x-2 gap-y-1.5 p-2.5 rounded-xl bg-slate-800/70 border border-slate-700/50"
                             role="listitem"
-                            aria-label={`${item.name}, ${item.quantity} at ${currency}${item.unitPrice} each`}
                         >
                             <ProductThumbnail
                                 product={{ image_url: item.imageUrl, name: item.name, id: item.productId }}
                                 businessCategory={businessCategory}
                                 size="cart"
-                                className="border border-slate-600/80"
+                                className="row-span-2 border border-slate-600/80 self-start"
                             />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-gray-100 truncate" title={item.name}>{item.name}</p>
-                                <p className="text-[10px] text-gray-400">
+                            <div className="min-w-0 col-start-2">
+                                <p className="text-xs font-semibold text-gray-100 leading-snug line-clamp-2" title={item.name}>
+                                    {item.name}
+                                </p>
+                                <p className="text-[10px] text-gray-400 mt-0.5">
                                     {currency}{item.unitPrice.toLocaleString()} each
                                 </p>
                             </div>
-                            <div 
-                                className="flex items-center gap-1 bg-slate-700 rounded-lg px-1"
-                                role="group"
-                                aria-label={`Quantity controls for ${item.name}`}
-                            >
-                                <button
-                                    onClick={() => onQuantityChange(idx, Math.max(1, item.quantity - 1))}
-                                    className="p-1 hover:bg-slate-600 rounded transition-colors focus:ring-1 focus:ring-brand-primary"
-                                    aria-label={`Decrease quantity of ${item.name}`}
-                                >
-                                    <Minus className="w-3 h-3" aria-hidden="true" />
-                                </button>
-                                <span 
-                                    className="w-7 text-center text-xs font-bold"
-                                    aria-live="polite"
-                                    aria-atomic="true"
-                                >
-                                    {item.quantity}
-                                </span>
-                                <button
-                                    onClick={() => onQuantityChange(idx, item.quantity + 1)}
-                                    className="p-1 hover:bg-slate-600 rounded transition-colors focus:ring-1 focus:ring-brand-primary"
-                                    aria-label={`Increase quantity of ${item.name}`}
-                                >
-                                    <Plus className="w-3 h-3" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <span className="text-xs font-bold text-brand-primary-dark w-16 text-right">
-                                {currency}{(item.unitPrice * item.quantity).toLocaleString()}
-                            </span>
                             <button
+                                type="button"
                                 onClick={() => onRemoveItem(idx)}
-                                className="p-1 hover:bg-red-500/20 rounded transition-colors text-gray-500 hover:text-red-400 focus:ring-1 focus:ring-red-400"
-                                aria-label={`Remove ${item.name} from cart`}
+                                className="col-start-3 p-1 self-start rounded-md hover:bg-red-500/20 text-gray-500 hover:text-red-400"
+                                aria-label={`Remove ${item.name}`}
                             >
-                                <X className="w-3 h-3" aria-hidden="true" />
+                                <X className="w-3.5 h-3.5" />
                             </button>
+                            <div className="col-start-2 col-span-2 flex items-center justify-between gap-2 pt-0.5">
+                                <div
+                                    className="flex items-center gap-0.5 bg-slate-700/80 rounded-lg px-0.5"
+                                    role="group"
+                                    aria-label={`Quantity for ${item.name}`}
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => onQuantityChange(idx, Math.max(1, item.quantity - 1))}
+                                        className="p-1.5 hover:bg-slate-600 rounded-md transition-colors"
+                                        aria-label={`Decrease ${item.name}`}
+                                    >
+                                        <Minus className="w-3 h-3" />
+                                    </button>
+                                    <span className="w-8 text-center text-xs font-bold tabular-nums">{item.quantity}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => onQuantityChange(idx, item.quantity + 1)}
+                                        className="p-1.5 hover:bg-slate-600 rounded-md transition-colors"
+                                        aria-label={`Increase ${item.name}`}
+                                    >
+                                        <Plus className="w-3 h-3" />
+                                    </button>
+                                </div>
+                                <span className="text-sm font-bold text-brand-primary tabular-nums">
+                                    {currency}{(item.unitPrice * item.quantity).toLocaleString()}
+                                </span>
+                            </div>
                         </motion.div>
                     ))}
                 </AnimatePresence>
 
                 {items.length === 0 && (
-                    <div 
-                        className="flex flex-col items-center justify-center py-16 text-gray-500"
+                    <div
+                        className="flex flex-col items-center justify-center py-12 px-4 text-center text-gray-500"
                         role="status"
                         aria-live="polite"
                     >
-                        <ShoppingCart className="w-10 h-10 mb-3 opacity-30" aria-hidden="true" />
-                        <p className="text-xs">Cart is empty</p>
-                        <p className="text-[10px] text-gray-600 mt-1">Click products to add</p>
+                        <ShoppingCart className="w-11 h-11 mb-3 opacity-25" aria-hidden="true" />
+                        <p className="text-sm font-medium text-gray-400">Cart is empty</p>
+                        <p className="text-[11px] text-gray-600 mt-1 max-w-[200px]">
+                            Tap products on the left or scan a barcode to add items
+                        </p>
                     </div>
                 )}
             </div>
 
-            {/* Totals + Payment */}
-            {items.length > 0 && (
-                <div className="border-t border-slate-700 px-4 py-3 space-y-3">
-                    {/* Customer */}
-                    <button
-                        onClick={onCustomerSelect}
-                        className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-xs"
-                    >
-                        <User className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-gray-300">{customer?.name || 'Walk-in Customer'}</span>
-                        <ChevronDown className="w-3 h-3 ml-auto text-gray-500" />
-                    </button>
+            {/* Checkout footer, pinned */}
+            <footer className={cn(POS_SHELL_FOOTER, 'border-slate-700/80 bg-slate-900 px-3 sm:px-4 py-3 space-y-2.5')}>
+                {items.length > 0 ? (
+                    <>
+                        <button
+                            type="button"
+                            onClick={onCustomerSelect}
+                            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-slate-800/90 hover:bg-slate-800 transition-colors text-xs border border-slate-700/60"
+                        >
+                            <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                            <span className="text-gray-200 truncate flex-1 text-left">{customer?.name || 'Walk-in Customer'}</span>
+                            <ChevronDown className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                        </button>
 
-                    {/* Loyalty */}
-                    {loyaltyBalance > 0 && (
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                            <Star className="w-3.5 h-3.5 text-amber-400" />
-                            <span className="text-xs text-amber-300">{loyaltyBalance} loyalty points</span>
-                            <Button variant="ghost" size="sm" className="ml-auto h-5 text-[10px] text-amber-400 hover:text-amber-300 px-2">
-                                <Gift className="w-3 h-3 mr-1" /> Redeem
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* Totals with intelligent discount */}
-                    <div 
-                        className="space-y-1 text-xs"
-                        role="region"
-                        aria-label="Order totals"
-                    >
-                        <div className="flex justify-between text-gray-400">
-                            <span>Subtotal ({items.reduce((sum, i) => sum + i.quantity, 0)} items)</span>
-                            <span>{currency}{subtotal.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-gray-400">
-                            <span>{taxLabel}</span>
-                            <span>{currency}{taxAmount.toLocaleString()}</span>
-                        </div>
-                        
-                        {/* Intelligent Discount with type toggle */}
-                        <div className="flex items-center justify-between text-gray-400 gap-2">
-                            <div className="flex items-center gap-1">
-                                <span>Discount</span>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <button
-                                                onClick={() => onDiscountTypeChange?.(discountType === 'fixed' ? 'percentage' : 'fixed')}
-                                                className="p-1 rounded hover:bg-slate-700 transition-colors"
-                                                aria-label={`Switch to ${discountType === 'fixed' ? 'percentage' : 'fixed amount'} discount`}
-                                            >
-                                                {discountType === 'fixed' ? (
-                                                    <Percent className="w-3 h-3" />
-                                                ) : (
-                                                    <Calculator className="w-3 h-3" />
-                                                )}
-                                            </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top">
-                                            <p>Click to switch to {discountType === 'fixed' ? 'percentage' : 'fixed amount'}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                {discount > 0 && (
-                                    <span className="text-[10px] text-brand-primary">
-                                        ({discountType === 'fixed' ? currency : ''}{discount}{discountType === 'percentage' ? '%' : ''})
-                                    </span>
-                                )}
+                        <div className="rounded-xl bg-slate-800/60 border border-slate-700/50 px-3 py-2 space-y-1 text-[11px] sm:text-xs" role="region" aria-label="Order totals">
+                            <div className="flex justify-between text-gray-400">
+                                <span>Subtotal ({itemQty})</span>
+                                <span className="tabular-nums">{currency}{subtotal.toLocaleString()}</span>
                             </div>
-                            <div className="flex items-center gap-1">
+                            <div className="flex justify-between text-gray-400">
+                                <span>{taxLabel}</span>
+                                <span className="tabular-nums">{currency}{taxAmount.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-gray-400 gap-2">
+                                <div className="flex items-center gap-1 min-w-0">
+                                    <span>Discount</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => onDiscountTypeChange?.(discountType === 'fixed' ? 'percentage' : 'fixed')}
+                                        className="p-0.5 rounded hover:bg-slate-700"
+                                        aria-label="Toggle discount type"
+                                    >
+                                        {discountType === 'fixed' ? <Percent className="w-3 h-3" /> : <Calculator className="w-3 h-3" />}
+                                    </button>
+                                </div>
                                 <Input
                                     type="number"
                                     value={discount}
                                     onChange={(e) => onDiscountChange?.(e.target.value)}
-                                    className="w-20 h-6 text-right text-xs bg-slate-800 border-slate-700 text-white rounded px-2 focus:ring-1 focus:ring-brand-primary"
+                                    className="w-16 h-7 text-right text-xs bg-slate-900 border-slate-600 text-white rounded-md px-2"
                                     min={0}
                                     max={discountType === 'percentage' ? 100 : subtotal}
-                                    aria-label={`Discount ${discountType === 'percentage' ? 'percentage' : 'amount'}`}
+                                    aria-label="Discount"
                                 />
                             </div>
-                        </div>
-                        
-                        {/* Quick discount presets */}
-                        {discountType === 'percentage' && discount === 0 && (
-                            <div className="flex gap-1 justify-end">
-                                {[5, 10, 15, 20].map(pct => (
-                                    <button
-                                        key={pct}
-                                        onClick={() => onDiscountChange?.(pct)}
-                                        className="px-2 py-0.5 text-[10px] bg-slate-800 hover:bg-brand-primary/20 rounded transition-colors"
-                                        aria-label={`Apply ${pct}% discount`}
-                                    >
-                                        {pct}%
-                                    </button>
-                                ))}
+                            {discountAmount > 0 && (
+                                <div className="flex justify-between text-emerald-400 text-[10px]">
+                                    <span>Savings</span>
+                                    <span>-{currency}{discountAmount.toLocaleString()}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-baseline pt-1.5 mt-0.5 border-t border-slate-600/80">
+                                <span className="text-sm font-bold text-white">Total</span>
+                                <span className="text-xl font-semibold text-brand-primary tabular-nums" aria-live="polite">
+                                    {currency}{total.toLocaleString()}
+                                </span>
                             </div>
-                        )}
-                        
-                        {discountAmount > 0 && (
-                            <div className="flex justify-between text-emerald-400 text-[10px]">
-                                <span>You save</span>
-                                <span>-{currency}{discountAmount.toLocaleString()}</span>
-                            </div>
-                        )}
-                        
-                        <div className="flex justify-between text-lg font-black text-white pt-2 border-t border-slate-700">
-                            <span>TOTAL</span>
-                            <span className="text-brand-primary" aria-live="polite">{currency}{total.toLocaleString()}</span>
                         </div>
-                    </div>
 
-                    {/* Amount Tendered & Change (for cash payments) */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400">Amount Tendered</span>
-                            <Input
-                                type="number"
-                                value={amountTendered}
-                                onChange={(e) => setAmountTendered(e.target.value)}
-                                className="w-24 h-6 text-right text-xs bg-slate-800 border-slate-700 text-white rounded px-2 focus:ring-1 focus:ring-brand-primary"
-                                placeholder={total.toString()}
-                                aria-label="Amount tendered by customer"
-                            />
+                        <div
+                            className="grid grid-cols-4 gap-1"
+                            role="radiogroup"
+                            aria-label="Payment method"
+                        >
+                            {[
+                                { key: 'cash', icon: Banknote, label: 'Cash' },
+                                { key: 'card', icon: CreditCard, label: 'Card' },
+                                { key: 'wallet', icon: Smartphone, label: 'Wallet' },
+                                { key: 'split', icon: SplitSquareHorizontal, label: 'Split' },
+                            ].map(({ key, icon: Icon, label }) => (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    onClick={() => onPaymentMethodSelect?.(key)}
+                                    className={cn(
+                                        'flex flex-col items-center gap-0.5 py-1.5 rounded-lg border text-[10px] font-medium transition-all',
+                                        selectedPaymentMethod === key
+                                            ? 'border-brand-primary bg-brand-primary/20 text-white'
+                                            : 'border-slate-700 bg-slate-800 text-gray-400 hover:border-slate-600'
+                                    )}
+                                    role="radio"
+                                    aria-checked={selectedPaymentMethod === key}
+                                >
+                                    <Icon className="w-3.5 h-3.5" />
+                                    {label}
+                                </button>
+                            ))}
                         </div>
-                        {changeDue > 0 && (
-                            <div className="flex justify-between text-sm text-emerald-400 font-medium">
-                                <span>Change Due</span>
-                                <span aria-live="polite">{currency}{changeDue.toLocaleString()}</span>
-                            </div>
-                        )}
-                    </div>
 
-                    {/* Payment Methods */}
-                    <div 
-                        className="grid grid-cols-4 gap-1.5"
-                        role="radiogroup"
-                        aria-label="Select payment method"
-                    >
-                        {[
-                            { key: 'cash', icon: Banknote, label: 'Cash', color: 'hover:bg-emerald-500/20 hover:border-emerald-500/40' },
-                            { key: 'card', icon: CreditCard, label: 'Card', color: 'hover:bg-brand-primary/20 hover:border-brand-primary/40' },
-                            { key: 'wallet', icon: Smartphone, label: 'Wallet', color: 'hover:bg-wine-500/20 hover:border-wine-500/40' },
-                            { key: 'split', icon: SplitSquareHorizontal, label: 'Split', color: 'hover:bg-amber-500/20 hover:border-amber-500/40' },
-                        ].map(({ key, icon: Icon, label, color }) => (
-                            <button
-                                key={key}
-                                type="button"
-                                onClick={() => onPaymentMethodSelect?.(key)}
-                                className={cn(
-                                    'flex flex-col items-center gap-1 py-2 rounded-lg border transition-all text-gray-400 focus:ring-1 focus:ring-brand-primary',
-                                    selectedPaymentMethod === key
-                                        ? 'border-brand-primary bg-brand-primary/15 text-white'
-                                        : cn('border-slate-700 bg-slate-800', color)
-                                )}
-                                role="radio"
-                                aria-checked={selectedPaymentMethod === key}
-                                aria-label={`Pay by ${label}`}
+                        <div className="flex gap-1.5">
+                            {onPrintBill ? (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => onPrintBill({ subtotal, taxAmount, discountAmount, total })}
+                                    disabled={isProcessing}
+                                    className="h-11 flex-1 rounded-xl text-xs font-semibold border-slate-600 bg-slate-800 hover:bg-slate-700 text-white"
+                                    title="Print bill"
+                                >
+                                    <Printer className="w-4 h-4 mr-1" /> Print
+                                </Button>
+                            ) : null}
+                            {onDownloadBillPdf ? (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => onDownloadBillPdf({ subtotal, taxAmount, discountAmount, total })}
+                                    disabled={isProcessing}
+                                    className="h-11 w-11 shrink-0 rounded-xl border-slate-600 bg-slate-800 hover:bg-slate-700 text-white p-0"
+                                    title="Download PDF"
+                                    aria-label="Download bill PDF"
+                                >
+                                    <FileDown className="w-4 h-4" />
+                                </Button>
+                            ) : null}
+                            <Button
+                                onClick={onCompleteSale}
+                                disabled={isProcessing}
+                                className="h-11 flex-[2] rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/25"
                             >
-                                <Icon className="w-4 h-4" aria-hidden="true" />
-                                <span className="text-[9px] font-medium">{label}</span>
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Complete Sale */}
-                    <Button
-                        onClick={onCompleteSale}
-                        disabled={isProcessing || items.length === 0}
-                        className="w-full h-12 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/20 disabled:opacity-50 focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900"
-                        aria-label={`Complete sale for ${currency}${total.toLocaleString()}`}
-                    >
-                        {isProcessing ? (
-                            <div className="flex items-center gap-2" aria-live="polite">
-                                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                                Processing...
-                            </div>
-                        ) : (
-                            <>
-                                <CheckCircle2 className="w-5 h-5 mr-2" aria-hidden="true" />
-                                COMPLETE SALE -- {currency}{total.toLocaleString()}
-                            </>
+                                {isProcessing ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                        Processing…
+                                    </span>
+                                ) : (
+                                    <>
+                                        <CheckCircle2 className="w-4 h-4 mr-1.5 inline" />
+                                        Pay {currency}{total.toLocaleString()}
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                        {!hideKeyboardHint && (
+                            <p className="text-[10px] text-gray-500 text-center flex items-center justify-center gap-1">
+                                <Keyboard className="w-3 h-3" /> Ctrl+F search · Enter checkout
+                            </p>
                         )}
-                    </Button>
-                    
-                    {/* Keyboard shortcuts hint — desktop only */}
-                    {!hideKeyboardHint && (
-                    <div className="flex items-center gap-1 text-[9px] text-gray-500 justify-center">
-                        <Keyboard className="w-3 h-3" aria-hidden="true" />
-                        <span>Ctrl+F: Search | 1-9: Categories | Enter: Complete</span>
+                    </>
+                ) : (
+                    <div className="py-2 text-center">
+                        <p className="text-[11px] text-gray-500">Checkout appears when you add items</p>
+                        <p className="text-lg font-semibold text-slate-600 mt-1 tabular-nums">{currency}0</p>
                     </div>
-                    )}
-                </div>
-            )}
+                )}
+            </footer>
         </div>
     );
 }
@@ -632,12 +584,12 @@ export function PosTerminal({
     session,
     category: categoryProp,
 }) {
-    const { business } = useBusiness();
+    const { business, currencySymbol } = useBusiness();
     const category = categoryProp || business?.category || 'retail-shop';
     const posUi = useMemo(() => getPosUiConfig(category, business), [category, business]);
     const documentLabel = posUi.receiptLabel;
     const currencyCode = posUi.currencyCode;
-    const displayCurrency = currency || posUi.currencySymbol;
+    const displayCurrency = currencySymbol || posUi.currencySymbol;
     const [cart, setCart] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
@@ -648,11 +600,28 @@ export function PosTerminal({
     const [discountType, setDiscountType] = useState('fixed'); // 'fixed' or 'percentage'
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [isProcessing, setIsProcessing] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [lastSale, setLastSale] = useState(null);
     const [isStartingSession, setIsStartingSession] = useState(false);
     const [mobilePane, setMobilePane] = useState('browse');
     const searchInputRef = useRef(null);
+    const { containerRef, isFullscreen, toggleFullscreen } = usePosFullscreen();
+    const {
+        autoPrintEnabled,
+        toggleAutoPrint,
+        lastSale,
+        showSuccess,
+        dismissSuccess,
+        printBillFromCart,
+        downloadBillPdfFromCart,
+        recordSuccessfulSale,
+        printLastReceipt,
+        downloadLastReceiptPdf,
+        formatSaleError,
+    } = usePosReceipt({
+        business,
+        documentLabel,
+        category,
+        currencyCode,
+    });
 
     // Global keyboard shortcuts
     useEffect(() => {
@@ -672,6 +641,12 @@ export function PosTerminal({
                 }
             }
             
+            // F11, fullscreen POS
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+
             // Escape to clear search
             if (e.key === 'Escape' && searchTerm) {
                 setSearchTerm('');
@@ -681,7 +656,7 @@ export function PosTerminal({
         
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cart.length, isProcessing, searchTerm, showCustomerDialog]);
+    }, [cart.length, isProcessing, searchTerm, showCustomerDialog, toggleFullscreen]);
 
     const hasSession = Boolean(
         session?.id
@@ -694,11 +669,10 @@ export function PosTerminal({
         : null;
     const terminalLabel = session?.terminalName || session?.terminal_name || posUi.terminalLabel;
 
-    const categories = useMemo(() => {
-        const fromProducts = [...new Set((products || []).map(p => p.category).filter(Boolean))];
-        const merged = [...new Set([...fromProducts, ...posUi.defaultCategories])];
-        return merged.sort((a, b) => String(a).localeCompare(String(b)));
-    }, [products, posUi.defaultCategories]);
+    const categories = useMemo(
+        () => buildPosCategoryChips(products, posUi.defaultCategories, posUi.maxCategoryChips),
+        [products, posUi.defaultCategories, posUi.maxCategoryChips]
+    );
 
     const filteredCustomers = useMemo(() => {
         if (!customerQuery.trim()) return (customers || []).slice(0, 40);
@@ -726,18 +700,31 @@ export function PosTerminal({
         return { subtotal, taxAmount, discountAmount, total, itemCount };
     }, [cart, discount, discountType]);
 
-    const handlePrintReceipt = useCallback(() => {
-        if (!lastSale) return;
-        const html = buildThermalReceiptHtml({
-            business,
-            documentLabel,
-            category,
-            currencyCode,
-            sale: lastSale,
-            lineItems: lastSale.lineItems || [],
+    const handlePrintBill = useCallback((totalsFromCart) => {
+        printBillFromCart({
+            cart,
+            customer,
+            paymentMethod,
+            discount,
+            discountType,
+            totalsFromCart,
         });
-        printThermalReceiptHtml(html);
-    }, [business, category, currencyCode, documentLabel, lastSale]);
+    }, [cart, customer, discount, discountType, paymentMethod, printBillFromCart]);
+
+    const handleDownloadBillPdf = useCallback((totalsFromCart) => {
+        downloadBillPdfFromCart({
+            cart,
+            customer,
+            paymentMethod,
+            discount,
+            discountType,
+            totalsFromCart,
+        });
+    }, [cart, customer, discount, discountType, paymentMethod, downloadBillPdfFromCart]);
+
+    const handlePrintReceipt = useCallback(() => {
+        printLastReceipt();
+    }, [printLastReceipt]);
 
     const handleStartSession = useCallback(async () => {
         if (!onStartSession || isStartingSession) return;
@@ -820,39 +807,21 @@ export function PosTerminal({
             const result = await onCompleteSale?.(payload);
 
             if (result?.success) {
-                const lineItems = cart.map((i) => ({
-                    name: i.name,
-                    sku: i.sku,
-                    quantity: i.quantity,
-                    unitPrice: i.unitPrice,
-                    lineTotal: Math.round(i.unitPrice * i.quantity * (1 + (i.taxPercent || 0) / 100) * 100) / 100,
-                }));
-                setLastSale({
-                    ...result.transaction,
-                    saleNumber: result.transaction?.transaction_number || `SALE-${Date.now()}`,
-                    transaction_number: result.transaction?.transaction_number || result.transaction?.invoice_number,
-                    invoice_number: result.transaction?.invoice_number,
-                    total: payload.total,
-                    subtotal: payload.subtotal,
-                    taxAmount: payload.taxAmount,
-                    discountAmount: payload.discountAmount,
-                    lineItems,
-                    items: cart.length,
-                    customerName: customer?.name || null,
+                recordSuccessfulSale({
+                    result,
+                    payload,
+                    cart,
+                    customer,
                     paymentMethod,
-                    mode: result?.mode || (hasSession ? 'pos' : 'invoice-fallback'),
-                    date: new Date().toISOString(),
+                    hasSession,
                 });
-                setShowSuccess(true);
                 setCart([]);
                 setCustomer(null);
                 setDiscount(0);
                 setDiscountType('fixed');
                 setMobilePane('browse');
-                setTimeout(() => setShowSuccess(false), 3000);
             } else if (result?.error) {
-                const msg = result.error?.message || String(result.error);
-                toast.error(msg || 'Sale could not be completed', { id: 'pos-sale-error' });
+                toast.error(formatSaleError(result), { id: 'pos-sale-error' });
             }
         } catch (err) {
             console.error('POS sale error:', err);
@@ -860,7 +829,7 @@ export function PosTerminal({
         } finally {
             setIsProcessing(false);
         }
-    }, [cart, businessId, session, customer, discount, discountType, paymentMethod, isProcessing, onCompleteSale, hasSession]);
+    }, [cart, businessId, session, customer, discount, discountType, paymentMethod, isProcessing, onCompleteSale, hasSession, recordSuccessfulSale, formatSaleError]);
 
     const cartPanelProps = {
         items: cart,
@@ -881,40 +850,97 @@ export function PosTerminal({
         selectedPaymentMethod: paymentMethod,
         loyaltyBalance: 0,
         businessCategory: category,
+        onPrintBill: handlePrintBill,
+        onDownloadBillPdf: handleDownloadBillPdf,
     };
 
-    const sessionBanner = (
-        <div className={cn(
-            'mx-3 lg:mx-4 mt-2 lg:mt-3 mb-0 px-3 py-2 rounded-xl border text-[11px] lg:text-xs font-semibold flex items-center justify-between gap-2',
-            hasSession
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                : 'bg-amber-50 border-amber-200 text-amber-700'
-        )}>
-            <span className="truncate">
-                {hasSession
-                    ? `Session · ${terminalLabel}${sessionStartedLabel ? ` · ${sessionStartedLabel}` : ''}`
-                    : 'No session — invoice fallback'}
-            </span>
-            {!hasSession && (
-                <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 lg:h-8 text-[10px] lg:text-[11px] flex-shrink-0"
-                    onClick={handleStartSession}
-                    disabled={isStartingSession}
-                >
-                    {isStartingSession ? '…' : 'Start'}
-                </Button>
-            )}
-        </div>
+    const posShellHeader = (
+        <header className={cn(POS_SHELL_HEADER, 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 lg:px-4 py-2 border-b border-gray-200 bg-white')}>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="text-xs lg:text-sm font-bold text-gray-900 truncate">
+                    {posUi.terminalLabel}
+                </span>
+                <span className="hidden sm:inline text-gray-300">|</span>
+                <span className={cn(
+                    'text-[10px] lg:text-xs font-semibold truncate',
+                    hasSession ? 'text-emerald-600' : 'text-amber-600'
+                )}>
+                    {hasSession
+                        ? `Session · ${terminalLabel}${sessionStartedLabel ? ` · ${sessionStartedLabel}` : ''}`
+                        : 'No session'}
+                </span>
+                {!hasSession && (
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[10px] flex-shrink-0 ml-auto sm:ml-0"
+                        onClick={handleStartSession}
+                        disabled={isStartingSession}
+                    >
+                        {isStartingSession ? '…' : 'Start'}
+                    </Button>
+                )}
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0 self-end sm:self-auto">
+                <span className="text-[10px] font-semibold text-gray-500 mr-1 hidden md:inline tabular-nums">
+                    Cart {displayCurrency}{cartSummary.total.toLocaleString()}
+                </span>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className={cn('h-8 px-2 text-[10px] font-semibold', autoPrintEnabled ? 'text-emerald-600' : 'text-gray-500')}
+                                onClick={toggleAutoPrint}
+                                aria-pressed={autoPrintEnabled}
+                            >
+                                <Printer className="w-3.5 h-3.5 mr-1" />
+                                Auto
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                            <p>{autoPrintEnabled ? 'Auto-print on' : 'Auto-print off'}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={toggleFullscreen}
+                                aria-label={isFullscreen ? 'Exit full screen' : 'Full screen POS'}
+                            >
+                                {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                            <p>{isFullscreen ? 'Exit (F11)' : 'Full screen (F11)'}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
+        </header>
     );
 
     return (
-        <>
-            {/* Desktop — split product grid + cart */}
-            <div className="hidden lg:flex h-[calc(100vh-60px)] bg-gray-50 rounded-xl overflow-hidden shadow-sm border border-gray-200">
-                <div className="flex-1 min-w-0 bg-white">
-                    {sessionBanner}
+        <div
+            ref={containerRef}
+            className={cn(
+                'flex flex-col min-h-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm',
+                getPosShellHeightClass(isFullscreen, 'terminal'),
+                isFullscreen && 'fixed inset-0 z-[100] rounded-none border-0 shadow-none'
+            )}
+        >
+            {posShellHeader}
+            {/* Desktop, one-page split */}
+            <div className="hidden lg:flex flex-1 min-h-0 overflow-hidden">
+                <section className="flex-1 min-w-0 flex flex-col min-h-0 bg-white border-r border-gray-100">
                     <PosProductGrid
                         products={products}
                         categories={categories}
@@ -928,18 +954,17 @@ export function PosTerminal({
                         barcodeFirst={posUi.barcodeFirst}
                         businessCategory={category}
                     />
-                </div>
-                <div className="w-[380px] xl:w-[420px] flex-shrink-0">
+                </section>
+                <aside className="w-[min(100%,380px)] xl:w-[420px] shrink-0 flex flex-col min-h-0 bg-slate-900">
                     <PosCart {...cartPanelProps} />
-                </div>
+                </aside>
             </div>
 
-            {/* Mobile — browse products + checkout sheet */}
-            <div className="lg:hidden flex flex-col h-[calc(100dvh-5.25rem)] min-h-[420px] bg-gray-50 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-                {sessionBanner}
+            {/* Mobile, browse / checkout panes */}
+            <div className="lg:hidden flex flex-col flex-1 min-h-0 overflow-hidden">
                 {mobilePane === 'browse' ? (
                     <>
-                        <div className="flex-1 min-h-0 bg-white">
+                        <div className="flex-1 min-h-0 flex flex-col bg-white">
                             <PosProductGrid
                                 products={products}
                                 categories={categories}
@@ -955,29 +980,31 @@ export function PosTerminal({
                             />
                         </div>
                         {cart.length > 0 ? (
-                            <button
-                                type="button"
-                                onClick={() => setMobilePane('checkout')}
-                                className="flex items-center justify-between gap-3 px-4 py-3.5 bg-slate-900 text-white border-t border-slate-700 active:bg-slate-800"
-                            >
-                                <div className="flex items-center gap-2 min-w-0">
-                                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-primary text-xs font-black">
-                                        {cartSummary.itemCount}
+                            <footer className={cn(POS_SHELL_FOOTER, 'shrink-0 flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 text-white border-slate-700')}>
+                                <button
+                                    type="button"
+                                    onClick={() => setMobilePane('checkout')}
+                                    className="flex items-center justify-between gap-3 w-full active:opacity-90"
+                                >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-primary text-xs font-semibold">
+                                            {cartSummary.itemCount}
+                                        </span>
+                                        <span className="text-sm font-semibold truncate">View cart & pay</span>
+                                    </div>
+                                    <span className="text-base font-semibold text-brand-primary flex-shrink-0 tabular-nums">
+                                        {displayCurrency}{cartSummary.total.toLocaleString()}
                                     </span>
-                                    <span className="text-sm font-semibold truncate">View cart</span>
-                                </div>
-                                <span className="text-base font-black text-brand-primary flex-shrink-0">
-                                    {displayCurrency}{cartSummary.total.toLocaleString()}
-                                </span>
-                            </button>
+                                </button>
+                            </footer>
                         ) : (
-                            <div className="px-4 py-2.5 text-center text-[11px] text-gray-400 border-t bg-white">
+                            <footer className="shrink-0 px-4 py-2.5 text-center text-[11px] text-gray-400 border-t bg-white">
                                 Tap a product to add to cart
-                            </div>
+                            </footer>
                         )}
                     </>
                 ) : (
-                    <div className="flex-1 min-h-0">
+                    <div className="flex-1 min-h-0 flex flex-col">
                         <PosCart
                             {...cartPanelProps}
                             onBack={() => setMobilePane('browse')}
@@ -1000,15 +1027,31 @@ export function PosTerminal({
                         <div>
                             <p className="font-bold text-sm">Sale Completed!</p>
                             <p className="text-xs text-emerald-100">
-                                {lastSale?.transaction_number} — {displayCurrency}{lastSale?.total?.toLocaleString()} ({lastSale?.mode === 'invoice-fallback' ? 'Invoice Mode' : 'POS Mode'})
+                                {lastSale?.transaction_number} - {displayCurrency}{lastSale?.total?.toLocaleString()} ({lastSale?.mode === 'invoice-fallback' ? 'Invoice Mode' : 'POS Mode'})
                             </p>
                         </div>
                         <Button
                             variant="ghost" size="sm"
-                            className="text-emerald-100 hover:text-white hover:bg-emerald-500 ml-2"
+                            className="text-emerald-100 hover:text-white hover:bg-emerald-500"
                             onClick={handlePrintReceipt}
                         >
-                            <Receipt className="w-4 h-4 mr-1" /> Receipt
+                            <Printer className="w-4 h-4 mr-1" /> Print
+                        </Button>
+                        <Button
+                            variant="ghost" size="sm"
+                            className="text-emerald-100 hover:text-white hover:bg-emerald-500"
+                            onClick={() => downloadLastReceiptPdf()}
+                            aria-label="Download receipt PDF"
+                        >
+                            <FileDown className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost" size="sm"
+                            className="text-emerald-100 hover:text-white hover:bg-emerald-500"
+                            onClick={() => dismissSuccess()}
+                            aria-label="Dismiss"
+                        >
+                            <X className="w-4 h-4" />
                         </Button>
                     </motion.div>
                 )}
@@ -1055,7 +1098,7 @@ export function PosTerminal({
                     </div>
                 </DialogContent>
             </Dialog>
-        </>
+        </div>
     );
 }
 

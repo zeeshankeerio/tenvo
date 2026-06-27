@@ -70,7 +70,7 @@ export function DomainFieldRenderer({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-gray-400 cursor-help hover:text-gray-600 transition-colors">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase text-gray-400 cursor-help hover:text-gray-600 transition-colors">
                       {unitPreview}
                     </span>
                   </TooltipTrigger>
@@ -121,7 +121,7 @@ export function DomainFieldRenderer({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-gray-400 cursor-help hover:text-gray-600 transition-colors">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase text-gray-400 cursor-help hover:text-gray-600 transition-colors">
                       {unitPreview}
                     </span>
                   </TooltipTrigger>
@@ -146,7 +146,7 @@ export function DomainFieldRenderer({
       </Label>
       {renderField()}
       {error && (
-        <p className="text-[10px] font-black text-red-500 uppercase tracking-tight flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1">
+        <p className="text-[10px] font-semibold text-red-500 uppercase tracking-tight flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1">
           <AlertCircle className="w-3 h-3" />
           {error}
         </p>

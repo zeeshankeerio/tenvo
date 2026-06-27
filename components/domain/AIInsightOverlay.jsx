@@ -51,9 +51,9 @@ export function AIInsightOverlay({ domain, items, businessId }) {
         >
           <div className="flex items-center gap-2 text-white">
             <Sparkles className="w-4 h-4 animate-pulse" />
-            <span className="text-xs font-black uppercase tracking-widest italic">Domain Co-Pilot</span>
+            <span className="text-xs font-semibold uppercase tracking-widest italic">Domain Co-Pilot</span>
           </div>
-          <Badge className="bg-white/20 text-white border-0 text-[9px] font-bold">
+          <Badge className="bg-white/20 text-white border-0 text-[10px] font-bold">
             {loading ? 'Thinking...' : `${insights.length} Strategies`}
           </Badge>
         </div>
@@ -78,7 +78,7 @@ export function AIInsightOverlay({ domain, items, businessId }) {
                        insight.type === 'risk' ? <ShieldAlert className="w-3 h-3" /> : <Lightbulb className="w-3 h-3" />}
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[11px] font-black text-gray-900 leading-tight">{insight.title}</p>
+                      <p className="text-[11px] font-semibold text-gray-900 leading-tight">{insight.title}</p>
                       <p className="text-[10px] text-gray-500 leading-relaxed">{insight.description}</p>
                     </div>
                   </div>
@@ -88,7 +88,7 @@ export function AIInsightOverlay({ domain, items, businessId }) {
             )}
 
             <div className="pt-2">
-              <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
+              <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-900 text-white text-[10px] font-semibold uppercase tracking-widest hover:bg-black transition-all">
                 <MessageSquare className="w-3 h-3" />
                 Ask Co-Pilot
               </button>

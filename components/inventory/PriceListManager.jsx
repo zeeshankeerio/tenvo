@@ -27,7 +27,7 @@ export function PriceListManager({
   customers = [],
   onSave,
   currency = 'PKR',
-  /** When true, parent card already shows title — toolbar only, no duplicate heading */
+  /** When true, parent card already shows title, toolbar only, no duplicate heading */
   embedInCard = false,
 }) {
   const [lists, setLists] = useState(priceLists);
@@ -114,7 +114,7 @@ export function PriceListManager({
       <div className={`flex flex-nowrap items-center gap-2 ${embedInCard ? 'justify-end' : 'flex-wrap items-start justify-between gap-3'}`}>
         {!embedInCard && (
           <div className="min-w-0">
-            <h3 className="text-base font-extrabold text-slate-900">Price Lists</h3>
+            <h3 className="text-base font-semibold text-slate-900">Price Lists</h3>
             <p className="text-xs text-slate-500">Manage multiple price lists for different scenarios</p>
           </div>
         )}

@@ -4,6 +4,7 @@ import { memo, useState, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Maximize2, RotateCcw, Settings, ChevronDown, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { HUB_CAPTION, HUB_LABEL } from '@/lib/utils/typography';
 
 interface PortletProps {
     title: string;
@@ -49,12 +50,12 @@ export const Portlet = memo(function Portlet({
                                 onClick={() => setIsCollapsed(!isCollapsed)}
                             />
                         )}
-                        <CardTitle className="text-[11px] font-[900] text-gray-800 uppercase tracking-[0.05em]">
+                        <CardTitle className={cn(HUB_LABEL, 'text-gray-800 normal-case')}>
                             {title}
                         </CardTitle>
                     </div>
                     {description && (
-                        <CardDescription className="text-[9px] text-gray-500 font-bold uppercase tracking-tight ml-8">
+                        <CardDescription className={cn(HUB_CAPTION, 'ml-8 normal-case')}>
                             {description}
                         </CardDescription>
                     )}

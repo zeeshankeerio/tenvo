@@ -7,27 +7,30 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { cn } from '@/lib/utils';
 import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
+import { BRAND_PRIMARY } from '@/lib/theme/brandTokens';
 
-export function MobileNav({ isOpen, onClose, categories, businessDomain, accent = '#e34242' }) {
+export function MobileNav({ isOpen, onClose, categories, businessDomain, accent = BRAND_PRIMARY, navLinks }) {
   const [catsOpen, setCatsOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const { cart } = useCart();
   const { wishlistCount } = useWishlist();
 
   const cartCount = cart?.items?.reduce((sum, i) => sum + i.quantity, 0) || 0;
+  const storeRoot = `/store/${businessDomain}`;
+  const useCustomNav = Array.isArray(navLinks) && navLinks.length > 0;
 
   const mainLinks = [
-    { label: 'Home',     href: `/store/${businessDomain}`,                 icon: Home },
-    { label: 'Products', href: `/store/${businessDomain}/products`,         icon: ShoppingBag, badge: cartCount },
-    { label: 'Wishlist', href: `/store/${businessDomain}/account/wishlist`, icon: Heart,        badge: wishlistCount },
-    { label: 'My Orders',href: `/store/${businessDomain}/orders`,           icon: Package },
+    { label: 'Home',     href: storeRoot,                 icon: Home },
+    { label: 'Products', href: `${storeRoot}/products`,         icon: ShoppingBag, badge: cartCount },
+    { label: 'Wishlist', href: `${storeRoot}/account/wishlist`, icon: Heart,        badge: wishlistCount },
+    { label: 'My Orders',href: `${storeRoot}/orders`,           icon: Package },
   ];
 
   const supportLinks = [
-    { label: 'Shipping Info',       href: `/store/${businessDomain}/shipping`,  icon: Truck },
-    { label: 'Returns & Exchanges', href: `/store/${businessDomain}/returns`,   icon: RotateCcw },
-    { label: 'FAQs',                href: `/store/${businessDomain}/faqs`,      icon: HelpCircle },
-    { label: 'Contact Us',          href: `/store/${businessDomain}/contact`,   icon: Phone },
+    { label: 'Shipping Info',       href: `${storeRoot}/shipping`,  icon: Truck },
+    { label: 'Returns & Exchanges', href: `${storeRoot}/returns`,   icon: RotateCcw },
+    { label: 'FAQs',                href: `${storeRoot}/faqs`,      icon: HelpCircle },
+    { label: 'Contact Us',          href: `${storeRoot}/contact`,   icon: Phone },
   ];
 
   return (
@@ -49,37 +52,50 @@ export function MobileNav({ isOpen, onClose, categories, businessDomain, accent 
         <nav className="flex-1 overflow-y-auto">
           {/* Main links */}
           <div className="px-3 py-3">
-            {mainLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={onClose}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors group"
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: accent + '18' }}
+            {useCustomNav ? (
+              navLinks.map((link) => (
+                <Link
+                  key={link.id || link.href}
+                  href={link.href}
+                  onClick={onClose}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors group"
                 >
-                  <link.icon className="w-4.5 h-4.5 w-[18px] h-[18px]" style={{ color: accent }} />
-                </div>
-                <span className="font-semibold text-gray-800 group-hover:text-gray-900 flex-1">{link.label}</span>
-                {link.badge > 0 && (
-                  <span
-                    className="text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1"
-                    style={{ backgroundColor: accent }}
+                  <span className="font-semibold text-gray-800 group-hover:text-gray-900 flex-1">{link.label}</span>
+                </Link>
+              ))
+            ) : (
+              mainLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={onClose}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors group"
+                >
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: accent + '18' }}
                   >
-                    {link.badge > 99 ? '99+' : link.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
+                    <link.icon className="w-4.5 h-4.5 w-[18px] h-[18px]" style={{ color: accent }} />
+                  </div>
+                  <span className="font-semibold text-gray-800 group-hover:text-gray-900 flex-1">{link.label}</span>
+                  {link.badge > 0 && (
+                    <span
+                      className="text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1"
+                      style={{ backgroundColor: accent }}
+                    >
+                      {link.badge > 99 ? '99+' : link.badge}
+                    </span>
+                  )}
+                </Link>
+              ))
+            )}
           </div>
 
           {/* Divider */}
           <div className="mx-5 border-t border-gray-100" />
 
           {/* Categories accordion */}
-          {categories?.length > 0 && (
+          {categories?.length > 0 && !useCustomNav && (
             <div className="px-3 py-2">
               <button
                 onClick={() => setCatsOpen((v) => !v)}
@@ -98,7 +114,7 @@ export function MobileNav({ isOpen, onClose, categories, businessDomain, accent 
               {catsOpen && (
                 <div className="ml-12 mt-1 space-y-0.5">
                   <Link
-                    href={`/store/${businessDomain}/products`}
+                    href={`${storeRoot}/products`}
                     onClick={onClose}
                     className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm text-gray-700 hover:text-gray-900 transition-colors"
                   >
@@ -107,7 +123,7 @@ export function MobileNav({ isOpen, onClose, categories, businessDomain, accent 
                   {categories.map((cat) => (
                     <Link
                       key={cat.id}
-                      href={`/store/${businessDomain}/products?category=${cat.slug}`}
+                      href={`${storeRoot}/products?category=${cat.slug}`}
                       onClick={onClose}
                       className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm text-gray-700 hover:text-gray-900 transition-colors"
                     >
@@ -159,13 +175,13 @@ export function MobileNav({ isOpen, onClose, categories, businessDomain, accent 
         {/* CTA footer */}
         <div className="p-4 border-t border-gray-100 flex-shrink-0">
           <Link
-            href={`/store/${businessDomain}/products`}
+            href={useCustomNav ? `${storeRoot}/products` : `${storeRoot}/products`}
             onClick={onClose}
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-bold text-sm transition-opacity hover:opacity-90"
             style={{ backgroundColor: accent }}
           >
             <ShoppingBag className="w-4 h-4" />
-            Shop Now
+            {useCustomNav ? 'Explore inventory' : 'Shop Now'}
           </Link>
         </div>
       </SheetContent>

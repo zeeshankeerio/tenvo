@@ -95,7 +95,7 @@ export function VehicleCompatibilitySelector({ value = [], onChange }) {
 
           {searchQuery && filteredQuickSelect.length > 0 && (
             <div className="p-2 bg-gray-50/50 max-h-32 overflow-y-auto scrollbar-hide">
-              <div className="text-[10px] font-black text-gray-400 uppercase px-2 mb-1">Suggestions</div>
+              <div className="text-[10px] font-semibold text-gray-400 uppercase px-2 mb-1">Suggestions</div>
               <div className="grid grid-cols-2 gap-1 px-1">
                 {filteredQuickSelect.map(v => (
                   <button
@@ -143,7 +143,7 @@ export function PartNumberInput({ value, onChange, required = true }) {
         value={value || ''}
         onChange={(e) => onChange(e.target.value.toUpperCase())}
         placeholder="PART-CODE-789"
-        className="font-mono bg-gray-50 focus:bg-white border-gray-100 transition-colors uppercase font-black"
+        className="font-mono bg-gray-50 focus:bg-white border-gray-100 transition-colors uppercase font-semibold"
       />
     </div>
   );

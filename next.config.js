@@ -5,7 +5,7 @@ const nextConfig = {
   reactStrictMode: true,
   async redirects() {
     return [
-      { source: '/favicon.ico', destination: '/favicon.svg', permanent: false },
+      { source: '/favicon.ico', destination: '/tenvo.svg', permanent: false },
     ];
   },
   images: {

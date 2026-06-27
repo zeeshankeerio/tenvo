@@ -9,8 +9,10 @@ import { Mail, MapPin, Clock, Building2, ExternalLink } from 'lucide-react';
 import { TENVO_PARENT_COMPANY } from '@/lib/marketing/tenvo-assistant-knowledge';
 import { SupportWhatsAppLink, SupportWhatsAppIcon } from '@/components/marketing/SupportWhatsAppLink';
 import { getPublicSupportEmail } from '@/lib/marketing/site-url';
+import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 import { CONTACT_PAGE_FAQS } from '@/lib/marketing/structured-data';
 import { MARKETING_H2, MARKETING_H3, MARKETING_LEAD } from '@/lib/utils/marketingLayout';
+import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
 import { cn } from '@/lib/utils';
 
 const SUPPORT_EMAIL = getPublicSupportEmail();
@@ -27,8 +29,8 @@ export default function ContactPage() {
             <span className="text-brand-primary">partnership inquiries</span>
           </>
         }
-        subtitle="Ask about inventory, POS, storefront checkout, warehouses, accounting, or Pakistan tax positioning. We route demos, billing, and technical threads to the right pod — typical first reply within one business day."
-        primaryCTA={{ text: 'Book a demo', href: '/demo' }}
+        subtitle="Ask about inventory, POS, storefront checkout, warehouses, accounting, or Pakistan tax positioning. We route demos, billing, and technical threads to the right pod - typical first reply within one business day."
+        primaryCTA={{ text: 'Book a meeting', href: getBookMeetingHref() }}
         secondaryCTA={{ text: 'View pricing', href: '/pricing' }}
       />
 
@@ -132,7 +134,11 @@ export default function ContactPage() {
                 <li className="flex items-start gap-3">
                   <span className="mt-0.5 text-brand-primary" aria-hidden>•</span>
                   <span>
-                    Schedule a <a href="/demo" className="font-medium text-brand-primary hover:underline">live demo</a> with our team
+                    Schedule a{' '}
+                    <MarketingCtaLink href={getBookMeetingHref()} className="font-medium text-brand-primary hover:underline">
+                      live meeting
+                    </MarketingCtaLink>{' '}
+                    with our team
                   </span>
                 </li>
               </ul>
@@ -142,7 +148,7 @@ export default function ContactPage() {
       </MarketingSection>
 
       <MarketingSection className="border-y border-neutral-200 bg-neutral-50" padding="tight" width="narrow">
-        <h2 className="mb-3 text-lg font-bold text-neutral-900 sm:text-xl">Intellectual property &amp; confidentiality</h2>
+        <h2 className={cn(MARKETING_H3, 'mb-3 sm:text-xl')}>Intellectual property &amp; confidentiality</h2>
         <p className="mb-3 text-sm leading-relaxed text-neutral-700">
           TENVO, related marks, documentation, user interface, and this website are proprietary to{' '}
           <strong>Mindscape Analytics LLC</strong> and its licensors. All rights reserved. Unauthorised copying,
@@ -181,7 +187,7 @@ function ContactInfoCard({ icon, title, content, link, external }) {
         <div className="text-brand-primary transition-transform duration-300 group-hover:scale-110">{icon}</div>
       </div>
       <div className="min-w-0">
-        <h3 className="mb-0.5 font-bold text-gray-900 transition-colors duration-300 group-hover:text-brand-primary">{title}</h3>
+        <h3 className={MARKETING_H3}>{title}</h3>
         <p className="break-all text-sm text-gray-600">{content}</p>
       </div>
     </div>

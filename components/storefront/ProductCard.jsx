@@ -11,10 +11,15 @@ import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
-import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
+import { getEffectiveProductImageUrl, getFallbackProductImageUrl } from '@/lib/storefront/productImageFallback';
+import { isAutoPartsFinderStore } from '@/lib/storefront/partsFinder';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
+/**
+ * @param {'default' | 'compact' | 'dense'} variant
+ *   dense, 6-col showcase grid (Glovida / marketplace style)
+ */
 export function ProductCard({ product, businessDomain, variant = 'default' }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -25,16 +30,30 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
 
   const accent = getStoreAccentColor(settings, business?.category);
   const displayImage = getEffectiveProductImageUrl(product, business?.category);
+  const imageFallback =
+    product?.image_url?.trim()
+      ? getFallbackProductImageUrl(product, business?.category, product.category_name || product.category)
+      : undefined;
   const inWishlist = isInWishlist(product.id);
+  const isDense = variant === 'dense';
+  const isCompact = variant === 'compact' || isDense;
 
-  // Correct out-of-stock logic: null stock = unlimited (always available)
   const isOutOfStock = product.stock !== null && product.stock !== undefined && product.stock <= 0;
-  const isLowStock = product.stock !== null && product.stock !== undefined && product.stock > 0 && product.stock <= 5;
+  const isLowStock =
+    product.stock !== null && product.stock !== undefined && product.stock > 0 && product.stock <= 5;
 
   const discount =
     product.compare_price && Number(product.compare_price) > Number(product.price)
       ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
       : 0;
+
+  const categoryLabel = product.category_name || product.category;
+  const brandLabel = product.brand?.trim();
+  const showPartsMeta = isAutoPartsFinderStore(business?.category);
+  const partNumber = product.domain_data?.partnumber;
+  const fitmentHint = showPartsMeta
+    ? [product.domain_data?.vehiclemake, product.domain_data?.vehiclemodel].filter(Boolean).join(' ')
+    : '';
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
@@ -49,8 +68,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
         variantId: product.default_variant_id || null,
         businessId,
       });
-      toast.success(`Added to cart`, { icon: '🛒' });
-      // Open cart drawer
+      toast.success('Added to cart', { icon: '🛒' });
       window.dispatchEvent(new Event('toggle-cart'));
     } catch (error) {
       toast.error(error.message || 'Failed to add to cart');
@@ -68,181 +86,234 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
   const productHref = `/store/${businessDomain}/products/${product.slug || product.id}`;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -3 }}
+      whileHover={isDense ? undefined : { y: -3 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        'group relative bg-white rounded-xl sm:rounded-2xl overflow-hidden border border-gray-100',
-        'transition-shadow duration-300 hover:shadow-xl',
-        variant === 'compact' ? 'p-2 sm:p-3' : 'p-0'
+        'group relative flex h-full flex-col overflow-hidden bg-white transition-shadow duration-300',
+        isDense
+          ? 'rounded-lg border border-slate-100 hover:border-slate-200 hover:shadow-md'
+          : 'rounded-xl border border-gray-100 hover:shadow-xl sm:rounded-2xl',
+        variant === 'compact' && !isDense && 'p-2 sm:p-3'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* ── Image area (relative container for all overlays) ───────────── */}
       <div
         className={cn(
-          'relative overflow-hidden bg-gray-50',
-          variant === 'compact' ? 'aspect-square rounded-lg sm:rounded-xl' : 'aspect-square sm:aspect-[4/5]'
+          'relative overflow-hidden bg-slate-50',
+          isDense ? 'aspect-square' : isCompact ? 'aspect-square rounded-lg sm:rounded-xl' : 'aspect-square sm:aspect-[4/5]'
         )}
       >
-        {/* Clickable image */}
         <Link href={productHref} className="absolute inset-0" tabIndex={-1} aria-label={product.name}>
           {displayImage ? (
             <SmartProductImage
               src={displayImage}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              fallbackSrc={imageFallback && imageFallback !== displayImage ? imageFallback : undefined}
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              sizes={
+                isDense
+                  ? '(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw'
+                  : '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw'
+              }
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
-              <ShoppingBag className="w-10 h-10 text-gray-200" />
+              <ShoppingBag className="h-8 w-8 text-slate-200" />
             </div>
           )}
         </Link>
 
-        {/* Badges */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none">
+        <div className="pointer-events-none absolute left-2 top-2 z-10 flex flex-col gap-1">
           {discount > 0 && (
-            <Badge className="bg-red-500 text-white border-0 text-[10px] font-bold px-2 py-0.5">
+            <Badge className="border-0 bg-red-600 px-1.5 py-0 text-[10px] font-bold text-white">
               -{discount}%
             </Badge>
           )}
-          {product.is_new && !discount && (
+          {product.is_featured && !discount && (
+            <Badge className="border-0 bg-slate-900 px-1.5 py-0 text-[10px] font-bold text-white">
+              Top pick
+            </Badge>
+          )}
+          {product.is_new && !discount && !product.is_featured && (
             <Badge
-              className="text-white border-0 text-[10px] font-bold px-2 py-0.5"
+              className="border-0 px-1.5 py-0 text-[10px] font-bold text-white"
               style={{ backgroundColor: accent }}
             >
               NEW
             </Badge>
           )}
-          {isLowStock && (
-            <Badge className="bg-orange-500 text-white border-0 text-[10px] font-bold px-2 py-0.5">
-              <Zap className="w-2.5 h-2.5 mr-0.5 inline" />
+          {isLowStock && !isDense && (
+            <Badge className="border-0 bg-orange-500 px-1.5 py-0 text-[10px] font-bold text-white">
+              <Zap className="mr-0.5 inline h-2.5 w-2.5" />
               {product.stock} left
             </Badge>
           )}
         </div>
 
-        {/* Quick action buttons — wishlist + quick-view */}
-        <div
-          className={cn(
-            'absolute top-2 right-2 flex flex-col gap-1.5 z-10 transition-all duration-200',
-            'max-sm:opacity-100 max-sm:translate-x-0',
-            isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-3 max-sm:opacity-100 max-sm:translate-x-0'
-          )}
-        >
+        {!isDense && (
+          <div
+            className={cn(
+              'absolute right-2 top-2 z-10 flex flex-col gap-1.5 transition-all duration-200',
+              'max-sm:translate-x-0 max-sm:opacity-100',
+              isHovered ? 'translate-x-0 opacity-100' : 'translate-x-3 opacity-0 max-sm:translate-x-0 max-sm:opacity-100'
+            )}
+          >
+            <button
+              type="button"
+              onClick={handleWishlist}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-colors',
+                inWishlist ? 'text-red-500' : 'text-slate-500 hover:text-red-500'
+              )}
+              aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+              <Heart className={cn('h-4 w-4', inWishlist && 'fill-current')} />
+            </button>
+            <Link
+              href={productHref}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500 shadow-md transition-colors hover:text-slate-900"
+              aria-label="View product"
+            >
+              <Eye className="h-4 w-4" />
+            </Link>
+          </div>
+        )}
+
+        {isDense && (
           <button
+            type="button"
             onClick={handleWishlist}
             className={cn(
-              'w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center transition-colors',
-              inWishlist ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+              'absolute right-1.5 top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-white/95 shadow-sm transition-colors',
+              inWishlist ? 'text-red-500' : 'text-slate-400 hover:text-red-500'
             )}
             aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
           >
-            <Heart className={cn('w-4 h-4', inWishlist && 'fill-current')} />
+            <Heart className={cn('h-3 w-3', inWishlist && 'fill-current')} />
           </button>
+        )}
 
-          <Link
-            href={productHref}
-            className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
-            aria-label="View product"
-          >
-            <Eye className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {/* Out of stock overlay */}
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 pointer-events-none">
-            <span className="bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full">
-              Out of Stock
+        {isDense && categoryLabel && (
+          <div className="pointer-events-none absolute bottom-2 left-2 z-10">
+            <span className="rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-600 shadow-sm">
+              {categoryLabel}
             </span>
           </div>
         )}
 
-        {/* Quick add — slides up on hover (button is outside Link, valid DOM) */}
-        {!isOutOfStock && variant !== 'compact' && (
+        {isOutOfStock && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/40">
+            <span className="rounded-full bg-white px-3 py-1 text-[10px] font-bold text-slate-900">
+              Sold out
+            </span>
+          </div>
+        )}
+
+        {!isOutOfStock && variant === 'default' && (
           <div
             className={cn(
-              'absolute bottom-0 left-0 right-0 p-2 sm:p-3 z-10 transition-all duration-300',
+              'absolute bottom-0 left-0 right-0 z-10 p-2 transition-all duration-300 sm:p-3',
               'translate-y-0 opacity-100',
               'sm:translate-y-full sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100'
             )}
           >
             <button
+              type="button"
               onClick={handleAddToCart}
               disabled={isAdding}
-              className="w-full py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold text-white shadow-lg transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2"
+              className="flex w-full items-center justify-center gap-2 rounded-lg py-2 text-xs font-bold text-white shadow-lg transition-all active:scale-95 disabled:opacity-70 sm:rounded-xl sm:py-2.5 sm:text-sm"
               style={{ backgroundColor: accent }}
             >
-              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {isAdding ? 'Adding…' : 'Add to Cart'}
             </button>
           </div>
         )}
       </div>
 
-      {/* ── Info ───────────────────────────────────────────────────────── */}
-      <div className={cn('space-y-1', variant === 'compact' ? 'mt-2' : 'p-2.5 sm:p-3.5')}>
-        {/* Category */}
-        {product.category_name && (
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider truncate">
-            {product.category_name}
+      <div
+        className={cn(
+          'flex flex-1 flex-col',
+          isDense ? 'gap-1 p-2 lg:p-2.5' : isCompact ? 'mt-2 space-y-1' : 'space-y-1 p-2.5 sm:p-3.5'
+        )}
+      >
+        {!isDense && categoryLabel && (
+          <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            {categoryLabel}
           </p>
         )}
 
-        {/* Name */}
-        <Link href={productHref}>
+        {isDense && brandLabel && (
+          <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            {brandLabel}
+          </p>
+        )}
+
+        <Link href={productHref} className="flex-1">
           <h3
-            className="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 leading-snug transition-colors"
-            style={{ '--hover-color': accent }}
+            className={cn(
+              'line-clamp-2 leading-snug text-slate-900 transition-colors group-hover:text-slate-700',
+              isDense ? 'text-[11px] font-semibold sm:text-xs' : 'text-xs font-semibold sm:text-sm'
+            )}
           >
             {product.name}
           </h3>
         </Link>
 
-        {/* Rating */}
-        {product.rating && (
+        {showPartsMeta && (partNumber || fitmentHint) && !isDense && (
+          <p className="truncate text-[10px] text-slate-500">
+            {partNumber ? <span className="font-medium text-slate-600">{partNumber}</span> : null}
+            {partNumber && fitmentHint ? ' · ' : null}
+            {fitmentHint ? <span>{fitmentHint}</span> : null}
+          </p>
+        )}
+
+        {product.rating && !isDense && (
           <div className="flex items-center gap-1">
-            <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-            <span className="text-xs font-semibold text-gray-700">
-              {Number(product.rating).toFixed(1)}
-            </span>
+            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+            <span className="text-xs font-semibold text-slate-700">{Number(product.rating).toFixed(1)}</span>
             {product.review_count > 0 && (
-              <span className="text-xs text-gray-400">({product.review_count})</span>
+              <span className="text-xs text-slate-400">({product.review_count})</span>
             )}
           </div>
         )}
 
-        {/* Price row */}
-        <div className="flex items-center gap-2 pt-0.5">
-          <span className="text-sm sm:text-base font-black text-gray-900">
+        <div className={cn('flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5', isDense ? 'pt-0.5' : 'pt-0.5')}>
+          <span
+            className={cn(
+              'store-price font-extrabold tabular-nums text-slate-900',
+              isDense ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'
+            )}
+          >
             {formatCurrency(product.price, currency)}
           </span>
           {discount > 0 && (
-            <span className="text-xs text-gray-400 line-through">
+            <span className="text-[10px] text-slate-400 line-through sm:text-xs">
               {formatCurrency(product.compare_price, currency)}
             </span>
           )}
         </div>
 
-        {/* Compact add button */}
-        {variant === 'compact' && !isOutOfStock && (
+        {(isCompact || isDense) && !isOutOfStock && (
           <button
+            type="button"
             onClick={handleAddToCart}
             disabled={isAdding}
-            className="w-full mt-1 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-70"
+            className={cn(
+              'mt-auto w-full rounded-lg font-bold text-white transition-all active:scale-[0.98] disabled:opacity-70',
+              isDense ? 'py-1.5 text-[10px] sm:text-[11px]' : 'mt-1 py-2 text-xs'
+            )}
             style={{ backgroundColor: accent }}
           >
-            {isAdding ? 'Adding…' : 'Add to Cart'}
+            {isAdding ? 'Adding…' : isOutOfStock ? 'Sold out' : 'Add to Cart'}
           </button>
         )}
       </div>
-    </motion.div>
+    </motion.article>
   );
 }

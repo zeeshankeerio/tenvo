@@ -199,7 +199,7 @@ export function PaymentReceiptForm({
                             <CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
                         <div className="min-w-0">
-                            <CardTitle className="truncate text-base font-black uppercase tracking-tighter sm:text-2xl">
+                            <CardTitle className="truncate text-base font-semibold uppercase tracking-tighter sm:text-2xl">
                                 {isCustomer ? 'Customer Receipt' : 'Vendor Payment'}
                             </CardTitle>
                             <p className="mt-0.5 hidden text-xs font-bold uppercase tracking-widest text-emerald-100 sm:block">
@@ -217,7 +217,7 @@ export function PaymentReceiptForm({
                         {/* Left Column: Basic Info */}
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                                     {isCustomer ? 'From Customer *' : 'To Vendor *'}
                                 </Label>
                                 <Combobox
@@ -240,11 +240,11 @@ export function PaymentReceiptForm({
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Amount ({currency})</Label>
+                                    <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Amount ({currency})</Label>
                                     <div className="relative">
                                         <Input
                                             type="number"
-                                            className="h-12 pl-10 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 font-black text-lg"
+                                            className="h-12 pl-10 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 font-semibold text-lg"
                                             value={formData.amount}
                                             onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                                         />
@@ -252,7 +252,7 @@ export function PaymentReceiptForm({
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Payment Date</Label>
+                                    <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Payment Date</Label>
                                     <div className="relative">
                                         <Input
                                             type="date"
@@ -266,14 +266,14 @@ export function PaymentReceiptForm({
                             </div>
 
                             <div className="space-y-4">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Payment Mode</Label>
+                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Payment Mode</Label>
                                 <div className="flex gap-2">
                                     {['cash', 'bank', 'cheque', 'online'].map((mode) => (
                                         <Button
                                             key={mode}
                                             type="button"
                                             variant={formData.payment_mode === mode ? 'default' : 'outline'}
-                                            className={`flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${formData.payment_mode === mode
+                                            className={`flex-1 h-12 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all ${formData.payment_mode === mode
                                                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-lg'
                                                     : 'text-gray-400 border-gray-200 hover:bg-white'
                                                 }`}
@@ -288,7 +288,7 @@ export function PaymentReceiptForm({
                             {formData.payment_mode !== 'cash' && (
                                 <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
                                     <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Bank Name</Label>
+                                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Bank Name</Label>
                                         <Input
                                             className="h-12 border-gray-200 rounded-xl shadow-sm"
                                             placeholder="Standard Chartered..."
@@ -297,7 +297,7 @@ export function PaymentReceiptForm({
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                                             {formData.payment_mode === 'cheque' ? 'Cheque #' : 'Transaction ID'}
                                         </Label>
                                         <Input
@@ -314,7 +314,7 @@ export function PaymentReceiptForm({
                             )}
 
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Notes</Label>
+                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Notes</Label>
                                 <textarea
                                     className="w-full h-24 px-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 transition-all outline-none font-medium shadow-sm resize-none text-sm"
                                     placeholder="Reference, remarks, etc..."
@@ -328,12 +328,12 @@ export function PaymentReceiptForm({
                         <div className="space-y-6">
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Outstanding Documents</Label>
+                                    <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Outstanding Documents</Label>
                                     {isLoadingDocs && <Loader2 className="w-3 h-3 animate-spin text-emerald-500" />}
                                 </div>
                                 <Button
                                     variant="link"
-                                    className="text-[10px] font-black uppercase tracking-widest text-emerald-600 p-0 h-auto"
+                                    className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600 p-0 h-auto"
                                     onClick={autoAllocate}
                                     disabled={!formData.amount || pendingDocs.length === 0}
                                 >
@@ -355,9 +355,9 @@ export function PaymentReceiptForm({
                                         <table className="w-full min-w-[480px] text-xs">
                                             <thead className="bg-gray-50 sticky top-0 z-10">
                                                 <tr className="border-b">
-                                                    <th className="px-4 py-3 text-left font-black uppercase tracking-widest text-gray-400">Document</th>
-                                                    <th className="px-4 py-3 text-right font-black uppercase tracking-widest text-gray-400">Balance</th>
-                                                    <th className="px-4 py-3 text-right font-black uppercase tracking-widest text-gray-400 w-32">Allocate</th>
+                                                    <th className="px-4 py-3 text-left font-semibold uppercase tracking-widest text-gray-400">Document</th>
+                                                    <th className="px-4 py-3 text-right font-semibold uppercase tracking-widest text-gray-400">Balance</th>
+                                                    <th className="px-4 py-3 text-right font-semibold uppercase tracking-widest text-gray-400 w-32">Allocate</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
@@ -367,7 +367,7 @@ export function PaymentReceiptForm({
                                                     return (
                                                         <tr key={doc.id} className={`hover:bg-emerald-50/30 transition-colors ${currentAlloc ? 'bg-emerald-50/20' : ''}`}>
                                                             <td className="px-4 py-4">
-                                                                <p className="font-black text-gray-900 uppercase tracking-tighter">#{doc.number}</p>
+                                                                <p className="font-semibold text-gray-900 uppercase tracking-tighter">#{doc.number}</p>
                                                                 <p className="text-[10px] font-bold text-gray-400">{new Date(doc.date).toLocaleDateString()}</p>
                                                             </td>
                                                             <td className="px-4 py-4 text-right">
@@ -395,13 +395,13 @@ export function PaymentReceiptForm({
                                 </div>
                                 <div className="p-4 bg-gray-50 border-t flex justify-between items-center">
                                     <div>
-                                        <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Allocated Total</p>
-                                        <p className={`text-xl font-black tracking-tighter ${Math.abs(allocatedTotal - formData.amount) < 0.01 ? 'text-emerald-600' : 'text-gray-900'}`}>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-1">Allocated Total</p>
+                                        <p className={`text-xl font-semibold tracking-tighter ${Math.abs(allocatedTotal - formData.amount) < 0.01 ? 'text-emerald-600' : 'text-gray-900'}`}>
                                             {formatCurrency(allocatedTotal, currency)}
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <Badge variant={Math.abs(allocatedTotal - formData.amount) < 0.01 ? 'default' : 'outline'} className={`rounded-full px-2 py-0 h-5 text-[9px] font-black uppercase ${Math.abs(allocatedTotal - formData.amount) < 0.01 ? 'bg-emerald-600' : 'text-gray-400 border-gray-200'}`}>
+                                        <Badge variant={Math.abs(allocatedTotal - formData.amount) < 0.01 ? 'default' : 'outline'} className={`rounded-full px-2 py-0 h-5 text-[10px] font-semibold uppercase ${Math.abs(allocatedTotal - formData.amount) < 0.01 ? 'bg-emerald-600' : 'text-gray-400 border-gray-200'}`}>
                                             {Math.abs(allocatedTotal - formData.amount) < 0.01 ? 'Fully Allocated' : `${formatCurrency(Math.max(0, formData.amount - allocatedTotal), currency)} Unallocated`}
                                         </Badge>
                                     </div>
@@ -413,21 +413,21 @@ export function PaymentReceiptForm({
 
                 <div className={cn(MOBILE_FORM_FOOTER, 'bg-white')}>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <Button variant="ghost" onClick={onClose} disabled={isSaving} className="h-9 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 sm:h-auto">
+                        <Button variant="ghost" onClick={onClose} disabled={isSaving} className="h-9 text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-gray-900 sm:h-auto">
                             Cancel
                         </Button>
                         <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
                             <Button
                                 disabled={isSaving}
                                 variant="outline"
-                                className="hidden h-9 rounded-xl border-gray-200 px-4 text-xs font-black uppercase tracking-widest hover:bg-gray-50 sm:inline-flex sm:h-12 sm:px-6"
+                                className="hidden h-9 rounded-xl border-gray-200 px-4 text-xs font-semibold uppercase tracking-widest hover:bg-gray-50 sm:inline-flex sm:h-12 sm:px-6"
                             >
                                 Save as Draft
                             </Button>
                             <Button
                                 disabled={isSaving || (formData.amount > 0 && Math.abs(allocatedTotal - formData.amount) > 0.01)}
                                 onClick={handleSave}
-                                className={`h-9 rounded-xl px-4 text-xs font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 sm:h-12 sm:px-10 ${isCustomer ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'} text-white`}
+                                className={`h-9 rounded-xl px-4 text-xs font-semibold uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 sm:h-12 sm:px-10 ${isCustomer ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'} text-white`}
                             >
                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 Process Voucher

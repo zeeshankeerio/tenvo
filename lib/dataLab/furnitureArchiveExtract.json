@@ -1,0 +1,410 @@
+{
+  "comfy": {
+    "collections": [
+      {
+        "href": "/collections/recliner-sofas",
+        "label": "Recliner Sofas",
+        "image": "https://comfy.sg/cdn/shop/collections/grey-leather-recliner-sofa-with-usb-ports.jpg?v=1687971708&width=1200"
+      },
+      {
+        "href": "/collections/sofa-beds",
+        "label": "Sofa Beds",
+        "image": "https://comfy.sg/cdn/shop/collections/cream-leather-l-shaped-sofa-bed-furniture-living-room.jpg?v=1691615016&width=1200"
+      },
+      {
+        "href": "/collections/sectional-sofas",
+        "label": "Sectional Sofas",
+        "image": "https://comfy.sg/cdn/shop/collections/sectional-sofa.jpg?v=1744029878&width=1200"
+      },
+      {
+        "href": "/collections/stationary-sofas",
+        "label": "Sofas",
+        "image": "https://comfy.sg/cdn/shop/collections/dark-blue-3-seater-full-grain-leather-sofa.jpg?v=1761083419&width=1200"
+      },
+      {
+        "href": "/collections/l-shape-sofas",
+        "label": "L-Shape Sofas",
+        "image": "https://comfy.sg/cdn/shop/collections/dante_L_sofa.jpg?v=1744018616&width=1200"
+      },
+      {
+        "href": "/collections/armchair",
+        "label": "Leather Armchairs and Recliner Chairs",
+        "image": "https://comfy.sg/cdn/shop/collections/DSC01206-Edit.jpg?v=1704982711&width=1200"
+      },
+      {
+        "href": "/collections/2-seater-sofas",
+        "label": "2 Seater Sofas",
+        "image": "https://comfy.sg/cdn/shop/collections/DSC01186-Edit.jpg?v=1743855736&width=1200"
+      },
+      {
+        "href": "/collections/3-seater-sofa",
+        "label": "3 Seater Sofas",
+        "image": "https://comfy.sg/cdn/shop/collections/beta_2.png?v=1743856919&width=1200"
+      },
+      {
+        "href": "/collections/4-seater-sofa",
+        "label": "4 Seater Sofas",
+        "image": "https://comfy.sg/cdn/shop/collections/4-seater-sofa-singapore.jpg?v=1743776588&width=1200"
+      },
+      {
+        "href": "/collections/wooden-sofa",
+        "label": "Wooden Sofas",
+        "image": "https://comfy.sg/cdn/shop/collections/wooden-sofa-collection.jpg?v=1692110215&width=1200"
+      },
+      {
+        "href": "/collections/sofas-and-couches",
+        "label": "All Sofas",
+        "image": "https://comfy.sg/cdn/shop/collections/PHOTO-2019-04-25-16-26-56.jpg?v=1743858934&width=1200"
+      },
+      {
+        "href": "/collections/living-room",
+        "label": "Living Room",
+        "image": "https://comfy.sg/cdn/shop/collections/steel-grey-leather-sofa-set.jpg?v=1681157253&width=1200"
+      },
+      {
+        "href": "/collections/dining-room",
+        "label": "Dining Room",
+        "image": "https://comfy.sg/cdn/shop/collections/modern-white-marble-dining-table-set.jpg?v=1701971178&width=1200"
+      },
+      {
+        "href": "/collections/bedroom",
+        "label": "Bedroom",
+        "image": "https://comfy.sg/cdn/shop/collections/grey-queen-size-bed-frame-bed-room.jpg?v=1743782029&width=1200"
+      },
+      {
+        "href": "/collections/kids-furniture",
+        "label": "Kids",
+        "image": "https://comfy.sg/cdn/shop/collections/kids-furniture-singapore.jpg?v=1743849412&width=1200"
+      }
+    ],
+    "fileImages": [
+      {
+        "slug": "comfy-furniture-favicon-logo",
+        "url": "https://comfy.sg/cdn/shop/files/comfy-furniture-favicon-logo.png?width=1200"
+      },
+      {
+        "slug": "comfy-furniture-share_2048x1205",
+        "url": "https://comfy.sg/cdn/shop/files/comfy-furniture-share_2048x1205.webp?width=1200"
+      },
+      {
+        "slug": "comfy-sofa-singapore",
+        "url": "https://comfy.sg/cdn/shop/files/comfy-sofa-singapore.jpg?width=1200"
+      },
+      {
+        "slug": "comfy-singapore-showrooms",
+        "url": "https://comfy.sg/cdn/shop/files/comfy-singapore-showrooms.webp?width=1200"
+      },
+      {
+        "slug": "semi-aniline-leather-recliner-sofa-top-grain",
+        "url": "https://comfy.sg/cdn/shop/files/semi-aniline-leather-recliner-sofa-top-grain.webp?width=1200"
+      },
+      {
+        "slug": "best-selling-sintered-stone-dining-table-set",
+        "url": "https://comfy.sg/cdn/shop/files/best-selling-sintered-stone-dining-table-set.webp?width=1200"
+      },
+      {
+        "slug": "stylish-dining-chair-set-dual-color",
+        "url": "https://comfy.sg/cdn/shop/files/stylish-dining-chair-set-dual-color.webp?width=1200"
+      },
+      {
+        "slug": "comfy-sleepperfect-hybrid-mattress",
+        "url": "https://comfy.sg/cdn/shop/files/comfy-sleepperfect-hybrid-mattress.webp?width=1200"
+      },
+      {
+        "slug": "irene-electric-recliner-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/irene-electric-recliner-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "cherry-marble-dining-table",
+        "url": "https://comfy.sg/cdn/shop/files/cherry-marble-dining-table.jpg?width=1200"
+      },
+      {
+        "slug": "carol-black-marble-dining-table",
+        "url": "https://comfy.sg/cdn/shop/files/carol-black-marble-dining-table.jpg?width=1200"
+      },
+      {
+        "slug": "heidi-electric-recliner-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/heidi-electric-recliner-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "cherry-marble-dining-table-and-chairs",
+        "url": "https://comfy.sg/cdn/shop/files/cherry-marble-dining-table-and-chairs.jpg?width=1200"
+      },
+      {
+        "slug": "annie-electric-recliner-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/annie-electric-recliner-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "irene-electric-recliner-2seater-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/irene-electric-recliner-2seater-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "carol-marble-dining-table",
+        "url": "https://comfy.sg/cdn/shop/files/carol-marble-dining-table.jpg?width=1200"
+      },
+      {
+        "slug": "roslyn-electric-recliner-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/roslyn-electric-recliner-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "elliot-coffee-marble-table",
+        "url": "https://comfy.sg/cdn/shop/files/elliot-coffee-marble-table.jpg?width=1200"
+      },
+      {
+        "slug": "emily-electric-recliner-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/emily-electric-recliner-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "candy-electric-recliner-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/candy-electric-recliner-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "irene-electric-recliner",
+        "url": "https://comfy.sg/cdn/shop/files/irene-electric-recliner.jpg?width=1200"
+      },
+      {
+        "slug": "anson-electric-recliner-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/anson-electric-recliner-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "addison-marble-dining-table",
+        "url": "https://comfy.sg/cdn/shop/files/addison-marble-dining-table.jpg?width=1200"
+      },
+      {
+        "slug": "annie-electric-recliner-sofa-brown",
+        "url": "https://comfy.sg/cdn/shop/files/annie-electric-recliner-sofa-brown.jpg?width=1200"
+      },
+      {
+        "slug": "heidi-electric-recliner-sofa-2seater",
+        "url": "https://comfy.sg/cdn/shop/files/heidi-electric-recliner-sofa-2seater.jpg?width=1200"
+      },
+      {
+        "slug": "roslyn-electric-recliner-sofa-armchair",
+        "url": "https://comfy.sg/cdn/shop/files/roslyn-electric-recliner-sofa-armchair.jpg?width=1200"
+      },
+      {
+        "slug": "carol-marble-dining-table-gold-legs",
+        "url": "https://comfy.sg/cdn/shop/files/carol-marble-dining-table-gold-legs.jpg?width=1200"
+      },
+      {
+        "slug": "top-grain-leather-power-reclining-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/top-grain-leather-power-reclining-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "leather-recliner-sofa-top-grain",
+        "url": "https://comfy.sg/cdn/shop/files/leather-recliner-sofa-top-grain.jpg?width=1200"
+      },
+      {
+        "slug": "sintered-stone-top-dining-table-with-chairs",
+        "url": "https://comfy.sg/cdn/shop/files/sintered-stone-top-dining-table-with-chairs.jpg?width=1200"
+      },
+      {
+        "slug": "top-grain-reclining-leather-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/top-grain-reclining-leather-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "sintered-stone-dining-table-and-chairs",
+        "url": "https://comfy.sg/cdn/shop/files/sintered-stone-dining-table-and-chairs.jpg?width=1200"
+      },
+      {
+        "slug": "top-grain-leather-recliner-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/top-grain-leather-recliner-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "sintered-stone-dining-room-set",
+        "url": "https://comfy.sg/cdn/shop/files/sintered-stone-dining-room-set.jpg?width=1200"
+      },
+      {
+        "slug": "top-grain-leather-sofa-reclining",
+        "url": "https://comfy.sg/cdn/shop/files/top-grain-leather-sofa-reclining.jpg?width=1200"
+      },
+      {
+        "slug": "top-grain-leather-recliner-sectional-sofa",
+        "url": "https://comfy.sg/cdn/shop/files/top-grain-leather-recliner-sectional-sofa.jpg?width=1200"
+      },
+      {
+        "slug": "dining-table-and-chairs-made-of-sintered-stone",
+        "url": "https://comfy.sg/cdn/shop/files/dining-table-and-chairs-made-of-sintered-stone.jpg?width=1200"
+      },
+      {
+        "slug": "4A6CE30D-3E3D-4F7D-BDD0-4370AAC21A2E",
+        "url": "https://comfy.sg/cdn/shop/files/4A6CE30D-3E3D-4F7D-BDD0-4370AAC21A2E.jpg?width=1200"
+      },
+      {
+        "slug": "3_drawer_bedside_table_with_black_top_against_a_wooden_wall",
+        "url": "https://comfy.sg/cdn/shop/files/3_drawer_bedside_table_with_black_top_against_a_wooden_wall.jpg?width=1200"
+      },
+      {
+        "slug": "Round_bedside_table_with_a_beige_body_and_black_trim_on_a_white_background",
+        "url": "https://comfy.sg/cdn/shop/files/Round_bedside_table_with_a_beige_body_and_black_trim_on_a_white_background.png?width=1200"
+      },
+      {
+        "slug": "CCC5A1DD-36D5-441E-8F1A-43A8137B8ED1",
+        "url": "https://comfy.sg/cdn/shop/files/CCC5A1DD-36D5-441E-8F1A-43A8137B8ED1.jpg?width=1200"
+      },
+      {
+        "slug": "61F0A1B2-13DF-485E-B3C4-D9BC4F0F83DD",
+        "url": "https://comfy.sg/cdn/shop/files/61F0A1B2-13DF-485E-B3C4-D9BC4F0F83DD.jpg?width=1200"
+      },
+      {
+        "slug": "wooden_round_bedside_table_with_marble_top_and_open_drawer_on_a_neutral_background",
+        "url": "https://comfy.sg/cdn/shop/files/wooden_round_bedside_table_with_marble_top_and_open_drawer_on_a_neutral_background.jpg?width=1200"
+      }
+    ],
+    "editorial": [
+      {
+        "title": "Shop Furniture by Room",
+        "image": "https://comfy.sg/cdn/shop/collections/steel-grey-leather-sofa-set.jpg?v=1681157253&width=1200"
+      },
+      {
+        "title": "Visit a COMFY Showroom Near You",
+        "image": "https://comfy.sg/cdn/shop/files/semi-aniline-leather-recliner-sofa-top-grain.webp?v=1680868007&width=1200"
+      },
+      {
+        "title": "recently delivered to our customers",
+        "image": "https://comfy.sg/cdn/shop/files/top-grain-leather-power-reclining-sofa.jpg?v=1680862399&width=1200"
+      },
+      {
+        "title": "Latest Furniture Arrivals",
+        "image": "https://comfy.sg/cdn/shop/files/BeFunky-photo-2026-05-22T212450.244.jpg?v=1779456312&width=1200"
+      }
+    ],
+    "heroImages": [
+      "https://comfy.sg/cdn/shop/files/comfy-sofa-singapore.webp?width=1200",
+      "https://comfy.sg/cdn/shop/files/comfy-sofa-singapore.jpg?width=1200",
+      "https://comfy.sg/cdn/shop/files/comfy-singapore-showrooms.webp?width=1200",
+      "https://comfy.sg/cdn/shop/files/comfy-sleepperfect-hybrid-mattress.webp?width=1200"
+    ]
+  },
+  "ff": {
+    "productLike": [
+      {
+        "name": "EOFY Sale May 26 Web Assets Desktop 1280x420 UPDATE",
+        "url": "https://api.fantasticfurniture.com.au/medias/EOFY-Sale-May-26-Web-Assets-Desktop-1280x420-UPDATE.webp"
+      },
+      {
+        "name": "EOFY Sale May 26 Web Assets Tablet 990x420 UPDATE",
+        "url": "https://api.fantasticfurniture.com.au/medias/EOFY-Sale-May-26-Web-Assets-Tablet-990x420-UPDATE.webp"
+      },
+      {
+        "name": "EOFY Sale May 26 Web Assets Mobile 375x378 UPDATE",
+        "url": "https://api.fantasticfurniture.com.au/medias/EOFY-Sale-May-26-Web-Assets-Mobile-375x378-UPDATE.webp"
+      },
+      {
+        "name": "Mobile KV",
+        "url": "https://api.fantasticfurniture.com.au/medias/Mobile-KV.png"
+      },
+      {
+        "name": "Bridge Table",
+        "url": "https://api.fantasticfurniture.com.au/medias/Bridge-Table.png"
+      },
+      {
+        "name": "Photo",
+        "url": "https://api.fantasticfurniture.com.au/medias/Photo.png"
+      },
+      {
+        "name": "EOFY Sale May 26 Web Assets Mobile 375x368 R01",
+        "url": "https://api.fantasticfurniture.com.au/medias/EOFY-Sale-May-26-Web-Assets-Mobile-375x368-R01.jpg"
+      },
+      {
+        "name": "BF B ROYO D VEL BG ABC 07 1 1",
+        "url": "https://api.fantasticfurniture.com.au/medias/BF-B-ROYO-D-VEL-BG-ABC-07-1-1-.png"
+      },
+      {
+        "name": "BF B ROYO D VEL BG ABC 07 2 1",
+        "url": "https://api.fantasticfurniture.com.au/medias/BF-B-ROYO-D-VEL-BG-ABC-07-2-1-.png"
+      },
+      {
+        "name": "SOF NICO LGY ABC 07 1 1",
+        "url": "https://api.fantasticfurniture.com.au/medias/SOF-NICO-LGY-ABC-07-1-1.png"
+      },
+      {
+        "name": "SOF NICO LGY ABC 07 1 2",
+        "url": "https://api.fantasticfurniture.com.au/medias/SOF-NICO-LGY-ABC-07-1-2.png"
+      },
+      {
+        "name": "MAT A10 M908 D 06 1",
+        "url": "https://api.fantasticfurniture.com.au/medias/MAT-A10-M908-D-06-1.png"
+      },
+      {
+        "name": "MAT A10 M908 D 06 2",
+        "url": "https://api.fantasticfurniture.com.au/medias/MAT-A10-M908-D-06-2.png"
+      },
+      {
+        "name": "cvps 1 light",
+        "url": "https://api.fantasticfurniture.com.au/medias/cvps-1-light.png"
+      },
+      {
+        "name": "cvps 1 light1 m",
+        "url": "https://api.fantasticfurniture.com.au/medias/cvps-1-light1-m.png"
+      },
+      {
+        "name": "cvps 1 light2",
+        "url": "https://api.fantasticfurniture.com.au/medias/cvps-1-light2.png"
+      },
+      {
+        "name": "cvps 1 light2 m",
+        "url": "https://api.fantasticfurniture.com.au/medias/cvps-1-light2-m.png"
+      },
+      {
+        "name": "cvps 1 light3",
+        "url": "https://api.fantasticfurniture.com.au/medias/cvps-1-light3.png"
+      },
+      {
+        "name": "cvps 1 light3 m",
+        "url": "https://api.fantasticfurniture.com.au/medias/cvps-1-light3-m.png"
+      },
+      {
+        "name": "cvps 1 light4",
+        "url": "https://api.fantasticfurniture.com.au/medias/cvps-1-light4.png"
+      },
+      {
+        "name": "cvps 1 light4 m",
+        "url": "https://api.fantasticfurniture.com.au/medias/cvps-1-light4-m.png"
+      }
+    ],
+    "promos": [
+      {
+        "name": "Newhaven 4 Seater Round Dining Table",
+        "priceAud": 255,
+        "saveAud": 174
+      },
+      {
+        "name": "Jonnie Black Dining Chair",
+        "priceAud": 99,
+        "saveAud": 30
+      },
+      {
+        "name": "Sawyer Queen Bed Frame with Storage",
+        "priceAud": 279,
+        "saveAud": null
+      },
+      {
+        "name": "Benson Walnut Bedside Table",
+        "priceAud": 279,
+        "saveAud": null
+      },
+      {
+        "name": "Sleepapedic Queen Mattress",
+        "priceAud": 279,
+        "saveAud": null
+      },
+      {
+        "name": "Kaidon Double Beige Velvet Bed Frame",
+        "priceAud": 279,
+        "saveAud": 20
+      },
+      {
+        "name": "Elwine 3 Seater Light Grey Sofa with Ottoman",
+        "priceAud": 499,
+        "saveAud": 100
+      },
+      {
+        "name": "Cooshy Cloud Queen Medium Mattress",
+        "priceAud": 279,
+        "saveAud": 50
+      }
+    ]
+  },
+  "generatedAt": "2026-06-27T06:58:50.524Z"
+}

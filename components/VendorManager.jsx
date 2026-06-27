@@ -78,7 +78,7 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
       accessorKey: 'outstanding_balance',
       header: 'Payables',
       cell: ({ row }) => (
-        <span className={`font-black ${Number(row.original.outstanding_balance) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+        <span className={`font-semibold ${Number(row.original.outstanding_balance) > 0 ? 'text-red-600' : 'text-green-600'}`}>
           {formatCurrency(row.original.outstanding_balance || 0, 'PKR')}
         </span>
       ),
@@ -194,14 +194,14 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
       <div className="hidden grid-cols-1 gap-4 md:grid-cols-4 lg:grid">
         <Card className="border-none shadow-md bg-white">
           <CardContent className="pt-6">
-            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Active Vendors</p>
-            <p className="text-2xl font-black text-gray-900">{vendors.length}</p>
+            <p className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Active Vendors</p>
+            <p className="text-2xl font-semibold text-gray-900">{vendors.length}</p>
           </CardContent>
         </Card>
         <Card className="border-none shadow-md bg-white">
           <CardContent className="pt-6">
-            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Total Payables</p>
-            <p className="text-2xl font-black text-red-600">
+            <p className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Total Payables</p>
+            <p className="text-2xl font-semibold text-red-600">
               {formatCurrency(vendors.reduce((s, v) => s + (Number(v.outstanding_balance) || 0), 0), 'PKR')}
             </p>
           </CardContent>

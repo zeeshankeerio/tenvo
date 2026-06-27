@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { X, Save, Loader2, Package, AlertTriangle, Search, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react';
@@ -16,10 +16,10 @@ import toast from 'react-hot-toast';
 
 // --- Reason codes for stock adjustments --------------------------------------
 const ADJUSTMENT_REASONS = [
-    { value: 'counting_error', label: 'Counting Error', icon: '🔢', color: 'bg-blue-100 text-blue-700' },
-    { value: 'damage', label: 'Damage / Spoilage', icon: '💔', color: 'bg-red-100 text-red-700' },
+    { value: 'counting_error', label: 'Counting Error', icon: '??', color: 'bg-blue-100 text-blue-700' },
+    { value: 'damage', label: 'Damage / Spoilage', icon: '??', color: 'bg-red-100 text-red-700' },
     { value: 'theft', label: 'Theft / Loss', icon: '[ALERT]', color: 'bg-red-100 text-red-700' },
-    { value: 'expiry', label: 'Expired Stock', icon: '⏳', color: 'bg-amber-100 text-amber-700' },
+    { value: 'expiry', label: 'Expired Stock', icon: '?', color: 'bg-amber-100 text-amber-700' },
     { value: 'sample', label: 'Sample / Testing', icon: '[TEST]', color: 'bg-wine-100 text-wine-700' },
     { value: 'write_off', label: 'Write-Off', icon: '[DECREASE]', color: 'bg-gray-100 text-gray-700' },
     { value: 'found', label: 'Found Stock', icon: '[SEARCH]', color: 'bg-emerald-100 text-emerald-700' },
@@ -98,15 +98,12 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
             }
 
             const result = await adjustStockAction({
-                businessId: business?.id,
-                productId: formData.product_id,
-                warehouseId: formData.warehouse_id || undefined,
-                quantity: Math.abs(adjustmentQty),
-                type: adjustmentQty >= 0 ? 'adjustment_in' : 'adjustment_out',
+                business_id: business?.id,
+                product_id: formData.product_id,
+                warehouse_id: formData.warehouse_id || undefined,
+                quantity_change: adjustmentQty,
                 reason: formData.reason,
-                notes: formData.notes,
-                date: formData.date,
-                costPrice: selectedProduct?.cost_price || 0,
+                notes: formData.notes || undefined,
             });
 
             if (result.success) {
@@ -137,7 +134,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                             <Package className="w-6 h-6" />
                         </div>
                         <div>
-                            <CardTitle className="text-2xl font-black uppercase tracking-tighter">Stock Adjustment</CardTitle>
+                            <CardTitle className="text-2xl font-semibold uppercase tracking-tighter">Stock Adjustment</CardTitle>
                             <p className="text-xs font-bold text-amber-300/70 uppercase tracking-widest mt-1">
                                 {business?.name} * Inventory Correction
                             </p>
@@ -151,16 +148,16 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                 <CardContent className="flex-1 overflow-y-auto p-8 space-y-8 bg-gray-50/50">
                     {/* Product Search */}
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Select Product *</Label>
+                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Select Product *</Label>
                         {selectedProduct ? (
                             <div className="flex items-center gap-4 p-4 bg-white border border-amber-200 rounded-2xl shadow-sm">
                                 <div className="p-3 rounded-xl bg-amber-50 text-amber-600">
                                     <Package className="w-6 h-6" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="font-black text-gray-900">{selectedProduct.name}</p>
+                                    <p className="font-semibold text-gray-900">{selectedProduct.name}</p>
                                     <p className="text-xs text-gray-400 font-bold">
-                                        SKU: {selectedProduct.sku || '--'} * Current Stock: <span className="text-amber-600 font-black">{selectedProduct.current_stock || selectedProduct.stock || 0}</span>
+                                        SKU: {selectedProduct.sku || '--'} * Current Stock: <span className="text-amber-600 font-semibold">{selectedProduct.current_stock || selectedProduct.stock || 0}</span>
                                     </p>
                                 </div>
                                 <Button variant="ghost" size="sm" onClick={() => { setSelectedProduct(null); setFormData(prev => ({ ...prev, product_id: '' })); }} className="text-gray-400 hover:text-red-500">
@@ -202,7 +199,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
 
                     {/* Adjustment Type */}
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Adjustment Type</Label>
+                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Adjustment Type</Label>
                         <div className="grid grid-cols-3 gap-3">
                             {ADJUSTMENT_TYPES.map(type => {
                                 const TypeIcon = type.icon;
@@ -217,7 +214,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                                             }`}
                                     >
                                         <TypeIcon className={`w-5 h-5 ${isActive ? ADJ_COLOR_CLASSES[type.color]?.icon : 'text-gray-400'}`} />
-                                        <span className={`text-xs font-black uppercase tracking-widest ${isActive ? ADJ_COLOR_CLASSES[type.color]?.text : 'text-gray-500'}`}>
+                                        <span className={`text-xs font-semibold uppercase tracking-widest ${isActive ? ADJ_COLOR_CLASSES[type.color]?.text : 'text-gray-500'}`}>
                                             {type.label}
                                         </span>
                                     </button>
@@ -229,7 +226,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                     {/* Quantity + Warehouse */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                                 {formData.adjustment_type === 'set_to' ? 'New Quantity *' : 'Adjustment Quantity *'}
                             </Label>
                             <Input
@@ -237,13 +234,13 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                                 min="0"
                                 step="1"
                                 placeholder="0"
-                                className="h-12 text-xl font-black text-center border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-amber-500"
+                                className="h-12 text-xl font-semibold text-center border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-amber-500"
                                 value={formData.quantity}
                                 onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Warehouse</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Warehouse</Label>
                             <Combobox
                                 options={warehouses.map(w => ({
                                     value: String(w.id),
@@ -261,7 +258,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
 
                     {/* Reason Code */}
                     <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Reason *</Label>
+                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Reason *</Label>
                         <div className="grid grid-cols-3 gap-2">
                             {ADJUSTMENT_REASONS.map(reason => (
                                 <button
@@ -282,7 +279,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                     {/* Notes + Date */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Notes (Optional)</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Notes (Optional)</Label>
                             <textarea
                                 className="w-full h-24 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 transition-all outline-none font-medium shadow-sm resize-none"
                                 placeholder="Additional details about this adjustment..."
@@ -291,7 +288,7 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Adjustment Date</Label>
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Adjustment Date</Label>
                             <Input
                                 type="date"
                                 className="h-12 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-amber-500"
@@ -304,13 +301,13 @@ export function StockAdjustmentForm({ onClose, onSave, products = [], warehouses
 
                 {/* Footer */}
                 <div className="p-6 bg-white border-t flex justify-between items-center bg-gray-50/80 backdrop-blur-md flex-shrink-0">
-                    <Button variant="ghost" onClick={onClose} disabled={isSaving} className="font-black text-xs uppercase tracking-widest text-gray-400 hover:text-gray-900">
+                    <Button variant="ghost" onClick={onClose} disabled={isSaving} className="font-semibold text-xs uppercase tracking-widest text-gray-400 hover:text-gray-900">
                         Cancel
                     </Button>
                     <Button
                         disabled={isSaving || !formData.product_id || !formData.quantity}
                         onClick={handleSave}
-                        className="h-12 px-10 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-amber-500/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
+                        className="h-12 px-10 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs uppercase tracking-widest shadow-xl shadow-amber-500/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
                     >
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Apply Adjustment

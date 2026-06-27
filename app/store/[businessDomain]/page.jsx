@@ -11,8 +11,39 @@ import { getDomainConfig, getStoreAccentColor } from '@/lib/config/storefrontDom
 import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { getMergedStorefrontHero } from '@/lib/storefront/mergeHero';
 import { getStoreHomeCopy } from '@/lib/storefront/storeCopy';
+import { getDomainLanding } from '@/lib/storefront/domainLanding';
+import { getHeroPreset, usesFinderHero } from '@/lib/storefront/heroPresets';
+import { isImmersiveFinderHero, resolveStorefrontCurrency } from '@/lib/storefront/storefrontRegional';
+import { isPharmacyElevatedStore, formatPharmacyStoreName, getPharmacyHeroSlides, resolvePharmacyQuickSearchTerms } from '@/lib/storefront/pharmacyStorefront';
+import { isFurnitureElevatedStore, formatFurnitureStoreName, getFurnitureHeroSlides, resolveFurnitureQuickSearchTerms } from '@/lib/storefront/furnitureStorefront';
+import { isRestaurantElevatedStore, formatRestaurantStoreName, getRestaurantHeroSlides, resolveRestaurantQuickSearchTerms } from '@/lib/storefront/restaurantStorefront';
+import { isAutoDealershipStore } from '@/lib/storefront/autoDealership';
+import { TENVO_VEHICLES_METADATA } from '@/lib/storefront/tenvoVehiclesAssets';
+import { isAutoMarketplaceStore } from '@/lib/storefront/autoMarketplace';
 import { resolveStoreContact } from '@/lib/storefront/businessContact';
 import { StoreBuyerSupportStrip } from '@/components/storefront/StoreBuyerSupportStrip';
+import { DomainHeroRouter } from '@/components/storefront/sections/DomainHeroRouter';
+import { DomainQuickActions } from '@/components/storefront/sections/DomainQuickActions';
+import { DomainDealStrip } from '@/components/storefront/sections/DomainDealStrip';
+import { DomainServicePills } from '@/components/storefront/sections/DomainServicePills';
+import { DomainEditorialSpotlight } from '@/components/storefront/sections/DomainEditorialSpotlight';
+import { StoreMarketingSections } from '@/components/storefront/sections/StoreMarketingSections';
+import { TopCollectionsCarousel } from '@/components/storefront/sections/TopCollectionsCarousel';
+import { TopPicksSection } from '@/components/storefront/sections/TopPicksSection';
+import { FashionDepartmentSections } from '@/components/storefront/sections/fashion/FashionDepartmentSections';
+import { trimToShowcaseRows } from '@/lib/storefront/showcaseProducts';
+import { ensureRailProducts } from '@/lib/utils/storefrontProductRail';
+import { buildTopCollections, getTopCollectionsTitle } from '@/lib/storefront/topCollections';
+import { buildTopPicksProducts } from '@/lib/storefront/topPicks';
+import { buildFashionHomeSections } from '@/lib/storefront/fashionHomeSections';
+import { DealershipHomeSections } from '@/components/storefront/sections/dealership/DealershipHomeSections';
+import { MarketplaceHomeSections } from '@/components/storefront/sections/marketplace/MarketplaceHomeSections';
+import { PharmacyHomeSections } from '@/components/storefront/sections/pharmacy/PharmacyHomeSections';
+import { FurnitureHomeSections } from '@/components/storefront/sections/furniture/FurnitureHomeSections';
+import { RestaurantHomeSections } from '@/components/storefront/sections/restaurant/RestaurantHomeSections';
+import { AutoPartsHomeSections } from '@/components/storefront/sections/autoparts/AutoPartsHomeSections';
+import { isAutoPartsStore } from '@/lib/storefront/autoParts';
+import { cn } from '@/lib/utils';
 import {
   Truck, Shield, RotateCcw, Star, Zap, Leaf, Clock, Gift,
   Lock, Tag, ArrowRight, ChevronRight, Package, Sparkles,
@@ -24,10 +55,40 @@ export async function generateMetadata({ params }) {
   const result = await getBusinessByDomain(businessDomain);
   if (!result.success) return { title: 'Store Not Found' };
   const { business } = result;
+  const storeName = isPharmacyElevatedStore(business.category)
+    ? formatPharmacyStoreName(business.business_name)
+    : isFurnitureElevatedStore(business.category)
+      ? formatFurnitureStoreName(business.business_name)
+      : isRestaurantElevatedStore(business.category)
+        ? formatRestaurantStoreName(business.business_name)
+        : business.business_name;
+
+  let description = business.description;
+  let keywords = `${storeName}, online store, ${business.city || 'Pakistan'}`;
+
+  if (isPharmacyElevatedStore(business.category)) {
+    description = description || `Shop genuine medicines and wellness products at ${storeName}. Browse OTC, vitamins, personal care, and more.`;
+    keywords = `${storeName}, online pharmacy, medicines${business.city ? `, ${business.city}` : ''}`;
+  } else if (isAutoDealershipStore(business.category)) {
+    description = description || TENVO_VEHICLES_METADATA.description;
+    keywords = business.keywords || TENVO_VEHICLES_METADATA.keywords;
+  } else if (isAutoMarketplaceStore(business.category)) {
+    description = description || `Search new and used cars, rentals, and auto parts at ${storeName}.`;
+    keywords = `${storeName}, cars, used cars, auto marketplace, ${business.city || 'Singapore'}`;
+  } else if (isFurnitureElevatedStore(business.category)) {
+    description = description || `Shop modern sofas, beds, dining sets, and storage at ${storeName}.`;
+    keywords = `${storeName}, furniture store, sofas, beds${business.city ? `, ${business.city}` : ''}`;
+  } else if (isRestaurantElevatedStore(business.category)) {
+    description = description || `Order fresh meals and catering from ${storeName}. Browse the live menu with delivery and pickup options.`;
+    keywords = `${storeName}, online menu, food ordering${business.city ? `, ${business.city}` : ''}`;
+  } else {
+    description = description || `Shop online at ${storeName}.`;
+  }
+
   return {
-    title: `${business.business_name} — Online Store`,
-    description: business.description || `Shop online at ${business.business_name}. Browse our collection of quality products.`,
-    keywords: `${business.business_name}, online store, shop, ${business.city || ''}`,
+    title: `${storeName}, Online Store`,
+    description,
+    keywords,
     openGraph: {
       title: business.business_name,
       description: business.description,
@@ -48,15 +109,17 @@ function StoreSectionHeader({ title, subtitle, href, accent, linkLabel = 'View a
   return (
     <div className="mb-3 flex items-end justify-between gap-3 sm:mb-5">
       <div className="min-w-0">
-        <h2 className="truncate text-base font-bold text-gray-900 sm:text-xl">{title}</h2>
+        <h2 className="store-heading truncate text-lg font-extrabold tracking-tight text-slate-900 sm:text-2xl">
+          {title}
+        </h2>
         {subtitle ? (
-          <p className="mt-0.5 truncate text-xs text-gray-500">{subtitle}</p>
+          <p className="mt-1 truncate text-xs text-slate-500 sm:text-sm">{subtitle}</p>
         ) : null}
       </div>
       {href ? (
         <Link
           href={href}
-          className="flex shrink-0 items-center gap-0.5 text-xs font-semibold sm:text-sm"
+          className="flex shrink-0 items-center gap-0.5 text-xs font-bold sm:text-sm"
           style={{ color: accent }}
         >
           {linkLabel}
@@ -74,20 +137,61 @@ export default async function StoreHomePage({ params }) {
   if (!businessResult.success) notFound();
 
   const { business, settings } = businessResult;
-  const storeCurrency = settings?.currency || 'PKR';
+  const storeCurrency = resolveStorefrontCurrency(settings, business);
   const domainCfg = getDomainConfig(business.category);
   const accent = getStoreAccentColor(settings, business.category);
   const accentDark = domainCfg.accentDark;
   const accentLight = domainCfg.accentLight;
   const hero = getMergedStorefrontHero({ settings, domainCfg, business });
-  const copy = getStoreHomeCopy(business, domainCfg);
+  const landing = getDomainLanding(business.category, businessDomain, settings, business);
+  const heroPreset = getHeroPreset(business.category, businessDomain, settings, business);
+  const immersiveHero = usesFinderHero(business.category);
+  const finderHero = isImmersiveFinderHero(heroPreset.type);
+  const editorialHero = heroPreset.type === 'fashion-editorial';
+  const dealershipHero = heroPreset.type === 'auto-dealership';
+  const marketplaceHero = heroPreset.type === 'auto-marketplace';
+  const pharmacyElevatedHero = heroPreset.type === 'pharmacy-elevated';
+  const furnitureElevatedHero = heroPreset.type === 'furniture-elevated';
+  const restaurantElevatedHero = heroPreset.type === 'restaurant-elevated';
+  const autoPartsHero = finderHero && isAutoPartsStore(business.category);
+  const skipHomeNavSections = finderHero || editorialHero || dealershipHero || marketplaceHero || pharmacyElevatedHero || furnitureElevatedHero || restaurantElevatedHero;
+  const copy = getStoreHomeCopy(business, domainCfg, landing);
   const contact = resolveStoreContact({ business, settings });
 
-  const [featuredResult, newArrivalsResult, categoriesResult, onSaleResult] = await Promise.all([
-    getProducts(business.id, { limit: 8, sort: 'featured' }),
-    getProducts(business.id, { limit: 8, sort: 'newest' }),
+  const needsCatalogBackfill = !editorialHero && !dealershipHero && !marketplaceHero && !autoPartsHero && !furnitureElevatedHero && !restaurantElevatedHero;
+
+  const [featuredResult, newArrivalsResult, categoriesResult, onSaleResult, topCatalogResult, catalogSnapshotResult, dealershipCatalogResult, marketplaceCatalogResult, pharmacyCatalogResult, furnitureCatalogResult, restaurantCatalogResult, autoPartsCatalogResult, catalogBackfillResult] = await Promise.all([
+    getProducts(business.id, { limit: 12, sort: 'featured' }),
+    getProducts(business.id, { limit: 16, sort: 'newest' }),
     getCategories(business.id),
-    getProducts(business.id, { limit: 4, onSale: true }),
+    getProducts(business.id, { limit: 12, onSale: true }),
+    editorialHero
+      ? getProducts(business.id, { limit: 40, sort: 'popularity' })
+      : Promise.resolve({ success: false, products: [] }),
+    editorialHero
+      ? getProducts(business.id, { limit: 80, sort: 'popularity' })
+      : Promise.resolve({ success: false, products: [] }),
+    dealershipHero
+      ? getProducts(business.id, { limit: 24, sort: 'featured' })
+      : Promise.resolve({ success: false, products: [] }),
+    marketplaceHero
+      ? getProducts(business.id, { limit: 40, sort: 'featured' })
+      : Promise.resolve({ success: false, products: [] }),
+    pharmacyElevatedHero
+      ? getProducts(business.id, { limit: 48, sort: 'popularity' })
+      : Promise.resolve({ success: false, products: [] }),
+    furnitureElevatedHero
+      ? getProducts(business.id, { limit: 48, sort: 'popularity' })
+      : Promise.resolve({ success: false, products: [] }),
+    restaurantElevatedHero
+      ? getProducts(business.id, { limit: 48, sort: 'popularity' })
+      : Promise.resolve({ success: false, products: [] }),
+    autoPartsHero
+      ? getProducts(business.id, { limit: 48, sort: 'featured' })
+      : Promise.resolve({ success: false, products: [] }),
+    needsCatalogBackfill
+      ? getProducts(business.id, { limit: 12, sort: 'popularity' })
+      : Promise.resolve({ success: false, products: [] }),
   ]);
 
   const featuredProducts = featuredResult.success ? featuredResult.products : [];
@@ -98,20 +202,132 @@ export default async function StoreHomePage({ params }) {
   const featuredIds = new Set(featuredProducts.map((p) => p.id));
   const newArrivals = newArrivalsRaw.filter((p) => !featuredIds.has(p.id));
   const homepagePriorIds = new Set([...featuredIds, ...newArrivals.map((p) => p.id)]);
-  const onSaleProducts = onSaleProductsRaw.filter((p) => !homepagePriorIds.has(p.id)).slice(0, 8);
+  const onSaleProducts = onSaleProductsRaw.filter((p) => !homepagePriorIds.has(p.id)).slice(0, 12);
+  const popularityBackfill = catalogBackfillResult.success ? catalogBackfillResult.products : newArrivalsRaw;
+  const featuredForRow = needsCatalogBackfill
+    ? buildTopPicksProducts(featuredProducts, popularityBackfill, 12)
+    : featuredProducts;
+  const featuredRow = trimToShowcaseRows(
+    ensureRailProducts(featuredForRow, popularityBackfill, 6, 12),
+    6,
+    1
+  );
+  const onSaleRow = trimToShowcaseRows(
+    ensureRailProducts(onSaleProducts, popularityBackfill, 6, 12),
+    6,
+    1
+  );
+  const newArrivalsRow = trimToShowcaseRows(newArrivals, 6, 2);
 
   const catalogTotal = featuredResult.total ?? newArrivalsResult.total ?? featuredProducts.length;
   const showNewArrivals = newArrivals.length > 0 && catalogTotal > featuredProducts.length;
 
   const heroImage = business.cover_image_url || domainCfg.heroImage;
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
-  const returnDays = settings?.returnPolicyDays || 7;
+  const returnDays = settings?.returnPolicyDays ?? 7;
+  const categoryFallbackImage = domainCfg.categoryImages?.default || domainCfg.heroImage;
+  const topCollections = editorialHero && topCatalogResult.success
+    ? buildTopCollections({
+        products: topCatalogResult.products,
+        categories,
+        businessDomain,
+        businessCategory: business.category,
+      })
+    : [];
+  const topCollectionsTitle = getTopCollectionsTitle(business.country || settings?.contact?.country);
+  const topPicksProducts = editorialHero
+    ? buildTopPicksProducts(
+        featuredProducts,
+        topCatalogResult.success ? topCatalogResult.products : [],
+        12
+      )
+    : [];
+  const fashionDepartments = editorialHero
+    ? buildFashionHomeSections({
+        businessDomain,
+        businessCategory: business.category,
+        categories,
+        products: catalogSnapshotResult.success ? catalogSnapshotResult.products : [],
+        newArrivalProducts: newArrivalsRaw,
+      })
+    : null;
+
+  const pharmacyProducts = pharmacyCatalogResult.success
+    ? pharmacyCatalogResult.products
+    : buildTopPicksProducts(featuredProducts, popularityBackfill, 48);
+
+  const furnitureProducts = furnitureCatalogResult.success
+    ? furnitureCatalogResult.products
+    : buildTopPicksProducts(featuredProducts, popularityBackfill, 48);
+
+  const restaurantProducts = restaurantCatalogResult.success
+    ? restaurantCatalogResult.products
+    : buildTopPicksProducts(featuredProducts, popularityBackfill, 48);
+
+  const restaurantStoreName = formatRestaurantStoreName(business.business_name);
+  const pharmacyStoreName = formatPharmacyStoreName(business.business_name);
+  const furnitureStoreName = formatFurnitureStoreName(business.business_name);
+  const coverImageUrl = business.cover_image_url?.startsWith('http') ? business.cover_image_url : null;
+
+  const immersiveHeroPreset = restaurantElevatedHero
+    ? {
+        ...heroPreset,
+        settings,
+        storeName: restaurantStoreName,
+        businessCategory: business.category,
+        quickSearchTerms: resolveRestaurantQuickSearchTerms(settings, restaurantProducts, categories),
+        slides: getRestaurantHeroSlides(heroPreset.base, settings, {
+          storeName: restaurantStoreName,
+          businessDomain,
+          businessDescription: business.description || settings?.description,
+          coverImage: coverImageUrl,
+          products: restaurantProducts,
+        }),
+      }
+    : pharmacyElevatedHero
+      ? {
+          ...heroPreset,
+          settings,
+          storeName: pharmacyStoreName,
+          businessCategory: business.category,
+          quickSearchTerms: resolvePharmacyQuickSearchTerms(settings, pharmacyProducts, categories, businessDomain),
+          slides: getPharmacyHeroSlides(heroPreset.base, settings, {
+            storeName: pharmacyStoreName,
+            businessDomain,
+            businessDescription: business.description || settings?.description,
+            coverImage: coverImageUrl,
+            products: pharmacyProducts,
+          }),
+        }
+      : furnitureElevatedHero
+        ? {
+            ...heroPreset,
+            settings,
+            storeName: furnitureStoreName,
+            businessCategory: business.category,
+            quickSearchTerms: resolveFurnitureQuickSearchTerms(settings, furnitureProducts, categories, businessDomain),
+            slides: getFurnitureHeroSlides(heroPreset.base, settings, {
+              storeName: furnitureStoreName,
+              businessDomain,
+              businessDescription: business.description || settings?.description,
+              coverImage: coverImageUrl,
+              products: furnitureProducts,
+            }),
+          }
+        : heroPreset;
+
+  const autoPartsProducts = autoPartsCatalogResult.success
+    ? autoPartsCatalogResult.products
+    : buildTopPicksProducts(featuredProducts, popularityBackfill, 48);
 
   return (
-    <div className="min-h-screen bg-slate-50 antialiased text-slate-900 selection:bg-slate-200">
+    <div className={cn(
+      'min-h-screen antialiased text-slate-900 selection:bg-slate-200',
+      editorialHero ? 'bg-stone-50' : dealershipHero || marketplaceHero || pharmacyElevatedHero || furnitureElevatedHero || restaurantElevatedHero || autoPartsHero ? 'bg-white' : 'bg-slate-50'
+    )}>
 
       {/* ── Announcement Banner ─────────────────────────────────────────────── */}
-      {hero.banner ? (
+      {hero.banner && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero ? (
         <div
           className="md:hidden text-white text-center py-2 px-4 text-xs font-medium truncate"
           style={{ backgroundColor: accent }}
@@ -120,8 +336,16 @@ export default async function StoreHomePage({ params }) {
         </div>
       ) : null}
 
-      {/* ── Hero Section ────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden min-h-[240px] sm:min-h-[380px] lg:min-h-[520px]">
+      {immersiveHero ? (
+        <DomainHeroRouter
+          preset={{ ...immersiveHeroPreset, contactCity: contact.city || settings?.contact?.city || business.city }}
+          businessDomain={businessDomain}
+          accent={accent}
+          accentDark={accentDark}
+        />
+      ) : (
+      /* ── Hero Section (general retail) ─────────────────────────────────── */
+      <section className="relative overflow-hidden min-h-[240px] sm:min-h-[380px] lg:min-h-[520px] store-hero">
         {/* Background */}
         <div className="absolute inset-0">
           {heroImage ? (
@@ -134,11 +358,12 @@ export default async function StoreHomePage({ params }) {
           ) : (
             <div style={{ background: `linear-gradient(135deg, ${accent} 0%, ${accentDark} 100%)` }} className="w-full h-full" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/25" />
+          <div className="absolute inset-0 bg-black/20" />
         </div>
 
         {/* Content */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 lg:py-32">
+        <div className="relative mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8 sm:py-16 lg:py-28">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 mb-4 sm:mb-6 max-w-full">
               {business.logo_url ? (
@@ -155,11 +380,11 @@ export default async function StoreHomePage({ params }) {
               )}
             </div>
 
-            <h1 className="text-2xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-2 sm:mb-4 tracking-tight">
+            <h1 className="store-heading store-heading--inverse text-2xl sm:text-5xl lg:text-6xl font-black leading-tight mb-2 sm:mb-4 tracking-tight">
               {hero.title}
             </h1>
             {hero.subtitle ? (
-              <p className="text-sm sm:text-xl text-white/85 mb-4 sm:mb-8 leading-relaxed max-w-xl line-clamp-2 sm:line-clamp-none">
+              <p className="store-hero-subtitle text-sm sm:text-xl mb-4 sm:mb-8 leading-relaxed max-w-xl line-clamp-2 sm:line-clamp-none">
                 {hero.subtitle}
               </p>
             ) : null}
@@ -184,7 +409,7 @@ export default async function StoreHomePage({ params }) {
               )}
             </div>
 
-            {/* Quick stats — desktop only (mobile: footer / policies) */}
+            {/* Quick stats, desktop only (mobile: footer / policies) */}
             <div className="hidden sm:flex flex-wrap gap-6 mt-10">
               {[
                 { label: `${featuredResult.total || featuredProducts.length}+ Products`, icon: Package },
@@ -240,11 +465,120 @@ export default async function StoreHomePage({ params }) {
           </div>
         )}
       </section>
+      )}
 
-      {/* ── Category Chips ───────────────────────────────────────────────────── */}
-      {categories.length > 0 && (
+      {dealershipHero && dealershipCatalogResult.success && (
+        <DealershipHomeSections
+          businessDomain={businessDomain}
+          businessCategory={business.category}
+          business={business}
+          settings={settings}
+          products={dealershipCatalogResult.products}
+          currency={storeCurrency}
+          accent={accent}
+          base={heroPreset.base}
+        />
+      )}
+
+      {marketplaceHero && marketplaceCatalogResult.success && (
+        <MarketplaceHomeSections
+          businessDomain={businessDomain}
+          businessCategory={business.category}
+          products={marketplaceCatalogResult.products}
+          currency={storeCurrency}
+          accent={accent}
+          base={heroPreset.base}
+          settings={settings}
+        />
+      )}
+
+      {autoPartsHero && autoPartsProducts.length > 0 && (
+        <AutoPartsHomeSections
+          businessDomain={businessDomain}
+          businessCategory={business.category}
+          products={autoPartsProducts}
+          currency={storeCurrency}
+          accent={accent}
+          base={heroPreset.base}
+          settings={settings}
+        />
+      )}
+
+      {pharmacyElevatedHero && (
+        <PharmacyHomeSections
+          businessDomain={businessDomain}
+          businessCategory={business.category}
+          categories={categories}
+          products={pharmacyProducts}
+          currency={storeCurrency}
+          accent={accent}
+          base={heroPreset.base}
+          settings={settings}
+          storeName={pharmacyStoreName}
+          businessDescription={business.description || settings?.description}
+          country={business.country || settings?.contact?.country}
+        />
+      )}
+
+      {furnitureElevatedHero && (
+        <FurnitureHomeSections
+          businessDomain={businessDomain}
+          businessCategory={business.category}
+          categories={categories}
+          products={furnitureProducts}
+          currency={storeCurrency}
+          accent={accent}
+          base={heroPreset.base}
+          settings={settings}
+          storeName={furnitureStoreName}
+          businessDescription={business.description || settings?.description}
+        />
+      )}
+
+      {restaurantElevatedHero && (
+        <RestaurantHomeSections
+          businessDomain={businessDomain}
+          businessCategory={business.category}
+          categories={categories}
+          products={restaurantProducts}
+          accent={accent}
+          base={heroPreset.base}
+          settings={settings}
+          storeName={restaurantStoreName}
+          businessDescription={business.description || settings?.description}
+        />
+      )}
+
+      {editorialHero && landing.servicePills?.length > 0 && (
+        <DomainServicePills pills={landing.servicePills} accent={accent} />
+      )}
+
+      {editorialHero && topCollections.length > 0 && (
+        <TopCollectionsCarousel title={topCollectionsTitle} items={topCollections} />
+      )}
+
+      {editorialHero && topPicksProducts.length >= 2 && (
+        <TopPicksSection
+          products={topPicksProducts}
+          businessDomain={businessDomain}
+          businessCategory={business.category}
+        />
+      )}
+
+      {editorialHero && fashionDepartments && (
+        <FashionDepartmentSections
+          sections={fashionDepartments}
+          businessDomain={businessDomain}
+          editorialSpotlight={landing.spotlights?.[0]}
+          accent={accent}
+          accentDark={accentDark}
+        />
+      )}
+
+      {/* ── Category Chips (skip when parts finder already shows shortcuts) ─ */}
+      {categories.length > 0 && !skipHomeNavSections && (
         <section className="bg-white border-b shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-2 overflow-x-auto py-3 sm:py-4 scrollbar-hide">
               <Link
                 href={`/store/${businessDomain}/products`}
@@ -277,9 +611,35 @@ export default async function StoreHomePage({ params }) {
         </section>
       )}
 
-      {/* ── Trust Badges (tablet+) ─────────────────────────────────────────── */}
-      <section className="hidden md:block bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* ── Domain quick actions (hidden for parts finder, panel covers this) ─ */}
+      {!skipHomeNavSections && (
+      <DomainQuickActions
+        actions={landing.quickActions}
+        accent={accent}
+        accentLight={accentLight}
+      />
+      )}
+
+      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
+        <DomainServicePills pills={landing.servicePills} accent={accent} />
+      )}
+
+      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
+        <DomainDealStrip dealStrip={landing.dealStrip} accent={accent} accentDark={accentDark} />
+      )}
+
+      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
+        <StoreMarketingSections
+          sections={settings?.pageSections}
+          businessDomain={businessDomain}
+          accent={accent}
+        />
+      )}
+
+      {/* ── Trust Badges (tablet+), skip on parts / editorial / dealership ─ */}
+      {!finderHero && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && (
+        <section className="hidden md:block border-b bg-white">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {domainCfg.trustBadges.map((badge, i) => {
               const Icon = BADGE_ICONS[badge.icon] || Shield;
@@ -301,14 +661,17 @@ export default async function StoreHomePage({ params }) {
           </div>
         </div>
       </section>
+      )}
 
-      {/* ── Category Cards Grid (tablet+) — chips cover mobile ─────────────── */}
-      {categories.length >= 3 && (
-        <section className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* ── Category Cards Grid (tablet+) ─────────────────────────────────── */}
+      {categories.length >= 3 && !skipHomeNavSections && (
+        <section className="hidden sm:block mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-black text-gray-900">Shop by Category</h2>
-              <p className="text-gray-500 text-sm mt-1">Find exactly what you are looking for</p>
+              <h2 className="store-heading text-2xl font-extrabold tracking-tight text-slate-900">
+                {copy.categoryHeading}
+              </h2>
+              <p className="text-slate-500 text-sm mt-1">Find exactly what you are looking for</p>
             </div>
             <Link
               href={`/store/${businessDomain}/products`}
@@ -320,17 +683,9 @@ export default async function StoreHomePage({ params }) {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {categories.slice(0, 6).map((cat, i) => {
+            {categories.slice(0, 6).map((cat) => {
               // Curated fallback images per index
-              const fallbackImages = [
-                'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300&q=80&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=300&q=80&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&q=80&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=300&q=80&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&q=80&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&q=80&auto=format&fit=crop',
-              ];
-              const imgSrc = cat.image_url || fallbackImages[i % fallbackImages.length];
+              const imgSrc = cat.image_url || categoryFallbackImage;
 
               return (
                 <Link
@@ -359,37 +714,87 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {/* ── Featured / primary catalog ───────────────────────────────────── */}
-      {featuredProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
+      {featuredRow.length > 0 && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
+        <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
           <StoreSectionHeader
             title={copy.featuredTitle}
             subtitle={copy.featuredSubtitle}
             href={`/store/${businessDomain}/products?sort=featured`}
             accent={accent}
+            linkLabel="Shop all"
           />
-          <Suspense fallback={<ProductsSkeleton count={8} />}>
-            <ProductGrid products={featuredProducts} businessDomain={businessDomain} showResultsCount={false} />
+          <Suspense fallback={<ProductsSkeleton count={12} density="showcase" />}>
+            <ProductGrid
+              products={featuredRow}
+              businessDomain={businessDomain}
+              showResultsCount={false}
+              density="showcase"
+            />
           </Suspense>
         </section>
       )}
 
+      {landing.spotlights?.[0] && !editorialHero && (
+        <DomainEditorialSpotlight
+          spotlight={landing.spotlights[0]}
+          accent={accent}
+          accentDark={accentDark}
+          businessDomain={businessDomain}
+          variant={editorialHero ? 'editorial' : 'default'}
+        />
+      )}
+
       {/* ── Fallback primary grid when no featured flag ──────────────────── */}
-      {featuredProducts.length === 0 && newArrivalsRaw.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
+      {featuredRow.length === 0 && newArrivalsRaw.length > 0 && (
+        <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
           <StoreSectionHeader
             title={copy.shopAllTitle}
             subtitle={copy.shopAllSubtitle}
             href={`/store/${businessDomain}/products`}
             accent={accent}
           />
-          <Suspense fallback={<ProductsSkeleton count={8} />}>
-            <ProductGrid products={newArrivalsRaw.slice(0, 8)} businessDomain={businessDomain} showResultsCount={false} />
+          <Suspense fallback={<ProductsSkeleton count={12} density="showcase" />}>
+            <ProductGrid
+              products={trimToShowcaseRows(newArrivalsRaw, 6, 2)}
+              businessDomain={businessDomain}
+              showResultsCount={false}
+              density="showcase"
+            />
           </Suspense>
         </section>
       )}
 
-      {/* ── Promotional Banner (desktop — avoids duplicate free-shipping on mobile) */}
-      <section className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* ── On Sale, editorial stores need ≥2 items; sparse rows use horizontal rail ─ */}
+      {onSaleRow.length >= (editorialHero ? 2 : 1) && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
+        <section
+          className={cn(
+            'mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-10',
+            editorialHero && 'border-t border-stone-200 bg-white'
+          )}
+        >
+          <StoreSectionHeader
+            title={copy.onSaleTitle}
+            subtitle={copy.onSaleSubtitle}
+            href={`/store/${businessDomain}/products?onSale=true`}
+            accent={accent}
+            linkLabel="All deals"
+          />
+          <Suspense fallback={<ProductsSkeleton count={12} density="showcase" />}>
+            <ProductGrid
+              products={onSaleRow}
+              catalogPool={popularityBackfill}
+              businessDomain={businessDomain}
+              showResultsCount={false}
+              density={editorialHero ? 'default' : 'showcase'}
+              layout={editorialHero && onSaleRow.length < 6 ? 'rail' : 'grid'}
+            />
+          </Suspense>
+        </section>
+      )}
+
+      {/* ── Free shipping promo (desktop), skip on editorial (avoids 3rd accent banner) ─ */}
+      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && (
+      <section className="hidden md:block mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div
           className="relative overflow-hidden rounded-3xl p-8 sm:p-12"
           style={{ background: `linear-gradient(135deg, ${accent} 0%, ${accentDark} 100%)` }}
@@ -422,87 +827,91 @@ export default async function StoreHomePage({ params }) {
           </div>
         </div>
       </section>
+      )}
+
+      {editorialHero && (
+        <StoreMarketingSections
+          sections={settings?.pageSections}
+          businessDomain={businessDomain}
+          accent={accent}
+        />
+      )}
 
       {/* ── New Arrivals (only when catalog has more beyond featured) ───────── */}
-      {showNewArrivals && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
+      {showNewArrivals && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && (
+        <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
           <StoreSectionHeader
             title={copy.newArrivalsTitle}
             subtitle={copy.newArrivalsSubtitle}
             href={`/store/${businessDomain}/products?sort=newest`}
             accent={accent}
           />
-          <Suspense fallback={<ProductsSkeleton count={8} />}>
-            <ProductGrid products={newArrivals} businessDomain={businessDomain} showResultsCount={false} />
-          </Suspense>
-        </section>
-      )}
-
-      {/* ── On Sale Section ──────────────────────────────────────────────────── */}
-      {onSaleProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
-          <StoreSectionHeader
-            title={copy.onSaleTitle}
-            subtitle={copy.onSaleSubtitle}
-            href={`/store/${businessDomain}/products?onSale=true`}
-            accent={accent}
-            linkLabel="All deals"
-          />
-          <Suspense fallback={<ProductsSkeleton count={4} />}>
-            <ProductGrid products={onSaleProducts} businessDomain={businessDomain} showResultsCount={false} />
+          <Suspense fallback={<ProductsSkeleton count={12} density="showcase" />}>
+            <ProductGrid
+              products={newArrivalsRow}
+              businessDomain={businessDomain}
+              showResultsCount={false}
+              density="showcase"
+            />
           </Suspense>
         </section>
       )}
 
       {/* ── Mobile buyer support ───────────────────────────────────────────── */}
+      {!dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && (
       <StoreBuyerSupportStrip businessDomain={businessDomain} accent={accent} />
+      )}
 
-      {/* ── Store Info Strip (large screens — footer covers mobile) ─────────── */}
-      {contact.hasAnyContact && (
-        <section className="hidden lg:block bg-gray-900 text-white py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-wrap items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
+      {/* ── Store CTA strip (desktop, complements light footer) ─────────── */}
+      {contact.hasAnyContact && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && (
+        <section className="hidden lg:block border-t border-slate-200 bg-white">
+          <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-slate-100 bg-[var(--store-accent-light)] px-6 py-5">
+              <div className="flex items-center gap-4 min-w-0">
                 {business.logo_url ? (
                   <SmartProductImage src={business.logo_url} alt={business.business_name} width={120} height={40} className="h-10 w-auto object-contain" />
                 ) : (
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shrink-0"
                     style={{ backgroundColor: accent }}
                   >
                     {business.business_name?.charAt(0)}
                   </div>
                 )}
-                <div>
-                  <p className="font-bold text-white">{business.business_name}</p>
-                  {contact.city && (
-                    <p className="text-gray-400 text-sm">
-                      {contact.city}
-                      {contact.country ? `, ${contact.country}` : ''}
+                <div className="min-w-0">
+                  <p className="font-bold text-slate-900 truncate">{business.business_name}</p>
+                  {(contact.city || contact.country) && (
+                    <p className="text-slate-500 text-sm truncate">
+                      {[contact.city, contact.country].filter(Boolean).join(', ')}
                     </p>
                   )}
+                  {contact.businessHours ? (
+                    <p className="text-slate-400 text-xs mt-0.5">{contact.businessHours}</p>
+                  ) : null}
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-6 text-sm text-gray-400">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
                 {contact.phone && (
-                  <a href={`tel:${contact.phone}`} className="hover:text-white transition-colors">
+                  <a href={`tel:${contact.phone}`} className="hover:text-[var(--store-accent)] transition-colors">
                     {contact.phone}
                   </a>
                 )}
                 {contact.email && (
-                  <a href={`mailto:${contact.email}`} className="hover:text-white transition-colors">
+                  <a href={`mailto:${contact.email}`} className="hover:text-[var(--store-accent)] transition-colors break-all">
                     {contact.email}
                   </a>
                 )}
-                <Link href={`/store/${businessDomain}/contact`} className="hover:text-white transition-colors">
-                  Contact page →
-                </Link>
+                {contact.showContactPageCta && (
+                  <Link href={`/store/${businessDomain}/contact`} className="font-semibold hover:text-[var(--store-accent)] transition-colors">
+                    Contact us →
+                  </Link>
+                )}
               </div>
 
               <Link
                 href={`/store/${businessDomain}/products`}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all hover:scale-105"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all hover:opacity-95 shrink-0"
                 style={{ backgroundColor: accent }}
               >
                 <ShoppingBag className="w-4 h-4" />

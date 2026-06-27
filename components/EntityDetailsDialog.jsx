@@ -89,9 +89,9 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
                                     {isEditing ? `Edit ${subtitle}: ${title}` : title}
                                 </DialogTitle>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{subtitle}</span>
+                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">{subtitle}</span>
                                     <span className="w-1 h-1 bg-gray-300 rounded-full" />
-                                    <Badge variant="outline" className={`text-[9px] uppercase font-black px-1.5 py-0 border ${statusColor}`}>
+                                    <Badge variant="outline" className={`text-[10px] uppercase font-semibold px-1.5 py-0 border ${statusColor}`}>
                                         {isEditing ? 'Editing Mode' : status}
                                     </Badge>
                                 </div>
@@ -100,10 +100,10 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
                     </div>
                     {!isEditing && (item.grand_total || item.amount || item.total_cost) && (
                         <div className="text-right">
-                            <div className={`text-2xl font-black ${item.grand_total > 0 ? 'text-gray-900' : 'text-gray-400 opacity-50'}`}>
+                            <div className={`text-2xl font-semibold ${item.grand_total > 0 ? 'text-gray-900' : 'text-gray-400 opacity-50'}`}>
                                 {formatCurrency(item.grand_total || item.amount || item.total_cost || 0, 'PKR')}
                             </div>
-                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                                 {type === 'bom' ? 'Total Est. Cost' : 'Grand Total'}
                             </div>
                         </div>
@@ -117,27 +117,27 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div className="flex items-center gap-2 mb-2"><Users className="w-3.5 h-3.5 text-gray-400" /><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</label></div>
+                    <div className="flex items-center gap-2 mb-2"><Users className="w-3.5 h-3.5 text-gray-400" /><label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Customer</label></div>
                     <p className="font-bold text-gray-900">{item.customer_name || item.customer?.name || 'Walk-in Customer'}</p>
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight mt-1">{item.date ? new Date(item.date).toLocaleDateString('en-GB') : 'No date'}</p>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div className="flex items-center gap-2 mb-2"><Hash className="w-3.5 h-3.5 text-gray-400" /><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Reference</label></div>
+                    <div className="flex items-center gap-2 mb-2"><Hash className="w-3.5 h-3.5 text-gray-400" /><label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Reference</label></div>
                     <p className="font-bold text-gray-900">{item.invoice_number || item.number || 'N/A'}</p>
-                    <div className="flex items-center gap-2 mt-1"><span className={`w-2 h-2 rounded-full ${item.status === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'}`} /><span className="text-[10px] font-black uppercase tracking-widest">{item.payment_method ? `Via ${item.payment_method}` : 'Record Found'}</span></div>
+                    <div className="flex items-center gap-2 mt-1"><span className={`w-2 h-2 rounded-full ${item.status === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'}`} /><span className="text-[10px] font-semibold uppercase tracking-widest">{item.payment_method ? `Via ${item.payment_method}` : 'Record Found'}</span></div>
                 </div>
             </div>
 
             <div className="space-y-3">
-                <div className="flex items-center justify-between px-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Items ({item.items?.length || 0})</label></div>
+                <div className="flex items-center justify-between px-1"><label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Items ({item.items?.length || 0})</label></div>
                 {item.items && item.items.length > 0 ? (
                     <div className="border border-gray-100 rounded-3xl overflow-hidden bg-white shadow-sm">
                         <table className="w-full text-sm">
                             <thead className="bg-gray-100/50 text-gray-400 border-b border-gray-100">
                                 <tr>
-                                    <th className="px-4 py-3 text-left font-black uppercase text-[9px] tracking-widest">Description</th>
-                                    <th className="px-4 py-3 text-right font-black uppercase text-[9px] tracking-widest">Qty</th>
-                                    <th className="px-4 py-3 text-right font-black uppercase text-[9px] tracking-widest">Total</th>
+                                    <th className="px-4 py-3 text-left font-semibold uppercase text-[10px] tracking-widest">Description</th>
+                                    <th className="px-4 py-3 text-right font-semibold uppercase text-[10px] tracking-widest">Qty</th>
+                                    <th className="px-4 py-3 text-right font-semibold uppercase text-[10px] tracking-widest">Total</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -151,7 +151,7 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
                             </tbody>
                         </table>
                     </div>
-                ) : <div className="p-8 text-center border-2 border-dashed border-gray-100 rounded-[2rem] bg-gray-50/30"><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No items summarized</p></div>}
+                ) : <div className="p-8 text-center border-2 border-dashed border-gray-100 rounded-[2rem] bg-gray-50/30"><p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">No items summarized</p></div>}
             </div>
         </div>
     );
@@ -160,15 +160,15 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
                 <div className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Email</label>
+                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-1">Email</label>
                     <p className="font-bold text-gray-900 truncate">{item.email || 'N/A'}</p>
                 </div>
                 <div className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Phone</label>
+                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-1">Phone</label>
                     <p className="font-bold text-gray-900 underline underline-offset-4 decoration-emerald-200">{item.phone || 'N/A'}</p>
                 </div>
                 <div className="col-span-2 p-5 bg-gray-50/50 rounded-3xl border border-gray-100">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Location</label>
+                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-1">Location</label>
                     <p className="font-bold text-gray-900">{item.address || item.city || 'N/A'}</p>
                 </div>
             </div>
@@ -179,13 +179,13 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
         <div className="space-y-6">
             <div className="p-5 bg-wine-50 rounded-3xl border border-wine-100">
                 <div className="flex items-center justify-between mb-4">
-                    <div><label className="text-[10px] font-black text-wine-400 uppercase tracking-widest block">Product</label><p className="font-bold text-wine-900">{item.product_name || item.name || 'N/A'}</p></div>
-                    <div className="text-right"><label className="text-[10px] font-black text-wine-400 uppercase tracking-widest block">Qty</label><p className="font-black text-wine-900">{item.quantity || 1} {item.unit || 'pcs'}</p></div>
+                    <div><label className="text-[10px] font-semibold text-wine-400 uppercase tracking-widest block">Product</label><p className="font-bold text-wine-900">{item.product_name || item.name || 'N/A'}</p></div>
+                    <div className="text-right"><label className="text-[10px] font-semibold text-wine-400 uppercase tracking-widest block">Qty</label><p className="font-semibold text-wine-900">{item.quantity || 1} {item.unit || 'pcs'}</p></div>
                 </div>
                 {item.materials && item.materials.length > 0 && (
                     <div className="bg-white rounded-2xl border border-wine-100 overflow-hidden">
                         <table className="w-full text-xs">
-                            <thead className="bg-wine-100/50 text-wine-400 border-b border-wine-100"><tr><th className="px-3 py-2 text-left text-[8px] uppercase tracking-widest">Material</th><th className="px-3 py-2 text-right text-[8px] uppercase tracking-widest">Needed</th></tr></thead>
+                            <thead className="bg-wine-100/50 text-wine-400 border-b border-wine-100"><tr><th className="px-3 py-2 text-left text-[10px] uppercase tracking-widest">Material</th><th className="px-3 py-2 text-right text-[10px] uppercase tracking-widest">Needed</th></tr></thead>
                             <tbody className="divide-y divide-wine-50">{item.materials.map((m, i) => (<tr key={i}><td className="px-3 py-2 text-wine-900">{m.product_name || m.name}</td><td className="px-3 py-2 text-right font-bold text-wine-700">{m.quantity} {m.unit || 'unit'}</td></tr>))}</tbody>
                         </table>
                     </div>
@@ -197,16 +197,16 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
     const renderGenericDetails = () => (
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-                {item.number && <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Ref</label><p className="font-mono font-bold text-gray-900">{item.number}</p></div>}
-                {item.date && <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Date</label><p className="font-bold text-gray-900">{new Date(item.date).toLocaleDateString()}</p></div>}
+                {item.number && <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100"><label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-1">Ref</label><p className="font-mono font-bold text-gray-900">{item.number}</p></div>}
+                {item.date && <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100"><label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest block mb-1">Date</label><p className="font-bold text-gray-900">{new Date(item.date).toLocaleDateString()}</p></div>}
                 <div className="col-span-2 space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Attributes</label>
+                    <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-1">Attributes</label>
                     <div className="grid grid-cols-2 gap-3">
                         {Object.entries(item).map(([key, value]) => {
                             if (typeof value === 'object' || key.includes('id') || key.includes('_at') || ['name', 'number', 'status', 'grand_total', 'date', 'invoice_number', 'amount', 'tax_total', 'subtotal', 'discount_total', 'items', 'materials'].includes(key)) return null;
                             if (value === null || value === undefined || value === '') return null;
                             return (
-                                <div key={key} className="p-3 bg-white rounded-xl border border-gray-100 flex flex-col"><label className="text-[8px] font-black text-gray-400 uppercase tracking-wider mb-0.5">{key.replace(/_/g, ' ')}</label><p className="font-bold text-gray-800 text-xs truncate capitalize">{String(value)}</p></div>
+                                <div key={key} className="p-3 bg-white rounded-xl border border-gray-100 flex flex-col"><label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">{key.replace(/_/g, ' ')}</label><p className="font-bold text-gray-800 text-xs truncate capitalize">{String(value)}</p></div>
                             );
                         })}
                     </div>
@@ -247,12 +247,12 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
 
                 <div className="p-6 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between backdrop-blur-md shrink-0">
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={handlePrint} className="rounded-xl bg-white border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 px-3"><Printer className="w-3.5 h-3.5 mr-2" /><span className="text-[10px] font-black uppercase tracking-widest">Print</span></Button>
-                        <Button variant="outline" size="sm" onClick={() => copyToClipboard(JSON.stringify(item), "Item data")} className="rounded-xl bg-white border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 px-3"><Copy className="w-3.5 h-3.5 mr-2" /><span className="text-[10px] font-black uppercase tracking-widest">Copy</span></Button>
+                        <Button variant="outline" size="sm" onClick={handlePrint} className="rounded-xl bg-white border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 px-3"><Printer className="w-3.5 h-3.5 mr-2" /><span className="text-[10px] font-semibold uppercase tracking-widest">Print</span></Button>
+                        <Button variant="outline" size="sm" onClick={() => copyToClipboard(JSON.stringify(item), "Item data")} className="rounded-xl bg-white border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 px-3"><Copy className="w-3.5 h-3.5 mr-2" /><span className="text-[10px] font-semibold uppercase tracking-widest">Copy</span></Button>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Button variant="ghost" onClick={isEditing ? () => setIsEditing(false) : onClose} className="rounded-xl font-black uppercase text-[10px] tracking-widest px-6">{isEditing ? 'Cancel' : 'Close'}</Button>
-                        <Button onClick={() => setIsEditing(!isEditing)} className="rounded-xl font-black uppercase tracking-widest px-6 shadow-lg shadow-gray-200 border-none bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Button variant="ghost" onClick={isEditing ? () => setIsEditing(false) : onClose} className="rounded-xl font-semibold uppercase text-[10px] tracking-widest px-6">{isEditing ? 'Cancel' : 'Close'}</Button>
+                        <Button onClick={() => setIsEditing(!isEditing)} className="rounded-xl font-semibold uppercase tracking-widest px-6 shadow-lg shadow-gray-200 border-none bg-emerald-600 hover:bg-emerald-700 text-white">
                             {isEditing ? <React.Fragment><Eye className="w-3.5 h-3.5 mr-2" />View Details</React.Fragment> : <React.Fragment><Edit3 className="w-3.5 h-3.5 mr-2" />Update Record<ArrowUpRight className="w-3.5 h-3.5 ml-2" /></React.Fragment>}
                         </Button>
                     </div>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -119,7 +119,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                             <Gift className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black text-gray-900">
+                            <h2 className="text-sm font-semibold text-gray-900">
                                 {isEditing ? 'Edit Promotion' : 'Create New Promotion'}
                             </h2>
                             <p className="text-[10px] text-gray-400 font-bold">
@@ -152,7 +152,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                                         <Icon className="w-5 h-5 text-white" />
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-sm font-black text-gray-900">{type.label}</p>
+                                        <p className="text-sm font-semibold text-gray-900">{type.label}</p>
                                         <p className="text-[10px] text-gray-400 mt-0.5">{type.description}</p>
                                     </div>
                                     <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90" />
@@ -168,7 +168,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                         {/* Name & Description */}
                         <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Promotion Name *</label>
+                                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Promotion Name *</label>
                                 <Input
                                     value={formData.name}
                                     onChange={(e) => handleFieldChange('name', e.target.value)}
@@ -178,7 +178,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Description</label>
+                                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Description</label>
                                 <Input
                                     value={formData.description}
                                     onChange={(e) => handleFieldChange('description', e.target.value)}
@@ -192,7 +192,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                         {(formData.type === 'percentage' || formData.type === 'fixed') && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">
+                                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                         {formData.type === 'percentage' ? 'Discount (%)' : `Discount (${currency})`}
                                     </label>
                                     <Input
@@ -207,7 +207,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                                 </div>
                                 {formData.type === 'percentage' && (
                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Max Discount ({currency})</label>
+                                        <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Max Discount ({currency})</label>
                                         <Input
                                             type="number"
                                             value={formData.max_discount}
@@ -225,7 +225,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                             <div className="p-4 rounded-xl bg-wine-50/50 border border-wine-200 space-y-3">
                                 <div className="flex items-center gap-2">
                                     <Gift className="w-4 h-4 text-wine-500" />
-                                    <span className="text-xs font-black text-wine-700 uppercase">Buy X Get Y Configuration</span>
+                                    <span className="text-xs font-semibold text-wine-700 uppercase">Buy X Get Y Configuration</span>
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
                                     <div className="space-y-1">
@@ -271,7 +271,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                         {formData.type === 'threshold' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Minimum Spend ({currency})</label>
+                                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Minimum Spend ({currency})</label>
                                     <Input
                                         type="number"
                                         value={formData.min_order}
@@ -282,7 +282,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Discount ({currency})</label>
+                                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Discount ({currency})</label>
                                     <Input
                                         type="number"
                                         value={formData.value}
@@ -299,7 +299,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                             <div className="p-4 rounded-xl bg-orange-50/50 border border-orange-200 space-y-3">
                                 <div className="flex items-center gap-2">
                                     <Package className="w-4 h-4 text-orange-500" />
-                                    <span className="text-xs font-black text-orange-700 uppercase">Bundle Configuration</span>
+                                    <span className="text-xs font-semibold text-orange-700 uppercase">Bundle Configuration</span>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold text-gray-500">Bundle Price ({currency})</label>
@@ -321,7 +321,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                         {/* Date Range */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Start Date</label>
+                                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Start Date</label>
                                 <Input
                                     type="datetime-local"
                                     value={formData.start_date}
@@ -330,7 +330,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">End Date</label>
+                                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">End Date</label>
                                 <Input
                                     type="datetime-local"
                                     value={formData.end_date}
@@ -343,7 +343,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                         {/* Usage Limits */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Total Usage Limit</label>
+                                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Total Usage Limit</label>
                                 <Input
                                     type="number"
                                     value={formData.usage_limit}
@@ -354,7 +354,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Per Customer Limit</label>
+                                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Per Customer Limit</label>
                                 <Input
                                     type="number"
                                     value={formData.per_customer_limit}
@@ -368,7 +368,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
 
                         {/* Product Scope */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-black text-gray-700 uppercase tracking-wider">Applies To</label>
+                            <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Applies To</label>
                             <div className="flex gap-2">
                                 {[
                                     { key: 'all', label: 'All Products' },
@@ -404,7 +404,7 @@ function PromoFormDialog({ open, onClose, onSave, promotion = null, currency = '
                 {/* Footer */}
                 <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
                     <Button variant="outline" onClick={step === 0 ? onClose : () => setStep(0)} className="h-10 rounded-xl text-xs font-bold">
-                        {step === 0 ? 'Cancel' : '<- Back'}
+                        {step === 0 ? 'Cancel' : '<-� Back'}
                     </Button>
                     {step === 1 && (
                         <Button
@@ -461,20 +461,20 @@ function PromoCard({ promotion, onEdit, onToggle, onDuplicate, onDelete, currenc
                             <Icon className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-gray-900">{promotion.name}</h3>
-                            <Badge variant="outline" className={cn("text-[9px] mt-0.5", typeInfo.badgeColor)}>
+                            <h3 className="text-sm font-semibold text-gray-900">{promotion.name}</h3>
+                            <Badge variant="outline" className={cn("text-[10px] mt-0.5", typeInfo.badgeColor)}>
                                 {typeInfo.label}
                             </Badge>
                         </div>
                     </div>
-                    <Badge className={cn("text-[9px] font-bold border", STATUS_COLORS[status])}>
+                    <Badge className={cn("text-[10px] font-bold border", STATUS_COLORS[status])}>
                         {status}
                     </Badge>
                 </div>
 
                 {/* Value Display */}
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="text-lg font-black text-gray-900">
+                    <div className="text-lg font-semibold text-gray-900">
                         {promotion.type === 'percentage' && `${promotion.value}% OFF`}
                         {promotion.type === 'fixed' && `${currency}${promotion.value} OFF`}
                         {promotion.type === 'bogo' && `Buy ${promotion.buy_qty} Get ${promotion.get_qty}`}
@@ -551,8 +551,8 @@ function PromoCard({ promotion, onEdit, onToggle, onDuplicate, onDelete, currenc
 /**
  * @param {string} [businessId]
  * @param {string} [currency]
- * @param {any[] | undefined} [seedPromotions] — from campaigns hub prefetch; avoids empty spinner when tab opens.
- * @param {() => void} [onHubRefresh] — notify parent to refetch hub (counts + seed) after mutations.
+ * @param {any[] | undefined} [seedPromotions], from campaigns hub prefetch; avoids empty spinner when tab opens.
+ * @param {() => void} [onHubRefresh], notify parent to refetch hub (counts + seed) after mutations.
  */
 export function PromotionEngine({ businessId, currency = 'Rs.', seedPromotions, onHubRefresh }) {
     const { business } = useBusiness();
@@ -784,7 +784,7 @@ export function PromotionEngine({ businessId, currency = 'Rs.', seedPromotions, 
                                 <stat.icon className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <p className="text-xl font-black text-gray-900">{stat.value}</p>
+                                <p className="text-xl font-semibold text-gray-900">{stat.value}</p>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
                             </div>
                         </CardContent>
@@ -810,7 +810,7 @@ export function PromotionEngine({ businessId, currency = 'Rs.', seedPromotions, 
                                 key={status}
                                 onClick={() => setFilterStatus(status)}
                                 className={cn(
-                                    "px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
+                                    "px-3 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-wider transition-all",
                                     filterStatus === status
                                         ? "bg-brand-primary text-white shadow-md"
                                         : "bg-gray-100 text-gray-500 hover:bg-gray-200"

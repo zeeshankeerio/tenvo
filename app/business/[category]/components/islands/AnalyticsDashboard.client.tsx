@@ -27,7 +27,7 @@ interface AnalyticsDashboardProps {
     invoices: InvoiceLike[];
     colors?: Record<string, unknown>;
     category?: string;
-    /** Same range as Business Overview / workspace filter — passed through to demand forecast. */
+    /** Same range as Business Overview / workspace filter, passed through to demand forecast. */
     dateRange?: { from: Date; to: Date };
     onQuickAction?: (actionId: string) => void;
 }
@@ -52,11 +52,11 @@ export function AnalyticsDashboard({
             <Card className="h-[400px] border border-slate-200 shadow-sm bg-white overflow-hidden">
                 <CardHeader className="flex flex-row items-center justify-between py-3 px-5 border-b bg-gray-50/40 space-y-0">
                     <div>
-                        <CardTitle className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <CardTitle className="text-[10px] font-semibold text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2">
                             <BarChart3 className="w-3.5 h-3.5 text-wine" />
                             Performance Analytics
                         </CardTitle>
-                        <p className="text-[9px] text-slate-500 font-bold mt-1 uppercase tracking-wider">Awaiting sufficient period data</p>
+                        <p className="text-[10px] text-slate-500 font-bold mt-1 uppercase tracking-wider">Awaiting sufficient period data</p>
                     </div>
                 </CardHeader>
 
@@ -74,13 +74,13 @@ export function AnalyticsDashboard({
                     <div className="mt-4 flex items-center justify-center gap-2">
                         <button
                             onClick={() => onQuickAction?.('new-invoice')}
-                            className="px-3 py-1.5 font-black uppercase tracking-wider rounded-lg emerald-600 hover:emerald-700 transition-colors bg-emerald-600 hover:bg-emerald-700 text-white"
+                            className="px-3 py-1.5 font-semibold uppercase tracking-wider rounded-lg emerald-600 hover:emerald-700 transition-colors bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             Create Invoice
                         </button>
                         <button
                             onClick={() => onQuickAction?.('new-product')}
-                            className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+                            className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
                         >
                             Add Product
                         </button>
@@ -101,25 +101,25 @@ export function AnalyticsDashboard({
                     <CardHeader className="flex flex-row items-center justify-between py-3 px-5 border-b bg-gray-50/30 backdrop-blur-md space-y-0">
                         <div className="flex items-center gap-6">
                             <div className="flex flex-col">
-                                <CardTitle className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <CardTitle className="text-[10px] font-semibold text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2">
                                     <BarChart3 className="w-3.5 h-3.5 text-wine" />
                                     Performance Analytics
                                 </CardTitle>
-                                <span className="text-[8px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">AI-Enhanced Growth Monitoring</span>
+                                <span className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">AI-Enhanced Growth Monitoring</span>
                             </div>
 
                             <TabsList className="bg-slate-200/40 h-8 p-1 rounded-lg">
-                                <TabsTrigger value="visual" className="text-[9px] px-4 h-6 uppercase font-black data-[state=active]:bg-white data-[state=active]:text-wine">Trends</TabsTrigger>
-                                <TabsTrigger value="predictive" className="text-[9px] px-4 h-6 uppercase font-black data-[state=active]:bg-white data-[state=active]:text-wine">Projections</TabsTrigger>
+                                <TabsTrigger value="visual" className="text-[10px] px-4 h-6 uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-wine">Trends</TabsTrigger>
+                                <TabsTrigger value="predictive" className="text-[10px] px-4 h-6 uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-wine">Projections</TabsTrigger>
                             </TabsList>
                         </div>
 
                         <div className="hidden md:flex items-center gap-4 border-l border-slate-200 pl-4">
                             <div className="flex flex-col items-end">
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tight">System Status</span>
+                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-tight">System Status</span>
                                 <div className="flex items-center gap-1.5 mt-0.5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[9px] font-black text-emerald-600 uppercase">Live Intelligence Active</span>
+                                    <span className="text-[10px] font-semibold text-emerald-600 uppercase">Live Intelligence Active</span>
                                 </div>
                             </div>
                         </div>

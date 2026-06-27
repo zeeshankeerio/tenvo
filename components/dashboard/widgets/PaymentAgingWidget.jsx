@@ -155,7 +155,7 @@ export function PaymentAgingWidget({
                 <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <div className="flex justify-between mb-2">
                         <span className="text-xs font-semibold text-gray-600">Total Outstanding</span>
-                        <span className="text-lg font-black text-gray-900">
+                        <span className="text-lg font-semibold text-gray-900">
                             {formatCurrency(agingAnalysis.total.amount, currency)}
                         </span>
                     </div>

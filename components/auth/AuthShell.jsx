@@ -51,11 +51,11 @@ function AuthBrandPanel({ variant = 'login' }) {
         <TenvoTextLogo
           textClassName="text-white"
           taglineClassName="text-white/50"
-          iconClassName="h-10 w-10 rounded-xl border border-white/15 bg-wine shadow-lg shadow-wine/30"
+          iconClassName="h-10 w-10 shadow-lg shadow-wine/30"
         />
 
         <div className="mt-10 space-y-4 xl:mt-12">
-          <h1 className="max-w-md text-[2rem] font-black leading-[1.12] tracking-tight text-white xl:text-[2.35rem]">
+          <h1 className="max-w-md text-[2rem] font-semibold leading-[1.12] tracking-tight text-white xl:text-[2.35rem]">
             {AUTH_PANEL.headline[0]}
             <br />
             <span className="bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
@@ -98,7 +98,7 @@ function AuthBrandPanel({ variant = 'login' }) {
 }
 
 /**
- * Split-panel auth layout — 2026 SaaS style, fits laptop viewports without page scroll.
+ * Split-panel auth layout, 2026 SaaS style, fits laptop viewports without page scroll.
  */
 export function AuthShell({
   children,
@@ -109,7 +109,7 @@ export function AuthShell({
   stepIndicator = null,
   footer = null,
   variant = 'login',
-  /** @deprecated use variant — kept for register compat */
+  /** @deprecated use variant, kept for register compat */
   panelTagline,
 }) {
   void panelTagline;
@@ -124,7 +124,7 @@ export function AuthShell({
           <TenvoTextLogo
             textClassName="text-white"
             taglineClassName="text-white/50"
-            iconClassName="h-8 w-8 border border-white/15 bg-wine"
+            iconClassName="h-8 w-8"
           />
         </div>
 
@@ -147,7 +147,7 @@ export function AuthShell({
                 {(title || subtitle) && (
                   <div className="border-b border-gray-100 bg-gradient-to-b from-gray-50/90 to-white px-6 pb-5 pt-6 sm:px-7 sm:pt-7">
                     {title ? (
-                      <h2 className="text-xl font-black tracking-tight text-gray-900 sm:text-[1.35rem]">
+                      <h2 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-[1.35rem]">
                         {title}
                       </h2>
                     ) : null}

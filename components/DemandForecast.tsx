@@ -6,6 +6,7 @@ import { getDomainKnowledge } from '@/lib/domainKnowledge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { BRAND_PRIMARY } from '@/lib/theme/brandTokens';
 
 export type DemandForecastProps = {
     businessId?: string;
@@ -142,7 +143,7 @@ export const DemandForecast = memo(function DemandForecast({
                                 </CardTitle>
                                 <Badge
                                     variant={item.priority === 'high' ? 'destructive' : 'secondary'}
-                                    className="text-[8px] py-0 px-1 font-black uppercase"
+                                    className="text-[10px] py-0 px-1 font-semibold uppercase"
                                 >
                                     {item.priority === 'high' ? 'Critical' : 'Stable'}
                                 </Badge>
@@ -151,20 +152,20 @@ export const DemandForecast = memo(function DemandForecast({
                         <CardContent className="px-3 pb-3">
                             <div className="space-y-2">
                                 <div className="flex justify-between items-end border-b border-slate-50 pb-1">
-                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Current Stock</span>
-                                    <span className="font-black text-xs text-slate-900">
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Current Stock</span>
+                                    <span className="font-semibold text-xs text-slate-900">
                                         {item.current}{' '}
-                                        <span className="text-[8px] font-medium text-slate-400">units</span>
+                                        <span className="text-[10px] font-medium text-slate-400">units</span>
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-end border-b border-slate-50 pb-1">
-                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">AI Forecast (30D)</span>
-                                    <span className="font-black text-xs text-wine">{item.forecast}</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">AI Forecast (30D)</span>
+                                    <span className="font-semibold text-xs text-wine">{item.forecast}</span>
                                 </div>
                                 {item.insight && (
                                     <div
                                         className={cn(
-                                            'p-2 rounded-lg text-[9px] font-bold flex items-start gap-2 leading-tight mt-1',
+                                            'p-2 rounded-lg text-[10px] font-bold flex items-start gap-2 leading-tight mt-1',
                                             item.priority === 'high' ? 'bg-red-50 text-red-700' : 'bg-wine/5 text-wine'
                                         )}
                                     >
@@ -181,7 +182,7 @@ export const DemandForecast = memo(function DemandForecast({
             <Card className="border-wine/20 shadow-2xl bg-white/50 backdrop-blur-md">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle className="text-xl font-black text-wine">Market Trend Projection</CardTitle>
+                        <CardTitle className="text-xl font-semibold text-wine">Market Trend Projection</CardTitle>
                         <CardDescription className="font-medium text-gray-500">
                             Visualizing stock vs predicted demand variance
                         </CardDescription>
@@ -204,8 +205,8 @@ export const DemandForecast = memo(function DemandForecast({
                             <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorCurrent" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#e34242" stopOpacity={0.12} />
-                                        <stop offset="95%" stopColor="#e34242" stopOpacity={0} />
+                                        <stop offset="5%" stopColor={BRAND_PRIMARY} stopOpacity={0.12} />
+                                        <stop offset="95%" stopColor={BRAND_PRIMARY} stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -224,12 +225,12 @@ export const DemandForecast = memo(function DemandForecast({
                                         boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
                                         fontWeight: 700,
                                     }}
-                                    cursor={{ stroke: '#e34242', strokeWidth: 2, strokeDasharray: '5 5' }}
+                                    cursor={{ stroke: BRAND_PRIMARY, strokeWidth: 2, strokeDasharray: '5 5' }}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="current"
-                                    stroke="#e34242"
+                                    stroke={BRAND_PRIMARY}
                                     strokeWidth={4}
                                     fillOpacity={1}
                                     fill="url(#colorCurrent)"

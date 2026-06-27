@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -45,7 +45,7 @@ function ActivityItem({ activity, currency }) {
                 <p className="text-sm font-semibold text-gray-800 leading-snug">{activity.description}</p>
                 <div className="flex items-center gap-2 mt-1">
                     <span className={cn(
-                        'text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase',
+                        'text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase',
                         config.color
                     )}>
                         {config.label}
@@ -56,7 +56,7 @@ function ActivityItem({ activity, currency }) {
                     </span>
                     {activity.status && (
                         <span className={cn(
-                            'text-[9px] px-1.5 py-0.5 rounded-full font-bold',
+                            'text-[10px] px-1.5 py-0.5 rounded-full font-bold',
                             activity.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
                                 activity.status === 'pending' ? 'bg-amber-100 text-amber-700' :
                                     activity.status === 'warning' ? 'bg-red-100 text-red-700' :
@@ -93,9 +93,9 @@ function getTimeAgo(date) {
     return d.toLocaleDateString();
 }
 
-// ===============================================================
+// =�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�
 // MAIN AUDIT TRAIL VIEWER
-// ===============================================================
+// =�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�=�
 
 export function AuditTrailViewer({ businessId }) {
     const { business, currencySymbol } = useBusiness();
@@ -150,7 +150,7 @@ export function AuditTrailViewer({ businessId }) {
                         <ScrollText className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-black text-gray-900">Audit Trail</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">Audit Trail</h2>
                         <p className="text-xs text-gray-400">{activities.length} activities * Unified timeline</p>
                     </div>
                 </div>
@@ -174,8 +174,8 @@ export function AuditTrailViewer({ businessId }) {
                             )}
                         >
                             <Icon className="w-4 h-4 mb-1 opacity-60" />
-                            <p className="text-lg font-black">{count}</p>
-                            <p className="text-[9px] font-bold opacity-60 uppercase">{config.label}s</p>
+                            <p className="text-lg font-semibold">{count}</p>
+                            <p className="text-[10px] font-bold opacity-60 uppercase">{config.label}s</p>
                         </button>
                     );
                 })}
