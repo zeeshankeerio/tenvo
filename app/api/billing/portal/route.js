@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { prismaBase } from '@/lib/db';
 import { createBillingPortalSession } from '@/lib/payments/stripe';

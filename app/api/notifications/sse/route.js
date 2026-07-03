@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { prismaBase } from '@/lib/db';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
