@@ -13,10 +13,15 @@ import { CartDrawer } from '@/components/storefront/CartDrawer';
 import { BackToTop } from '@/components/storefront/BackToTop';
 import { StoreMobileBottomNav } from '@/components/storefront/mobile/StoreMobileBottomNav';
 import { StoreThemeStyles } from '@/components/storefront/StoreThemeStyles';
+import { StorefrontAnalyticsBeacon } from '@/components/storefront/StorefrontAnalyticsBeacon';
 import { isLuxuryFashionStore } from '@/lib/storefront/luxuryFashion';
 import { isAutoDealershipStore } from '@/lib/storefront/autoDealership';
 import { isAutoMarketplaceStore } from '@/lib/storefront/autoMarketplace';
 import { isPharmacyElevatedStore } from '@/lib/storefront/pharmacyStorefront';
+import { isFitnessElevatedStore } from '@/lib/storefront/fitnessStorefront';
+import { FitnessSiteHeader } from '@/components/storefront/fitness/FitnessSiteHeader';
+import { FitnessChromeProvider } from '@/components/storefront/fitness/FitnessChromeContext';
+import { FitnessMobileBottomNav } from '@/components/storefront/fitness/FitnessMobileBottomNav';
 import { TENVO_VEHICLES_METADATA } from '@/lib/storefront/tenvoVehiclesAssets';
 import { cn } from '@/lib/utils';
 
@@ -87,6 +92,7 @@ export default async function StoreLayout({ children, params }) {
   const dealershipStore = isAutoDealershipStore(business.category);
   const marketplaceStore = isAutoMarketplaceStore(business.category);
   const pharmacyStore = isPharmacyElevatedStore(business.category);
+  const fitnessStore = isFitnessElevatedStore(business.category);
   const portalStore = dealershipStore || marketplaceStore;
 
   const storeJsonLd = buildStoreJsonLd({ business, businessDomain: business.domain });
@@ -94,12 +100,17 @@ export default async function StoreLayout({ children, params }) {
 
   const storeChrome = (
     <div
-      className={cn('min-h-screen', portalStore || pharmacyStore ? 'bg-white' : luxuryStore ? 'bg-stone-50' : 'bg-slate-50')}
+      className={cn(
+        'min-h-screen',
+        fitnessStore && 'relative',
+        fitnessStore ? 'bg-black' : portalStore || pharmacyStore ? 'bg-white' : luxuryStore ? 'bg-stone-50' : 'bg-slate-50'
+      )}
       data-store-theme
       {...(luxuryStore ? { 'data-store-luxury': '' } : {})}
       {...(dealershipStore ? { 'data-store-dealership': '' } : {})}
       {...(marketplaceStore ? { 'data-store-marketplace': '' } : {})}
       {...(pharmacyStore ? { 'data-store-pharmacy': '' } : {})}
+      {...(fitnessStore ? { 'data-store-fitness': '' } : {})}
     >
       <a
         href="#store-main"
@@ -123,6 +134,10 @@ export default async function StoreLayout({ children, params }) {
         <Suspense fallback={<div className="h-[108px] border-b border-emerald-100 bg-white md:h-[132px]" aria-hidden />}>
           <PharmacySiteHeader business={business} settings={settings} />
         </Suspense>
+      ) : fitnessStore ? (
+        <Suspense fallback={null}>
+          <FitnessSiteHeader business={business} settings={settings} categories={categories} />
+        </Suspense>
       ) : (
         <StoreHeader
           business={business}
@@ -137,7 +152,9 @@ export default async function StoreLayout({ children, params }) {
           'min-h-[calc(100vh-300px)] lg:pb-0',
           pharmacyStore
             ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]'
-            : 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]'
+            : fitnessStore
+              ? 'pb-[calc(4.25rem+env(safe-area-inset-bottom))]'
+              : 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]'
         )}
         tabIndex={-1}
       >
@@ -149,7 +166,7 @@ export default async function StoreLayout({ children, params }) {
         settings={settings}
       />
 
-      {pharmacyStore ? <PharmacyMobileBottomNav /> : <StoreMobileBottomNav />}
+      {pharmacyStore ? <PharmacyMobileBottomNav /> : fitnessStore ? <FitnessMobileBottomNav /> : <StoreMobileBottomNav />}
 
       <CartDrawer />
       <LiveChat />
@@ -160,7 +177,14 @@ export default async function StoreLayout({ children, params }) {
   return (
     <StoreProviders business={business} settings={settings} categories={categories} plan={plan}>
       <StoreThemeStyles business={business} settings={settings} />
-      {pharmacyStore ? <PharmacyChromeProvider>{storeChrome}</PharmacyChromeProvider> : storeChrome}
+      <StorefrontAnalyticsBeacon businessDomain={business.domain} businessId={business.id} />
+      {pharmacyStore ? (
+        <PharmacyChromeProvider>{storeChrome}</PharmacyChromeProvider>
+      ) : fitnessStore ? (
+        <FitnessChromeProvider>{storeChrome}</FitnessChromeProvider>
+      ) : (
+        storeChrome
+      )}
     </StoreProviders>
   );
 }

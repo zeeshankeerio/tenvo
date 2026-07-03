@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,15 +35,19 @@ import {
   resolveEffectiveBusinessLimits,
 } from '@/lib/utils/businessLimitOverrides';
 import { updateOwnerBusinessPackagingAction } from '@/lib/actions/basic/business';
+import { resetTeamMemberPassword, createTeamMemberWithPassword } from '@/lib/actions/admin/teamManagement';
 import useSubscription from '@/lib/hooks/useSubscription';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CityAutocomplete } from './CityAutocomplete';
 import {
   Database, PlusCircle, LayoutGrid, ArrowLeftRight, Loader2, Sparkles, Trash2,
   HardDriveDownload, Save, Building2, Shield, Globe, Zap, CreditCard, Users, UserCog,
+  KeyRound, UserPlus, Mail,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
+import ManualPaymentRequestPanel from '@/components/billing/ManualPaymentRequestPanel';
+import DomainPackageBillingCards from '@/components/billing/DomainPackageBillingCards';
 
 function buildProfileFormData(b) {
   if (!b?.id) {
@@ -74,7 +78,7 @@ function buildProfileFormData(b) {
  */
 export function SettingsManager({ category }) {
   const { business, updateBusiness, role, isPlatformOwner, planTier, regionalStandards } = useBusiness();
-  const { initiateCheckout, isRedirecting, billingMode, fetchSubscription } = useSubscription();
+  const { initiateCheckout, isRedirecting, stripeCheckoutAvailable, devInstantBilling, fetchSubscription } = useSubscription();
 
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState(() => buildProfileFormData(business));
@@ -84,7 +88,19 @@ export function SettingsManager({ category }) {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('salesperson');
   const [teamBusy, setTeamBusy] = useState(false);
+  const [showEmailInvite, setShowEmailInvite] = useState(false);
+  const [createEmail, setCreateEmail] = useState('');
+  const [createName, setCreateName] = useState('');
+  const [createPassword, setCreatePassword] = useState('');
+  const [createRole, setCreateRole] = useState('salesperson');
+  const [createBusy, setCreateBusy] = useState(false);
+  const [pwdMember, setPwdMember] = useState(null);
+  const [pwdValue, setPwdValue] = useState('');
+  const [pwdSetBusy, setPwdSetBusy] = useState(false);
   const [planBusy, setPlanBusy] = useState(false);
+  const [packageBusy, setPackageBusy] = useState(false);
+  const [offlinePackageKey, setOfflinePackageKey] = useState(null);
+  const manualPaymentRef = useRef(null);
   const [packagingBusy, setPackagingBusy] = useState(false);
   const [localPackagingMode, setLocalPackagingMode] = useState('tier');
   const [localFeatureOverrides, setLocalFeatureOverrides] = useState(() => ({}));
@@ -271,6 +287,69 @@ export function SettingsManager({ category }) {
     }
   };
 
+  const handleCreateLogin = async () => {
+    if (!business?.id) return;
+    if (!createEmail.trim()) {
+      toast.error('Enter the new user\'s email');
+      return;
+    }
+    if (!createPassword || createPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    setCreateBusy(true);
+    try {
+      const res = await createTeamMemberWithPassword({
+        businessId: business.id,
+        email: createEmail.trim(),
+        password: createPassword,
+        name: createName.trim(),
+        role: createRole,
+      });
+      if (res.success) {
+        toast.success(res.message || 'Login created');
+        setCreateEmail('');
+        setCreateName('');
+        setCreatePassword('');
+        setCreateRole('salesperson');
+        await refreshTeam();
+      } else {
+        toast.error(res.error || 'Failed to create login');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to create login');
+    } finally {
+      setCreateBusy(false);
+    }
+  };
+
+  const handleSetPassword = async () => {
+    if (!business?.id || !pwdMember?.user_id) return;
+    if (!pwdValue || pwdValue.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    setPwdSetBusy(true);
+    try {
+      const res = await resetTeamMemberPassword({
+        businessId: business.id,
+        targetUserId: pwdMember.user_id,
+        newPassword: pwdValue,
+      });
+      if (res.success) {
+        toast.success(res.message || 'Password updated');
+        setPwdMember(null);
+        setPwdValue('');
+      } else {
+        toast.error(res.error || 'Failed to set password');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to set password');
+    } finally {
+      setPwdSetBusy(false);
+    }
+  };
+
   useEffect(() => {
     const pkg = getPackagingFromSettings(business?.settings);
     const mode = pkg?.mode === 'custom' ? 'custom' : 'tier';
@@ -329,7 +408,7 @@ export function SettingsManager({ category }) {
 
     const isElevation = (PLAN_ORDER[targetTier] ?? 0) > (PLAN_ORDER[currentTier] ?? 0);
     const useStripeCheckout =
-      billingMode !== 'manual' && targetTier !== 'free' && isElevation && !isPlatformOwner;
+      stripeCheckoutAvailable && targetTier !== 'free' && isElevation && !isPlatformOwner;
 
     setPlanBusy(true);
     try {
@@ -347,6 +426,31 @@ export function SettingsManager({ category }) {
       setPlanBusy(false);
     }
   };
+
+  const handlePackageCheckout = async (packageKey) => {
+    if (!business?.id || !packageKey) return;
+    setPackageBusy(true);
+    try {
+      await initiateCheckout({ domainPackageKey: packageKey });
+      const refreshed = await businessAPI.getById(business.id);
+      updateBusiness(refreshed);
+      await fetchSubscription();
+    } catch (error) {
+      toast.error(error.message || 'Could not start checkout for this suite');
+    } finally {
+      setPackageBusy(false);
+    }
+  };
+
+  const handlePayOfflinePackage = (packageKey) => {
+    setOfflinePackageKey(packageKey);
+    requestAnimationFrame(() => {
+      manualPaymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    toast.success('Offline payment form ready. Submit your transaction ID below.');
+  };
+
+  const billingActionBusy = planBusy || packageBusy || isRedirecting;
 
   const persistSettingsPatch = useCallback(
     async (mutate) => {
@@ -1117,34 +1221,116 @@ export function SettingsManager({ category }) {
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest">Active Members</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                    <Input
-                      placeholder="member@company.com"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      className="md:col-span-2"
-                    />
-                    <select
-                      value={inviteRole}
-                      onChange={(e) => setInviteRole(e.target.value)}
-                      className="h-10 px-3 bg-white border border-gray-200 rounded-xl text-sm font-medium"
-                    >
-                      {['admin', 'manager', 'accountant', 'cashier', 'salesperson', 'warehouse_manager', 'waiter', 'viewer'].map(role => (
-                        <option key={role} value={role}>{role.replace('_', ' ')}</option>
-                      ))}
-                    </select>
+                {/* Primary: add a member with email + password (works even if email/OTP delivery fails) */}
+                <div className="space-y-3 rounded-2xl border border-wine/20 bg-white p-4 shadow-sm">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                      <UserPlus className="w-4 h-4 text-wine" aria-hidden />
+                      Add a team member
+                    </h4>
+                    <p className="text-xs text-slate-500 font-medium">
+                      Set the member&apos;s email and a password yourself. They can sign in immediately — no email confirmation or OTP needed. Share the password with them securely.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Email</Label>
+                      <Input
+                        placeholder="member@company.com"
+                        type="email"
+                        value={createEmail}
+                        onChange={(e) => setCreateEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Full name (optional)</Label>
+                      <Input
+                        placeholder="Jane Doe"
+                        value={createName}
+                        onChange={(e) => setCreateName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Password (min 8 chars)</Label>
+                      <Input
+                        placeholder="Temporary password"
+                        type="text"
+                        value={createPassword}
+                        onChange={(e) => setCreatePassword(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Role</Label>
+                      <select
+                        value={createRole}
+                        onChange={(e) => setCreateRole(e.target.value)}
+                        className="h-10 w-full px-3 bg-white border border-gray-200 rounded-xl text-sm font-medium"
+                      >
+                        {['admin', 'manager', 'accountant', 'cashier', 'salesperson', 'warehouse_manager', 'waiter', 'viewer'].map(role => (
+                          <option key={role} value={role}>{role.replace('_', ' ')}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
                     <Button
                       size="sm"
-                      onClick={handleInviteMember}
-                      disabled={teamBusy}
+                      onClick={handleCreateLogin}
+                      disabled={createBusy}
                       className="bg-wine hover:bg-wine/90 text-[10px] font-semibold uppercase"
                     >
-                      Invite Member
+                      {createBusy ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <UserPlus className="w-3 h-3 mr-1" />}
+                      Add member
                     </Button>
                   </div>
                 </div>
+
+                {/* Secondary: send an email invite instead (member sets their own password) */}
+                <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailInvite((v) => !v)}
+                    className="flex w-full items-center justify-between text-left"
+                  >
+                    <span className="text-sm font-semibold text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-wine" aria-hidden />
+                      Or send an email invite
+                    </span>
+                    <span className="text-[10px] font-semibold uppercase text-slate-500">{showEmailInvite ? 'Hide' : 'Show'}</span>
+                  </button>
+                  {showEmailInvite && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-slate-500 font-medium">Sends a secure invite link. The member sets their own password when they accept.</p>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                        <Input
+                          placeholder="member@company.com"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          className="md:col-span-2"
+                        />
+                        <select
+                          value={inviteRole}
+                          onChange={(e) => setInviteRole(e.target.value)}
+                          className="h-10 px-3 bg-white border border-gray-200 rounded-xl text-sm font-medium"
+                        >
+                          {['admin', 'manager', 'accountant', 'cashier', 'salesperson', 'warehouse_manager', 'waiter', 'viewer'].map(role => (
+                            <option key={role} value={role}>{role.replace('_', ' ')}</option>
+                          ))}
+                        </select>
+                        <Button
+                          size="sm"
+                          onClick={handleInviteMember}
+                          disabled={teamBusy}
+                          className="bg-white text-wine border border-wine/30 hover:bg-wine/5 text-[10px] font-semibold uppercase"
+                        >
+                          Send invite
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest">Active Members</h4>
 
                 <div className="border rounded-2xl overflow-hidden">
                   <table className="w-full text-left">
@@ -1188,15 +1374,28 @@ export function SettingsManager({ category }) {
                             {member.role === 'owner' ? (
                               <span className="text-[10px] font-semibold uppercase text-gray-400">Protected</span>
                             ) : (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled={teamBusy}
-                                onClick={() => handleRemoveMember(member)}
-                                className="text-rose-600 font-semibold text-[10px] uppercase hover:bg-rose-50"
-                              >
-                                Remove
-                              </Button>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={teamBusy}
+                                  onClick={() => { setPwdMember(member); setPwdValue(''); }}
+                                  className="text-blue-600 font-semibold text-[10px] uppercase hover:bg-blue-50"
+                                  title="Set password"
+                                >
+                                  <KeyRound className="w-3 h-3 mr-1" />
+                                  Set password
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={teamBusy}
+                                  onClick={() => handleRemoveMember(member)}
+                                  className="text-rose-600 font-semibold text-[10px] uppercase hover:bg-rose-50"
+                                >
+                                  Remove
+                                </Button>
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -1213,6 +1412,45 @@ export function SettingsManager({ category }) {
               </div>
             </CardContent>
           </Card>
+
+          <Dialog open={!!pwdMember} onOpenChange={(open) => { if (!open) { setPwdMember(null); setPwdValue(''); } }}>
+            <DialogContent className="sm:max-w-md rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <KeyRound className="w-5 h-5 text-blue-600" />
+                  Set password
+                </DialogTitle>
+                <DialogDescription>
+                  Set a new password for {pwdMember?.user?.email || 'this member'}. They can sign in with it immediately — useful when email or OTP delivery fails.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2 py-2">
+                <Label>New password</Label>
+                <Input
+                  type="text"
+                  value={pwdValue}
+                  onChange={(e) => setPwdValue(e.target.value)}
+                  placeholder="At least 8 characters"
+                  className="rounded-xl"
+                  minLength={8}
+                />
+                <p className="text-xs text-slate-500">Share this password with the member through a secure channel.</p>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setPwdMember(null); setPwdValue(''); }} className="rounded-xl">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSetPassword}
+                  disabled={pwdSetBusy}
+                  className="rounded-xl bg-blue-600 hover:bg-blue-700"
+                >
+                  {pwdSetBusy ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Set password
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-4 pt-4">
@@ -1225,7 +1463,7 @@ export function SettingsManager({ category }) {
               <CardDescription>Select a plan based on seats and required capabilities</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4 relative">
-              <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${planBusy || isRedirecting ? 'pointer-events-none opacity-70' : ''}`}>
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${billingActionBusy ? 'pointer-events-none opacity-70' : ''}`}>
                 {Object.entries(PLAN_TIERS).map(([tier, config]) => {
                   const selected = (business?.plan_tier || 'free') === tier;
                   return (
@@ -1233,7 +1471,7 @@ export function SettingsManager({ category }) {
                       key={tier}
                       type="button"
                       onClick={() => handlePlanUpdate(tier)}
-                      disabled={planBusy || isRedirecting}
+                      disabled={billingActionBusy}
                       className={`text-left rounded-2xl border p-4 transition-all ${selected ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-200' : 'border-gray-200 bg-white hover:border-indigo-300 hover:bg-slate-50/80'}`}
                     >
                       <div className="flex items-center justify-between gap-2 mb-1">
@@ -1251,16 +1489,71 @@ export function SettingsManager({ category }) {
                   );
                 })}
               </div>
-              {(planBusy || isRedirecting) ? (
+              {billingActionBusy ? (
                 <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-[1px]">
                   <Loader2 className="h-8 w-8 animate-spin text-indigo-600" aria-hidden />
                 </div>
               ) : null}
               <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm font-medium text-indigo-900">
-                {billingMode === 'manual'
-                  ? 'Development billing: plan changes apply immediately without Stripe. Use only for testing or assisted sales.'
-                  : 'Paid upgrades go through Stripe Checkout. Downgrades and the Free tier can be applied directly here.'}
+                {devInstantBilling
+                  ? 'Development billing: plan changes apply immediately without Stripe when card checkout is unavailable. Offline payment and admin approval still work for testing.'
+                  : stripeCheckoutAvailable
+                    ? 'Paid upgrades use Stripe Checkout (dynamic pricing, no dashboard Price IDs). You can also pay offline via JazzCash, EasyPaisa, or bank below.'
+                    : 'Paid upgrades go through Stripe Checkout when configured. Downgrades and the Free tier can be applied directly here. Offline payment is available below.'}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-xl overflow-hidden">
+            <CardHeader className="bg-violet-50/70 border-b border-violet-100">
+              <CardTitle className="text-violet-950 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-violet-600" />
+                Industry packages
+              </CardTitle>
+              <CardDescription>
+                Vertical suites with tailored modules, limits, and storefront defaults. Same billing paths as standard plans.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 relative">
+              <DomainPackageBillingCards
+                businessSettings={business?.settings}
+                stripeCheckoutAvailable={stripeCheckoutAvailable}
+                devInstantBilling={devInstantBilling}
+                busy={packageBusy}
+                isRedirecting={isRedirecting}
+                onCheckout={handlePackageCheckout}
+                onPayOffline={handlePayOfflinePackage}
+              />
+              {billingActionBusy ? (
+                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-[1px]">
+                  <Loader2 className="h-8 w-8 animate-spin text-violet-600" aria-hidden />
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-xl">
+            <CardHeader className="bg-emerald-50/60 border-b border-emerald-100">
+              <CardTitle className="text-emerald-950 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-emerald-700" />
+                Payment options
+              </CardTitle>
+              <CardDescription>Offline wallets, bank transfer, and sales-assisted billing</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              {business?.id ? (
+                <div ref={manualPaymentRef}>
+                  <ManualPaymentRequestPanel
+                    businessId={business.id}
+                    devBillingMode={devInstantBilling}
+                    preferredDomainPackageKey={offlinePackageKey}
+                    onSubmitted={() => {
+                      void fetchSubscription();
+                    }}
+                  />
+                </div>
+              ) : null}
+
               <div className="rounded-2xl border border-amber-100 bg-amber-50/70 px-4 py-3 text-sm text-amber-950">
                 <span className="font-semibold">Enterprise or custom packaging?</span>{' '}
                 <a

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Bike, Clock, Shield, Sparkles, Wallet, UtensilsCrossed, Star } from 'lucide-react';
+import { ArrowRight, Bike, Clock, Sparkles, Wallet, UtensilsCrossed, Star } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { StoreProductRail } from '@/components/storefront/StoreProductRail';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
@@ -16,18 +16,9 @@ import {
   resolveRestaurantCuisineIcons,
   resolveRestaurantCuratedTabs,
   resolveRestaurantPromoBanners,
-  resolveRestaurantTrustPillars,
   formatRestaurantStoreName,
 } from '@/lib/storefront/restaurantStorefront';
 import { isDemoStoreDomain } from '@/lib/storefront/elevatedStorefrontTenant';
-
-const TRUST_ICONS = {
-  delivery: Bike,
-  fresh: UtensilsCrossed,
-  cashback: Wallet,
-  stock: Shield,
-  support: Shield,
-};
 
 /**
  * Tenant-aware elevated restaurant homepage sections.
@@ -54,7 +45,6 @@ export function RestaurantHomeSections({
     businessCategory,
   });
   const promoBanners = resolveRestaurantPromoBanners(settings, products, businessDomain, businessCategory);
-  const trustPillars = resolveRestaurantTrustPillars(settings, businessDomain);
   const curatedTabs = resolveRestaurantCuratedTabs(settings, categories);
   const displayName = formatRestaurantStoreName(storeName);
   const isDemo = isDemoStoreDomain(businessDomain);
@@ -122,32 +112,6 @@ export function RestaurantHomeSections({
           </div>
         </section>
       )}
-
-      <section className="border-b border-violet-50 bg-[#f2f2f2] py-3 sm:py-4">
-        <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
-          <div className="flex gap-2.5 overflow-x-auto scrollbar-hide sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible lg:grid-cols-4">
-            {trustPillars.map((pillar) => {
-              const Icon = TRUST_ICONS[pillar.id] || Shield;
-              return (
-                <div
-                  key={pillar.id}
-                  className="flex min-w-[72%] shrink-0 items-center gap-2 rounded-xl border border-violet-100/80 bg-white/90 px-3 py-2.5 text-xs font-semibold text-violet-950 sm:min-w-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:text-sm"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-violet-700 shadow-sm">
-                    <Icon className="h-4 w-4" aria-hidden />
-                  </span>
-                  <span>
-                    {pillar.label}
-                    {pillar.desc ? (
-                      <span className="hidden font-normal text-stone-500 lg:block">{pillar.desc}</span>
-                    ) : null}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {config.showSuperPicks !== false && superPicks.length > 0 && (
         <StoreProductRail

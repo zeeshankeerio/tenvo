@@ -1,31 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard, Package, FileText, Users, Truck, ShoppingCart,
   UtensilsCrossed, Heart, ClipboardList, Landmark, CreditCard, Receipt,
   BarChart3, Building2, Factory,
   UserCog, CheckSquare, Settings, Brain, ShieldCheck,
-  Lock, Crown, Sparkles, TrendingUp, BadgeDollarSign,
+  Lock, Crown, TrendingUp, BadgeDollarSign,
   ChevronDown, Warehouse, Hash, History, X, Globe, Megaphone,
   Scale, RefreshCcw, BookOpen, ScrollText, FileCheck,
   ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen,
-  RotateCcw, ArrowLeftRight, Calendar, Shield,
-  ExternalLink, Store
+  RotateCcw, ArrowLeftRight, Calendar, Shield, BadgeCheck,
+  ExternalLink, Store, Inbox
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useBusiness } from '@/lib/context/BusinessContext';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import { translations } from '@/lib/translations';
-import { getDomainKnowledge } from '@/lib/domainKnowledge';
+import { getDomainKnowledgeForBusiness } from '@/lib/utils/businessRegionalContext';
 import { getNavItemAccess } from '@/lib/rbac/permissions';
 import { PLAN_TIERS, FEATURE_LABELS, FEATURE_MIN_PLAN, resolvePlanTier } from '@/lib/config/plans';
 import {
   POS_RELEVANT_DOMAINS, HOSPITALITY_DOMAINS, CAMPAIGN_RELEVANT_DOMAINS,
-  isPosRelevant, isHospitality, isCampaignRelevant
+  isPosRelevant, isHospitality, isCampaignRelevant, isMembershipRelevant
 } from '@/lib/config/domains';
 import { normalizeDashboardTab } from '@/lib/config/tabs';
 import toast from 'react-hot-toast';
@@ -47,53 +47,6 @@ function isHospitalityDomain(category) {
 
 function isCampaignRelevantDomain(category, domainKnowledge) {
   return isCampaignRelevant(category, domainKnowledge);
-}
-
-function getDomainGapSuggestions({ category, planTier, domainKnowledge }) {
-  const suggestions = [];
-  const resolved = resolvePlanTier(planTier);
-  const posRelevant = isPosRelevantDomain(category, domainKnowledge);
-  const hospitality = isHospitalityDomain(category);
-  const campaignRelevant = isCampaignRelevantDomain(category, domainKnowledge);
-  const manufacturingRelevant = domainKnowledge?.manufacturingEnabled;
-
-  if (posRelevant && resolved === 'free') {
-    suggestions.push({
-      key: 'pos-starter',
-      title: 'POS requires Starter',
-      message: 'Upgrade to Starter to enable Point of Sale and Refunds & Returns.',
-      requiredPlan: 'starter'
-    });
-  }
-
-  if (hospitality && (resolved === 'free' || resolved === 'starter')) {
-    suggestions.push({
-      key: 'hospitality-business',
-      title: 'Hospitality Suite recommendation',
-      message: 'For bakery/restaurant operations, Business plan enables restaurant workflows, campaigns, and advanced automation.',
-      requiredPlan: 'business'
-    });
-  }
-
-  if (manufacturingRelevant && (resolved === 'free' || resolved === 'starter')) {
-    suggestions.push({
-      key: 'manufacturing-professional',
-      title: 'Manufacturing requires Professional',
-      message: 'Upgrade to Professional for BOM, production orders, and manufacturing analytics.',
-      requiredPlan: 'professional'
-    });
-  }
-
-  if (campaignRelevant && (resolved === 'free' || resolved === 'starter')) {
-    suggestions.push({
-      key: 'campaigns-professional',
-      title: 'Campaigns & Marketing requires Professional',
-      message: 'Upgrade to Professional to run campaigns, promotions, and CRM-driven automations.',
-      requiredPlan: 'professional'
-    });
-  }
-
-  return suggestions;
 }
 
 // --- Grouped Navigation Definition ------------------------------------------
@@ -122,10 +75,12 @@ const ADVANCED_NAV_SECTIONS = [
     label: 'STOREFRONT',
     items: [
       { key: 'orders', label: 'Orders', icon: Package, alwaysShow: true, badge: 'NEW' },
+      { key: 'inquiries', label: 'Customer Inquiries', icon: Inbox, alwaysShow: true },
       { key: 'pos', label: 'Point of Sale', icon: ShoppingCart, domainRule: 'posRelevant' },
       { key: 'refunds', label: 'Refunds & Returns', icon: RefreshCcw, domainRule: 'posRelevant' },
       { key: 'restaurant', label: 'Restaurant', icon: UtensilsCrossed, domainRule: 'hospitality' },
       { key: 'loyalty', label: 'Loyalty & CRM', icon: Heart, domainRule: 'posRelevant' },
+      { key: 'memberships', label: 'Memberships', icon: BadgeCheck, domainRule: 'membershipRelevant' },
       { key: 'quotations', label: 'Quotations', icon: ClipboardList, conditionKey: 'quotations' },
       { key: 'sales', label: 'Sales Manager', icon: TrendingUp, alwaysShow: true },
       { key: 'view-storefront', label: 'View Public Store', icon: ExternalLink, alwaysShow: true, isExternal: true, externalUrl: (business) => business?.handle || business?.domain ? `/store/${business?.handle || business?.domain}` : null },
@@ -168,7 +123,10 @@ const ADVANCED_NAV_SECTIONS = [
 ];
 
 // --- EASY MODE Navigation (Zoho-competitive, intuitive for all users) --------
-// Organized by business workflow: Home → Sell → Buy → Track → Finance
+// Organized by business workflow: Home → Sell → Buy → Track → Money → Team →
+// Insights → System. Mirrors the full advanced module coverage (same keys and
+// domain/plan gating) with friendlier labels, so Simple mode is never missing a
+// necessary module -- irrelevant items simply stay hidden via getItemState().
 const EASY_NAV_SECTIONS = [
   {
     label: 'HOME',
@@ -181,10 +139,17 @@ const EASY_NAV_SECTIONS = [
     items: [
       { key: 'invoices', label: 'Invoices', icon: FileText, alwaysShow: true },
       { key: 'customers', label: 'Customers', icon: Users, alwaysShow: true },
+      { key: 'memberships', label: 'Memberships', icon: BadgeCheck, domainRule: 'membershipRelevant' },
       { key: 'orders', label: 'Orders', icon: Package, alwaysShow: true, badge: 'NEW' },
+      { key: 'inquiries', label: 'Customer Inquiries', icon: Inbox, alwaysShow: true },
       { key: 'pos', label: 'Point of Sale', icon: ShoppingCart, domainRule: 'posRelevant' },
+      { key: 'refunds', label: 'Refunds & Returns', icon: RefreshCcw, domainRule: 'posRelevant' },
+      { key: 'restaurant', label: 'Restaurant', icon: UtensilsCrossed, domainRule: 'hospitality' },
+      { key: 'loyalty', label: 'Loyalty & CRM', icon: Heart, domainRule: 'posRelevant' },
       { key: 'quotations', label: 'Estimates', icon: ClipboardList, conditionKey: 'quotations' },
+      { key: 'sales', label: 'Sales Manager', icon: TrendingUp, alwaysShow: true },
       { key: 'view-storefront', label: 'View Public Store', icon: ExternalLink, alwaysShow: true, isExternal: true, externalUrl: (business) => business?.handle || business?.domain ? `/store/${business?.handle || business?.domain}` : null },
+      { key: 'store-settings', label: 'Store Settings', icon: Store, alwaysShow: true },
     ]
   },
   {
@@ -199,6 +164,8 @@ const EASY_NAV_SECTIONS = [
     items: [
       { key: 'inventory', label: 'Products & Stock', icon: Package, alwaysShow: true },
       { key: 'warehouses', label: 'Warehouses', icon: Warehouse, conditionKey: 'multiLocation' },
+      { key: 'manufacturing', label: 'Manufacturing', icon: Factory, conditionKey: 'manufacturing' },
+      { key: 'batches', label: 'Batches & Serials', icon: Hash, conditionKey: 'batchTracking' },
     ]
   },
   {
@@ -207,8 +174,28 @@ const EASY_NAV_SECTIONS = [
       { key: 'finance', label: 'Finance Hub', icon: Landmark, alwaysShow: true },
       { key: 'payments', label: 'Payments', icon: CreditCard, alwaysShow: true },
       { key: 'gst', label: 'Tax / GST', icon: BadgeDollarSign, alwaysShow: true },
-      { key: 'reports', label: 'Reports', icon: BarChart3, alwaysShow: true },
+    ]
+  },
+  {
+    label: 'TEAM',
+    items: [
+      { key: 'payroll', label: 'Payroll & HR', icon: UserCog },
+      { key: 'approvals', label: 'Approvals', icon: CheckSquare },
+    ]
+  },
+  {
+    label: 'INSIGHTS',
+    items: [
+      { key: 'reports', label: 'Reports & AI', icon: BarChart3, alwaysShow: true },
+      { key: 'campaigns', label: 'Campaigns & Marketing', icon: Megaphone, domainRule: 'campaignRelevant' },
+      { key: 'audit', label: 'Audit Trail', icon: ScrollText },
+    ]
+  },
+  {
+    label: 'SYSTEM',
+    items: [
       { key: 'settings', label: 'Settings', icon: Settings },
+      { key: 'platform-admin', label: 'Platform Admin', icon: Shield, platformOnly: true },
     ]
   },
 ];
@@ -218,7 +205,7 @@ const NAV_SECTIONS = ADVANCED_NAV_SECTIONS;
 
 export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarCollapsed }) {
   const { user } = useAuth();
-  const { business, role, planTier: contextPlanTier, isLoading: businessLoading, isPlatformOwner } = useBusiness();
+  const { business, role, planTier: contextPlanTier, isLoading: businessLoading, isPlatformOwner, isPlatformAdmin } = useBusiness();
   const { language } = useLanguage();
   const { appMode, setAppMode, isEasyMode } = useAppMode();
   const t = translations[language];
@@ -232,10 +219,11 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
   const category = business?.category || handleFromUrl;
   const baseUrl = `/business/${handleFromUrl}`;
 
-  const domainKnowledge = getDomainKnowledge(category);
+  const domainKnowledge = getDomainKnowledgeForBusiness(category, business);
   const posRelevant = isPosRelevantDomain(category, domainKnowledge);
   const hospitalityDomain = isHospitalityDomain(category);
   const campaignRelevant = isCampaignRelevantDomain(category, domainKnowledge);
+  const membershipRelevant = isMembershipRelevant(category);
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
@@ -244,12 +232,12 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
 
   // Keep access gating deterministic between SSR and first client render.
   const safeIsPlatformOwner = hasHydrated ? isPlatformOwner : false;
+  const safeIsPlatformAdmin = hasHydrated ? isPlatformAdmin : false;
   const effectiveRole = (!hasHydrated || businessLoading || !role) ? 'viewer' : role;
   const planTier = hasHydrated
     ? (safeIsPlatformOwner ? 'enterprise' : resolvePlanTier(contextPlanTier || business?.plan_tier || 'free'))
     : 'free';
   const planName = safeIsPlatformOwner ? 'Platform Owner' : (PLAN_TIERS[planTier]?.name || 'Free');
-  const domainGapSuggestions = useMemo(() => getDomainGapSuggestions({ category, planTier, domainKnowledge }), [category, planTier, domainKnowledge]);
   const navAccessReady = hasHydrated && !businessLoading && (safeIsPlatformOwner || role !== null);
 
   const [collapsedSections, setCollapsedSections] = useState({});
@@ -279,7 +267,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
   // Check if a nav item should be visible + whether it's locked behind subscription
   const getItemState = (item) => {
     // Platform-only items: only visible to platform owner/admin
-    if (item.platformOnly && !safeIsPlatformOwner) {
+    if (item.platformOnly && !safeIsPlatformAdmin) {
       return { visible: false, locked: false, requiredPlan: null };
     }
 
@@ -295,6 +283,9 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
       return { visible: false, locked: false, requiredPlan: null };
     }
     if (item.domainRule === 'campaignRelevant' && !campaignRelevant) {
+      return { visible: false, locked: false, requiredPlan: null };
+    }
+    if (item.domainRule === 'membershipRelevant' && !membershipRelevant) {
       return { visible: false, locked: false, requiredPlan: null };
     }
 
@@ -537,55 +528,8 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
           })}
         </nav>
 
-        {/* --- Upgrade Banner (shown for free/starter plans, hidden for platform owner and compact mode) --- */}
-        {!isSidebarCollapsed && !safeIsPlatformOwner && (planTier === 'free' || planTier === 'starter') && (
-          <div className="flex-none mx-3 mb-2.5">
-            <div className="bg-gradient-to-r from-brand-primary to-brand-primary-dark rounded-xl p-3 text-white">
-              <div className="flex items-center gap-2 mb-1">
-                <Crown className="w-4 h-4 text-amber-300" />
-                <span className="text-[11px] font-bold">Unlock more features</span>
-              </div>
-              <p className="text-[10px] text-brand-100 leading-relaxed mb-2">
-                {hospitalityDomain
-                  ? 'Hospitality Growth: move to Business plan for restaurant + marketing automations.'
-                  : planTier === 'free'
-                    ? 'Get POS, Expenses, CRM and more with Starter'
-                    : 'Get Manufacturing, Payroll, AI and more with Professional'}
-              </p>
-              <Link
-                href={`${baseUrl}?tab=settings&section=billing`}
-                className="block text-center text-[10px] font-bold bg-white/20 hover:bg-white/30 rounded-lg py-1.5 transition-colors"
-              >
-                Upgrade Now →
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {!isSidebarCollapsed && !safeIsPlatformOwner && domainGapSuggestions.length > 0 && (
-          <div className="flex-none mx-3 mb-2.5">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-700">Domain Gaps</span>
-              </div>
-              <div className="space-y-2">
-                {domainGapSuggestions.slice(0, 2).map(gap => (
-                  <div key={gap.key} className="bg-white rounded-lg border border-amber-100 p-2">
-                    <p className="text-[10px] font-bold text-gray-900">{gap.title}</p>
-                    <p className="text-[10px] text-gray-600 leading-snug">{gap.message}</p>
-                  </div>
-                ))}
-              </div>
-              <Link
-                href={`${baseUrl}?tab=settings&section=billing`}
-                className="mt-2 block text-center text-[10px] font-bold text-amber-700 hover:text-amber-800"
-              >
-                Review upgrade path
-              </Link>
-            </div>
-          </div>
-        )}
+        {/* Upgrade nudges are surfaced as a compact, once-per-session bottom
+            banner (UpgradeNudgeBanner) rather than persistent sidebar boxes. */}
 
         {/* --- Footer ---------------------------------------------- */}
         <div className={cn(
@@ -594,17 +538,27 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
         )}>
           <UserManager trigger={
             <button className={cn(
-              "w-full bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl p-2 flex items-center gap-2.5 transition-all text-left group",
+              "w-full bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl p-2 flex items-center gap-2.5 transition-all text-left group relative",
               isSidebarCollapsed && "p-1.5 border-none bg-transparent"
             )}>
+              {/* Platform Owner Crown Badge */}
+              {safeIsPlatformOwner && !isSidebarCollapsed && (
+                <div className="absolute -top-1 -right-1 bg-amber-400 rounded-full p-1 shadow-sm ring-2 ring-white">
+                  <Crown className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
+              
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white bg-brand-primary shrink-0"
+                className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0",
+                  safeIsPlatformOwner ? "bg-gradient-to-br from-amber-400 to-amber-600" : "bg-brand-primary"
+                )}
               >
-                {user?.email?.substring(0, 2).toUpperCase() || 'ME'}
+                {safeIsPlatformOwner ? <Crown className="w-4 h-4" /> : (user?.email?.substring(0, 2).toUpperCase() || 'ME')}
               </div>
               {!isSidebarCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-900 truncate">
+                  <p className="text-xs font-bold text-gray-900 truncate flex items-center gap-1.5">
                     {user?.user_metadata?.full_name || 'My Account'}
                   </p>
                   <p className="text-[10px] text-gray-400 truncate">

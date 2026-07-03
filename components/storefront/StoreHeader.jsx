@@ -21,7 +21,7 @@ import { getDomainConfig, getStoreAccentColor } from '@/lib/config/storefrontDom
 import { getStoreHomeCopy } from '@/lib/storefront/storeCopy';
 import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
 import { isAutoDealershipStore, getDealershipNavLinks, getDealershipNavGroups } from '@/lib/storefront/autoDealership';
-import { resolveTcdDealershipLogo } from '@/lib/storefront/tenvoCarDealershipBrand';
+import { resolveStorefrontLogo } from '@/lib/storefront/resolveStorefrontLogo';
 import { isAutoMarketplaceStore, getMarketplaceNavLinks } from '@/lib/storefront/autoMarketplace';
 import { isPharmacyElevatedStore, getPharmacyNavLinks, formatPharmacyStoreName } from '@/lib/storefront/pharmacyStorefront';
 import { resolveDomainKey } from '@/lib/config/domainKeyAliases';
@@ -116,7 +116,7 @@ export function StoreHeader({ business, categories, settings }) {
   const marketplaceLinks = marketplaceNav ? getMarketplaceNavLinks(storeRoot) : [];
   const pharmacyLinks = pharmacyNav ? getPharmacyNavLinks(storeRoot) : [];
   const pharmacyDisplayName = pharmacyNav ? formatPharmacyStoreName(business?.business_name) : '';
-  const storeLogoUrl = resolveTcdDealershipLogo(business, settings, business?.logo_url);
+  const storeLogoUrl = resolveStorefrontLogo(business, settings);
 
   const visibleCategories = categories?.slice(0, 5) || [];
   const extraCategories = categories?.slice(5) || [];
@@ -279,9 +279,9 @@ export function StoreHeader({ business, categories, settings }) {
               className="flex shrink-0 items-center"
               aria-label={business?.business_name || 'Store home'}
             >
-              {business?.logo_url ? (
+              {storeLogoUrl ? (
                 <SmartProductImage
-                  src={business.logo_url}
+                  src={storeLogoUrl}
                   alt={business.business_name}
                   width={32}
                   height={32}
@@ -456,9 +456,9 @@ export function StoreHeader({ business, categories, settings }) {
             ) : marketplaceNav ? (
               <>
                 <Link href={storeRoot} className="flex shrink-0 items-center gap-2">
-                  {business?.logo_url ? (
+                  {storeLogoUrl ? (
                     <SmartProductImage
-                      src={business.logo_url}
+                      src={storeLogoUrl}
                       alt={business.business_name}
                       width={140}
                       height={40}
@@ -524,9 +524,9 @@ export function StoreHeader({ business, categories, settings }) {
             ) : pharmacyNav ? (
               <>
                 <Link href={storeRoot} className="flex shrink-0 items-center gap-2">
-                  {business?.logo_url ? (
+                  {storeLogoUrl ? (
                     <SmartProductImage
-                      src={business.logo_url}
+                      src={storeLogoUrl}
                       alt={business.business_name}
                       width={140}
                       height={40}
@@ -678,9 +678,9 @@ export function StoreHeader({ business, categories, settings }) {
               href={`/store/${businessDomain}`}
               className="flex items-center gap-2.5 flex-shrink-0 group"
             >
-              {business?.logo_url ? (
+              {storeLogoUrl ? (
                 <SmartProductImage
-                  src={business.logo_url}
+                  src={storeLogoUrl}
                   alt={business.business_name}
                   width={120}
                   height={36}

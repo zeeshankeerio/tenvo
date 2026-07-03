@@ -248,13 +248,18 @@ export const POST = withApiAuth(async (request, { businessId, session, role, pla
     try {
         // Check role permissions - viewers cannot create invoices
         if (role === 'viewer') {
-            return apiError(
-                'FORBIDDEN',
-                'Insufficient permissions. Viewers cannot create invoices.',
-                403,
-                null,
-                { businessId, planTier }
-            );
+            return apiError('FORBIDDEN', 'Insufficient permissions. Viewers cannot create invoices.', 403, null, { businessId, planTier });
+        }
+
+        // Enforce monthly invoice limit
+        const { canCreateOrder } = await import('@/lib/services/planLimits');
+        const limitCheck = await canCreateOrder(businessId);
+        if (!limitCheck.allowed) {
+            return apiError('PLAN_LIMIT_REACHED', limitCheck.reason, 403, {
+                current: limitCheck.current,
+                limit: limitCheck.limit,
+                upgradePlan: limitCheck.upgradePlan,
+            }, { businessId, planTier });
         }
 
         // Use pre-parsed body from middleware (request.json() already consumed the stream)

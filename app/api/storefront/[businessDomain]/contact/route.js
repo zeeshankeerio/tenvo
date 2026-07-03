@@ -3,13 +3,11 @@ import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import { sendTransactionalEmail } from '@/lib/email/resend';
 import { StorefrontContactNotification } from '@/lib/email/templates/StorefrontContactNotification';
 import { resolveStoreContact } from '@/lib/storefront/businessContact';
-import { DEALERSHIP_CONTACT_SUBJECTS } from '@/lib/storefront/dealershipBooking';
+import { STOREFRONT_CONTACT_SUBJECTS } from '@/lib/dashboard/domainOperationsSubjects';
+import { notifyStorefrontContact } from '@/lib/notifications/notificationHelpers';
 import pool from '@/lib/db';
 
-const SUBJECTS = new Set([
-  'general', 'order', 'product', 'return', 'wholesale', 'other',
-  ...DEALERSHIP_CONTACT_SUBJECTS,
-]);
+const SUBJECTS = new Set(STOREFRONT_CONTACT_SUBJECTS);
 
 function clip(value, max) {
   if (typeof value !== 'string') return '';
@@ -70,59 +68,52 @@ export async function POST(request, { params }) {
   const ownerEmail = contact.email;
 
   const client = await pool.connect();
+  let contactId = null;
   try {
-    try {
-      await client.query(
-        `INSERT INTO storefront_contact_messages (
-          business_id, customer_name, customer_email, customer_phone,
-          subject, message, order_number, status, created_at, updated_at
-        ) VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, 'new', NOW(), NOW())`,
-        [
-          business.id,
-          name,
-          email.toLowerCase(),
-          phone || null,
-          subjectKey,
-          storedMessage,
-          orderNumber || null,
-        ]
-      );
-    } catch (dbErr) {
-      if (dbErr.code === '42P01') {
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS storefront_contact_messages (
-            id SERIAL PRIMARY KEY,
-            business_id UUID NOT NULL,
-            customer_name TEXT NOT NULL,
-            customer_email TEXT NOT NULL,
-            customer_phone TEXT,
-            subject TEXT NOT NULL DEFAULT 'general',
-            message TEXT NOT NULL,
-            order_number TEXT,
-            status TEXT NOT NULL DEFAULT 'new',
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            updated_at TIMESTAMPTZ DEFAULT NOW()
-          )
-        `);
-        await client.query(
-          `INSERT INTO storefront_contact_messages (
-            business_id, customer_name, customer_email, customer_phone,
-            subject, message, order_number, status, created_at, updated_at
-          ) VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, 'new', NOW(), NOW())`,
-          [
-            business.id,
-            name,
-            email.toLowerCase(),
-            phone || null,
-            subjectKey,
-            storedMessage,
-            orderNumber || null,
-          ]
-        );
-      } else {
-        console.warn('[storefront/contact] DB store skipped:', dbErr.message);
+    const insertResult = await client.query(
+      `INSERT INTO storefront_contact_messages (
+        business_id, customer_name, customer_email, customer_phone,
+        subject, message, order_number, status, created_at, updated_at
+      ) VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, 'new', NOW(), NOW())
+      RETURNING id`,
+      [
+        business.id,
+        name,
+        email.toLowerCase(),
+        phone || null,
+        subjectKey,
+        storedMessage,
+        orderNumber || null,
+      ]
+    );
+    contactId = insertResult.rows[0]?.id;
+    
+    // Create notification for business
+    if (contactId) {
+      try {
+        await notifyStorefrontContact({
+          businessId: business.id,
+          business,
+          contactId,
+          customerName: name,
+          customerEmail: email,
+          subject: subjectKey,
+          client,
+        });
+      } catch (notifyErr) {
+        console.warn('[storefront/contact] notification skipped:', notifyErr?.message || notifyErr);
       }
     }
+  } catch (dbErr) {
+    if (dbErr.code === '42P01') {
+      console.error('[storefront/contact] storefront_contact_messages missing — run bun run db:migrate');
+    } else {
+      console.error('[storefront/contact] insert failed:', dbErr.message);
+    }
+    return NextResponse.json(
+      { error: 'Contact form is temporarily unavailable. Please call or email the store directly.' },
+      { status: 503 }
+    );
   } finally {
     client.release();
   }

@@ -14,6 +14,7 @@ import { MarketplaceHero } from './marketplace/MarketplaceHero';
 import { PharmacyHero } from './pharmacy/PharmacyHero';
 import { FurnitureHero } from './furniture/FurnitureHero';
 import { RestaurantHero } from './restaurant/RestaurantHero';
+import { FitnessHero } from './fitness/FitnessHero';
 
 /**
  * Renders the domain-appropriate immersive hero (parts finder, pharmacy, fashion, etc.).
@@ -69,6 +70,17 @@ export function DomainHeroRouter({ preset, businessDomain, accent, accentDark })
           accent={accent}
           accentDark={accentDark}
           contactCity={preset.contactCity}
+        />
+      );
+    case 'fitness-elevated':
+      return (
+        <FitnessHero
+          preset={preset}
+          businessDomain={businessDomain}
+          accent={accent}
+          accentDark={accentDark}
+          contactCity={preset.contactCity}
+          meetingUrl={preset.meetingUrl}
         />
       );
     case 'fashion-editorial':

@@ -52,6 +52,47 @@ assert(pkRetail.categories.length > 0, 'PK retail-shop should produce category s
 assert(pkRetail.domainProfile?.automation, 'Registration should include automation defaults');
 assert(pkRetail.domainProfile?.intelligence, 'Registration should include intelligence defaults');
 
+const pkGarments = buildRegistrationSeedPayload({
+  businessId: bizId,
+  domainKey: 'garments',
+  countryIso: 'PK',
+});
+assert(pkGarments.items.length >= 8, 'PK garments registration should seed local + imported catalog');
+assert(
+  pkGarments.items.some((i) => i.domain_data?.sourcing === 'local'),
+  'PK garments seed should include local Pakistani brands'
+);
+assert(
+  pkGarments.items.some((i) => i.domain_data?.sourcing === 'imported'),
+  'PK garments seed should include imported fashion stock'
+);
+assert(pkGarments.categories.includes('Imported Fashion'), 'PK garments should include Imported Fashion category');
+
+const pkBoutique = buildRegistrationSeedPayload({
+  businessId: bizId,
+  domainKey: 'boutique-fashion',
+  countryIso: 'PK',
+});
+assert(pkBoutique.items.length >= 15, 'PK boutique-fashion registration should seed rich catalog');
+
+const pkTextile = buildRegistrationSeedPayload({
+  businessId: bizId,
+  domainKey: 'textile-wholesale',
+  countryIso: 'PK',
+});
+assert(pkTextile.items.length >= 10, 'PK textile-wholesale registration should seed local + imported fabric');
+assert(
+  pkTextile.items.some((i) => i.category === 'Imported Fabric' || i.category === 'Lunda Bazaar'),
+  'PK textile-wholesale seed should include imported / Lunda categories'
+);
+
+const usGarments = buildRegistrationSeedPayload({
+  businessId: bizId,
+  domainKey: 'garments',
+  countryIso: 'US',
+});
+assert(usGarments.items.length === 0, 'Non-PK garments registration must not seed demo products');
+
 const aePharmacy = buildRegistrationSeedPayload({
   businessId: bizId,
   domainKey: 'pharmacy',
@@ -94,11 +135,16 @@ for (const key of DOMAIN_KNOWLEDGE_KEYS.slice(0, 5)) {
   });
   const canonical = resolveDomainKey(key);
   const expectProducts =
-    canonical === 'vehicle-dealership' || canonical === 'auto-parts';
+    canonical === 'vehicle-dealership' ||
+    canonical === 'auto-parts' ||
+    (canonical === 'garments' && payload.items.length > 0) ||
+    (canonical === 'boutique-fashion' && payload.items.length > 0) ||
+    (canonical === 'textile-wholesale' && payload.items.length > 0) ||
+    (canonical === 'textile-mill' && payload.items.length > 0);
   assert(
     Array.isArray(payload.items) && (expectProducts ? payload.items.length > 0 : payload.items.length === 0),
     expectProducts
-      ? `${canonical} should seed starter products on registration`
+      ? `${canonical} should seed starter products on registration (PK)`
       : `no products for ${key}`
   );
   assert(Array.isArray(payload.categories), `category array for ${key}`);

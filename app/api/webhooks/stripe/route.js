@@ -3,7 +3,11 @@ import Stripe from 'stripe';
 import { Prisma } from '@prisma/client';
 import { prismaBase } from '@/lib/db';
 import { sendSubscriptionConfirmationEmail } from '@/lib/email/subscription-emails';
-import { getPlanTierQuotaUpdateData, resolvePlanTier } from '@/lib/config/plans';
+import { resolvePlanTier } from '@/lib/config/plans';
+import {
+  getBillingActivationPayload,
+  mergeBusinessSettingsForBilling,
+} from '@/lib/payments/billingActivation';
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
@@ -37,6 +41,7 @@ export async function POST(request) {
   console.log('[Stripe Webhook] Event received:', event.type);
 
   let subscriptionDeletedEmails = null;
+  let storefrontOrderPaidHook = null;
 
   try {
     await prismaBase.$transaction(
@@ -52,6 +57,12 @@ export async function POST(request) {
         switch (event.type) {
           case 'checkout.session.completed':
             await handleCheckoutSessionCompletedTx(tx, event.data.object);
+            break;
+          case 'checkout.session.expired':
+            // No DB mutation needed — the checkout simply didn't complete.
+            // Log for observability; the business row is unchanged.
+            console.log('[Stripe Webhook] Checkout session expired:', event.data.object.id,
+              '| business:', event.data.object.metadata?.businessId ?? 'unknown');
             break;
           case 'invoice.payment_succeeded':
             await handleInvoicePaymentSucceededTx(tx, event.data.object);
@@ -72,7 +83,7 @@ export async function POST(request) {
             await handleTrialWillEndTx(tx, event.data.object);
             break;
           case 'payment_intent.succeeded':
-            await handlePaymentIntentSucceededTx(tx, event.data.object);
+            storefrontOrderPaidHook = await handlePaymentIntentSucceededTx(tx, event.data.object);
             break;
           case 'payment_intent.payment_failed':
             await handlePaymentIntentFailedTx(tx, event.data.object);
@@ -102,6 +113,14 @@ export async function POST(request) {
           businessName: m.businessName,
         }).catch(console.error);
       }
+    }
+
+    if (storefrontOrderPaidHook?.businessId && storefrontOrderPaidHook?.orderId) {
+      const { onStorefrontOrderPaidAsync } = await import('@/lib/memberships/membershipOrderHooks');
+      void onStorefrontOrderPaidAsync(
+        storefrontOrderPaidHook.businessId,
+        storefrontOrderPaidHook.orderId
+      );
     }
 
     if (event.type === 'checkout.session.completed') {
@@ -137,9 +156,18 @@ export async function POST(request) {
  * @param {import('stripe').Stripe.Checkout.Session} session
  */
 async function handleCheckoutSessionCompletedTx(tx, session) {
-  const { businessId, planTier } = session.metadata || {};
+  const { businessId, planTier, domainPackageKey } = session.metadata || {};
   if (!businessId || !planTier) {
     console.error('[Stripe Webhook] Missing metadata in checkout session');
+    return;
+  }
+
+  const activation = getBillingActivationPayload({ planTier, domainPackageKey });
+  if (!activation) {
+    console.error('[Stripe Webhook] Invalid billing activation for checkout metadata:', {
+      planTier,
+      domainPackageKey,
+    });
     return;
   }
 
@@ -173,16 +201,20 @@ async function handleCheckoutSessionCompletedTx(tx, session) {
 
   const historyStatus = stripeStatus;
 
-  const quota = getPlanTierQuotaUpdateData(planTier);
-  if (!quota) {
-    console.error('[Stripe Webhook] Invalid plan tier in checkout metadata:', planTier);
-    return;
-  }
+  const existing = await tx.businesses.findUnique({
+    where: { id: businessId },
+    select: { settings: true },
+  });
+  const nextSettings = mergeBusinessSettingsForBilling(
+    existing?.settings,
+    activation.settingsPatch
+  );
 
   await tx.businesses.update({
     where: { id: businessId },
     data: {
-      ...quota,
+      ...activation.quota,
+      settings: nextSettings,
       stripe_subscription_id: subscriptionId,
       ...(customerId ? { stripe_customer_id: customerId } : {}),
       stripe_subscription_status: stripeStatus,
@@ -194,7 +226,7 @@ async function handleCheckoutSessionCompletedTx(tx, session) {
   await tx.subscription_history.create({
     data: {
       business_id: businessId,
-      plan_tier: quota.plan_tier,
+      plan_tier: activation.quota.plan_tier,
       status: historyStatus,
       stripe_subscription_id: subscriptionId,
       amount_minor: amountMinor,
@@ -203,6 +235,8 @@ async function handleCheckoutSessionCompletedTx(tx, session) {
         checkout_session_id: session.id,
         customer: customerId,
         stripe_subscription_status: stripeStatus,
+        domainPackageKey: activation.domainPackageKey,
+        billingKind: session.metadata?.billingKind || null,
       },
     },
   });
@@ -221,14 +255,44 @@ async function handleInvoicePaymentSucceededTx(tx, invoice) {
       : invoice.subscription?.id || null;
   if (!subscriptionId) return;
 
-  await tx.businesses.updateMany({
+  // Retrieve the subscription metadata to re-apply quota on renewal / trial-to-paid conversion.
+  // This ensures plan_seats and feature flags stay correct after each billing cycle.
+  let quotaPatch = null;
+  let settingsPatch = null;
+  if (stripe) {
+    try {
+      const sub = await stripe.subscriptions.retrieve(subscriptionId);
+      const planFromMeta = sub.metadata?.planTier || sub.metadata?.plan_tier;
+      const domainPackageKey = sub.metadata?.domainPackageKey || null;
+      if (planFromMeta) {
+        const activation = getBillingActivationPayload({ planTier: planFromMeta, domainPackageKey });
+        if (activation) {
+          quotaPatch = activation.quota;
+          settingsPatch = activation.settingsPatch;
+        }
+      }
+    } catch (e) {
+      console.warn('[Stripe Webhook] Could not retrieve subscription for invoice.payment_succeeded:', e?.message);
+    }
+  }
+
+  const rows = await tx.businesses.findMany({
     where: { stripe_subscription_id: subscriptionId },
-    data: {
+    select: { id: true, settings: true },
+  });
+
+  for (const biz of rows) {
+    const data = {
       stripe_subscription_status: 'active',
       plan_expires_at: null,
       updated_at: new Date(),
-    },
-  });
+    };
+    if (quotaPatch) Object.assign(data, quotaPatch);
+    if (settingsPatch && Object.keys(settingsPatch).length) {
+      data.settings = mergeBusinessSettingsForBilling(biz.settings, settingsPatch);
+    }
+    await tx.businesses.update({ where: { id: biz.id }, data });
+  }
 
   console.log('[Stripe Webhook] Payment succeeded for subscription:', subscriptionId);
 }
@@ -302,20 +366,31 @@ async function handleSubscriptionCreatedTx(tx, subscription) {
  */
 async function handleSubscriptionUpdatedTx(tx, subscription) {
   const planFromMeta = subscription.metadata?.planTier || subscription.metadata?.plan_tier;
-  const quotaPatch =
-    planFromMeta && typeof planFromMeta === 'string' ? getPlanTierQuotaUpdateData(planFromMeta) : null;
+  const domainPackageKey = subscription.metadata?.domainPackageKey || null;
+
+  // If metadata is missing (e.g., subscription was modified directly in Stripe dashboard),
+  // we fall back to reading the plan from the current businesses row — no stale overwrites.
+  const hasPlanMeta = planFromMeta && typeof planFromMeta === 'string';
+
+  const activation =
+    hasPlanMeta
+      ? getBillingActivationPayload({ planTier: planFromMeta, domainPackageKey })
+      : null;
+  const quotaPatch = activation?.quota || null;
   const data = {
     stripe_subscription_status: subscription.status,
     updated_at: new Date(),
   };
   if (subscription.status === 'trialing' && subscription.trial_end) {
     data.plan_expires_at = new Date(subscription.trial_end * 1000);
-  } else {
+  } else if (subscription.status === 'active') {
+    // Clear trial expiry when subscription transitions to active (payment succeeded)
     data.plan_expires_at = null;
   }
+  // Only patch plan/quota if we have valid metadata — don't clobber on metadata-less events
   if (quotaPatch) {
     Object.assign(data, quotaPatch);
-  } else if (planFromMeta && typeof planFromMeta === 'string') {
+  } else if (hasPlanMeta) {
     data.plan_tier = resolvePlanTier(planFromMeta);
   }
 
@@ -325,6 +400,10 @@ async function handleSubscriptionUpdatedTx(tx, subscription) {
   });
 
   if (res.count === 0 && subscription.metadata?.businessId) {
+    const existing = await tx.businesses.findUnique({
+      where: { id: subscription.metadata.businessId },
+      select: { settings: true },
+    });
     const fallbackData = {
       stripe_subscription_id: subscription.id,
       stripe_subscription_status: subscription.status,
@@ -332,18 +411,37 @@ async function handleSubscriptionUpdatedTx(tx, subscription) {
     };
     if (subscription.status === 'trialing' && subscription.trial_end) {
       fallbackData.plan_expires_at = new Date(subscription.trial_end * 1000);
-    } else {
+    } else if (subscription.status === 'active') {
       fallbackData.plan_expires_at = null;
     }
     if (quotaPatch) {
       Object.assign(fallbackData, quotaPatch);
-    } else if (planFromMeta && typeof planFromMeta === 'string') {
+    } else if (hasPlanMeta) {
       fallbackData.plan_tier = resolvePlanTier(planFromMeta);
+    }
+    if (activation?.settingsPatch && Object.keys(activation.settingsPatch).length) {
+      fallbackData.settings = mergeBusinessSettingsForBilling(
+        existing?.settings,
+        activation.settingsPatch
+      );
     }
     await tx.businesses.updateMany({
       where: { id: subscription.metadata.businessId },
       data: fallbackData,
     });
+  } else if (activation?.settingsPatch && Object.keys(activation.settingsPatch).length && res.count > 0) {
+    const rows = await tx.businesses.findMany({
+      where: { stripe_subscription_id: subscription.id },
+      select: { id: true, settings: true },
+    });
+    for (const row of rows) {
+      await tx.businesses.update({
+        where: { id: row.id },
+        data: {
+          settings: mergeBusinessSettingsForBilling(row.settings, activation.settingsPatch),
+        },
+      });
+    }
   }
 
   console.log('[Stripe Webhook] Subscription updated:', subscription.id);
@@ -416,13 +514,13 @@ async function handlePaymentIntentSucceededTx(tx, paymentIntent) {
   const { orderId, businessId } = paymentIntent.metadata || {};
   if (!orderId || !businessId) {
     console.error('[Stripe Webhook] Missing metadata in payment intent');
-    return;
+    return null;
   }
 
   const orderIdNum = Number.parseInt(String(orderId), 10);
   if (Number.isNaN(orderIdNum)) {
     console.error('[Stripe Webhook] Invalid orderId in payment intent metadata');
-    return;
+    return null;
   }
 
   await tx.payment_transactions.updateMany({
@@ -467,6 +565,7 @@ async function handlePaymentIntentSucceededTx(tx, paymentIntent) {
   }
 
   console.log('[Stripe Webhook] Payment succeeded for order:', orderId);
+  return { businessId, orderId: orderIdNum };
 }
 
 /**

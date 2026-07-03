@@ -7,31 +7,31 @@ datasource db {
 }
 
 model User {
-  id                      String                  @id
-  name                    String
-  email                   String                  @unique
-  emailVerified           Boolean                 @default(false)
-  image                   String?
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @updatedAt
-  banExpires              DateTime?
-  banReason               String?
-  banned                  Boolean?                @default(false)
-  displayUsername         String?
-  lastLoginMethod         String?
-  role                    String?
-  stripeCustomerId        String?
-  twoFactorEnabled        Boolean?                @default(false)
-  username                String?                 @unique
-  accounts                Account[]
-  business_users          business_users[]
-  businesses              businesses[]
-  sessions                Session[]
-  twofactors              TwoFactor[]
-  pos_sessions            pos_sessions[]
-  invoice_approvals       invoice_approvals[]     @relation("invoice_approvals")
-  invoice_templates       invoice_templates[]     @relation("invoice_templates")
-  invoices_created        invoices[]              @relation("invoices_created_by")
+  id                String              @id
+  name              String
+  email             String              @unique
+  emailVerified     Boolean             @default(false)
+  image             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  banExpires        DateTime?
+  banReason         String?
+  banned            Boolean?            @default(false)
+  displayUsername   String?
+  lastLoginMethod   String?
+  role              String?
+  stripeCustomerId  String?
+  twoFactorEnabled  Boolean?            @default(false)
+  username          String?             @unique
+  accounts          Account[]
+  business_users    business_users[]
+  businesses        businesses[]
+  sessions          Session[]
+  twofactors        TwoFactor[]
+  pos_sessions      pos_sessions[]
+  invoice_approvals invoice_approvals[] @relation("invoice_approvals")
+  invoice_templates invoice_templates[] @relation("invoice_templates")
+  invoices_created  invoices[]          @relation("invoices_created_by")
 
   @@map("user")
 }
@@ -146,131 +146,186 @@ model business_users {
 }
 
 model businesses {
-  storefront_orders         storefront_orders[]
-  store_payment_settings    store_payment_settings?
-  business_payment_methods  business_payment_methods[]
-  stripe_connect_accounts   stripe_connect_accounts?
-  storefront_analytics      storefront_analytics[]
-  payment_transactions      payment_transactions[]
-  business_settings         business_settings?
-  feature_flags             feature_flags[]
-  product_categories        product_categories[]
-  notifications             notifications[]
-  id                      String                    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id                 String?
-  business_name           String
-  email                   String
-  phone                   String?
-  ntn                     String?
-  cnic                    String?
-  srn                     String?
-  address                 String?
-  city                    String?
-  state                   String?
-  country                 String?                   @default("Pakistan")
-  postal_code             String?
-  domain                  String                    @unique(map: "unique_business_domain")
-  category                String
-  description             String?
-  logo_url                String?
-  cover_image_url         String?
-  website                 String?
-  is_active               Boolean?                  @default(true)
-  is_verified             Boolean?                  @default(false)
-  created_at              DateTime?                 @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime?                 @default(now()) @db.Timestamptz(6)
-  currency                String?                   @default("PKR")
-  timezone                String?                   @default("Asia/Karachi")
-  settings                Json?                     @default("{}")
-  fiscal_year_start       Int?                      @default(7)
-  default_payment_terms   Int?                      @default(30)
-  plan_tier               String?                   @default("free") @db.VarChar(20)
-  plan_expires_at         DateTime?                 @db.Timestamptz(6)
-  plan_seats              Int?                      @default(2)
-  max_products            Int?                      @default(100)
-  max_warehouses          Int?                      @default(1)
-  stripe_subscription_id  String?                   @db.VarChar(255)
-  stripe_customer_id      String?                   @db.VarChar(255)
-  stripe_subscription_status String?                @db.VarChar(32)
-  subscription_history    subscription_history[]
-  stripe_webhook_events     stripe_webhook_events[]
-  bom_materials           bom_materials[]
-  boms                    boms[]
-  business_users          business_users[]
-  user                    User?                     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  customers               customers[]
-  delivery_challans       delivery_challans[]
-  gl_accounts             gl_accounts[]
-  gl_entries              gl_entries[]
-  journal_entries         journal_entries[]
-  inventory_ledger        inventory_ledger[]
-  invoice_items           invoice_items[]
-  invoices                invoices[]
-  payments                payments[]
-  product_batches         product_batches[]
-  product_serials         product_serials[]
-  product_stock_locations product_stock_locations[]
-  product_variants        product_variants[]
-  production_orders       production_orders[]
-  products                products[]
-  purchases               purchases[]
-  quotation_items         quotation_items[]
-  quotations              quotations[]
-  sales_order_items       sales_order_items[]
-  sales_orders            sales_orders[]
-  stock_movements         stock_movements[]
-  stock_transfers         stock_transfers[]
-  tax_configurations      tax_configurations[]
-  vendors                 vendors[]
-  warehouse_locations     warehouse_locations[]
-  workflow_rules          workflow_rules[]
-  workflow_history        workflow_history[]
-  audit_logs              audit_logs[]
-  promotions              promotions[]
-  promotion_products      promotion_products[]
-  campaigns               campaigns[]
-  campaign_messages       campaign_messages[]
-  customer_segments       customer_segments[]
-  segment_customers       segment_customers[]
-  inventory_reservations  inventory_reservations[]
-  supplier_quotes         supplier_quotes[]
-  price_lists             price_lists[]
-  price_list_items        price_list_items[]
-  fiscal_periods          fiscal_periods[]
-  expenses                expenses[]
-  exchange_rates          exchange_rates[]
-  credit_notes            credit_notes[]
-  credit_note_items       credit_note_items[]
-  pos_terminals           pos_terminals[]
-  pos_sessions            pos_sessions[]
-  pos_transactions        pos_transactions[]
-  pos_transaction_items   pos_transaction_items[]
-  pos_payments            pos_payments[]
-  pos_refunds             pos_refunds[]
-  pos_refund_items        pos_refund_items[]
-  loyalty_programs        loyalty_programs[]
-  loyalty_transactions    loyalty_transactions[]
-  restaurant_tables       restaurant_tables[]
-  restaurant_orders       restaurant_orders[]
-  restaurant_order_items  restaurant_order_items[]
-  kitchen_orders          kitchen_orders[]
-  approval_requests       approval_requests[]
-  payroll_employees       payroll_employees[]
-  payroll_runs            payroll_runs[]
-  payroll_items           payroll_items[]
-  purchase_items          purchase_items[]
-  challan_items           challan_items[]
-  purchase_returns        purchase_returns[]       // C16
-  purchase_return_items   purchase_return_items[]  // C16
-  document_sequences      document_sequences[]     // C17
-  invoice_approvals       invoice_approvals[]
-  invoice_templates       invoice_templates[]
-  invoice_reminders       invoice_payment_reminders[]
-  reorder_points          reorder_points[]
-  low_stock_alerts        low_stock_alerts[]
-  inventory_abc_analysis  inventory_abc_analysis[]
-  cycle_counts            cycle_counts[]
+  storefront_orders            storefront_orders[]
+  store_payment_settings       store_payment_settings?
+  business_payment_methods     business_payment_methods[]
+  stripe_connect_accounts      stripe_connect_accounts?
+  storefront_analytics         storefront_analytics[]
+  storefront_contact_messages storefront_contact_messages[]
+  payment_transactions         payment_transactions[]
+  business_settings            business_settings?
+  feature_flags                feature_flags[]
+  product_categories           product_categories[]
+  notifications                notifications[]
+  id                           String                         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id                      String?
+  business_name                String
+  email                        String
+  phone                        String?
+  ntn                          String?
+  cnic                         String?
+  srn                          String?
+  address                      String?
+  city                         String?
+  state                        String?
+  country                      String?                        @default("Pakistan")
+  postal_code                  String?
+  domain                       String                         @unique(map: "unique_business_domain")
+  category                     String
+  description                  String?
+  logo_url                     String?
+  cover_image_url              String?
+  website                      String?
+  is_active                    Boolean?                       @default(true)
+  is_verified                  Boolean?                       @default(false)
+  created_at                   DateTime?                      @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime?                      @default(now()) @db.Timestamptz(6)
+  currency                     String?                        @default("PKR")
+  timezone                     String?                        @default("Asia/Karachi")
+  settings                     Json?                          @default("{}")
+  fiscal_year_start            Int?                           @default(7)
+  default_payment_terms        Int?                           @default(30)
+  plan_tier                    String?                        @default("free") @db.VarChar(20)
+  plan_expires_at              DateTime?                      @db.Timestamptz(6)
+  plan_seats                   Int?                           @default(2)
+  max_products                 Int?                           @default(100)
+  max_warehouses               Int?                           @default(1)
+  stripe_subscription_id       String?                        @db.VarChar(255)
+  stripe_customer_id           String?                        @db.VarChar(255)
+  stripe_subscription_status   String?                        @db.VarChar(32)
+  approval_status              String                         @default("auto_approved") @db.VarChar(32)
+  approval_requested_at        DateTime?                      @db.Timestamptz(6)
+  approval_decided_at          DateTime?                      @db.Timestamptz(6)
+  approval_decided_by          String?
+  approval_notes               String?
+  is_demo_requested            Boolean                        @default(false)
+  demo_requested_at            DateTime?                      @db.Timestamptz(6)
+  registration_requests        registration_requests[]
+  subscription_history         subscription_history[]
+  stripe_webhook_events        stripe_webhook_events[]
+  bom_materials                bom_materials[]
+  boms                         boms[]
+  business_users               business_users[]
+  user                         User?                          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  customers                    customers[]
+  delivery_challans            delivery_challans[]
+  gl_accounts                  gl_accounts[]
+  gl_entries                   gl_entries[]
+  journal_entries              journal_entries[]
+  inventory_ledger             inventory_ledger[]
+  invoice_items                invoice_items[]
+  invoices                     invoices[]
+  payments                     payments[]
+  product_batches              product_batches[]
+  product_serials              product_serials[]
+  product_stock_locations      product_stock_locations[]
+  product_variants             product_variants[]
+  production_orders            production_orders[]
+  products                     products[]
+  purchases                    purchases[]
+  quotation_items              quotation_items[]
+  quotations                   quotations[]
+  sales_order_items            sales_order_items[]
+  sales_orders                 sales_orders[]
+  stock_movements              stock_movements[]
+  stock_transfers              stock_transfers[]
+  tax_configurations           tax_configurations[]
+  vendors                      vendors[]
+  warehouse_locations          warehouse_locations[]
+  workflow_rules               workflow_rules[]
+  workflow_history             workflow_history[]
+  audit_logs                   audit_logs[]
+  promotions                   promotions[]
+  promotion_products           promotion_products[]
+  campaigns                    campaigns[]
+  campaign_messages            campaign_messages[]
+  customer_segments            customer_segments[]
+  segment_customers            segment_customers[]
+  inventory_reservations       inventory_reservations[]
+  supplier_quotes              supplier_quotes[]
+  price_lists                  price_lists[]
+  price_list_items             price_list_items[]
+  fiscal_periods               fiscal_periods[]
+  expenses                     expenses[]
+  exchange_rates               exchange_rates[]
+  credit_notes                 credit_notes[]
+  credit_note_items            credit_note_items[]
+  pos_terminals                pos_terminals[]
+  pos_sessions                 pos_sessions[]
+  pos_transactions             pos_transactions[]
+  pos_transaction_items        pos_transaction_items[]
+  pos_payments                 pos_payments[]
+  pos_refunds                  pos_refunds[]
+  pos_refund_items             pos_refund_items[]
+  loyalty_programs             loyalty_programs[]
+  loyalty_transactions         loyalty_transactions[]
+  restaurant_tables            restaurant_tables[]
+  restaurant_orders            restaurant_orders[]
+  restaurant_order_items       restaurant_order_items[]
+  kitchen_orders               kitchen_orders[]
+  approval_requests            approval_requests[]
+  payroll_employees            payroll_employees[]
+  payroll_runs                 payroll_runs[]
+  payroll_items                payroll_items[]
+  purchase_items               purchase_items[]
+  challan_items                challan_items[]
+  purchase_returns             purchase_returns[] // C16
+  purchase_return_items        purchase_return_items[] // C16
+  document_sequences           document_sequences[] // C17
+  invoice_approvals            invoice_approvals[]
+  invoice_templates            invoice_templates[]
+  invoice_reminders            invoice_payment_reminders[]
+  invoice_payments             invoice_payments[]
+  reorder_points               reorder_points[]
+  low_stock_alerts             low_stock_alerts[]
+  inventory_abc_analysis       inventory_abc_analysis[]
+  cycle_counts                 cycle_counts[]
   bank_reconciliation_sessions bank_reconciliation_sessions[]
+  product_reviews              product_reviews[]
+  membership_plans             membership_plans[]
+  customer_memberships         customer_memberships[]
+  membership_events            membership_events[]
+  membership_benefits          membership_benefits[]
+
+  @@index([approval_status, approval_requested_at(sort: Desc)], map: "idx_businesses_approval_status")
+}
+
+/// Registration approval audit trail (platform owner workflow).
+model registration_requests {
+  id                  String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id         String?    @db.Uuid
+  user_id             String
+  user_email          String
+  user_name           String?
+  business_name       String
+  domain              String
+  category            String
+  country             String
+  phone               String?
+  plan_tier           String
+  domain_package_key  String?
+  requested_at        DateTime?  @default(now()) @db.Timestamptz(6)
+  ip_address          String?
+  user_agent          String?
+  referrer            String?
+  status              String     @default("pending") @db.VarChar(32)
+  status_updated_at   DateTime?  @default(now()) @db.Timestamptz(6)
+  decided_by          String?
+  decided_at          DateTime?  @db.Timestamptz(6)
+  decision_notes      String?
+  demo_requested      Boolean    @default(false)
+  demo_requested_at   DateTime?  @db.Timestamptz(6)
+  demo_scheduled_at   DateTime?  @db.Timestamptz(6)
+  demo_completed      Boolean    @default(false)
+  internal_notes      String?
+  tags                String[]
+  created_at          DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?  @default(now()) @db.Timestamptz(6)
+  businesses          businesses? @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([status, requested_at(sort: Desc)], map: "idx_registration_requests_status")
+  @@index([user_id], map: "idx_registration_requests_user")
+  @@index([business_id], map: "idx_registration_requests_business")
 }
 
 /// Append-only SaaS subscription / plan changes (not AR customer invoices).
@@ -305,43 +360,44 @@ model stripe_webhook_events {
 }
 
 model customers {
-  id                   String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id          String                 @db.Uuid
-  name                 String
-  email                String?
-  phone                String?
-  ntn                  String?
-  cnic                 String?
-  srn                  String?
-  address              String?
-  city                 String?
-  state                String?
-  pincode              String?
-  country              String?                @default("Pakistan")
-  credit_limit         Decimal?               @default(0) @db.Decimal(12, 2)
-  outstanding_balance  Decimal?               @default(0) @db.Decimal(12, 2)
-  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
-  domain_data          Json?                  @default("{}")
-  opening_balance      Decimal?               @default(0) @db.Decimal(12, 2)
-  filer_status         String?                @default("none") @db.VarChar(50)
-  type                 String?                @default("individual")
-  notes                String?
-  is_active            Boolean                @default(true)
-  is_deleted           Boolean                @default(false)
-  deleted_at           DateTime?              @db.Timestamptz(6)
-  businesses           businesses             @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  delivery_challans    delivery_challans[]
-  invoices             invoices[]
-  payments             payments[]
-  product_serials      product_serials[]
-  quotations           quotations[]
-  sales_orders         sales_orders[]
-  credit_notes         credit_notes[]
-  pos_transactions     pos_transactions[]
-  loyalty_transactions loyalty_transactions[]
-  restaurant_orders    restaurant_orders[]
+  id                     String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id            String                   @db.Uuid
+  name                   String
+  email                  String?
+  phone                  String?
+  ntn                    String?
+  cnic                   String?
+  srn                    String?
+  address                String?
+  city                   String?
+  state                  String?
+  pincode                String?
+  country                String?                  @default("Pakistan")
+  credit_limit           Decimal?                 @default(0) @db.Decimal(12, 2)
+  outstanding_balance    Decimal?                 @default(0) @db.Decimal(12, 2)
+  created_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  domain_data            Json?                    @default("{}")
+  opening_balance        Decimal?                 @default(0) @db.Decimal(12, 2)
+  filer_status           String?                  @default("none") @db.VarChar(50)
+  type                   String?                  @default("individual")
+  notes                  String?
+  is_active              Boolean                  @default(true)
+  is_deleted             Boolean                  @default(false)
+  deleted_at             DateTime?                @db.Timestamptz(6)
+  businesses             businesses               @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  delivery_challans      delivery_challans[]
+  invoices               invoices[]
+  payments               payments[]
+  product_serials        product_serials[]
+  quotations             quotations[]
+  sales_orders           sales_orders[]
+  credit_notes           credit_notes[]
+  pos_transactions       pos_transactions[]
+  loyalty_transactions   loyalty_transactions[]
+  restaurant_orders      restaurant_orders[]
   inventory_reservations inventory_reservations[]
+  customer_memberships   customer_memberships[]
 
   @@index([domain_data], map: "idx_customers_domain_data", type: Gin)
   @@index([business_id, email])
@@ -350,24 +406,24 @@ model customers {
 }
 
 model gl_accounts {
-  id                String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id       String        @db.Uuid
-  code              String
-  name              String
-  type              String
+  id                           String                         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id                  String                         @db.Uuid
+  code                         String
+  name                         String
+  type                         String
   /// Optional sub-classification (e.g. current_asset) — used by accounting UI and actions.
-  sub_type          String?       @db.VarChar(100)
-  description       String?
-  parent_id         String?       @db.Uuid
-  is_active         Boolean?      @default(true)
-  created_at        DateTime?     @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime?     @default(now()) @updatedAt @db.Timestamptz(6)
-  is_system         Boolean?      @default(false)
-  businesses        businesses    @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  gl_accounts       gl_accounts?  @relation("gl_accountsTogl_accounts", fields: [parent_id], references: [id], onUpdate: NoAction)
-  other_gl_accounts gl_accounts[] @relation("gl_accountsTogl_accounts")
-  gl_entries        gl_entries[]
-  expenses          expenses[]
+  sub_type                     String?                        @db.VarChar(100)
+  description                  String?
+  parent_id                    String?                        @db.Uuid
+  is_active                    Boolean?                       @default(true)
+  created_at                   DateTime?                      @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime?                      @default(now()) @updatedAt @db.Timestamptz(6)
+  is_system                    Boolean?                       @default(false)
+  businesses                   businesses                     @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  gl_accounts                  gl_accounts?                   @relation("gl_accountsTogl_accounts", fields: [parent_id], references: [id], onUpdate: NoAction)
+  other_gl_accounts            gl_accounts[]                  @relation("gl_accountsTogl_accounts")
+  gl_entries                   gl_entries[]
+  expenses                     expenses[]
   bank_reconciliation_sessions bank_reconciliation_sessions[]
 
   @@unique([business_id, code])
@@ -399,61 +455,63 @@ model gl_entries {
 
 model invoices {
   invoice_payments invoice_payments[]
-  id                      String                  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id             String                  @db.Uuid
-  invoice_number          String
-  customer_id             String?                 @db.Uuid
-  created_by              String?
-  date                    DateTime                @db.Date
-  due_date                DateTime?               @db.Date
-  subtotal                Decimal?                @default(0.00) @db.Decimal(12, 2)
-  total_tax               Decimal?                @default(0.00) @db.Decimal(12, 2)
-  total_amount            Decimal?                @default(0.00) @db.Decimal(12, 2)
-  status                  String?                 @default("draft") // draft, sent, viewed, approved, payment_pending, partially_paid, paid, overdue, voided, amended
-  notes                   String?
-  created_at              DateTime?               @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime?               @default(now()) @db.Timestamptz(6)
-  tax_total               Decimal?                @default(0) @db.Decimal(12, 2)
-  discount_total          Decimal?                @default(0) @db.Decimal(12, 2)
-  grand_total             Decimal?                @default(0) @db.Decimal(12, 2)
-  payment_method          String?
-  payment_status          String?
-  terms                   String?
-  tax_details             Json?                   @default("{}")
-  is_deleted              Boolean                 @default(false)
-  deleted_at              DateTime?               @db.Timestamptz(6)
-  
+  id               String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id      String             @db.Uuid
+  invoice_number   String
+  customer_id      String?            @db.Uuid
+  created_by       String?
+  date             DateTime           @db.Date
+  due_date         DateTime?          @db.Date
+  subtotal         Decimal?           @default(0.00) @db.Decimal(12, 2)
+  total_tax        Decimal?           @default(0.00) @db.Decimal(12, 2)
+  total_amount     Decimal?           @default(0.00) @db.Decimal(12, 2)
+  status           String?            @default("draft") // draft, sent, viewed, approved, payment_pending, partially_paid, paid, overdue, voided, amended
+  notes            String?
+  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  tax_total        Decimal?           @default(0) @db.Decimal(12, 2)
+  discount_total   Decimal?           @default(0) @db.Decimal(12, 2)
+  grand_total      Decimal?           @default(0) @db.Decimal(12, 2)
+  payment_method   String?
+  payment_status   String?
+  terms            String?
+  tax_details      Json?              @default("{}")
+  is_deleted       Boolean            @default(false)
+  deleted_at       DateTime?          @db.Timestamptz(6)
+
   // Workflow & Approval Fields
-  approval_status         String?                 @default("none") // none, pending, approved, rejected
-  approval_by             String?
-  approval_date           DateTime?               @db.Timestamptz(6)
-  approval_notes          String?
-  sent_by                 String?
-  sent_date               DateTime?               @db.Timestamptz(6)
-  viewed_date             DateTime?               @db.Timestamptz(6)
-  print_count             Int?                    @default(0)
-  email_sent_count        Int?                    @default(0)
-  fbr_status              String?                 @default("pending") // pending, valid, invalid, sync_error
-  fbr_response            Json?                   @default("{}")
-  template_id             String?                 @db.Uuid
-  is_recurring            Boolean?                @default(false)
-  recurring_parent_id     String?                 @db.Uuid
-  recurring_frequency     String? // daily, weekly, monthly, quarterly, yearly
-  next_invoice_date       DateTime?               @db.Date
-  
+  approval_status     String?   @default("none") // none, pending, approved, rejected
+  approval_by         String?
+  approval_date       DateTime? @db.Timestamptz(6)
+  approval_notes      String?
+  sent_by             String?
+  sent_date           DateTime? @db.Timestamptz(6)
+  viewed_date         DateTime? @db.Timestamptz(6)
+  print_count         Int?      @default(0)
+  email_sent_count    Int?      @default(0)
+  fbr_status          String?   @default("pending") // pending, valid, invalid, sync_error
+  fbr_response        Json?     @default("{}")
+  template_id         String?   @db.Uuid
+  is_recurring        Boolean?  @default(false)
+  recurring_parent_id String?   @db.Uuid
+  recurring_frequency String? // daily, weekly, monthly, quarterly, yearly
+  next_invoice_date   DateTime? @db.Date
+
   // Relations
-  invoice_items           invoice_items[]
-  payment_allocations     payment_allocations[]
-  credit_notes            credit_notes[]
-  pos_transactions        pos_transactions[]
-  invoice_approvals       invoice_approvals[]
-  invoice_reminders       invoice_payment_reminders[]
-  recurring_invoices      invoices[]              @relation("RecurringInvoices")
-  parent_invoice          invoices?               @relation("RecurringInvoices", fields: [recurring_parent_id], references: [id], onDelete: SetNull)
-  
-  businesses              businesses              @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  customers               customers?              @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  creator                 User?                   @relation("invoices_created_by", fields: [created_by], references: [id], onDelete: SetNull)
+  invoice_items       invoice_items[]
+  payment_allocations payment_allocations[]
+  credit_notes        credit_notes[]
+  pos_transactions    pos_transactions[]
+  invoice_approvals   invoice_approvals[]
+  invoice_reminders   invoice_payment_reminders[]
+  recurring_invoices  invoices[]                  @relation("RecurringInvoices")
+  parent_invoice      invoices?                   @relation("RecurringInvoices", fields: [recurring_parent_id], references: [id], onDelete: SetNull)
+  membership_initial  customer_memberships[]      @relation("MembershipInitialInvoice")
+  membership_recurring customer_memberships[]     @relation("MembershipRecurringInvoice")
+
+  businesses businesses @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  customers  customers? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  creator    User?      @relation("invoices_created_by", fields: [created_by], references: [id], onDelete: SetNull)
 
   @@unique([business_id, invoice_number])
   @@index([business_id, date])
@@ -468,18 +526,18 @@ model invoices {
 }
 
 model invoice_approvals {
-  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  business_id       String      @db.Uuid
-  invoice_id        String      @db.Uuid
-  approved_by       String?
-  approval_status   String      // approved, rejected
-  notes             String?
-  metadata          Json?       @default("{}")
-  created_at        DateTime    @default(now()) @db.Timestamptz(6)
-  
-  businesses        businesses  @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  invoices          invoices    @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
-  approver          User?       @relation("invoice_approvals", fields: [approved_by], references: [id], onDelete: SetNull)
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id     String   @db.Uuid
+  invoice_id      String   @db.Uuid
+  approved_by     String?
+  approval_status String // approved, rejected
+  notes           String?
+  metadata        Json?    @default("{}")
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  businesses businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  invoices   invoices   @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  approver   User?      @relation("invoice_approvals", fields: [approved_by], references: [id], onDelete: SetNull)
 
   @@unique([invoice_id, approved_by])
   @@index([business_id])
@@ -488,23 +546,23 @@ model invoice_approvals {
 }
 
 model invoice_templates {
-  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  business_id       String      @db.Uuid
-  name              String
-  description       String?
-  template_type     String      // standard, recurring, credit_note
-  items             Json        @default("[]") // Template items
-  notes             String?
-  terms             String?
-  tax_category      String?
-  is_active         Boolean     @default(true)
-  metadata          Json?       @default("{}")
-  created_at        DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime    @default(now()) @db.Timestamptz(6)
-  created_by        String?
-  
-  businesses        businesses  @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  creator           User?       @relation("invoice_templates", fields: [created_by], references: [id], onDelete: SetNull)
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id   String   @db.Uuid
+  name          String
+  description   String?
+  template_type String // standard, recurring, credit_note
+  items         Json     @default("[]") // Template items
+  notes         String?
+  terms         String?
+  tax_category  String?
+  is_active     Boolean  @default(true)
+  metadata      Json?    @default("{}")
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+  created_by    String?
+
+  businesses businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  creator    User?      @relation("invoice_templates", fields: [created_by], references: [id], onDelete: SetNull)
 
   @@unique([business_id, name])
   @@index([business_id])
@@ -513,18 +571,18 @@ model invoice_templates {
 }
 
 model invoice_payment_reminders {
-  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  business_id       String      @db.Uuid
-  invoice_id        String      @db.Uuid
-  reminder_type     String      // first_due, overdue_3days, overdue_7days, overdue_14days, overdue_30days
-  scheduled_date    DateTime    @db.Date
-  sent_date         DateTime?   @db.Timestamptz(6)
-  is_sent           Boolean     @default(false)
-  metadata          Json?       @default("{}")
-  created_at        DateTime    @default(now()) @db.Timestamptz(6)
-  
-  businesses        businesses  @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  invoices          invoices    @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id    String    @db.Uuid
+  invoice_id     String    @db.Uuid
+  reminder_type  String // first_due, overdue_3days, overdue_7days, overdue_14days, overdue_30days
+  scheduled_date DateTime  @db.Date
+  sent_date      DateTime? @db.Timestamptz(6)
+  is_sent        Boolean   @default(false)
+  metadata       Json?     @default("{}")
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+
+  businesses businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  invoices   invoices   @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
 
   @@unique([invoice_id, reminder_type])
   @@index([business_id])
@@ -613,6 +671,28 @@ model product_specifications {
   @@index([product_id], map: "idx_product_specs_product_id")
 }
 
+/// Storefront product reviews (created by migration 20260617_storefront_product_columns).
+model product_reviews {
+  id             String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  product_id     String      @db.Uuid
+  business_id    String?     @db.Uuid
+  reviewer_name  String      @db.VarChar(255)
+  reviewer_email String?     @db.VarChar(255)
+  rating         Int
+  title          String?     @db.VarChar(255)
+  body           String?
+  is_approved    Boolean?    @default(false)
+  helpful_count  Int?        @default(0)
+  created_at     DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?   @default(now()) @db.Timestamptz(6)
+  products       products    @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  businesses     businesses? @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([product_id], map: "idx_product_reviews_product_id")
+  @@index([product_id, is_approved], map: "idx_product_reviews_approved")
+  @@index([business_id], map: "idx_product_reviews_business_id")
+}
+
 model production_orders {
   id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   business_id         String               @db.Uuid
@@ -647,44 +727,44 @@ model production_orders {
 
 model products {
   slug             String?
-  compare_price    Decimal?                  @db.Decimal(12, 2)
-  is_featured      Boolean?                  @default(false)
-  is_new           Boolean?                  @default(false)
+  compare_price    Decimal?                     @db.Decimal(12, 2)
+  is_featured      Boolean?                     @default(false)
+  is_new           Boolean?                     @default(false)
   stock_status     String?
-  sales_count      Int?                      @default(0)
-  images           Json?                     @default("[]")
-  has_variants     Boolean?                  @default(false)
-  rating           Decimal?                  @db.Decimal(3, 2)
-  review_count     Int?                      @default(0)
-  enable_reviews   Boolean?                  @default(true)
-  id                      String                    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id             String                    @db.Uuid
-  sku                     String?
-  barcode                 String?
-  description             String?
-  category                String?
-  brand                   String?
-  price                   Decimal                   @default(0) @db.Decimal(12, 2)
-  cost_price              Decimal?                  @db.Decimal(12, 2)
-  mrp                     Decimal?                  @db.Decimal(12, 2)
-  stock                   Decimal?                  @default(0) @db.Decimal
-  min_stock               Decimal?                  @default(0) @db.Decimal(12, 2)
-  min_stock_level         Decimal?                  @default(5) @db.Decimal(12, 2)
-  max_stock               Decimal?                  @db.Decimal(12, 2)
-  reorder_point           Decimal?                  @db.Decimal(12, 2)
-  reorder_quantity        Decimal?                  @db.Decimal(12, 2)
-  unit                    String?                   @default("pcs")
-  hsn_code                String?
-  sac_code                String?
-  tax_percent             Decimal?                  @default(17) @db.Decimal(5, 2)
-  image_url               String?
-  is_active               Boolean?                  @default(true)
-  domain_data             Json?                     @default("{}")
-  batches                 Json?                     @default("[]")
-  serial_numbers          Json?                     @default("[]")
-  variants                Json?                     @default("[]")
-  embedding               Unsupported("vector(1536)")?
-  expiry_date             DateTime?                 @db.Date
+  sales_count      Int?                         @default(0)
+  images           Json?                        @default("[]")
+  has_variants     Boolean?                     @default(false)
+  rating           Decimal?                     @db.Decimal(3, 2)
+  review_count     Int?                         @default(0)
+  enable_reviews   Boolean?                     @default(true)
+  id               String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id      String                       @db.Uuid
+  sku              String?
+  barcode          String?
+  description      String?
+  category         String?
+  brand            String?
+  price            Decimal                      @default(0) @db.Decimal(12, 2)
+  cost_price       Decimal?                     @db.Decimal(12, 2)
+  mrp              Decimal?                     @db.Decimal(12, 2)
+  stock            Decimal?                     @default(0) @db.Decimal
+  min_stock        Decimal?                     @default(0) @db.Decimal(12, 2)
+  min_stock_level  Decimal?                     @default(5) @db.Decimal(12, 2)
+  max_stock        Decimal?                     @db.Decimal(12, 2)
+  reorder_point    Decimal?                     @db.Decimal(12, 2)
+  reorder_quantity Decimal?                     @db.Decimal(12, 2)
+  unit             String?                      @default("pcs")
+  hsn_code         String?
+  sac_code         String?
+  tax_percent      Decimal?                     @default(17) @db.Decimal(5, 2)
+  image_url        String?
+  is_active        Boolean?                     @default(true)
+  domain_data      Json?                        @default("{}")
+  batches          Json?                        @default("[]")
+  serial_numbers   Json?                        @default("[]")
+  variants         Json?                        @default("[]")
+  embedding        Unsupported("vector(1536)")?
+  expiry_date      DateTime?                    @db.Date
 
   manufacturing_date      DateTime?                 @db.Date
   created_at              DateTime?                 @default(now()) @db.Timestamptz(6)
@@ -716,15 +796,17 @@ model products {
   price_list_items        price_list_items[]
   credit_note_items       credit_note_items[]
   pos_transaction_items   pos_transaction_items[]
-  purchase_return_items   purchase_return_items[]  // C16
-  category_id             String?                  @db.Uuid
-  catalog_category        product_categories?      @relation("ProductCatalogCategory", fields: [category_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  purchase_return_items   purchase_return_items[] // C16
+  category_id             String?                   @db.Uuid
+  catalog_category        product_categories?       @relation("ProductCatalogCategory", fields: [category_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   reorder_points          reorder_points[]
   low_stock_alerts        low_stock_alerts[]
   inventory_abc_analysis  inventory_abc_analysis[]
   cycle_count_items       cycle_count_items[]
   inventory_adjustments   inventory_adjustments[]
   product_specifications  product_specifications[]
+  product_reviews         product_reviews[]
+  membership_plans        membership_plans[]
 
   @@index([business_id, sku])
   @@index([business_id, category])
@@ -809,8 +891,8 @@ model tax_configurations {
 }
 
 model vendors {
-  id                  String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id         String      @db.Uuid
+  id                  String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id         String             @db.Uuid
   name                String
   email               String?
   phone               String?
@@ -820,25 +902,25 @@ model vendors {
   city                String?
   state               String?
   payment_terms       String?
-  credit_limit        Decimal?    @default(0) @db.Decimal(12, 2)
-  outstanding_balance Decimal?    @default(0) @db.Decimal(12, 2)
-  created_at          DateTime?   @default(now()) @db.Timestamptz(6)
-  updated_at          DateTime?   @default(now()) @db.Timestamptz(6)
-  domain_data         Json?       @default("{}")
-  opening_balance     Decimal?    @default(0) @db.Decimal(12, 2)
-  filer_status        String?     @default("none") @db.VarChar(50)
+  credit_limit        Decimal?           @default(0) @db.Decimal(12, 2)
+  outstanding_balance Decimal?           @default(0) @db.Decimal(12, 2)
+  created_at          DateTime?          @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?          @default(now()) @db.Timestamptz(6)
+  domain_data         Json?              @default("{}")
+  opening_balance     Decimal?           @default(0) @db.Decimal(12, 2)
+  filer_status        String?            @default("none") @db.VarChar(50)
   contact_person      String?
   pincode             String?
-  country             String?     @default("Pakistan")
+  country             String?            @default("Pakistan")
   notes               String?
-  is_active           Boolean     @default(true)
-  is_deleted          Boolean     @default(false)
-  deleted_at          DateTime?   @db.Timestamptz(6)
+  is_active           Boolean            @default(true)
+  is_deleted          Boolean            @default(false)
+  deleted_at          DateTime?          @db.Timestamptz(6)
   payments            payments[]
   purchases           purchases[]
   expenses            expenses[]
-  purchase_returns    purchase_returns[]  // C16
-  businesses          businesses  @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  purchase_returns    purchase_returns[] // C16
+  businesses          businesses         @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([domain_data], map: "idx_vendors_domain_data", type: Gin)
 }
@@ -877,33 +959,33 @@ model product_batches {
 }
 
 model warehouse_locations {
-  id                      String                    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id             String                    @db.Uuid
-  name                    String
-  address                 String?
-  city                    String?
-  type                    String?                   @default("warehouse")
-  is_active               Boolean?                  @default(true)
-  created_at              DateTime?                 @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime?                 @default(now()) @db.Timestamptz(6)
-  code                    String?                   @db.VarChar(50)
-  contact_person          String?                   @db.VarChar(100)
-  phone                   String?                   @db.VarChar(50)
-  email                   String?                   @db.VarChar(100)
-  is_primary              Boolean?                  @default(false)
-  product_batches         product_batches[]
-  product_serials         product_serials[]
-  product_stock_locations product_stock_locations[]
+  id                       String                    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id              String                    @db.Uuid
+  name                     String
+  address                  String?
+  city                     String?
+  type                     String?                   @default("warehouse")
+  is_active                Boolean?                  @default(true)
+  created_at               DateTime?                 @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?                 @default(now()) @db.Timestamptz(6)
+  code                     String?                   @db.VarChar(50)
+  contact_person           String?                   @db.VarChar(100)
+  phone                    String?                   @db.VarChar(50)
+  email                    String?                   @db.VarChar(100)
+  is_primary               Boolean?                  @default(false)
+  product_batches          product_batches[]
+  product_serials          product_serials[]
+  product_stock_locations  product_stock_locations[]
   production_orders_input  production_orders[]       @relation("production_input_warehouse")
   production_orders_output production_orders[]       @relation("production_output_warehouse")
-  stock_movements         stock_movements[]
-  stock_transfers_from    stock_transfers[]         @relation("stock_transfers_from_location")
-  stock_transfers_to      stock_transfers[]         @relation("stock_transfers_to_location")
-  pos_terminals           pos_terminals[]
-  businesses              businesses                @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  reorder_points          reorder_points[]
-  low_stock_alerts        low_stock_alerts[]
-  cycle_counts            cycle_counts[]
+  stock_movements          stock_movements[]
+  stock_transfers_from     stock_transfers[]         @relation("stock_transfers_from_location")
+  stock_transfers_to       stock_transfers[]         @relation("stock_transfers_to_location")
+  pos_terminals            pos_terminals[]
+  businesses               businesses                @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  reorder_points           reorder_points[]
+  low_stock_alerts         low_stock_alerts[]
+  cycle_counts             cycle_counts[]
 }
 
 model purchase_items {
@@ -1092,30 +1174,30 @@ model sales_order_items {
 }
 
 model delivery_challans {
-  id                     String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id            String                   @db.Uuid
-  sales_order_id         String?                  @db.Uuid
-  customer_id            String?                  @db.Uuid
-  warehouse_id           String?                  @db.Uuid
-  challan_number         String
-  date                   DateTime?                @default(dbgenerated("CURRENT_DATE")) @db.Date
-  status                 String?                  @default("issued")
-  subtotal               Decimal?                 @default(0) @db.Decimal(12, 2)
-  tax_total              Decimal?                 @default(0) @db.Decimal(12, 2)
-  total_amount           Decimal?                 @default(0) @db.Decimal(12, 2)
-  driver_name            String?
-  vehicle_number         String?
-  notes                  String?
-  domain_data            Json?                    @default("{}")
-  created_at             DateTime?                @default(now()) @db.Timestamptz(6)
-  updated_at             DateTime?                @default(now()) @db.Timestamptz(6)
-  delivery_address       String?
-  is_deleted             Boolean?                 @default(false)
-  deleted_at             DateTime?                @db.Timestamptz(6)
-  challan_items          challan_items[]
-  businesses             businesses               @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  customers              customers?               @relation(fields: [customer_id], references: [id], onUpdate: NoAction)
-  sales_orders           sales_orders?            @relation(fields: [sales_order_id], references: [id], onUpdate: NoAction)
+  id               String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id      String          @db.Uuid
+  sales_order_id   String?         @db.Uuid
+  customer_id      String?         @db.Uuid
+  warehouse_id     String?         @db.Uuid
+  challan_number   String
+  date             DateTime?       @default(dbgenerated("CURRENT_DATE")) @db.Date
+  status           String?         @default("issued")
+  subtotal         Decimal?        @default(0) @db.Decimal(12, 2)
+  tax_total        Decimal?        @default(0) @db.Decimal(12, 2)
+  total_amount     Decimal?        @default(0) @db.Decimal(12, 2)
+  driver_name      String?
+  vehicle_number   String?
+  notes            String?
+  domain_data      Json?           @default("{}")
+  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  delivery_address String?
+  is_deleted       Boolean?        @default(false)
+  deleted_at       DateTime?       @db.Timestamptz(6)
+  challan_items    challan_items[]
+  businesses       businesses      @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  customers        customers?      @relation(fields: [customer_id], references: [id], onUpdate: NoAction)
+  sales_orders     sales_orders?   @relation(fields: [sales_order_id], references: [id], onUpdate: NoAction)
 
   @@unique([business_id, challan_number], map: "unique_challan_number")
   @@index([business_id], map: "idx_delivery_challans_business_id")
@@ -1180,7 +1262,6 @@ model payments {
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-
 
 model product_stock_locations {
   id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
@@ -1394,7 +1475,7 @@ model inventory_reservations {
   quantity       Decimal    @db.Decimal(12, 2)
   expires_at     DateTime   @db.Timestamptz(6)
   status         String     @default("active") // active, completed, fulfilled, cancelled, expired
-  reference      String?    // e.g. "quotation:uuid" or "order_123"
+  reference      String? // e.g. "quotation:uuid" or "order_123"
   reference_type String?    @db.VarChar(50) // invoice | quotation | sales_order | production
   reference_id   String?    @db.Uuid
   notes          String?
@@ -1474,7 +1555,7 @@ model journal_entries {
   description      String?
   reference_type   String?           @db.VarChar(50)
   reference_id     String?           @db.Uuid
-  reference_number String?           // free-text reference entered by users (e.g. cheque no., doc no.)
+  reference_number String? // free-text reference entered by users (e.g. cheque no., doc no.)
   is_reversed      Boolean           @default(false)
   reversed_by      String?           @db.Uuid
   created_by       String?           @db.VarChar(255)
@@ -1840,9 +1921,9 @@ model restaurant_tables {
 }
 
 model restaurant_orders {
-  payment_method String?
-  payment_status String?
-  tip_amount     Decimal? @db.Decimal(12, 2)
+  payment_method         String?
+  payment_status         String?
+  tip_amount             Decimal?                 @db.Decimal(12, 2)
   id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   business_id            String                   @db.Uuid
   order_number           String                   @db.VarChar(50)
@@ -1934,7 +2015,6 @@ model approval_requests {
   @@index([status])
 }
 
-
 model payroll_employees {
   id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   business_id   String          @db.Uuid
@@ -2015,26 +2095,26 @@ model payroll_items {
 // ============================================================================
 
 model purchase_returns {
-  id                  String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id         String                   @db.Uuid
-  vendor_id           String                   @db.Uuid
-  return_number       String                   @db.VarChar(50)
-  return_date         DateTime                 @default(now()) @db.Date
-  original_purchase_id String?                 @db.Uuid
-  subtotal            Decimal                  @db.Decimal(12, 2)
-  tax_amount          Decimal                  @default(0) @db.Decimal(12, 2)
-  total_amount        Decimal                  @db.Decimal(12, 2)
-  status              String                   @default("pending") @db.VarChar(20) // pending | approved | completed
-  reason              String?
-  notes               String?
-  created_at          DateTime                 @default(now()) @db.Timestamptz(6)
-  updated_at          DateTime                 @default(now()) @db.Timestamptz(6)
-  created_by          String?
-  
-  businesses          businesses               @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  vendors             vendors                  @relation(fields: [vendor_id], references: [id])
+  id                   String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id          String   @db.Uuid
+  vendor_id            String   @db.Uuid
+  return_number        String   @db.VarChar(50)
+  return_date          DateTime @default(now()) @db.Date
+  original_purchase_id String?  @db.Uuid
+  subtotal             Decimal  @db.Decimal(12, 2)
+  tax_amount           Decimal  @default(0) @db.Decimal(12, 2)
+  total_amount         Decimal  @db.Decimal(12, 2)
+  status               String   @default("pending") @db.VarChar(20) // pending | approved | completed
+  reason               String?
+  notes                String?
+  created_at           DateTime @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime @default(now()) @db.Timestamptz(6)
+  created_by           String?
+
+  businesses            businesses              @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  vendors               vendors                 @relation(fields: [vendor_id], references: [id])
   purchase_return_items purchase_return_items[]
-  
+
   @@unique([business_id, return_number])
   @@index([business_id])
   @@index([vendor_id])
@@ -2042,22 +2122,22 @@ model purchase_returns {
 }
 
 model purchase_return_items {
-  id                String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id       String           @db.Uuid
-  return_id         String           @db.Uuid
-  product_id        String           @db.Uuid
-  quantity          Decimal          @db.Decimal(12, 2)
-  unit_price        Decimal          @db.Decimal(12, 2)
-  tax_amount        Decimal          @default(0) @db.Decimal(12, 2)
-  total             Decimal          @db.Decimal(12, 2)
-  batch_number      String?
-  notes             String?
-  created_at        DateTime         @default(now()) @db.Timestamptz(6)
-  
-  businesses        businesses       @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  purchase_returns  purchase_returns @relation(fields: [return_id], references: [id], onDelete: Cascade)
-  products          products         @relation(fields: [product_id], references: [id])
-  
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id  String   @db.Uuid
+  return_id    String   @db.Uuid
+  product_id   String   @db.Uuid
+  quantity     Decimal  @db.Decimal(12, 2)
+  unit_price   Decimal  @db.Decimal(12, 2)
+  tax_amount   Decimal  @default(0) @db.Decimal(12, 2)
+  total        Decimal  @db.Decimal(12, 2)
+  batch_number String?
+  notes        String?
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  businesses       businesses       @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  purchase_returns purchase_returns @relation(fields: [return_id], references: [id], onDelete: Cascade)
+  products         products         @relation(fields: [product_id], references: [id])
+
   @@index([business_id])
   @@index([return_id])
   @@index([product_id])
@@ -2068,23 +2148,23 @@ model purchase_return_items {
 // ============================================================================
 
 model document_sequences {
-  id              String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id     String     @db.Uuid
-  document_type   String     @db.VarChar(50) // invoice | purchase | pos_transaction | etc.
-  prefix          String     @default("") @db.VarChar(20)
-  current_number  Int        @default(1)
-  padding_length  Int        @default(6) // e.g., 6 = 000001
-  suffix          String?    @db.VarChar(20)
-  reset_frequency String?    @db.VarChar(20) // null | yearly | monthly
-  last_reset_date DateTime?  @db.Date
-  reset_by        String?    @db.VarChar(255)
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id     String    @db.Uuid
+  document_type   String    @db.VarChar(50) // invoice | purchase | pos_transaction | etc.
+  prefix          String    @default("") @db.VarChar(20)
+  current_number  Int       @default(1)
+  padding_length  Int       @default(6) // e.g., 6 = 000001
+  suffix          String?   @db.VarChar(20)
+  reset_frequency String?   @db.VarChar(20) // null | yearly | monthly
+  last_reset_date DateTime? @db.Date
+  reset_by        String?   @db.VarChar(255)
   reset_reason    String?
-  reset_at        DateTime?  @db.Timestamptz(6)
-  created_at      DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime   @default(now()) @db.Timestamptz(6)
-  
-  businesses      businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  
+  reset_at        DateTime? @db.Timestamptz(6)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  businesses businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
+
   @@unique([business_id, document_type])
   @@index([business_id])
 }
@@ -2119,18 +2199,18 @@ model storefront_orders {
 }
 
 model storefront_order_items {
-  id           Int                @id @default(autoincrement())
+  id           Int               @id @default(autoincrement())
   order_id     Int
-  product_id   String?            @db.Uuid
+  product_id   String?           @db.Uuid
   product_name String?
-  product_sku  String?            @db.VarChar(255)
-  variant_id   String?            @db.Uuid
-  quantity     Decimal            @default(1) @db.Decimal(12, 2)
-  unit_price   Decimal            @default(0) @db.Decimal(12, 2)
-  tax_amount   Decimal?           @default(0) @db.Decimal(12, 2)
-  total_price  Decimal?           @default(0) @db.Decimal(12, 2)
+  product_sku  String?           @db.VarChar(255)
+  variant_id   String?           @db.Uuid
+  quantity     Decimal           @default(1) @db.Decimal(12, 2)
+  unit_price   Decimal           @default(0) @db.Decimal(12, 2)
+  tax_amount   Decimal?          @default(0) @db.Decimal(12, 2)
+  total_price  Decimal?          @default(0) @db.Decimal(12, 2)
   metadata     Json?
-  order        storefront_orders  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  order        storefront_orders @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@index([order_id])
 }
@@ -2213,6 +2293,28 @@ model storefront_analytics {
   @@unique([business_id, date])
 }
 
+model storefront_contact_messages {
+  id             Int        @id @default(autoincrement())
+  business_id    String     @db.Uuid
+  customer_name  String
+  customer_email String
+  customer_phone String?
+  subject        String     @default("general")
+  message        String
+  order_number   String?
+  status         String     @default("new")
+  handled_at     DateTime?  @db.Timestamptz(6)
+  handled_by     String?
+  metadata       Json?      @default("{}")
+  created_at     DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
+  businesses     businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
+
+  @@index([business_id, status])
+  @@index([business_id, created_at(sort: Desc)])
+  @@index([business_id, subject])
+}
+
 model payment_transactions {
   id                       String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   order_id                 Int
@@ -2232,13 +2334,13 @@ model payment_transactions {
 }
 
 model business_settings {
-  id                     String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id            String     @unique @db.Uuid
-  settings               Json?
-  is_storefront_enabled  Boolean    @default(true)
-  created_at             DateTime?  @default(now()) @db.Timestamptz(6)
-  updated_at             DateTime?  @default(now()) @db.Timestamptz(6)
-  businesses             businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  id                    String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id           String     @unique @db.Uuid
+  settings              Json?
+  is_storefront_enabled Boolean    @default(true)
+  created_at            DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?  @default(now()) @db.Timestamptz(6)
+  businesses            businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
 }
 
 model feature_flags {
@@ -2255,33 +2357,33 @@ model feature_flags {
 
 /// Platform-wide feature definitions (admin rollout / defaults). Distinct from per-business `feature_flags`.
 model platform_feature_flags {
-  id                   String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  key                  String                           @unique @db.VarChar(100)
-  name                 String                           @db.VarChar(200)
-  description          String?
-  type                 String                           @default("boolean") @db.VarChar(50)
-  default_value        Json                             @default("false")
-  rollout_percentage   Int                              @default(100)
-  is_active            Boolean                          @default(true)
-  created_at           DateTime?                        @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime?                        @default(now()) @db.Timestamptz(6)
-  overrides            platform_feature_flag_overrides[]
+  id                 String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key                String                            @unique @db.VarChar(100)
+  name               String                            @db.VarChar(200)
+  description        String?
+  type               String                            @default("boolean") @db.VarChar(50)
+  default_value      Json                              @default("false")
+  rollout_percentage Int                               @default(100)
+  is_active          Boolean                           @default(true)
+  created_at         DateTime?                         @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?                         @default(now()) @db.Timestamptz(6)
+  overrides          platform_feature_flag_overrides[]
 
   @@index([is_active])
 }
 
 model platform_feature_flag_overrides {
-  id                      String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  platform_feature_flag_id String            @db.Uuid
-  target_type             String               @db.VarChar(20)
-  target_id               String               @db.Uuid
-  value                   Json
-  expires_at              DateTime?            @db.Timestamptz(6)
-  reason                  String?
-  created_by              String?
-  created_at              DateTime?            @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime?            @default(now()) @db.Timestamptz(6)
-  platform_feature_flags  platform_feature_flags @relation(fields: [platform_feature_flag_id], references: [id], onDelete: Cascade)
+  id                       String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  platform_feature_flag_id String                 @db.Uuid
+  target_type              String                 @db.VarChar(20)
+  target_id                String                 @db.Uuid
+  value                    Json
+  expires_at               DateTime?              @db.Timestamptz(6)
+  reason                   String?
+  created_by               String?
+  created_at               DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?              @default(now()) @db.Timestamptz(6)
+  platform_feature_flags   platform_feature_flags @relation(fields: [platform_feature_flag_id], references: [id], onDelete: Cascade)
 
   @@unique([platform_feature_flag_id, target_type, target_id])
   @@index([target_type, target_id])
@@ -2310,60 +2412,61 @@ model product_categories {
 }
 
 model subscription_plans {
-  id           String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name         String
-  price        Decimal    @db.Decimal(10, 2)
-  features     Json?
-  is_active    Boolean    @default(true)
-  created_at   DateTime?  @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime?  @default(now()) @db.Timestamptz(6)
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name       String
+  price      Decimal   @db.Decimal(10, 2)
+  features   Json?
+  is_active  Boolean   @default(true)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
 }
 
 model invoice_payments {
-  id               String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id      String?   @db.Uuid
-  invoice_id       String    @db.Uuid
-  amount             Decimal   @db.Decimal(12, 2)
-  payment_method     String?
-  payment_date       DateTime  @db.Date
-  reference_number   String?
-  transaction_id     String?
-  gateway_response   Json?     @default("{}")
-  notes              String?
-  received_by        String?
-  is_deleted         Boolean   @default(false)
-  deleted_at         DateTime? @db.Timestamptz(6)
+  id               String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id      String?     @db.Uuid
+  invoice_id       String      @db.Uuid
+  amount           Decimal     @db.Decimal(12, 2)
+  payment_method   String?
+  payment_date     DateTime    @db.Date
+  reference_number String?
+  transaction_id   String?
+  gateway_response Json?       @default("{}")
+  notes            String?
+  received_by      String?
+  is_deleted       Boolean     @default(false)
+  deleted_at       DateTime?   @db.Timestamptz(6)
   /// User id who soft-deleted the row (`user`.id is TEXT). Migration `20260608_invoice_payments_deleted_by_text` ensures Postgres type is TEXT, not UUID.
-  deleted_by         String?
-  created_at         DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime? @default(now()) @db.Timestamptz(6)
-  invoices           invoices  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  deleted_by       String?
+  created_at       DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?   @default(now()) @db.Timestamptz(6)
+  invoices         invoices    @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  businesses       businesses? @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([invoice_id])
   @@index([business_id, invoice_id])
 }
 
 model notifications {
-  id           String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id  String     @db.Uuid
-  user_id      String?
-  title        String
-  message      String
-  type         String?
-  is_read      Boolean    @default(false)
-  link         String?
-  
+  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id String  @db.Uuid
+  user_id     String?
+  title       String
+  message     String
+  type        String?
+  is_read     Boolean @default(false)
+  link        String?
+
   // Newly added columns for full enterprise support
   action_url   String?
-  metadata     Json?      @default("{}")
-  is_dismissed Boolean    @default(false)
-  priority     String?    @default("medium")
-  read_at      DateTime?  @db.Timestamptz(6)
+  metadata     Json?     @default("{}")
+  is_dismissed Boolean   @default(false)
+  priority     String?   @default("medium")
+  read_at      DateTime? @db.Timestamptz(6)
 
-  created_at   DateTime?  @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime?  @default(now()) @db.Timestamptz(6)
-  
-  businesses   businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  businesses businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
 
   @@index([business_id, is_read])
   @@index([business_id, is_dismissed])
@@ -2373,18 +2476,18 @@ model notifications {
 // Tables created by prisma/migrations/20260514_inventory_reorder_cycle_counts
 
 model reorder_points {
-  id               String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id      String               @db.Uuid
-  product_id       String               @db.Uuid
-  warehouse_id     String?              @db.Uuid
-  min_stock_level  Decimal              @db.Decimal(12, 2)
-  reorder_quantity Decimal              @db.Decimal(12, 2)
-  lead_time_days   Int                  @default(7)
-  enabled          Boolean              @default(true)
-  created_at       DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime             @default(now()) @db.Timestamptz(6)
-  businesses       businesses           @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  products         products             @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id         String               @db.Uuid
+  product_id          String               @db.Uuid
+  warehouse_id        String?              @db.Uuid
+  min_stock_level     Decimal              @db.Decimal(12, 2)
+  reorder_quantity    Decimal              @db.Decimal(12, 2)
+  lead_time_days      Int                  @default(7)
+  enabled             Boolean              @default(true)
+  created_at          DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime             @default(now()) @db.Timestamptz(6)
+  businesses          businesses           @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  products            products             @relation(fields: [product_id], references: [id], onDelete: Cascade)
   warehouse_locations warehouse_locations? @relation(fields: [warehouse_id], references: [id], onDelete: Cascade)
 
   @@unique([business_id, product_id, warehouse_id], map: "idx_reorder_points_unique")
@@ -2392,17 +2495,17 @@ model reorder_points {
 }
 
 model low_stock_alerts {
-  id              String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id     String               @db.Uuid
-  product_id      String               @db.Uuid
-  warehouse_id    String?              @db.Uuid
-  current_stock   Decimal              @default(0) @db.Decimal(12, 2)
-  min_stock_level Decimal              @db.Decimal(12, 2)
-  status          String               @default("active") @db.VarChar(32)
-  created_at      DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime             @default(now()) @db.Timestamptz(6)
-  businesses      businesses           @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  products        products             @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id         String               @db.Uuid
+  product_id          String               @db.Uuid
+  warehouse_id        String?              @db.Uuid
+  current_stock       Decimal              @default(0) @db.Decimal(12, 2)
+  min_stock_level     Decimal              @db.Decimal(12, 2)
+  status              String               @default("active") @db.VarChar(32)
+  created_at          DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime             @default(now()) @db.Timestamptz(6)
+  businesses          businesses           @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  products            products             @relation(fields: [product_id], references: [id], onDelete: Cascade)
   warehouse_locations warehouse_locations? @relation(fields: [warehouse_id], references: [id], onDelete: Cascade)
 
   @@unique([business_id, product_id, warehouse_id, status], map: "idx_low_stock_alerts_unique_status")
@@ -2410,72 +2513,72 @@ model low_stock_alerts {
 }
 
 model inventory_abc_analysis {
-  id                  String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id         String     @db.Uuid
-  product_id          String     @db.Uuid
-  abc_category        String     @db.VarChar(1)
-  period_days         Int        @default(90)
-  total_qty           Decimal    @default(0) @db.Decimal(12, 2)
-  total_value         Decimal    @default(0) @db.Decimal(14, 2)
-  pct_of_total_value  Decimal    @default(0) @db.Decimal(7, 4)
-  calculated_at       DateTime   @default(now()) @db.Timestamptz(6)
-  created_at          DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at          DateTime   @default(now()) @db.Timestamptz(6)
-  businesses          businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  products            products   @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  id                 String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id        String     @db.Uuid
+  product_id         String     @db.Uuid
+  abc_category       String     @db.VarChar(1)
+  period_days        Int        @default(90)
+  total_qty          Decimal    @default(0) @db.Decimal(12, 2)
+  total_value        Decimal    @default(0) @db.Decimal(14, 2)
+  pct_of_total_value Decimal    @default(0) @db.Decimal(7, 4)
+  calculated_at      DateTime   @default(now()) @db.Timestamptz(6)
+  created_at         DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime   @default(now()) @db.Timestamptz(6)
+  businesses         businesses @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  products           products   @relation(fields: [product_id], references: [id], onDelete: Cascade)
 
   @@unique([business_id, product_id, period_days], map: "idx_inventory_abc_business_product_period")
   @@index([business_id, abc_category], map: "idx_inventory_abc_business_category")
 }
 
 model cycle_counts {
-  id              String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id     String               @db.Uuid
-  name            String               @db.VarChar(255)
-  category        String               @default("manual") @db.VarChar(64)
-  warehouse_id    String?              @db.Uuid
-  status          String               @default("in-progress") @db.VarChar(32)
-  item_count      Int                  @default(0)
-  variance_count  Int                  @default(0)
-  scheduled_date  DateTime?            @db.Date
-  completed_at    DateTime?            @db.Timestamptz(6)
-  created_at      DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime             @default(now()) @db.Timestamptz(6)
-  businesses      businesses           @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  warehouse_locations warehouse_locations? @relation(fields: [warehouse_id], references: [id], onDelete: SetNull)
-  cycle_count_items cycle_count_items[]
+  id                    String                  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id           String                  @db.Uuid
+  name                  String                  @db.VarChar(255)
+  category              String                  @default("manual") @db.VarChar(64)
+  warehouse_id          String?                 @db.Uuid
+  status                String                  @default("in-progress") @db.VarChar(32)
+  item_count            Int                     @default(0)
+  variance_count        Int                     @default(0)
+  scheduled_date        DateTime?               @db.Date
+  completed_at          DateTime?               @db.Timestamptz(6)
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
+  businesses            businesses              @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  warehouse_locations   warehouse_locations?    @relation(fields: [warehouse_id], references: [id], onDelete: SetNull)
+  cycle_count_items     cycle_count_items[]
   inventory_adjustments inventory_adjustments[]
 
   @@index([business_id, status, created_at(sort: Desc)], map: "idx_cycle_counts_business_status")
 }
 
 model cycle_count_items {
-  id               String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  cycle_count_id   String        @db.Uuid
-  product_id       String        @db.Uuid
-  sku              String?       @db.VarChar(120)
-  product_name     String        @db.VarChar(255)
-  system_quantity  Decimal       @default(0) @db.Decimal(12, 2)
-  counted_quantity Decimal?      @db.Decimal(12, 2)
-  unit_price       Decimal       @default(0) @db.Decimal(12, 2)
-  created_at       DateTime      @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime      @default(now()) @db.Timestamptz(6)
-  cycle_counts     cycle_counts  @relation(fields: [cycle_count_id], references: [id], onDelete: Cascade)
-  products         products      @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  id               String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  cycle_count_id   String       @db.Uuid
+  product_id       String       @db.Uuid
+  sku              String?      @db.VarChar(120)
+  product_name     String       @db.VarChar(255)
+  system_quantity  Decimal      @default(0) @db.Decimal(12, 2)
+  counted_quantity Decimal?     @db.Decimal(12, 2)
+  unit_price       Decimal      @default(0) @db.Decimal(12, 2)
+  created_at       DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime     @default(now()) @db.Timestamptz(6)
+  cycle_counts     cycle_counts @relation(fields: [cycle_count_id], references: [id], onDelete: Cascade)
+  products         products     @relation(fields: [product_id], references: [id], onDelete: Cascade)
 
   @@unique([cycle_count_id, product_id], map: "idx_cycle_count_items_unique_product")
   @@index([cycle_count_id], map: "idx_cycle_count_items_count")
 }
 
 model inventory_adjustments {
-  id              String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  cycle_count_id  String?       @db.Uuid
-  product_id      String        @db.Uuid
-  adjustment_qty  Decimal       @db.Decimal(12, 2)
-  reason          String?
-  created_at      DateTime      @default(now()) @db.Timestamptz(6)
-  cycle_counts    cycle_counts? @relation(fields: [cycle_count_id], references: [id], onDelete: SetNull)
-  products        products      @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  id             String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  cycle_count_id String?       @db.Uuid
+  product_id     String        @db.Uuid
+  adjustment_qty Decimal       @db.Decimal(12, 2)
+  reason         String?
+  created_at     DateTime      @default(now()) @db.Timestamptz(6)
+  cycle_counts   cycle_counts? @relation(fields: [cycle_count_id], references: [id], onDelete: SetNull)
+  products       products      @relation(fields: [product_id], references: [id], onDelete: Cascade)
 
   @@index([product_id, created_at(sort: Desc)], map: "idx_inventory_adjustments_product_date")
 }
@@ -2484,18 +2587,18 @@ model inventory_adjustments {
 // Tables created by prisma/migrations/20260514_bank_reconciliation
 
 model bank_reconciliation_sessions {
-  id                        String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  business_id               String               @db.Uuid
-  account_id                String               @db.Uuid
-  statement_date            DateTime             @db.Date
-  statement_closing_balance Decimal              @default(0) @db.Decimal(15, 2)
-  status                    String               @default("in_progress")
-  completed_at              DateTime?            @db.Timestamptz(6)
+  id                        String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id               String                 @db.Uuid
+  account_id                String                 @db.Uuid
+  statement_date            DateTime               @db.Date
+  statement_closing_balance Decimal                @default(0) @db.Decimal(15, 2)
+  status                    String                 @default("in_progress")
+  completed_at              DateTime?              @db.Timestamptz(6)
   created_by                String?
-  created_at                DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at                DateTime             @default(now()) @db.Timestamptz(6)
-  businesses                businesses           @relation(fields: [business_id], references: [id], onDelete: Cascade)
-  gl_accounts               gl_accounts          @relation(fields: [account_id], references: [id])
+  created_at                DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime               @default(now()) @db.Timestamptz(6)
+  businesses                businesses             @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  gl_accounts               gl_accounts            @relation(fields: [account_id], references: [id])
   bank_statement_lines      bank_statement_lines[]
 
   @@unique([business_id, account_id, statement_date], map: "uidx_bank_recon_sessions_unique")
@@ -2504,19 +2607,116 @@ model bank_reconciliation_sessions {
 }
 
 model bank_statement_lines {
-  id                          String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  session_id                  String                       @db.Uuid
-  statement_date              DateTime                     @db.Date
-  description                 String?
-  debit                       Decimal                      @default(0) @db.Decimal(15, 2)
-  credit                      Decimal                      @default(0) @db.Decimal(15, 2)
-  matched                     Boolean                      @default(false)
-  gl_entry_id                 String?                      @db.Uuid
-  created_at                  DateTime                     @default(now()) @db.Timestamptz(6)
+  id                           String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  session_id                   String                       @db.Uuid
+  statement_date               DateTime                     @db.Date
+  description                  String?
+  debit                        Decimal                      @default(0) @db.Decimal(15, 2)
+  credit                       Decimal                      @default(0) @db.Decimal(15, 2)
+  matched                      Boolean                      @default(false)
+  gl_entry_id                  String?                      @db.Uuid
+  created_at                   DateTime                     @default(now()) @db.Timestamptz(6)
   bank_reconciliation_sessions bank_reconciliation_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade)
-  gl_entries                  gl_entries?                  @relation(fields: [gl_entry_id], references: [id], onDelete: SetNull)
+  gl_entries                   gl_entries?                  @relation(fields: [gl_entry_id], references: [id], onDelete: SetNull)
 
   @@index([session_id], map: "idx_bank_stmt_lines_session_id")
   @@index([session_id, matched], map: "idx_bank_stmt_lines_matched")
   @@index([gl_entry_id], map: "idx_bank_stmt_lines_gl_entry")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Tenant customer memberships (gym/spa/salon access plans — not platform SaaS)
+// ═══════════════════════════════════════════════════════════════════════
+
+/// Sellable plan catalog — typically linked to a membership product SKU.
+model membership_plans {
+  id               String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id      String                 @db.Uuid
+  product_id       String?                @db.Uuid
+  vertical_key     String                 @db.VarChar(64)
+  name             String
+  slug             String?
+  billing_interval String                 @default("monthly") @db.VarChar(32) // monthly | quarterly | annual | session_pack | installment | none
+  duration_days    Int?
+  price            Decimal                @default(0) @db.Decimal(12, 2)
+  compare_price    Decimal?               @db.Decimal(12, 2)
+  currency         String                 @default("PKR") @db.VarChar(10)
+  domain_rules     Json?                  @default("{}")
+  is_active        Boolean                @default(true)
+  metadata         Json?                  @default("{}")
+  created_at       DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
+  businesses       businesses             @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products         products?              @relation(fields: [product_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  enrollments      customer_memberships[]
+  benefits         membership_benefits[]
+
+  @@unique([business_id, product_id], map: "membership_plans_business_product_key")
+  @@index([business_id, vertical_key, is_active], map: "idx_membership_plans_business_vertical")
+  @@index([business_id, slug], map: "idx_membership_plans_business_slug")
+}
+
+/// Active or historical customer enrollment in a membership plan.
+model customer_memberships {
+  id                     String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id            String              @db.Uuid
+  customer_id            String              @db.Uuid
+  plan_id                String              @db.Uuid
+  product_id             String?             @db.Uuid
+  status                 String              @default("pending") @db.VarChar(32) // trial | pending | active | paused | cancelled | expired
+  started_at             DateTime            @default(now()) @db.Timestamptz(6)
+  ends_at                DateTime?           @db.Timestamptz(6)
+  next_billing_at        DateTime?           @db.Timestamptz(6)
+  auto_renew             Boolean             @default(true)
+  source                 String              @default("hub") @db.VarChar(32) // storefront | pos | hub | import
+  initial_storefront_order_id Int?
+  initial_pos_transaction_id String?        @db.Uuid
+  initial_invoice_id     String?             @db.Uuid
+  recurring_invoice_id   String?             @db.Uuid
+  amount_paid            Decimal?            @default(0) @db.Decimal(12, 2)
+  domain_data            Json?               @default("{}")
+  cancelled_at           DateTime?           @db.Timestamptz(6)
+  paused_at              DateTime?           @db.Timestamptz(6)
+  created_at             DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  businesses             businesses          @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  customers              customers           @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  plan                   membership_plans    @relation(fields: [plan_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  initial_invoice        invoices?           @relation("MembershipInitialInvoice", fields: [initial_invoice_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  recurring_invoice      invoices?           @relation("MembershipRecurringInvoice", fields: [recurring_invoice_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  events                 membership_events[]
+
+  @@index([business_id, customer_id, status], map: "idx_customer_memberships_business_customer_status")
+  @@index([business_id, ends_at], map: "idx_customer_memberships_business_ends")
+  @@index([business_id, next_billing_at], map: "idx_customer_memberships_business_next_billing")
+  @@index([business_id, plan_id], map: "idx_customer_memberships_business_plan")
+}
+
+model membership_events {
+  id            String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id   String               @db.Uuid
+  membership_id String               @db.Uuid
+  event_type    String               @db.VarChar(64)
+  metadata      Json?                @default("{}")
+  created_at    DateTime             @default(now()) @db.Timestamptz(6)
+  businesses    businesses           @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  membership    customer_memberships @relation(fields: [membership_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([membership_id, created_at(sort: Desc)], map: "idx_membership_events_membership_created")
+  @@index([business_id, event_type], map: "idx_membership_events_business_type")
+}
+
+model membership_benefits {
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id  String           @db.Uuid
+  plan_id      String           @db.Uuid
+  benefit_type String           @db.VarChar(64) // discount_percent | loyalty_multiplier | price_list | class_credits
+  value        Json             @default("{}")
+  is_active    Boolean          @default(true)
+  created_at   DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  businesses   businesses       @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  plan         membership_plans @relation(fields: [plan_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([business_id, plan_id], map: "idx_membership_benefits_business_plan")
 }

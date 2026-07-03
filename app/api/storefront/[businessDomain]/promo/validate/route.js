@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import pool from '@/lib/db';
+import {
+  customerHasActiveMembership,
+  isMemberOnlyPromo,
+} from '@/lib/memberships/membershipStorefrontDiscount';
 
 export async function POST(request, { params }) {
   const { businessDomain } = await params;
 
   try {
     const body = await request.json();
-    const { code, subtotal = 0 } = body;
+    const { code, subtotal = 0, customerEmail = '' } = body;
 
     if (!code || typeof code !== 'string' || !code.trim()) {
       return NextResponse.json({ error: 'Promo code is required' }, { status: 400 });
@@ -66,6 +70,23 @@ export async function POST(request, { params }) {
           { error: 'Invalid or expired promo code' },
           { status: 400 }
         );
+      }
+
+      if (isMemberOnlyPromo(promoRow)) {
+        const email = String(customerEmail || '').trim();
+        if (!email) {
+          return NextResponse.json(
+            { error: 'Enter your email to use this members-only promo code' },
+            { status: 400 }
+          );
+        }
+        const isMember = await customerHasActiveMembership(client, businessId, email);
+        if (!isMember) {
+          return NextResponse.json(
+            { error: 'This promo code is for active members only' },
+            { status: 403 }
+          );
+        }
       }
 
       // Calculate discount

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import notify, { TOAST_IDS } from '@/lib/utils/appToast';
 import {
     Building2, ChevronDown, Check, Plus, Loader2, Search, Star, Clock,
-    Store, UtensilsCrossed, Factory, Truck, ShoppingCart, X
+    Store, UtensilsCrossed, Factory, Truck, ShoppingCart, X, Shield, ArrowUpRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
@@ -35,7 +35,7 @@ const DOMAIN_COLORS = {
 
 export function BusinessSwitcherEnhanced({ isCollapsed = false }) {
     const router = useRouter();
-    const { business, switchBusinessByDomain } = useBusiness();
+    const { business, switchBusinessByDomain, isPlatformAdmin } = useBusiness();
     const [isOpen, setIsOpen] = useState(false);
     const [businesses, setBusinesses] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -247,6 +247,26 @@ export function BusinessSwitcherEnhanced({ isCollapsed = false }) {
                             <X className="w-3.5 h-3.5 text-neutral-400" />
                         </button>
                     </div>
+                    
+                    {/* Platform Admin Quick Link */}
+                    {isPlatformAdmin && (
+                        <button
+                            onClick={() => {
+                                setIsOpen(false);
+                                router.push('/admin');
+                            }}
+                            className="w-full p-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border border-purple-200 rounded-lg flex items-center gap-2.5 mb-2 transition-colors group"
+                        >
+                            <div className="w-7 h-7 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-md flex items-center justify-center">
+                                <Shield className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1 text-left">
+                                <p className="text-xs font-bold text-purple-900">Platform Control Center</p>
+                                <p className="text-[10px] text-purple-700">System-wide administration</p>
+                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-purple-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </button>
+                    )}
                     
                     {businesses.length > 3 && (
                         <div className="relative">

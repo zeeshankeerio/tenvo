@@ -14,6 +14,8 @@ import {
   Zap,
   BarChart3,
   Lightbulb,
+  Plug,
+  Trash2,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +34,7 @@ import {
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { PromotionEngine } from '@/components/crm/PromotionEngine';
+import { CampaignIntegrationsPanel } from '@/components/crm/CampaignIntegrationsPanel';
 import dynamic from 'next/dynamic';
 
 const AIInsightsPanel = dynamic(() =>
@@ -40,13 +43,20 @@ const AIInsightsPanel = dynamic(() =>
 
 import {
   getCampaignsOverviewAction,
+  getCampaignIntegrationsAction,
   createOutreachCampaignAction,
   createSegmentFromPlaybookAction,
+  createCustomSegmentAction,
   refreshSegmentAction,
+  dispatchOutreachCampaignAction,
+  deleteSegmentAction,
+  deleteCampaignAction,
 } from '@/lib/actions/standard/campaignsHub';
+import { EMPTY_VALUE } from '@/lib/utils/copyTypography';
+import { getCampaignWorkspaceNotice, CAMPAIGN_CHANNEL_COPY } from '@/lib/marketing/campaignCapabilities';
 
 function formatShortDate(iso) {
-  if (!iso) return ', ';
+  if (!iso) return EMPTY_VALUE;
   try {
     return new Date(iso).toLocaleString(undefined, {
       month: 'short',
@@ -55,7 +65,7 @@ function formatShortDate(iso) {
       minute: '2-digit',
     });
   } catch {
-    return ', ';
+    return EMPTY_VALUE;
   }
 }
 
@@ -84,17 +94,36 @@ export function CampaignsManager({
   const [outreachBusy, setOutreachBusy] = useState(false);
   const [outreachForm, setOutreachForm] = useState({
     name: '',
+    description: '',
     type: 'email',
     segment_id: '',
     scheduled_at: '',
     queue_now: true,
   });
+  const [segmentOpen, setSegmentOpen] = useState(false);
+  const [segmentBusy, setSegmentBusy] = useState(false);
+  const [segmentForm, setSegmentForm] = useState({
+    name: '',
+    min_spend: '',
+    last_order_days: '',
+    city: '',
+    new_leads_only: false,
+  });
+  const [dispatchBusyId, setDispatchBusyId] = useState(null);
+  const [deleteBusyId, setDeleteBusyId] = useState(null);
+  const [emailDelivery, setEmailDelivery] = useState(null);
 
   const loadHub = useCallback(async () => {
     if (!businessId) return;
     setHubLoading(true);
     try {
-      const res = await getCampaignsOverviewAction(businessId);
+      const [res, intRes] = await Promise.all([
+        getCampaignsOverviewAction(businessId),
+        getCampaignIntegrationsAction(businessId),
+      ]);
+      if (intRes.success) {
+        setEmailDelivery(intRes.emailDelivery || null);
+      }
       if (res.success) {
         setHub({
           campaigns: res.campaigns || [],
@@ -192,7 +221,7 @@ export function CampaignsManager({
   const statValue = (n) => {
     if (hubLoading) return '…';
     if (typeof n === 'number') return n;
-    return n ?? ', ';
+    return n ?? EMPTY_VALUE;
   };
 
   const handlePlaybook = async (index) => {
@@ -235,16 +264,24 @@ export function CampaignsManager({
     try {
       const res = await createOutreachCampaignAction(businessId, {
         name: outreachForm.name.trim(),
+        description: outreachForm.description.trim(),
         type: outreachForm.type,
         segment_id: outreachForm.segment_id || null,
         scheduled_at: outreachForm.scheduled_at || null,
         queue_now: outreachForm.queue_now,
       });
       if (res.success) {
-        toast.success('Campaign created');
+        toast.success(
+          outreachForm.type === 'email'
+            ? emailDelivery?.configured
+              ? 'Campaign created and email dispatch started when queued.'
+              : 'Campaign created. Configure email under Integrations to send.'
+            : 'Campaign created'
+        );
         setOutreachOpen(false);
         setOutreachForm({
           name: '',
+          description: '',
           type: 'email',
           segment_id: '',
           scheduled_at: '',
@@ -260,6 +297,95 @@ export function CampaignsManager({
       setOutreachBusy(false);
     }
   };
+
+  const submitCustomSegment = async () => {
+    if (!businessId || !segmentForm.name.trim()) {
+      toast.error('Segment name is required');
+      return;
+    }
+    setSegmentBusy(true);
+    try {
+      const res = await createCustomSegmentAction(businessId, {
+        name: segmentForm.name.trim(),
+        min_spend: segmentForm.min_spend,
+        last_order_days: segmentForm.last_order_days,
+        city: segmentForm.city,
+        new_leads_only: segmentForm.new_leads_only,
+      });
+      if (res.success) {
+        toast.success(`Segment ready, ${res.members ?? 0} members matched`);
+        setSegmentOpen(false);
+        setSegmentForm({ name: '', min_spend: '', last_order_days: '', city: '', new_leads_only: false });
+        await loadHub();
+        setTab('segments');
+      } else {
+        toast.error(res.error || 'Could not create segment');
+      }
+    } catch (e) {
+      toast.error(e.message || 'Failed');
+    } finally {
+      setSegmentBusy(false);
+    }
+  };
+
+  const handleDispatch = async (campaignId) => {
+    if (!businessId) return;
+    setDispatchBusyId(campaignId);
+    try {
+      const res = await dispatchOutreachCampaignAction(businessId, campaignId);
+      if (res.success) {
+        const { sent = 0, failed = 0, skipped = 0, pending = 0 } = res;
+        toast.success(`Dispatch complete: ${sent} sent, ${failed} failed, ${skipped} skipped, ${pending} pending`);
+        await loadHub();
+      } else {
+        toast.error(res.error || 'Dispatch failed');
+      }
+    } catch (e) {
+      toast.error(e.message || 'Failed');
+    } finally {
+      setDispatchBusyId(null);
+    }
+  };
+
+  const handleDeleteSegment = async (segmentId, segmentName) => {
+    if (!businessId) return;
+    if (!window.confirm(`Delete segment "${segmentName}"? Draft campaigns will lose this segment.`)) return;
+    setDeleteBusyId(segmentId);
+    try {
+      const res = await deleteSegmentAction(businessId, segmentId);
+      if (res.success) {
+        toast.success('Segment deleted');
+        await loadHub();
+      } else {
+        toast.error(res.error || 'Delete failed');
+      }
+    } catch (e) {
+      toast.error(e.message || 'Failed');
+    } finally {
+      setDeleteBusyId(null);
+    }
+  };
+
+  const handleArchiveCampaign = async (campaignId, campaignName) => {
+    if (!businessId) return;
+    if (!window.confirm(`Archive campaign "${campaignName}"? Pending sends will stop.`)) return;
+    setDeleteBusyId(campaignId);
+    try {
+      const res = await deleteCampaignAction(businessId, campaignId, { hard: false });
+      if (res.success) {
+        toast.success('Campaign archived');
+        await loadHub();
+      } else {
+        toast.error(res.error || 'Archive failed');
+      }
+    } catch (e) {
+      toast.error(e.message || 'Failed');
+    } finally {
+      setDeleteBusyId(null);
+    }
+  };
+
+  const workspaceNotice = getCampaignWorkspaceNotice(emailDelivery);
 
   if (!businessId) {
     return (
@@ -318,8 +444,12 @@ export function CampaignsManager({
         </div>
       </div>
 
+      <p className="rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-[11px] leading-relaxed text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
+        {workspaceNotice}
+      </p>
+
       <Tabs value={tab} onValueChange={setTab} className="space-y-3">
-        <TabsList className="grid h-9 w-full max-w-xl grid-cols-4 gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5 dark:bg-muted/40">
+        <TabsList className="grid h-9 w-full max-w-2xl grid-cols-5 gap-0.5 overflow-x-auto rounded-lg border border-border bg-muted/50 p-0.5 dark:bg-muted/40 lg:max-w-2xl">
           <TabsTrigger
             value="command"
             className="rounded-md py-1.5 text-[11px] font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
@@ -343,6 +473,13 @@ export function CampaignsManager({
             className="rounded-md py-1.5 text-[11px] font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
           >
             Segments
+          </TabsTrigger>
+          <TabsTrigger
+            value="integrations"
+            className="rounded-md py-1.5 text-[11px] font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          >
+            <span className="hidden sm:inline">Integrations</span>
+            <Plug className="h-3.5 w-3.5 sm:hidden" aria-hidden />
           </TabsTrigger>
         </TabsList>
 
@@ -442,7 +579,7 @@ export function CampaignsManager({
                 AI &amp; analytics
               </h3>
             </div>
-            <AIInsightsPanel businessId={businessId} />
+            <AIInsightsPanel businessId={businessId} category={category || 'retail-shop'} />
           </div>
         </TabsContent>
 
@@ -471,7 +608,7 @@ export function CampaignsManager({
           ) : (hub?.campaigns || []).length === 0 ? (
             <Card className="border-dashed border-border">
               <CardContent className="py-8 text-center text-xs text-muted-foreground">
-                No outreach campaigns yet. Create one to queue messages to a segment (email / WhatsApp / in-app).
+                No outreach campaigns yet. Create one to queue messages to a segment (email via Resend when configured).
               </CardContent>
             </Card>
           ) : (
@@ -489,11 +626,41 @@ export function CampaignsManager({
                       {c.type} · {c.segment_name || 'No segment'}
                       {c.message_count != null ? ` · ${c.message_count} messages` : ''}
                     </CardDescription>
+                    {(c.pending_count > 0 || c.sent_count > 0 || c.failed_count > 0) && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {c.pending_count ?? 0} pending · {c.sent_count ?? 0} sent · {c.failed_count ?? 0} failed
+                      </p>
+                    )}
                   </CardHeader>
-                  <CardContent className="px-3 pb-3 text-[10px] text-muted-foreground">
-                    <span>Updated {formatShortDate(c.updated_at)}</span>
-                    {c.scheduled_at && (
-                      <span className="ml-2">· Scheduled {formatShortDate(c.scheduled_at)}</span>
+                  <CardContent className="flex flex-wrap items-center justify-between gap-2 px-3 pb-3 text-[10px] text-muted-foreground">
+                    <span>
+                      Updated {formatShortDate(c.updated_at)}
+                      {c.scheduled_at && (
+                        <span className="ml-2">· Scheduled {formatShortDate(c.scheduled_at)}</span>
+                      )}
+                    </span>
+                    {c.type === 'email' && (c.pending_count ?? 0) > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 rounded-md text-[11px]"
+                        disabled={dispatchBusyId === c.id}
+                        onClick={() => handleDispatch(c.id)}
+                      >
+                        {dispatchBusyId === c.id ? 'Sending…' : 'Send pending'}
+                      </Button>
+                    )}
+                    {c.status !== 'cancelled' && c.status !== 'completed' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 rounded-md text-[11px] text-destructive hover:text-destructive"
+                        disabled={deleteBusyId === c.id}
+                        onClick={() => handleArchiveCampaign(c.id, c.name)}
+                      >
+                        <Trash2 className="mr-1 h-3 w-3" />
+                        Archive
+                      </Button>
                     )}
                   </CardContent>
                 </Card>
@@ -503,10 +670,21 @@ export function CampaignsManager({
         </TabsContent>
 
         <TabsContent value="segments" className="space-y-2 outline-none">
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            Dynamic segments recompute from invoices and customers. Use <strong className="text-foreground">Refresh</strong>{' '}
-            after large sales pushes.
-          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              Dynamic segments recompute from invoices, storefront orders, and customers. Use{' '}
+              <strong className="text-foreground">Refresh</strong> after large sales pushes.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 shrink-0 rounded-md text-xs"
+              onClick={() => setSegmentOpen(true)}
+            >
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              Custom segment
+            </Button>
+          </div>
           {hubLoading ? (
             <div className="py-8 text-center text-xs text-muted-foreground">Loading segments…</div>
           ) : (hub?.segments || []).length === 0 ? (
@@ -528,19 +706,35 @@ export function CampaignsManager({
                       {s.is_dynamic ? 'Dynamic' : 'Static'} · {s.member_count ?? 0} members
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 shrink-0 rounded-md text-[11px]"
-                    onClick={() => handleRefreshSegment(s.id)}
-                  >
-                    <RefreshCw className="mr-1 h-3 w-3" />
-                    Refresh
-                  </Button>
+                  <div className="flex shrink-0 flex-wrap gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 shrink-0 rounded-md text-[11px]"
+                      onClick={() => handleRefreshSegment(s.id)}
+                    >
+                      <RefreshCw className="mr-1 h-3 w-3" />
+                      Refresh
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 shrink-0 rounded-md text-[11px] text-destructive hover:text-destructive"
+                      disabled={deleteBusyId === s.id}
+                      onClick={() => handleDeleteSegment(s.id, s.name)}
+                    >
+                      <Trash2 className="mr-1 h-3 w-3" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="integrations" className="outline-none">
+          <CampaignIntegrationsPanel businessId={businessId} />
         </TabsContent>
       </Tabs>
 
@@ -567,6 +761,18 @@ export function CampaignsManager({
               />
             </div>
             <div>
+              <Label htmlFor="oc-desc" className="text-xs">
+                Message (optional)
+              </Label>
+              <Input
+                id="oc-desc"
+                value={outreachForm.description}
+                onChange={(e) => setOutreachForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Short note included in email body"
+                className="mt-1 h-9 rounded-md border-input text-sm"
+              />
+            </div>
+            <div>
               <Label htmlFor="oc-type" className="text-xs">
                 Channel
               </Label>
@@ -576,10 +782,13 @@ export function CampaignsManager({
                 value={outreachForm.type}
                 onChange={(e) => setOutreachForm((f) => ({ ...f, type: e.target.value }))}
               >
-                <option value="email">Email</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="notification">In-app notification</option>
+                <option value="email">{CAMPAIGN_CHANNEL_COPY.email.label}</option>
+                <option value="whatsapp">{CAMPAIGN_CHANNEL_COPY.whatsapp.label} (roadmap)</option>
+                <option value="notification">{CAMPAIGN_CHANNEL_COPY.notification.label}</option>
               </select>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                {CAMPAIGN_CHANNEL_COPY[outreachForm.type]?.hint}
+              </p>
             </div>
             <div>
               <Label htmlFor="oc-seg" className="text-xs">
@@ -591,7 +800,7 @@ export function CampaignsManager({
                 value={outreachForm.segment_id}
                 onChange={(e) => setOutreachForm((f) => ({ ...f, segment_id: e.target.value }))}
               >
-                <option value="">, None (draft only), </option>
+                <option value="">None (draft only)</option>
                 {(hub?.segments || []).map((seg) => (
                   <option key={seg.id} value={seg.id}>
                     {seg.name} ({seg.member_count ?? 0})
@@ -632,6 +841,92 @@ export function CampaignsManager({
               onClick={submitOutreach}
             >
               {outreachBusy ? 'Saving…' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={segmentOpen} onOpenChange={setSegmentOpen}>
+        <DialogContent className="max-w-md gap-0 rounded-xl border-border bg-background p-0 sm:rounded-xl">
+          <DialogHeader className="border-b border-border px-4 py-3 text-left">
+            <DialogTitle className="text-base font-semibold">Custom segment</DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed">
+              Rules match CRM customers using invoice and storefront order history.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2.5 px-4 py-3">
+            <div>
+              <Label htmlFor="seg-name" className="text-xs">
+                Name
+              </Label>
+              <Input
+                id="seg-name"
+                value={segmentForm.name}
+                onChange={(e) => setSegmentForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="e.g. Karachi VIP buyers"
+                className="mt-1 h-9 rounded-md border-input text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="seg-spend" className="text-xs">
+                  Min lifetime spend
+                </Label>
+                <Input
+                  id="seg-spend"
+                  type="number"
+                  min="0"
+                  value={segmentForm.min_spend}
+                  onChange={(e) => setSegmentForm((f) => ({ ...f, min_spend: e.target.value }))}
+                  className="mt-1 h-9 rounded-md border-input text-sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor="seg-churn" className="text-xs">
+                  No order in (days)
+                </Label>
+                <Input
+                  id="seg-churn"
+                  type="number"
+                  min="0"
+                  value={segmentForm.last_order_days}
+                  onChange={(e) => setSegmentForm((f) => ({ ...f, last_order_days: e.target.value }))}
+                  className="mt-1 h-9 rounded-md border-input text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="seg-city" className="text-xs">
+                City (optional)
+              </Label>
+              <Input
+                id="seg-city"
+                value={segmentForm.city}
+                onChange={(e) => setSegmentForm((f) => ({ ...f, city: e.target.value }))}
+                className="mt-1 h-9 rounded-md border-input text-sm"
+              />
+            </div>
+            <label className="flex cursor-pointer items-start gap-2 text-[11px] text-muted-foreground">
+              <input
+                type="checkbox"
+                className="mt-0.5 rounded border-input"
+                checked={segmentForm.new_leads_only}
+                onChange={(e) => setSegmentForm((f) => ({ ...f, new_leads_only: e.target.checked }))}
+              />
+              <span>New leads only (no invoice or storefront orders yet)</span>
+            </label>
+          </div>
+          <DialogFooter className="gap-2 border-t border-border px-4 py-3 sm:justify-end">
+            <Button variant="outline" size="sm" className="h-8" onClick={() => setSegmentOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              className="h-8 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
+              disabled={segmentBusy}
+              onClick={submitCustomSegment}
+            >
+              {segmentBusy ? 'Creating…' : 'Create segment'}
             </Button>
           </DialogFooter>
         </DialogContent>

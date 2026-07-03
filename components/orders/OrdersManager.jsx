@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,13 +33,14 @@ import {
   Package, Search, Filter, Eye, CheckCircle, XCircle,
   Truck, Clock, DollarSign, User, Calendar, ArrowLeft,
   ChevronLeft, ChevronRight, RefreshCw, PlusCircle, Banknote,
-  CreditCard, Smartphone, FileText, Hash, StickyNote, X
+  CreditCard, Smartphone, FileText, Hash, StickyNote, X, BadgeCheck
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { formatDate } from '@/lib/utils';
 import { getBusinessOrders, getOrderDetails, updateOrderStatus } from '@/lib/actions/storefront/orders';
 import { updateOrderPaymentStatus, recordManualPayment } from '@/lib/actions/storefront/payments';
 import { cn } from '@/lib/utils';
+import { useMembershipHubAccess } from '@/lib/hooks/useMembershipHubAccess';
 import toast from 'react-hot-toast';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
 import { useStorefrontEmbedded } from '@/lib/context/StorefrontMobileContext';
@@ -55,6 +57,7 @@ const STATUS_CONFIG = {
 
 const PAYMENT_STATUS_CONFIG = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
+  awaiting_payment: { label: 'Awaiting Payment', color: 'bg-amber-100 text-amber-800' },
   paid: { label: 'Paid', color: 'bg-green-100 text-green-800' },
   failed: { label: 'Failed', color: 'bg-red-100 text-red-800' },
   refunded: { label: 'Refunded', color: 'bg-gray-100 text-gray-800' },
@@ -78,7 +81,33 @@ const DEFAULT_PAYMENT_FORM = {
   markFullyPaid: true,
 };
 
+const ENROLLMENT_STATUS_STYLE = {
+  active: 'bg-emerald-100 text-emerald-700',
+  pending: 'bg-amber-100 text-amber-700',
+  paused: 'bg-slate-100 text-slate-600',
+  cancelled: 'bg-rose-100 text-rose-700',
+  expired: 'bg-gray-100 text-gray-500',
+};
+
+function MembershipOrderBadge({ compact = false }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        'border-violet-200 bg-violet-50 text-violet-700 font-semibold',
+        compact ? 'text-[10px] px-1.5 py-0' : 'text-xs'
+      )}
+    >
+      <BadgeCheck className={cn('mr-1', compact ? 'h-3 w-3' : 'h-3.5 w-3.5')} />
+      Membership
+    </Badge>
+  );
+}
+
 export function OrdersManager({ business, category }) {
+  const router = useRouter();
+  const params = useParams();
+  const { enabled: membershipHubEnabled } = useMembershipHubAccess(category);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -93,6 +122,11 @@ export function OrdersManager({ business, category }) {
   const [paymentForm, setPaymentForm] = useState(DEFAULT_PAYMENT_FORM);
   const [recordingPayment, setRecordingPayment] = useState(false);
   const limit = 10;
+
+  const openMembershipsTab = () => {
+    const handle = params?.category || business?.handle || business?.domain || category;
+    router.push(`/business/${handle}?tab=memberships`, { scroll: false });
+  };
 
   const loadOrders = useCallback(async () => {
     if (!business?.id) return;
@@ -157,7 +191,12 @@ export function OrdersManager({ business, category }) {
     try {
       const result = await getOrderDetails(order.id, business.id);
       if (result.success) {
-        setOrderDetails({ order: result.order, items: result.items, history: result.history || [] });
+        setOrderDetails({
+          order: result.order,
+          items: result.items,
+          history: result.history || [],
+          membershipEnrollments: result.membershipEnrollments || [],
+        });
       } else {
         toast.error('Failed to load order details');
       }
@@ -544,6 +583,7 @@ export function OrdersManager({ business, category }) {
               <div className="flex flex-wrap items-center gap-1.5">
                 {getStatusBadge(order.status, true)}
                 {getPaymentStatusBadge(order.payment_status, true)}
+                {order.has_membership_items ? <MembershipOrderBadge compact /> : null}
                 <span className="ml-auto text-[10px] font-medium text-gray-400">
                   {order.items_count} {order.items_count === 1 ? 'item' : 'items'}
                 </span>
@@ -594,6 +634,11 @@ export function OrdersManager({ business, category }) {
                     <TableCell>
                       <div className="font-medium">{order.order_number}</div>
                       <div className="text-xs text-gray-500">#{String(order.id).slice(-6)}</div>
+                      {order.has_membership_items ? (
+                        <div className="mt-1">
+                          <MembershipOrderBadge compact />
+                        </div>
+                      ) : null}
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{order.customer_name || 'Guest'}</div>
@@ -687,8 +732,64 @@ export function OrdersManager({ business, category }) {
                 <div className="flex items-center gap-2">
                   {getStatusBadge(orderDetails.order.status)}
                   {getPaymentStatusBadge(orderDetails.order.payment_status)}
+                  {orderDetails.order.has_membership_items ? <MembershipOrderBadge /> : null}
                 </div>
               </div>
+
+              {membershipHubEnabled &&
+                (orderDetails.order.has_membership_items ||
+                  (orderDetails.membershipEnrollments?.length ?? 0) > 0) && (
+                <Card className="border-violet-100 bg-violet-50/40">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-2">
+                        <BadgeCheck className="w-4 h-4 text-violet-600" />
+                        Membership enrollment
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-violet-700 hover:text-violet-900"
+                        onClick={openMembershipsTab}
+                      >
+                        Open Memberships tab
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {(orderDetails.membershipEnrollments?.length ?? 0) === 0 ? (
+                      <p className="text-sm text-gray-600">
+                        This order includes membership SKUs. Enrollment records appear after checkout
+                        completes and payment is confirmed.
+                      </p>
+                    ) : (
+                      orderDetails.membershipEnrollments.map((enrollment) => (
+                        <div
+                          key={enrollment.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-100 bg-white px-3 py-2 text-sm"
+                        >
+                          <div>
+                            <p className="font-semibold text-gray-900">{enrollment.plan_name}</p>
+                            <p className="text-xs text-gray-500 capitalize">
+                              Source: {enrollment.source || 'storefront'}
+                            </p>
+                          </div>
+                          <Badge
+                            className={cn(
+                              'capitalize font-semibold',
+                              ENROLLMENT_STATUS_STYLE[enrollment.status] ||
+                                ENROLLMENT_STATUS_STYLE.pending
+                            )}
+                          >
+                            {enrollment.status}
+                          </Badge>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Customer Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

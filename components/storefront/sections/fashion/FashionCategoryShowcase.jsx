@@ -2,44 +2,56 @@
 
 import Link from 'next/link';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { FashionSectionHeader } from './FashionSectionHeader';
+import { cn } from '@/lib/utils';
 
 /**
- * Zellbury-style 4-up unstitched category grid.
+ * Editorial 4-up unstitched / fabric category grid. Aligns to the shared
+ * 1400px content column (matching every other fashion section) and uses a
+ * consistent 3:4 tile ratio with an on-hover "Shop now" reveal.
  */
-export function UnstitchedShowcase({ title = 'UNSTITCHED', tiles = [], viewAllHref }) {
+export function UnstitchedShowcase({
+  title = 'UNSTITCHED',
+  tiles = [],
+  viewAllHref,
+  animate = true,
+  accent = '#1c1917',
+}) {
   if (tiles.length < 2) return null;
 
   return (
-    <section className="border-b border-stone-100 bg-white py-10 sm:py-12">
+    <section className="border-b border-stone-100 bg-white py-12 sm:py-16">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col items-center gap-3 sm:mb-8">
-          <h2 className="text-center text-xl font-semibold uppercase tracking-[0.2em] text-stone-900 sm:text-2xl">
-            {title}
-          </h2>
-          {viewAllHref ? (
-            <Link
-              href={viewAllHref}
-              className="text-xs font-semibold uppercase tracking-wide text-stone-500 transition hover:text-stone-800"
-            >
-              View all
-            </Link>
-          ) : null}
-        </div>
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <FashionSectionHeader title={title} viewAllHref={viewAllHref} accent={accent} />
+
+        <div
+          className={cn(
+            'grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5',
+            animate && 'sf-stagger'
+          )}
+        >
           {tiles.map((tile) => (
             <Link key={tile.id} href={tile.href} className="group text-center">
-              <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-stone-100">
+              <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-stone-100 shadow-sm ring-1 ring-stone-200/60 transition duration-500 group-hover:shadow-xl">
                 <SmartProductImage
                   src={tile.image}
                   alt=""
                   fill
-                  className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                  className="object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
                   sizes="(max-width: 640px) 50vw, 25vw"
                 />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent opacity-70 transition duration-500 group-hover:opacity-100" />
+                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white drop-shadow-sm sm:text-sm">
+                    {tile.label}
+                  </p>
+                  <span
+                    className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/0 transition-all duration-300 group-hover:text-white/90 sm:text-[11px]"
+                  >
+                    Shop now
+                  </span>
+                </div>
               </div>
-              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-stone-900 sm:text-sm">
-                {tile.label}
-              </p>
             </Link>
           ))}
         </div>

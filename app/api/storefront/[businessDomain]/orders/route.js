@@ -1,9 +1,96 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { generateOrderNumber } from '@/lib/utils/order';
-import { sendOrderConfirmationEmail } from '@/lib/email/resend';
+import { sendOrderConfirmationEmail, sendNewOrderMerchantEmail } from '@/lib/email/resend';
 import { resolveStorefrontBusiness } from '@/lib/tenancy/resolveStorefrontBusiness';
 import { lookupPublicStorefrontOrders } from '@/lib/storefront/publicOrderLookup';
+import {
+  parseStockNumber,
+  querySellableLocationQty,
+  resolveSellableStockQty,
+  decrementHeadlineAndLocationsInTx,
+  recordStorefrontSaleMovementInTx,
+  recordStorefrontVariantSaleMovementInTx,
+} from '@/lib/storefront/storefrontOrderStock';
+import { recordStorefrontOrderAnalytics } from '@/lib/storefront/storefrontAnalytics';
+import {
+  incrementStorefrontPromoUsage,
+  resolveStorefrontOrderDiscount,
+} from '@/lib/storefront/storefrontOrderDiscount';
+import { MembershipService } from '@/lib/services/MembershipService';
+import { MEMBERSHIP_SOURCE } from '@/lib/memberships/membershipConstants';
+import { notifyStorefrontOrder, notifyLowStock } from '@/lib/notifications/notificationHelpers';
+
+/**
+ * Storefront checkout decrements stock via direct SQL (bypassing InventoryService),
+ * so the InventoryService low-stock notification never runs for online sales. This
+ * re-adds that safety net: after commit, re-read each sold product's sellable stock
+ * and raise a low-stock notification when it drops to/below its threshold.
+ * Best-effort and never throws.
+ */
+async function checkLowStockAfterSale(client, business, resolvedLines) {
+  const productIds = [...new Set(resolvedLines.map((l) => l.productId).filter(Boolean))];
+  for (const productId of productIds) {
+    try {
+      const pr = await client.query(
+        `SELECT name, stock::float AS stock, has_variants,
+                reorder_point::float AS reorder_point,
+                min_stock::float AS min_stock,
+                min_stock_level::float AS min_stock_level
+         FROM products WHERE id = $1::uuid AND business_id = $2::uuid`,
+        [productId, business.id]
+      );
+      const p = pr.rows[0];
+      if (!p) continue;
+
+      let variantSum = 0;
+      if (p.has_variants) {
+        const vr = await client.query(
+          `SELECT COALESCE(SUM(stock), 0)::float AS s
+           FROM product_variants
+           WHERE product_id = $1::uuid AND business_id = $2::uuid
+             AND COALESCE(is_active, true) = true AND COALESCE(is_deleted, false) = false`,
+          [productId, business.id]
+        );
+        variantSum = parseFloat(vr.rows[0]?.s || 0);
+      }
+      let locationQty = 0;
+      try {
+        locationQty = (await querySellableLocationQty(client, productId, business.id)) || 0;
+      } catch {
+        locationQty = 0;
+      }
+
+      const sellable = Math.max(parseFloat(p.stock || 0), variantSum, locationQty);
+      const threshold =
+        Number(p.reorder_point) > 0
+          ? Number(p.reorder_point)
+          : Number(p.min_stock_level) > 0
+            ? Number(p.min_stock_level)
+            : Number(p.min_stock) > 0
+              ? Number(p.min_stock)
+              : 5;
+
+      if (sellable <= threshold) {
+        await notifyLowStock({
+          businessId: business.id,
+          business: {
+            id: business.id,
+            domain: business.domain,
+            business_name: business.business_name,
+          },
+          productId,
+          productName: p.name,
+          currentStock: sellable,
+          minStock: threshold,
+          client,
+        });
+      }
+    } catch (err) {
+      console.warn('[Create Order] low-stock check skipped:', err?.message || err);
+    }
+  }
+}
 
 function roundMoney(n) {
   return Math.round(Number(n) * 100) / 100;
@@ -26,7 +113,7 @@ function formatAddressBlock(addr) {
  * Server-authoritative pricing, row locks, storefront_orders / storefront_order_items.
  */
 export async function POST(request, { params }) {
-  const { businessDomain } = params;
+  const { businessDomain } = await params;
   const business = await resolveStorefrontBusiness(businessDomain);
 
   if (!business) {
@@ -45,6 +132,8 @@ export async function POST(request, { params }) {
     shipping,
     paymentMethod,
     notes,
+    promoCode,
+    memberPricingRequested,
   } = body;
 
   if (!customer?.email || !customer?.firstName || !customer?.phone) {
@@ -115,7 +204,7 @@ export async function POST(request, { params }) {
         const row = vr.rows[0];
         const unitPrice = roundMoney(parseFloat(row.price || '0'));
         const taxPercent = roundMoney(parseFloat(row.tax_percent || '0'));
-        const stock = row.stock != null ? parseFloat(row.stock) : null;
+        const stock = parseStockNumber(row.stock);
 
         if (stock != null && stock < qty) {
           throw new Error(
@@ -163,7 +252,12 @@ export async function POST(request, { params }) {
         const row = pr.rows[0];
         const unitPrice = roundMoney(parseFloat(row.price || '0'));
         const taxPercent = roundMoney(parseFloat(row.tax_percent || '0'));
-        const stock = row.stock != null ? parseFloat(row.stock) : null;
+        const locationQty = await querySellableLocationQty(client, row.id, business.id);
+        const stock = resolveSellableStockQty({
+          headlineStock: row.stock,
+          locationQty,
+          variants: [],
+        });
 
         if (stock != null && stock < qty) {
           throw new Error(
@@ -199,7 +293,46 @@ export async function POST(request, { params }) {
       taxTotal = roundMoney(taxTotal + line.lineTax);
     }
 
-    const discountAmount = 0;
+    let discountAmount = 0;
+    let discountMeta = {};
+    let promoUsageRef = null;
+    try {
+      const discountResult = await resolveStorefrontOrderDiscount(client, business.id, {
+        customerEmail: customer.email,
+        subtotal: subtotalNet,
+        promoCode,
+        memberPricingRequested: Boolean(memberPricingRequested),
+      });
+      discountAmount = discountResult.discountAmount;
+      discountMeta = {
+        member_discount: discountResult.memberDiscount,
+        promo_discount: discountResult.promoDiscount,
+        promo_code: discountResult.promoCode,
+        member_plan: discountResult.memberPlanName,
+        member_percent: discountResult.memberPercent,
+      };
+      if (discountResult.promoRow?.id && discountResult.promoSource) {
+        promoUsageRef = {
+          source: discountResult.promoSource,
+          id: discountResult.promoRow.id,
+        };
+      }
+    } catch (discountErr) {
+      if (
+        discountErr?.code === 'INVALID_PROMO' ||
+        discountErr?.code === 'MEMBER_PROMO_EMAIL' ||
+        discountErr?.code === 'MEMBER_PROMO_FORBIDDEN' ||
+        discountErr?.code === 'PROMO_MIN_ORDER'
+      ) {
+        await client.query('ROLLBACK');
+        return NextResponse.json(
+          { success: false, error: discountErr.message },
+          { status: 400 }
+        );
+      }
+      throw discountErr;
+    }
+
     const grandTotal = roundMoney(subtotalNet + taxTotal + shippingAmount - discountAmount);
 
     const orderNumber = await generateOrderNumber(client, business.id);
@@ -253,8 +386,11 @@ export async function POST(request, { params }) {
 
     const orderMeta = {
       source: 'storefront',
+      customer_id: customerId,
+      payment_method: paymentMethod || 'cod',
       clientDeclaredShipping: shipping,
       serverShipping: shippingAmount,
+      discounts: discountMeta,
     };
 
     const orderResult = await client.query(
@@ -295,6 +431,10 @@ export async function POST(request, { params }) {
 
     const order = orderResult.rows[0];
     const orderId = order.id;
+
+    if (promoUsageRef) {
+      await incrementStorefrontPromoUsage(client, promoUsageRef.source, promoUsageRef.id);
+    }
 
     for (let i = 0; i < resolvedLines.length; i++) {
       const line = resolvedLines[i];
@@ -353,33 +493,97 @@ export async function POST(request, { params }) {
            WHERE id = $2::uuid AND business_id = $3::uuid`,
           [line.quantity, line.variantId, business.id]
         );
+        // Audit trail for size/color variant sales (clothing/footwear norm) so they
+        // appear in stock movement reports; best-effort, never blocks the order.
+        await recordStorefrontVariantSaleMovementInTx(
+          client,
+          business.id,
+          line.productId,
+          line.variantId,
+          line.quantity,
+          { orderId, orderNumber }
+        );
       } else {
-        const qtyInt = Math.min(2147483647, Math.floor(line.quantity));
-        await client.query(
-          `UPDATE products 
-           SET stock = stock - $1::numeric, 
-               sales_count = COALESCE(sales_count, 0) + $2::int, 
-               updated_at = NOW()
-           WHERE id = $3::uuid AND business_id = $4::uuid`,
-          [line.quantity, qtyInt, line.productId, business.id]
+        await decrementHeadlineAndLocationsInTx(
+          client,
+          business.id,
+          line.productId,
+          line.quantity
+        );
+        // Audit trail: record the sale in stock_movements + inventory_ledger so
+        // storefront sales appear in valuation/reports (symmetric with cancel restock).
+        await recordStorefrontSaleMovementInTx(
+          client,
+          business.id,
+          line.productId,
+          line.quantity,
+          { orderId, orderNumber }
         );
       }
     }
 
+    try {
+      await MembershipService.enrollFromLineItems(
+        {
+          businessId: business.id,
+          customerId,
+          source: MEMBERSHIP_SOURCE.STOREFRONT,
+          paymentConfirmed: paymentStatus !== 'pending' && paymentStatus !== 'awaiting_payment',
+          initialStorefrontOrderId: orderId,
+          currency,
+          lines: resolvedLines.map((line) => ({
+            productId: line.productId,
+            quantity: line.quantity,
+            unitPrice: line.unitPrice,
+          })),
+        },
+        client
+      );
+    } catch (membershipErr) {
+      console.warn('[Create Order] membership enrollment skipped:', membershipErr?.message || membershipErr);
+    }
+
     await client.query('COMMIT');
+
+    // Create notification for business (new online order alert)
+    try {
+      await notifyStorefrontOrder({
+        businessId: business.id,
+        business,
+        orderId,
+        orderNumber,
+        customerName,
+        customerEmail: customer.email,
+        totalAmount: grandTotal,
+        itemCount: resolvedLines.length,
+        client,
+      });
+    } catch (notifyErr) {
+      console.warn('[Create Order] notification skipped:', notifyErr?.message || notifyErr);
+    }
+
+    try {
+      await recordStorefrontOrderAnalytics(client, business.id, grandTotal);
+    } catch (analyticsErr) {
+      console.warn('[Create Order] analytics rollup skipped:', analyticsErr?.message || analyticsErr);
+    }
+
+    await checkLowStockAfterSale(client, business, resolvedLines);
+
+    const emailItems = resolvedLines.map((line, idx) => ({
+      name: line.productName,
+      quantity: line.quantity,
+      unitPrice: line.unitPrice,
+      lineTotal: line.lineTotal,
+      variantName: line.variantName,
+      ...items[idx],
+    }));
 
     void sendOrderConfirmationEmail({
       to: customer.email,
       order: {
         orderNumber,
-        items: resolvedLines.map((line, idx) => ({
-          name: line.productName,
-          quantity: line.quantity,
-          unitPrice: line.unitPrice,
-          lineTotal: line.lineTotal,
-          variantName: line.variantName,
-          ...items[idx],
-        })),
+        items: emailItems,
         subtotal: subtotalNet,
         shipping: shippingAmount,
         tax: taxTotal,
@@ -393,6 +597,25 @@ export async function POST(request, { params }) {
       },
     }).catch(console.error);
 
+    // Notify the merchant by email (in addition to the in-app bell notification)
+    if (business.email) {
+      void sendNewOrderMerchantEmail({
+        to: business.email,
+        order: {
+          orderNumber,
+          items: emailItems,
+          total: grandTotal,
+          currency: business.currency || undefined,
+          customerName,
+          customerEmail: customer.email,
+        },
+        business: {
+          name: business.business_name,
+          email: business.email,
+        },
+      }).catch(console.error);
+    }
+
     return NextResponse.json({
       success: true,
       order: {
@@ -401,6 +624,11 @@ export async function POST(request, { params }) {
         total: parseFloat(String(order.total_amount)),
         status: order.status,
         paymentStatus: order.payment_status,
+        subtotal: subtotalNet,
+        tax: taxTotal,
+        shipping: shippingAmount,
+        discount: discountAmount,
+        currency,
       },
     });
   } catch (error) {
@@ -451,5 +679,7 @@ export async function GET(request, { params }) {
     );
   }
 
+  // lookupPublicStorefrontOrders already enriches each order with line items,
+  // including product image_url and tax_amount used by the tracking page + receipt.
   return NextResponse.json({ success: true, orders: result.orders });
 }

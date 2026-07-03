@@ -220,6 +220,17 @@ export const POST = withApiAuth(async (request, { businessId, session, role, par
             return apiError('FORBIDDEN', 'Insufficient permissions. Viewers cannot create products.', 403);
         }
 
+        // Enforce plan product limit before creating
+        const { canAddProduct } = await import('@/lib/services/planLimits');
+        const limitCheck = await canAddProduct(businessId);
+        if (!limitCheck.allowed) {
+            return apiError('PLAN_LIMIT_REACHED', limitCheck.reason, 403, {
+                current: limitCheck.current,
+                limit: limitCheck.limit,
+                upgradePlan: limitCheck.upgradePlan,
+            });
+        }
+
         // Use pre-parsed body from middleware (stream already consumed)
         const body = parsedBody || {};
 

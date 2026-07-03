@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { getDomainKnowledge } from '@/lib/domainKnowledge';
+import { getDomainKnowledgeForBusiness } from '@/lib/utils/businessRegionalContext';
+import { useBusiness } from '@/lib/context/BusinessContext';
 import toast from 'react-hot-toast';
 import { createBulkPurchaseOrdersAction } from '@/lib/actions/standard/purchase';
 import { getAiRestockSuggestionsAction } from '@/lib/actions/premium/ai/ai';
@@ -18,9 +19,12 @@ export const SmartRestockEngine = memo(function SmartRestockEngine({
     locations = [],
     category = 'retail-shop',
     businessId,
-    domainKnowledge = getDomainKnowledge(category),
+    domainKnowledge: domainKnowledgeProp,
     refreshData
 }) {
+    const { business } = useBusiness();
+    const domainKnowledge =
+        domainKnowledgeProp ?? getDomainKnowledgeForBusiness(category, business);
     const [selectedItems, setSelectedItems] = useState([]);
     const [isGenerating, setIsGenerating] = useState(false);
     const [aiSuggestions, setAiSuggestions] = useState([]);

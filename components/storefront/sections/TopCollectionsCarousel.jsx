@@ -4,16 +4,19 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { useRailAutoScroll } from '@/lib/hooks/storefront/useRailAutoScroll';
 import { cn } from '@/lib/utils';
 
 /**
  * Zellbury-style Top 10 collections carousel with rank numerals and badge overlays.
- * @param {{ title?: string; items: Array<{ rank: number; label: string; badge?: string | null; image: string; href: string }> }} props
+ * @param {{ title?: string; items: Array<{ rank: number; label: string; badge?: string | null; image: string; href: string }>; autoScroll?: boolean }} props
  */
-export function TopCollectionsCarousel({ title = 'Top 10 Collections Nationwide', items = [] }) {
+export function TopCollectionsCarousel({ title = 'Top 10 Collections Nationwide', items = [], autoScroll = true }) {
   const trackRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useRailAutoScroll(trackRef, { enabled: autoScroll && items.length > 3, interval: 4200 });
 
   const updateScrollState = useCallback(() => {
     const el = trackRef.current;

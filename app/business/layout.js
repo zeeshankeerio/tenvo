@@ -9,7 +9,9 @@ import { DataProvider } from '@/lib/context/DataContext';
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette';
 import { AgenticFloatingChatbot } from '@/components/layout/AgenticFloatingChatbot';
 import { SubscriptionBillingBanner } from '@/components/billing/SubscriptionBillingBanner';
+import { UpgradeNudgeBanner } from '@/components/billing/UpgradeNudgeBanner';
 import { HubMobileBottomNav } from '@/components/layout/HubMobileBottomNav';
+import { PendingApprovalGuard } from '@/components/guards/PendingApprovalGuard';
 
 export default function BusinessLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,11 +42,12 @@ export default function BusinessLayout({ children }) {
 
                         <main className="flex-1 overflow-y-auto custom-scrollbar p-3 pb-20 lg:p-6 lg:pb-6">
                             <SubscriptionBillingBanner />
-                            {children}
+                            <PendingApprovalGuard>{children}</PendingApprovalGuard>
                         </main>
                     </div>
                 </div>
                 <HubMobileBottomNav />
+                <UpgradeNudgeBanner />
                 <AgenticFloatingChatbot />
             </DataProvider>
         </FilterProvider>

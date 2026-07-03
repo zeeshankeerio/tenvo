@@ -49,6 +49,22 @@ const tenvoProfile = isTenvoVehiclesShowroomProfile(
 );
 if (!tenvoProfile) errors.push('tenvo-vehicles profile detection failed');
 
+const fitnessNotShowroom = isTenvoVehiclesShowroomProfile(
+  { category: 'gym-fitness', country: 'Pakistan' },
+  {}
+);
+if (fitnessNotShowroom) {
+  errors.push('gym-fitness must not resolve as tenvo-vehicles showroom (logo leak)');
+}
+
+const pharmacyNotShowroom = isTenvoVehiclesShowroomProfile(
+  { category: 'pharmacy', country: 'Pakistan' },
+  {}
+);
+if (pharmacyNotShowroom) {
+  errors.push('pharmacy must not resolve as tenvo-vehicles showroom (logo leak)');
+}
+
 if (errors.length) {
   console.error('verify:showroom-seed FAILED');
   for (const e of errors) console.error(`  - ${e}`);

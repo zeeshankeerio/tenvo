@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { businessAPI } from '@/lib/api/business';
+import { getPlatformAccessStatus } from '@/lib/actions/admin/platform';
 import {
   Building2,
   Store,
@@ -20,6 +21,7 @@ import {
   ArrowRight,
   TrendingUp,
   ShieldCheck,
+  Shield,
   Zap,
   LayoutGrid,
   Search,
@@ -37,6 +39,7 @@ export default function MultiBusinessPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
 
   useEffect(() => {
     async function fetchBusinesses() {
@@ -58,6 +61,24 @@ export default function MultiBusinessPage() {
       router.push('/login');
     }
   }, [user, authLoading, router]);
+
+  // Platform owner / admin detection is server-authoritative (email allowlist +
+  // BetterAuth role are not in the client bundle).
+  useEffect(() => {
+    let active = true;
+    if (!authLoading && user) {
+      getPlatformAccessStatus()
+        .then((status) => {
+          if (active) setIsPlatformAdmin(Boolean(status?.isPlatformAdmin));
+        })
+        .catch(() => {
+          if (active) setIsPlatformAdmin(false);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [user, authLoading]);
 
   const handleEnterBusiness = (domain) => {
     router.push(`/business/${domain}`);
@@ -98,6 +119,20 @@ export default function MultiBusinessPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {isPlatformAdmin && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/admin')}
+                    className="border-wine/30 text-wine hover:bg-wine/5 font-semibold rounded-xl px-4 py-5 text-xs uppercase tracking-widest"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Control Panel</span>
+                    <span className="sm:hidden">Admin</span>
+                  </Button>
+                  <div className="w-px h-6 bg-gray-100 mx-2" />
+                </>
+              )}
               <Button
                 variant="ghost"
                 onClick={() => router.push('/')}

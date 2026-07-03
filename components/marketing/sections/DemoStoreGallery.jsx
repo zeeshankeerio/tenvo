@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowUpRight,
   Car,
   CarFront,
   Croissant,
+  Dumbbell,
   Gem,
   Pill,
   Scissors,
@@ -35,6 +37,7 @@ const ICON_MAP = {
   croissant: Croissant,
   scissors: Scissors,
   sofa: Sofa,
+  dumbbell: Dumbbell,
   car: Car,
   'car-front': CarFront,
   store: Store,
@@ -79,13 +82,18 @@ function StoreIconBadge({ store, className }) {
  */
 function StoreSlide({ store, active, priority = false }) {
   const [imgSrc, setImgSrc] = useState(store.heroImage);
+  const [imgFailed, setImgFailed] = useState(false);
+  const isDark = store.slideTheme === 'dark';
 
   useEffect(() => {
     setImgSrc(store.heroImage);
+    setImgFailed(false);
   }, [store.heroImage]);
 
   const fallbackImage =
-    'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=85&auto=format&fit=crop';
+    'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-4.1.0&auto=format&fit=crop&w=1920&q=85';
+
+  const displaySrc = imgFailed ? fallbackImage : imgSrc;
 
   return (
     <div
@@ -96,49 +104,93 @@ function StoreSlide({ store, active, priority = false }) {
       style={{ transitionDuration: `${FADE_MS}ms` }}
       aria-hidden={!active}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={imgSrc}
+      <div
+        className={cn('absolute inset-0 z-0', store.slideBackdropClass || 'bg-slate-100')}
+        aria-hidden
+      />
+      <Image
+        src={displaySrc || fallbackImage}
         alt=""
-        className="h-full w-full object-cover object-center"
-        loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-        fetchPriority={priority ? 'high' : 'auto'}
+        fill
+        priority={priority}
+        sizes="100vw"
+        className={cn(
+          'z-[1]',
+          store.heroObjectFit || 'object-cover',
+          store.heroObjectPosition || 'object-center'
+        )}
         onError={() => {
-          if (imgSrc !== fallbackImage) setImgSrc(fallbackImage);
+          if (!imgFailed) setImgFailed(true);
         }}
       />
 
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white from-25% via-white/55 via-50% to-white/10"
+        className={cn(
+          'pointer-events-none absolute inset-0 z-[2]',
+          isDark
+            ? 'bg-gradient-to-t from-black/90 from-20% via-black/45 via-55% to-black/15'
+            : 'bg-gradient-to-t from-white/95 from-18% via-white/40 via-45% to-transparent'
+        )}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/30 via-transparent to-transparent"
+        className={cn(
+          'pointer-events-none absolute inset-0 z-[2]',
+          isDark
+            ? 'bg-gradient-to-r from-black/50 via-transparent to-transparent'
+            : 'bg-gradient-to-r from-white/20 via-transparent to-transparent'
+        )}
         aria-hidden
       />
 
       <div
         className={cn(
-          'absolute inset-x-0 bottom-0 z-20 flex flex-col gap-5 px-5 pb-28 pt-16 sm:px-10 sm:pb-32 lg:px-14 lg:pb-36',
+          'absolute inset-x-0 bottom-0 z-20 flex flex-col gap-5 px-5 pb-28 pt-20 sm:px-10 sm:pb-32 lg:px-14 lg:pb-36',
           'sm:flex-row sm:items-end sm:justify-between'
         )}
       >
         <div className="flex min-w-0 max-w-3xl gap-4 sm:gap-5">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/90 bg-white/95 shadow-lg sm:h-14 sm:w-14">
-            <StoreIconBadge store={store} />
+          <div
+            className={cn(
+              'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border shadow-lg sm:h-14 sm:w-14',
+              isDark
+                ? 'border-white/15 bg-white/10 backdrop-blur-sm'
+                : 'border-white/90 bg-white/95'
+            )}
+          >
+            <StoreIconBadge store={store} className={isDark ? 'text-white' : undefined} />
           </div>
           <div className="min-w-0 space-y-1.5 sm:space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">
+            <p
+              className={cn(
+                'text-[11px] font-semibold uppercase tracking-[0.22em]',
+                isDark ? 'text-white/60' : 'text-neutral-500'
+              )}
+            >
               {store.vertical}
             </p>
-            <h3 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl">
+            <h3
+              className={cn(
+                'text-2xl font-semibold tracking-tight sm:text-4xl lg:text-5xl',
+                isDark ? 'text-white' : 'text-neutral-900'
+              )}
+            >
               {store.name}
             </h3>
-            <p className="line-clamp-2 text-sm font-medium leading-relaxed text-neutral-600 sm:line-clamp-3 sm:text-base lg:text-lg">
+            <p
+              className={cn(
+                'line-clamp-2 text-sm font-medium leading-relaxed sm:line-clamp-3 sm:text-base lg:text-lg',
+                isDark ? 'text-white/75' : 'text-neutral-600'
+              )}
+            >
               {store.description}
             </p>
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+            <p
+              className={cn(
+                'text-xs font-medium uppercase tracking-wide',
+                isDark ? 'text-white/45' : 'text-neutral-400'
+              )}
+            >
               {store.city || store.country}
               {store.tier === 'full' ? ' · Full hub demo' : ''}
             </p>
@@ -152,10 +204,11 @@ function StoreSlide({ store, active, priority = false }) {
           tabIndex={active ? 0 : -1}
           className={cn(
             'inline-flex w-fit shrink-0 items-center justify-center gap-2 rounded-full',
-            'border border-neutral-300/90 bg-white/85 px-6 py-3 text-sm font-semibold text-neutral-900',
-            'shadow-md backdrop-blur-md transition-all',
-            'hover:border-neutral-400 hover:bg-white hover:shadow-lg',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2'
+            'px-6 py-3 text-sm font-semibold shadow-md backdrop-blur-md transition-all',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2',
+            isDark
+              ? 'border border-white/20 bg-white text-neutral-900 hover:bg-rose-50 hover:shadow-lg'
+              : 'border border-neutral-300/90 bg-white/85 text-neutral-900 hover:border-neutral-400 hover:bg-white hover:shadow-lg'
           )}
         >
           Visit store

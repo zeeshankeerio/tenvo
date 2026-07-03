@@ -22,7 +22,8 @@ import Link from 'next/link';
  * @param {string} props.businessId - Business UUID
  */
 export function GeneralLedgerReport({ businessId }) {
-    const { currency } = useBusiness();
+    const { currency: businessCurrency } = useBusiness();
+    const displayCurrency = businessCurrency || 'PKR';
     const [accounts, setAccounts] = useState([]);
 
     const [selectedAccount, setSelectedAccount] = useState('all');
@@ -227,7 +228,7 @@ export function GeneralLedgerReport({ businessId }) {
                                         <TableCell></TableCell>
                                         <TableCell></TableCell>
                                         <TableCell className="text-right text-yellow-800 font-mono">
-                                            {formatCurrency(openingBalance, currency)}
+                                            {formatCurrency(openingBalance, displayCurrency)}
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -260,14 +261,14 @@ export function GeneralLedgerReport({ businessId }) {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right font-mono text-gray-900 border-r border-gray-50 bg-gray-50/30">
-                                                {parseFloat(entry.debit) > 0 ? formatCurrency(entry.debit, currency) : '-'}
+                                                {parseFloat(entry.debit) > 0 ? formatCurrency(entry.debit, displayCurrency) : '-'}
                                             </TableCell>
                                             <TableCell className="text-right font-mono text-gray-900">
-                                                {parseFloat(entry.credit) > 0 ? formatCurrency(entry.credit, currency) : '-'}
+                                                {parseFloat(entry.credit) > 0 ? formatCurrency(entry.credit, displayCurrency) : '-'}
                                             </TableCell>
                                             {isSingleAccount && (
                                                 <TableCell className="text-right font-mono font-medium text-gray-800 bg-blue-50/10">
-                                                    {formatCurrency(entry.runningBalance, currency)}
+                                                    {formatCurrency(entry.runningBalance, displayCurrency)}
                                                 </TableCell>
                                             )}
                                         </TableRow>

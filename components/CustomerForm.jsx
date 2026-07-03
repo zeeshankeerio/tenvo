@@ -289,12 +289,12 @@ export function CustomerForm({
                     <TabsContent value="basic" className="mt-0 space-y-4">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div className="space-y-1.5">
-                                <Label className={labelClass}>Customer Name *</Label>
-                                <Input value={formData.name || ''} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Full Name / Company" className={inputClass} />
+                                <Label className={MOBILE_LABEL_CLASS}>Customer Name *</Label>
+                                <Input value={formData.name || ''} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="Full Name / Company" className={MOBILE_INPUT_CLASS} />
                                 {errors?.name && <FormError message={errors.name} />}
                             </div>
                             <div className="space-y-1.5">
-                                <Label className={labelClass}>Phone *</Label>
+                                <Label className={MOBILE_LABEL_CLASS}>Phone *</Label>
                                 <div className="flex gap-2">
                                     <Select value={countryCode} onValueChange={setCountryCode}>
                                         <SelectTrigger className="h-9 w-[100px] rounded-lg">
@@ -308,14 +308,14 @@ export function CustomerForm({
                                     </Select>
                                     <div className="relative flex-1">
                                         <Smartphone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                                        <Input value={localPhone} onChange={(e) => setLocalPhone(e.target.value.replace(/[^\d\s-]/g, ''))} placeholder="300 1234567" className={cn(inputClass, 'pl-9')} />
+                                        <Input value={localPhone} onChange={(e) => setLocalPhone(e.target.value.replace(/[^\d\s-]/g, ''))} placeholder="300 1234567" className={cn(MOBILE_INPUT_CLASS, 'pl-9')} />
                                     </div>
                                 </div>
                                 {errors?.phone && <FormError message={errors.phone} />}
                             </div>
                             <div className="space-y-1.5">
-                                <Label className={labelClass}>Email</Label>
-                                <Input value={formData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="customer@example.com" className={inputClass} />
+                                <Label className={MOBILE_LABEL_CLASS}>Email</Label>
+                                <Input value={formData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="customer@example.com" className={MOBILE_INPUT_CLASS} />
                                 {errors?.email && <FormError message={errors.email} />}
                             </div>
                             <div className="space-y-1.5">
@@ -326,20 +326,20 @@ export function CustomerForm({
                                 <MarketLocationSelector value={formData.market_location} onChange={(val) => handleInputChange('market_location', val)} city={formData.city} required={false} language="en" />
                             </div>
                             <div className="space-y-1.5 md:col-span-2">
-                                <Label className={labelClass}>Billing Address</Label>
-                                <Input value={formData.address || ''} onChange={(e) => handleInputChange('address', e.target.value)} placeholder="Shop #, Market, Area" className={inputClass} />
+                                <Label className={MOBILE_LABEL_CLASS}>Billing Address</Label>
+                                <Input value={formData.address || ''} onChange={(e) => handleInputChange('address', e.target.value)} placeholder="Shop #, Market, Area" className={MOBILE_INPUT_CLASS} />
                             </div>
                         </div>
 
                         {isEasyMode && (
                             <div className="grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 md:grid-cols-2">
                                 <div className="space-y-1.5">
-                                    <Label className={labelClass}>Credit Limit ({currency})</Label>
-                                    <Input type="number" value={formData.credit_limit || ''} onChange={(e) => handleInputChange('credit_limit', e.target.value)} placeholder="0" className={inputClass} />
+                                    <Label className={MOBILE_LABEL_CLASS}>Credit Limit ({currency})</Label>
+                                    <Input type="number" value={formData.credit_limit || ''} onChange={(e) => handleInputChange('credit_limit', e.target.value)} placeholder="0" className={MOBILE_INPUT_CLASS} />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label className={labelClass}>Opening Balance ({currency})</Label>
-                                    <Input type="number" value={formData.opening_balance || ''} onChange={(e) => handleInputChange('opening_balance', e.target.value)} placeholder="0" className={inputClass} />
+                                    <Label className={MOBILE_LABEL_CLASS}>Opening Balance ({currency})</Label>
+                                    <Input type="number" value={formData.opening_balance || ''} onChange={(e) => handleInputChange('opening_balance', e.target.value)} placeholder="0" className={MOBILE_INPUT_CLASS} />
                                 </div>
                             </div>
                         )}
@@ -350,22 +350,22 @@ export function CustomerForm({
                             {isPakistanMarket ? (
                                 <>
                                     <div className="space-y-1.5">
-                                        <Label className={labelClass}>CNIC</Label>
-                                        <Input value={formData.cnic || ''} onChange={handleCNICChange} placeholder="42201-1234567-1" className={cn(inputClass, 'font-mono')} maxLength={15} />
+                                        <Label className={MOBILE_LABEL_CLASS}>CNIC</Label>
+                                        <Input value={formData.cnic || ''} onChange={handleCNICChange} placeholder="42201-1234567-1" className={cn(MOBILE_INPUT_CLASS, 'font-mono')} maxLength={15} />
                                         {errors?.cnic && <FormError message={errors.cnic} />}
                                     </div>
                                     <div className="space-y-1.5">
-                                        <Label className={labelClass}>{taxIdLabel || 'NTN'}</Label>
-                                        <Input value={formData.ntn || ''} onChange={handleNTNChange} placeholder="1234567-8" className={cn(inputClass, 'font-mono')} maxLength={9} />
+                                        <Label className={MOBILE_LABEL_CLASS}>{taxIdLabel || 'NTN'}</Label>
+                                        <Input value={formData.ntn || ''} onChange={handleNTNChange} placeholder="1234567-8" className={cn(MOBILE_INPUT_CLASS, 'font-mono')} maxLength={9} />
                                         {errors?.ntn && <FormError message={errors.ntn} />}
                                     </div>
                                     <div className="space-y-1.5">
-                                        <Label className={labelClass}>SRN</Label>
-                                        <Input value={formData.srn || ''} onChange={(e) => handleInputChange('srn', e.target.value)} placeholder="12-34-5678-910-1" className={cn(inputClass, 'font-mono')} />
+                                        <Label className={MOBILE_LABEL_CLASS}>SRN</Label>
+                                        <Input value={formData.srn || ''} onChange={(e) => handleInputChange('srn', e.target.value)} placeholder="12-34-5678-910-1" className={cn(MOBILE_INPUT_CLASS, 'font-mono')} />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <Label className={labelClass}>FBR Filer Status</Label>
-                                        <select className={cn(inputClass, 'w-full border border-input bg-background px-3')} value={formData.filer_status || 'none'} onChange={(e) => handleInputChange('filer_status', e.target.value)}>
+                                        <Label className={MOBILE_LABEL_CLASS}>FBR Filer Status</Label>
+                                        <select className={cn(MOBILE_INPUT_CLASS, 'w-full border border-input bg-background px-3')} value={formData.filer_status || 'none'} onChange={(e) => handleInputChange('filer_status', e.target.value)}>
                                             <option value="none">Not Verified</option>
                                             <option value="active">Active (Filer)</option>
                                             <option value="inactive">Inactive (Non-Filer)</option>
@@ -374,18 +374,18 @@ export function CustomerForm({
                                 </>
                             ) : (
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <Label className={labelClass}>{taxIdLabel}</Label>
-                                    <Input value={formData.ntn || ''} onChange={(e) => handleInputChange('ntn', e.target.value)} placeholder={`${taxIdLabel} / registration number`} className={inputClass} />
+                                    <Label className={MOBILE_LABEL_CLASS}>{taxIdLabel}</Label>
+                                    <Input value={formData.ntn || ''} onChange={(e) => handleInputChange('ntn', e.target.value)} placeholder={`${taxIdLabel} / registration number`} className={MOBILE_INPUT_CLASS} />
                                     {errors?.ntn && <FormError message={errors.ntn} />}
                                 </div>
                             )}
                             <div className="space-y-1.5">
-                                <Label className={labelClass}>Credit Limit ({currency})</Label>
-                                <Input type="number" value={formData.credit_limit || ''} onChange={(e) => handleInputChange('credit_limit', e.target.value)} placeholder="0" className={inputClass} />
+                                <Label className={MOBILE_LABEL_CLASS}>Credit Limit ({currency})</Label>
+                                <Input type="number" value={formData.credit_limit || ''} onChange={(e) => handleInputChange('credit_limit', e.target.value)} placeholder="0" className={MOBILE_INPUT_CLASS} />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className={labelClass}>Opening Balance ({currency})</Label>
-                                <Input type="number" value={formData.opening_balance || ''} onChange={(e) => handleInputChange('opening_balance', e.target.value)} placeholder="0" className={inputClass} />
+                                <Label className={MOBILE_LABEL_CLASS}>Opening Balance ({currency})</Label>
+                                <Input type="number" value={formData.opening_balance || ''} onChange={(e) => handleInputChange('opening_balance', e.target.value)} placeholder="0" className={MOBILE_INPUT_CLASS} />
                             </div>
                         </div>
                     </TabsContent>

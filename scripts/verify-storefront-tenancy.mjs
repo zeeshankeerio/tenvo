@@ -60,14 +60,49 @@ if (!productsAction.includes('checkProductStock(productId, variantId, quantity, 
 if (!productsAction.includes('cost_price: _costPrice')) {
   mark('getProductBySlug must strip cost_price from public payload');
 }
+if (!productsAction.includes("coalesce(p.domain_data->>'fabrictype'")) {
+  mark('products.js must support fabric filter via domain_data.fabrictype');
+}
+if (!productsAction.includes("coalesce(p.domain_data->>'sourcing'")) {
+  mark('products.js must support sourcing filter via domain_data.sourcing');
+}
+if (!productsAction.includes('variants: normalizedVariants')) {
+  mark('getProductBySlug must attach variants array on product payload');
+}
 
-// --- Orders API ---
+const productDetailPage = read('app/store/[businessDomain]/products/[slug]/page.jsx');
+if (!productDetailPage.includes('ProductPurchasePanel')) {
+  mark('product detail page must use ProductPurchasePanel for variant + cart wiring');
+}
+
+if (!productsAction.includes('querySellableLocationQty')) {
+  mark('checkProductStock must use warehouse-aware querySellableLocationQty');
+}
+if (!productsAction.includes('enrichStorefrontProductStock')) {
+  mark('getProducts/getProductBySlug must enrich display stock via enrichStorefrontProductStock');
+}
+if (!productsAction.includes('serializeDecimalsDeep')) {
+  mark('storefront products actions must serialize decimals for client payloads');
+}
+
+const productInfo = read('components/storefront/ProductInfo.jsx');
+if (!productInfo.includes('getStorefrontStockState')) {
+  mark('ProductInfo must use getStorefrontStockState for stock badges');
+}
+if (!productInfo.includes('ProductAttributeList')) {
+  mark('ProductInfo must render clothing/parts attributes via ProductAttributeList');
+}
+
+// --- Orders API (continued) ---
 const ordersRoute = read('app/api/storefront/[businessDomain]/orders/route.js');
 if (!ordersRoute.includes('resolveStorefrontBusiness')) {
   mark('orders route must resolve business via resolveStorefrontBusiness');
 }
-if (!ordersRoute.includes('AND business_id = $4::uuid')) {
-  mark('orders route product stock UPDATE must include business_id');
+if (!ordersRoute.includes('decrementHeadlineAndLocationsInTx')) {
+  mark('orders route must decrement warehouse rows + headline stock via decrementHeadlineAndLocationsInTx');
+}
+if (!ordersRoute.includes('resolveSellableStockQty')) {
+  mark('orders route must validate stock with resolveSellableStockQty');
 }
 
 // --- Reviews API ---
@@ -84,6 +119,32 @@ const cartCtx = read('lib/context/CartContext.js');
 if (!cartCtx.includes('businessId')) {
   mark('CartContext must send businessId to stock API');
 }
+if (!cartCtx.includes('getCartStorageKey')) {
+  mark('CartContext must export getCartStorageKey for per-store cart isolation');
+}
+if (!cartCtx.includes('tenvo_storefront_cart_${businessId}')) {
+  mark('CartContext must use per-store localStorage keys');
+}
+
+const storeProviders = read('components/storefront/StoreProviders.jsx');
+if (!storeProviders.includes('businessId={business?.id}')) {
+  mark('StoreProviders must pass businessId into CartProvider');
+}
+
+const cartPage = read('app/store/[businessDomain]/cart/page.jsx');
+if (!cartPage.includes('cartMismatch')) {
+  mark('cart/page.jsx must guard against cross-store cart mismatch');
+}
+
+const cartDrawer = read('components/storefront/CartDrawer.jsx');
+if (!cartDrawer.includes('cartMismatch')) {
+  mark('CartDrawer must guard against cross-store cart mismatch');
+}
+
+const checkoutPage = read('app/store/[businessDomain]/checkout/page.jsx');
+if (!checkoutPage.includes('cart.businessId !== businessId')) {
+  mark('checkout/page.jsx must redirect when cart businessId mismatches storefront');
+}
 
 // --- Hub auth on admin/payment actions ---
 for (const rel of [
@@ -95,6 +156,14 @@ for (const rel of [
   if (!src.includes('requireStorefrontHubAccess')) {
     mark(`${rel} must guard hub actions with requireStorefrontHubAccess`);
   }
+}
+
+const paymentsAction = read('lib/actions/storefront/payments.js');
+if (!paymentsAction.includes('UPDATE storefront_orders SET metadata = $1 WHERE id = $2 AND business_id = $3::uuid')) {
+  mark('payments.js metadata updates must scope by business_id');
+}
+if (!paymentsAction.includes('WHERE id = $3 AND business_id = $4::uuid')) {
+  mark('recordManualPayment must scope order UPDATE by business_id');
 }
 
 // --- Shared resolver exists ---

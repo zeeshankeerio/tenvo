@@ -7,7 +7,7 @@ import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import {
   CreditCard, Truck, MapPin, Check, ChevronRight,
   Shield, Lock, AlertCircle, Wallet, Banknote,
-  Smartphone, Building2, Loader2, Package, ArrowLeft
+  Smartphone, Building2, Loader2, Package, ArrowLeft, Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +23,7 @@ import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { toast } from 'react-hot-toast';
 import { getAvailablePaymentMethods } from '@/lib/actions/storefront/payments';
+import { downloadStorefrontOrderReceipt } from '@/lib/storefront/storefrontReceiptDownload';
 
 const PAYMENT_ICONS = {
   stripe: CreditCard, cod: Banknote, easypaisa: Smartphone,
@@ -41,7 +42,7 @@ export default function CheckoutPage({ params }) {
   const { businessDomain } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { cart, calculateTotals, clearCart, hydrated } = useCart();
+  const { cart, calculateTotals, clearCart, hydrated, checkoutAdjustments } = useCart();
   const { currency, businessId, settings, business } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
 
@@ -58,8 +59,10 @@ export default function CheckoutPage({ params }) {
   const [processing, setProcessing] = useState(false);
   const [orderDone, setOrderDone] = useState(false);
   const [orderNumber, setOrderNumber] = useState(null);
+  const [placedOrder, setPlacedOrder] = useState(null);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [loadingPM, setLoadingPM] = useState(true);
+  const [downloadingReceipt, setDownloadingReceipt] = useState(false);
 
   const [form, setForm] = useState({
     email: '', firstName: '', lastName: '', phone: '',
@@ -68,11 +71,23 @@ export default function CheckoutPage({ params }) {
   });
 
   const { subtotal, itemCount } = calculateTotals();
+  const adjustments = cart.checkoutAdjustments || checkoutAdjustments;
+  const orderDiscount = adjustments
+    ? Math.min(
+        subtotal,
+        (adjustments.promoDiscount || 0) + (adjustments.memberDiscount || 0)
+      )
+    : 0;
   const shippingCost = form.shippingMethod === 'express' ? 300
     : form.shippingMethod === 'pickup' ? 0
     : subtotal >= freeShippingThreshold ? 0 : 150;
-  const tax = subtotal * taxRate;
-  const total = subtotal + shippingCost + tax;
+  // Match the server's per-product tax: use each item's tax_percent (captured at
+  // add-to-cart), falling back to the store default only for legacy cart items.
+  const tax = cart.items.reduce((sum, i) => {
+    const rate = typeof i.taxPercent === 'number' ? i.taxPercent / 100 : taxRate;
+    return sum + i.price * i.quantity * rate;
+  }, 0);
+  const total = subtotal + shippingCost + tax - orderDiscount;
 
   // Redirect empty cart, only after localStorage hydration to avoid false redirect
   useEffect(() => {
@@ -81,6 +96,15 @@ export default function CheckoutPage({ params }) {
       router.replace(`/store/${businessDomain}/cart`);
     }
   }, [hydrated, cart.items.length, orderDone, router, businessDomain]);
+
+  // Block checkout when cart belongs to another storefront (defense in depth)
+  useEffect(() => {
+    if (!hydrated || !businessId || orderDone) return;
+    if (cart.businessId && cart.businessId !== businessId) {
+      toast.error('Your cart contains items from another store. Please clear your cart.');
+      router.replace(`/store/${businessDomain}/cart`);
+    }
+  }, [hydrated, cart.businessId, businessId, orderDone, router, businessDomain]);
 
   // Load payment methods
   useEffect(() => {
@@ -96,6 +120,11 @@ export default function CheckoutPage({ params }) {
       finally { setLoadingPM(false); }
     })();
   }, [businessId]);
+
+  useEffect(() => {
+    if (!hydrated || !adjustments?.memberEmail) return;
+    setForm((f) => (f.email ? f : { ...f, email: adjustments.memberEmail }));
+  }, [hydrated, adjustments?.memberEmail]);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
@@ -160,6 +189,8 @@ export default function CheckoutPage({ params }) {
           shipping: shippingCost,
           shippingMethod: form.shippingMethod,
           paymentMethod: form.paymentMethod,
+          promoCode: adjustments?.promoCode || undefined,
+          memberPricingRequested: Boolean(adjustments?.memberPricingRequested),
         }),
       });
 
@@ -168,6 +199,33 @@ export default function CheckoutPage({ params }) {
         throw new Error(result.error || 'Failed to create order');
       }
 
+      // Snapshot the placed order for the confirmation receipt before clearing the
+      // cart. Prefer the server-authoritative breakdown so the receipt always
+      // matches what was actually charged.
+      setPlacedOrder({
+        orderNumber: result.order.orderNumber,
+        placedAt: new Date(),
+        customerName: `${form.firstName} ${form.lastName}`.trim(),
+        total: Number(result.order.total ?? total),
+        paymentStatus: result.order.paymentStatus,
+        paymentMethodLabel:
+          paymentMethods.find((m) => m.provider === form.paymentMethod)?.display_name ||
+          form.paymentMethod,
+        isCod: form.paymentMethod === 'cod',
+        shippingMethod: form.shippingMethod,
+        subtotal: Number(result.order.subtotal ?? subtotal),
+        shippingCost: Number(result.order.shipping ?? shippingCost),
+        tax: Number(result.order.tax ?? tax),
+        discount: Number(result.order.discount ?? orderDiscount),
+        items: cart.items.map((i) => ({
+          key: `${i.productId}-${i.variantId}`,
+          name: i.name,
+          variantName: i.variantName,
+          quantity: i.quantity,
+          price: i.price,
+          image: i.image,
+        })),
+      });
       setOrderNumber(result.order.orderNumber);
       setOrderDone(true);
       clearCart();
@@ -176,6 +234,37 @@ export default function CheckoutPage({ params }) {
       toast.error(err.message || 'Failed to place order. Please try again.');
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleDownloadReceipt = async () => {
+    if (!orderNumber) return;
+    setDownloadingReceipt(true);
+    try {
+      // Fetch full order details with line items
+      const res = await fetch(
+        `/api/storefront/${businessDomain}/orders?email=${encodeURIComponent(
+          form.email
+        )}&orderNumber=${encodeURIComponent(orderNumber)}`
+      );
+      const data = await res.json();
+      if (!data.success || !data.orders?.length) {
+        throw new Error('Order not found');
+      }
+      const fullOrder = data.orders[0];
+
+      await downloadStorefrontOrderReceipt({
+        order: fullOrder,
+        items: fullOrder.items || [],
+        business,
+      });
+
+      toast.success('Receipt downloaded!');
+    } catch (err) {
+      console.error('[Receipt Download]', err);
+      toast.error('Failed to download receipt. Please try again.');
+    } finally {
+      setDownloadingReceipt(false);
     }
   };
 
@@ -190,39 +279,160 @@ export default function CheckoutPage({ params }) {
 
   // ── Order Success Screen ─────────────────────────────────────────────
   if (orderDone) {
+    const receipt = placedOrder;
+    const totalUnits = receipt ? receipt.items.reduce((n, i) => n + i.quantity, 0) : 0;
+    const placedDate = receipt?.placedAt
+      ? new Date(receipt.placedAt).toLocaleDateString(undefined, {
+          year: 'numeric', month: 'short', day: 'numeric',
+        })
+      : null;
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-10">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden">
+          {/* Confirmation header */}
           <div
-            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-            style={{ backgroundColor: accent + '20' }}
+            className="px-8 pt-9 pb-7 text-center"
+            style={{ background: `linear-gradient(180deg, ${accent}10 0%, transparent 100%)` }}
           >
-            <Check className="w-10 h-10" style={{ color: accent }} />
-          </div>
-          <h1 className="text-2xl font-black text-gray-900 mb-2">Order Confirmed!</h1>
-          <p className="text-gray-500 mb-2">
-            Thank you, {form.firstName}! Your order has been placed.
-          </p>
-          <p className="text-gray-500 mb-1 text-sm">
-            Confirmation sent to <span className="font-medium text-gray-700">{form.email}</span>
-          </p>
-          <div
-            className="inline-block mt-4 mb-6 px-5 py-2.5 rounded-xl text-sm font-bold"
-            style={{ backgroundColor: accent + '15', color: accent }}
-          >
-            Order #{orderNumber}
-          </div>
-          <div className="space-y-3">
-            <Button
-              className="w-full rounded-xl font-bold"
-              style={{ backgroundColor: accent }}
-              onClick={() => router.push(`/store/${businessDomain}/orders?email=${encodeURIComponent(form.email)}`)}
+            <div
+              className="w-[72px] h-[72px] rounded-full flex items-center justify-center mx-auto mb-5 ring-8"
+              style={{ backgroundColor: accent, '--tw-ring-color': accent + '1f' }}
             >
-              Track My Order
+              <Check className="w-9 h-9 text-white" strokeWidth={2.5} />
+            </div>
+            <h1 className="text-[22px] font-semibold text-gray-900 mb-1.5">Order confirmed</h1>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Thank you{receipt?.customerName ? `, ${receipt.customerName.split(' ')[0]}` : ''}! Your order has
+              been placed. A confirmation is on its way to{' '}
+              <span className="font-medium text-gray-700">{form.email}</span>.
+            </p>
+            <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
+              <span
+                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold tabular-nums"
+                style={{ backgroundColor: accent + '15', color: accent }}
+              >
+                Order #{orderNumber}
+              </span>
+              {placedDate && (
+                <span className="inline-flex items-center px-3 py-2 rounded-full text-xs font-medium text-gray-500 bg-gray-100">
+                  {placedDate}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* On-screen receipt */}
+          {receipt && (
+            <div className="px-6 sm:px-8">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Order Receipt
+                  </p>
+                  <span className="text-xs text-gray-400">
+                    {totalUnits} item{totalUnits !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {receipt.items.map((item) => (
+                    <div key={item.key} className="flex justify-between gap-3 text-sm">
+                      <span className="text-gray-600 min-w-0 truncate">
+                        {item.name}
+                        {item.variantName ? ` (${item.variantName})` : ''}
+                        <span className="text-gray-400"> × {item.quantity}</span>
+                      </span>
+                      <span className="font-medium text-gray-900 tabular-nums flex-shrink-0">
+                        {formatCurrency(item.price * item.quantity, currency)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <Separator className="my-3" />
+
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Subtotal</span>
+                    <span className="font-medium tabular-nums">{formatCurrency(receipt.subtotal, currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Shipping</span>
+                    <span className={cn('font-medium tabular-nums', receipt.shippingCost === 0 && 'text-green-600')}>
+                      {receipt.shippingCost === 0 ? 'FREE' : formatCurrency(receipt.shippingCost, currency)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Tax</span>
+                    <span className="font-medium tabular-nums">{formatCurrency(receipt.tax, currency)}</span>
+                  </div>
+                  {receipt.discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount</span>
+                      <span className="font-medium tabular-nums">-{formatCurrency(receipt.discount, currency)}</span>
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="my-3" />
+
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-900">Total paid</span>
+                  <span className="text-lg font-semibold tabular-nums" style={{ color: accent }}>
+                    {formatCurrency(receipt.total, currency)}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2 rounded-xl bg-white px-3 py-2.5 text-xs text-gray-600 border border-gray-100">
+                  {receipt.isCod ? (
+                    <Banknote className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  ) : (
+                    <CreditCard className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  )}
+                  <span className="min-w-0">
+                    <span className="font-medium text-gray-700">{receipt.paymentMethodLabel}</span>
+                    {receipt.isCod
+                      ? ' · Pay in cash on delivery'
+                      : receipt.paymentStatus === 'awaiting_payment'
+                      ? ' · Awaiting payment'
+                      : ' · Payment received'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="p-6 sm:p-8 pt-5 space-y-2.5">
+            <Button
+              className="w-full rounded-xl gap-2 font-semibold text-white"
+              style={{ backgroundColor: accent }}
+              onClick={handleDownloadReceipt}
+              disabled={downloadingReceipt}
+            >
+              {downloadingReceipt ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Generating receipt…
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Download Receipt
+                </>
+              )}
             </Button>
             <Button
               variant="outline"
-              className="w-full rounded-xl"
+              className="w-full rounded-xl gap-2 font-medium"
+              onClick={() => router.push(`/store/${businessDomain}/orders?email=${encodeURIComponent(form.email)}`)}
+            >
+              <Package className="w-4 h-4" />
+              Track My Order
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full rounded-xl text-gray-600"
               onClick={() => router.push(`/store/${businessDomain}/products`)}
             >
               Continue Shopping
@@ -246,7 +456,7 @@ export default function CheckoutPage({ params }) {
           <ArrowLeft className="w-4 h-4" /> Back to Cart
         </Link>
 
-        <h1 className="text-2xl font-black text-gray-900 mb-6">Checkout</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Checkout</h1>
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1">
@@ -452,9 +662,9 @@ export default function CheckoutPage({ params }) {
                       {cart.items.map(item => (
                         <div key={`${item.productId}-${item.variantId}`}
                           className="flex gap-3 p-3 bg-gray-50 rounded-xl">
-                          <div className="w-14 h-14 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                          <div className="relative w-14 h-14 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                             {item.image
-                              ? <SmartProductImage src={item.image} alt={item.name} fill className="object-cover" />
+                              ? <SmartProductImage src={item.image} alt={item.name} fill className="object-cover" sizes="56px" />
                               : <div className="w-full h-full flex items-center justify-center"><Package className="w-5 h-5 text-gray-400" /></div>
                             }
                           </div>
@@ -555,16 +765,32 @@ export default function CheckoutPage({ params }) {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Tax ({Math.round(taxRate * 100)}%)</span>
+                      <span className="text-gray-500">Tax</span>
                       <span className="font-medium">{formatCurrency(tax, currency)}</span>
                     </div>
+                    {orderDiscount > 0 && (
+                      <>
+                        {adjustments?.memberDiscount > 0 && (
+                          <div className="flex justify-between text-green-600">
+                            <span>Member discount</span>
+                            <span className="font-medium">-{formatCurrency(adjustments.memberDiscount, currency)}</span>
+                          </div>
+                        )}
+                        {adjustments?.promoDiscount > 0 && (
+                          <div className="flex justify-between text-green-600">
+                            <span>Promo{adjustments.promoCode ? ` (${adjustments.promoCode})` : ''}</span>
+                            <span className="font-medium">-{formatCurrency(adjustments.promoDiscount, currency)}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
 
                   <Separator />
 
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-gray-900">Total</span>
-                    <span className="text-xl font-black" style={{ color: accent }}>
+                    <span className="text-xl font-semibold tabular-nums" style={{ color: accent }}>
                       {formatCurrency(total, currency)}
                     </span>
                   </div>

@@ -11,6 +11,7 @@ import { formatCurrency } from '@/lib/currency';
 import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
 import { useStorefront } from '@/lib/context/StorefrontContext';
+import { getStorefrontStockState } from '@/lib/storefront/storefrontStockUi';
 import { toast } from 'react-hot-toast';
 
 export function AddToCartSection({ product, businessDomain, selectedVariant = null }) {
@@ -20,12 +21,11 @@ export function AddToCartSection({ product, businessDomain, selectedVariant = nu
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { currency, businessId } = useStorefront();
   const isWishlisted = isInWishlist(product.id);
+  const requiresVariant =
+    product.has_variants && Array.isArray(product.variants) && product.variants.length > 0;
+  const variantMissing = requiresVariant && !selectedVariant;
   const price = selectedVariant?.price || product.price;
-  const stock = selectedVariant?.stock !== undefined 
-    ? selectedVariant.stock 
-    : product.stock;
-  const isOutOfStock = stock === 0;
-  const isLowStock = stock !== null && stock <= 5 && stock > 0;
+  const { stock, isOutOfStock, isLowStock } = getStorefrontStockState(product, selectedVariant);
   
   // Intelligent quantity suggestions based on stock
   const quickQuantities = useCallback(() => {
@@ -64,6 +64,10 @@ export function AddToCartSection({ product, businessDomain, selectedVariant = nu
   };
   
   const handleAddToCart = async () => {
+    if (variantMissing) {
+      toast.error('Please select all options before adding to cart');
+      return;
+    }
     if (isOutOfStock) {
       toast.error('This product is out of stock');
       return;
@@ -184,8 +188,14 @@ export function AddToCartSection({ product, businessDomain, selectedVariant = nu
             isOutOfStock && "opacity-50 cursor-not-allowed"
           )}
           onClick={handleAddToCart}
-          disabled={isAdding || isOutOfStock}
-          aria-label={isOutOfStock ? 'Product out of stock' : `Add ${quantity} to cart for ${formatCurrency(price * quantity, currency)}`}
+          disabled={isAdding || isOutOfStock || variantMissing}
+          aria-label={
+            variantMissing
+              ? 'Select product options before adding to cart'
+              : isOutOfStock
+                ? 'Product out of stock'
+                : `Add ${quantity} to cart for ${formatCurrency(price * quantity, currency)}`
+          }
         >
           {isAdding ? (
             <>
@@ -195,7 +205,11 @@ export function AddToCartSection({ product, businessDomain, selectedVariant = nu
           ) : (
             <>
               <ShoppingBag className="w-5 h-5" />
-              {isOutOfStock ? 'Out of Stock' : `Add to Cart - ${formatCurrency(price * quantity, currency)}`}
+              {variantMissing
+                ? 'Select options'
+                : isOutOfStock
+                  ? 'Out of Stock'
+                  : `Add to Cart - ${formatCurrency(price * quantity, currency)}`}
             </>
           )}
         </Button>

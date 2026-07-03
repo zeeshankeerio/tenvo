@@ -75,6 +75,7 @@ export const MARKETING_SITEMAP_ROUTES: ReadonlyArray<{
   { path: '/why-tenvo', priority: 0.85, changeFrequency: 'monthly' },
   { path: '/integrations', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/industries', priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/industry-plans', priority: 0.85, changeFrequency: 'monthly' },
   { path: '/about', priority: 0.75, changeFrequency: 'monthly' },
   { path: '/case-studies', priority: 0.75, changeFrequency: 'weekly' },
   { path: '/solutions/marketing-crm', priority: 0.7, changeFrequency: 'monthly' },

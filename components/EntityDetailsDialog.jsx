@@ -18,6 +18,7 @@ import {
     Edit3, Eye, ArrowUpRight
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
+import { useBusiness } from '@/lib/context/BusinessContext';
 import { ProductDetailsDialog } from './ProductDetailsDialog';
 import { CustomerForm } from './CustomerForm';
 import { VendorForm } from './VendorForm';
@@ -25,6 +26,8 @@ import { EnhancedInvoiceBuilder } from './EnhancedInvoiceBuilder';
 import toast from 'react-hot-toast';
 
 export function EntityDetailsDialog({ item: initialItem, type, open, onClose, category = 'retail-shop' }) {
+    const { currency: businessCurrency } = useBusiness();
+    const currency = businessCurrency || 'PKR';
     const [isEditing, setIsEditing] = useState(false);
     const [item, setItem] = useState(initialItem);
 
@@ -101,7 +104,7 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
                     {!isEditing && (item.grand_total || item.amount || item.total_cost) && (
                         <div className="text-right">
                             <div className={`text-2xl font-semibold ${item.grand_total > 0 ? 'text-gray-900' : 'text-gray-400 opacity-50'}`}>
-                                {formatCurrency(item.grand_total || item.amount || item.total_cost || 0, 'PKR')}
+                                {formatCurrency(item.grand_total || item.amount || item.total_cost || 0, currency)}
                             </div>
                             <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                                 {type === 'bom' ? 'Total Est. Cost' : 'Grand Total'}
@@ -145,7 +148,7 @@ export function EntityDetailsDialog({ item: initialItem, type, open, onClose, ca
                                     <tr key={i}>
                                         <td className="px-4 py-3"><div className="font-bold text-gray-900 text-xs">{line.name || line.product_name}</div></td>
                                         <td className="px-4 py-3 text-right"><Badge variant="outline" className="text-[10px] font-bold">{line.quantity}</Badge></td>
-                                        <td className="px-4 py-3 text-right font-bold text-gray-900 text-xs">{formatCurrency(line.total || line.amount || (line.rate * line.quantity), 'PKR')}</td>
+                                        <td className="px-4 py-3 text-right font-bold text-gray-900 text-xs">{formatCurrency(line.total || line.amount || (line.rate * line.quantity), currency)}</td>
                                     </tr>
                                 ))}
                             </tbody>

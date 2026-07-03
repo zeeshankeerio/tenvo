@@ -1,6 +1,6 @@
 'use client';
 
-import { Croissant, Globe, ShieldCheck, Store } from 'lucide-react';
+import { Croissant, Dumbbell, Globe, ShieldCheck, Store } from 'lucide-react';
 import MarketingSection from '@/components/marketing/layout/MarketingSection';
 import MarketingVisualCard from '@/components/marketing/ui/MarketingVisualCard';
 import { HOME_INDUSTRY_SOLUTIONS } from '@/lib/marketing/homeVisualThemes';
@@ -16,6 +16,7 @@ const ICONS = {
   wholesale: Globe,
   bakery: Croissant,
   pharmacy: ShieldCheck,
+  fitness: Dumbbell,
 };
 
 export default function HomeIndustrySolutionsSection() {
@@ -33,7 +34,7 @@ export default function HomeIndustrySolutionsSection() {
         </p>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4 xl:gap-6">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 xl:gap-6">
         {HOME_INDUSTRY_SOLUTIONS.map((item) => (
           <MarketingVisualCard
             key={item.id}

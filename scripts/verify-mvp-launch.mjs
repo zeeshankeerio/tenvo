@@ -68,6 +68,24 @@ if (!envExample.includes('NEXT_PUBLIC_DEV_FULL_FEATURES=false')) {
   mark('.env.example must mention NEXT_PUBLIC_DEV_FULL_FEATURES=false for production');
 }
 
+// --- Hub customer form must use shared mobile tokens (avoid undefined labelClass crash) ---
+const customerForm = read('components/CustomerForm.jsx');
+if (customerForm.includes('className={labelClass}') && !customerForm.includes('const labelClass')) {
+  mark('CustomerForm must not reference undefined labelClass');
+}
+if (customerForm.includes('className={inputClass}') && !customerForm.includes('const inputClass')) {
+  mark('CustomerForm must not reference undefined inputClass');
+}
+if (!customerForm.includes('MOBILE_LABEL_CLASS') || !customerForm.includes('MOBILE_INPUT_CLASS')) {
+  mark('CustomerForm must import and use MOBILE_LABEL_CLASS / MOBILE_INPUT_CLASS');
+}
+if (!customerForm.includes('DomainFieldRenderer')) {
+  mark('CustomerForm must render domain tab via DomainFieldRenderer');
+}
+if (!customerForm.includes('getDomainCustomerFields')) {
+  mark('CustomerForm must load domain customer fields from domainHelpers');
+}
+
 // --- package script registered ---
 const pkg = read('package.json');
 if (!pkg.includes('verify:mvp-launch')) {

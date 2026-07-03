@@ -36,7 +36,13 @@ import { DataTable } from './DataTable';
 import { getDomainColors } from '@/lib/domainColors';
 import { cn } from '@/lib/utils';
 import { BusyGrid } from './BusyGrid';
-import { getDomainTableColumns, normalizeKey, resolveDomainFieldKey, readDomainFieldValue } from '@/lib/utils/domainHelpers';
+import { normalizeKey, resolveDomainFieldKey, readDomainFieldValue } from '@/lib/utils/domainHelpers';
+import { buildInventoryGridColumns, readGridCellValue } from '@/lib/utils/inventoryGridColumns';
+import { inventoryRowsDiffer } from '@/lib/utils/inventoryRowDiff';
+import { mapExcelRowForSave, prepareCompositeUpsertFromRow } from '@/lib/utils/excelProductPayload';
+import { buildNewInventoryRow, getLastRowForDefaults } from '@/lib/utils/inventoryRowDefaults';
+import { getInventoryFieldSuggestions } from '@/lib/utils/inventoryFieldSuggestions';
+import { mapProductField, preserveRelationalData, processFieldValue } from '@/lib/utils/productFieldMapper';
 import { ShortcutsHelp } from './inventory/ShortcutsHelp';
 import { AdvancedSearch } from './AdvancedSearch';
 import { SmartRestockEngine } from './SmartRestockEngine';
@@ -103,7 +109,6 @@ import {
   filterMeaningfulBatches,
   filterMeaningfulSerials,
 } from '@/lib/utils/inventoryTrackingHelpers';
-import { VariantManager } from './domain/VariantManager';
 import { ProductDetailsDialog } from './ProductDetailsDialog';
 import { CustomParametersManager } from './inventory/CustomParametersManager';
 import { ExcelModeModal } from './ExcelModeModal';
@@ -145,24 +150,9 @@ function rowsMatchInventoryRow(p, row) {
   return false;
 }
 
-function readInventoryFieldValue(row, field, domainKnowledge, category) {
-  if (!row) return undefined;
-  if (field.includes('.')) {
-    const parts = field.split('.');
-    let cur = row;
-    for (const part of parts) {
-      if (cur == null) return undefined;
-      cur = cur[part];
-    }
-    return cur;
-  }
-  const isDomainField = domainKnowledge?.productFields?.some(
-    (f) => resolveDomainFieldKey(f, category) === field || normalizeKey(f) === field
-  );
-  if (isDomainField) {
-    return readDomainFieldValue(row.domain_data, field, category);
-  }
-  return row[field];
+function readInventoryFieldValue(row, field, _domainKnowledge, category) {
+  if (!row || !field) return undefined;
+  return readGridCellValue(row, field, category);
 }
 
 function busyFieldValueUnchanged(prevVal, nextVal) {
@@ -374,6 +364,52 @@ export function InventoryManager({
     }
   };
 
+  /** 
+   * Create via composite upsert (unified path for all creates).
+   * Always routes through onUpdate/handleSaveProduct when available for consistent ledger.
+   */
+  const handleCreateProduct = async (productData, opts = {}) => {
+    const { closeForm = true, silentToast = false } = opts;
+    
+    // UNIFIED PATH: Always use composite upsert when onUpdate available
+    if (typeof onUpdate === 'function') {
+      try {
+        setLoading(true);
+        const mapped = mapExcelRowForSave({ ...productData, business_id: businessId }, category);
+        const payload = prepareCompositeUpsertFromRow(mapped, category, businessId);
+        
+        // Use composite save path
+        await onUpdate(payload);
+        
+        if (!silentToast) {
+          toast.success('Product created successfully');
+        }
+        if (refreshData) {
+          await refreshData();
+        }
+        onAdd?.(productData);
+        if (closeForm) {
+          setShowProductFormInternal(false);
+          setEditingProduct(null);
+        }
+      } catch (error) {
+        console.error('Create error:', error);
+        toast.error(formatInventoryActionError(error));
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    
+    // Fallback for controlled components without onUpdate (rare)
+    await handleAddProduct(productData);
+    if (closeForm) {
+      setShowProductFormInternal(false);
+      setEditingProduct(null);
+    }
+  };
+
   // Handlers for CRUD to update local state immediately
   const handleDeleteProduct = async (id) => {
     // Optimistic Update
@@ -481,6 +517,8 @@ export function InventoryManager({
 
   /** Per persisted product id: monotonically increasing save generation to drop stale async results. */
   const busyCellSaveGenRef = useRef(new Map());
+  /** Busy inline draft rows (_tempId): create at most once per temp id after name is set. */
+  const busyDraftCreateRef = useRef(new Set());
 
   // Bulk Save Handler for Excel Mode
   const handleExcelSave = async (updatedData) => {
@@ -497,8 +535,7 @@ export function InventoryManager({
         const original = products.find((p) => rowsMatchInventoryRow(p, item));
         if (!original) return true; // Should not happen for edits
 
-        // Simple stringified comparison for quick diffing
-        return JSON.stringify(item) !== JSON.stringify(original);
+        return inventoryRowsDiffer(original, mapExcelRowForSave(item, category));
       });
 
       if (changedItems.length === 0) {
@@ -510,136 +547,117 @@ export function InventoryManager({
 
       toast.loading(`Saving ${changedItems.length} changes...`, { id: 'excel-save' });
 
-      const useCompositeSave = typeof onUpdate === 'function';
+      const useCompositeSave = typeof onUpdate === 'function' && businessId;
+      const successfulTempIds = new Set();
+      let compositeSuccess = false;
 
-      // Limited concurrency: unbounded parallel server actions often fail as "Failed to fetch"
-      const settled = await runWithConcurrency(changedItems, 5, async (item) => {
-        const isNew = Boolean(item._tempId && !item.id);
-
-        if (useCompositeSave) {
-          try {
-            if (isNew) {
-              await onUpdate(leanProductPayloadForCreate({ ...item, business_id: businessId }));
-            } else {
-              const original = products.find((p) => rowsMatchInventoryRow(p, item));
-              const base = leanProductPayloadForUpdate(item);
-              await onUpdate({
-                ...base,
-                id: item.id,
-                business_id: businessId,
-                batches: filterMeaningfulBatches(original?.batches ?? item.batches ?? []),
+      if (useCompositeSave) {
+        const bulkItems = changedItems.map((item) => {
+          const mapped = mapExcelRowForSave(item, category);
+          const isNew = Boolean(mapped._tempId && !mapped.id);
+          const original = !isNew ? products.find((p) => rowsMatchInventoryRow(p, mapped)) : null;
+          const rowForComposite = isNew
+            ? mapped
+            : {
+                ...mapped,
+                batches: filterMeaningfulBatches(original?.batches ?? mapped.batches ?? []),
                 serial_numbers: filterMeaningfulSerials(
                   original?.serial_numbers ??
                     original?.serialNumbers ??
-                    item.serial_numbers ??
-                    item.serialNumbers ??
+                    mapped.serial_numbers ??
+                    mapped.serialNumbers ??
                     []
                 ),
-              });
-            }
-            return { mode: 'composite', ok: true, item, isNew };
-          } catch (error) {
-            return { mode: 'composite', ok: false, item, isNew, error };
+              };
+          const params = prepareCompositeUpsertFromRow(rowForComposite, category, businessId);
+          params.productData = isNew
+            ? leanProductPayloadForCreate(params.productData)
+            : { ...leanProductPayloadForUpdate(params.productData), id: mapped.id };
+          return params;
+        });
+
+        const bulkRes = await productAPI.bulkUpsertIntegrated(businessId, bulkItems);
+        results.created = bulkRes.created ?? 0;
+        results.updated = bulkRes.updated ?? 0;
+        results.failed = bulkRes.failed?.length ?? 0;
+        compositeSuccess = results.created + results.updated > 0;
+        changedItems.forEach((item, idx) => {
+          if (item._tempId && !bulkRes.failed?.some((f) => f.index === idx)) {
+            successfulTempIds.add(item._tempId);
           }
+        });
+        if (bulkRes.failed?.length) {
+          bulkRes.failed.forEach((f) => {
+            console.error(`Failed to save row ${f.index + 1} (${f.name}):`, f.error);
+          });
         }
+      } else {
+        const settled = await runWithConcurrency(changedItems, 5, async (item) => {
+          const mapped = mapExcelRowForSave(item, category);
+          const isNew = Boolean(mapped._tempId && !mapped.id);
 
-        if (isNew) {
-          const res = await createProductAction(
-            leanProductPayloadForCreate({ ...item, business_id: businessId })
-          );
-          return { mode: 'action', res, item, isNew };
-        }
-        const res = await updateProductAction(item.id, businessId, leanProductPayloadForUpdate(item));
-        return { mode: 'action', res, item, isNew: false };
-      });
+          if (isNew) {
+            const res = await createProductAction(
+              leanProductPayloadForCreate({ ...mapped, business_id: businessId })
+            );
+            return { mode: 'action', res, item: mapped, isNew };
+          }
+          const res = await updateProductAction(mapped.id, businessId, leanProductPayloadForUpdate(mapped));
+          return { mode: 'action', res, item: mapped, isNew: false };
+        });
 
-      const successfulTempIds = new Set();
-      const activeUpdates = [];
-      const newRealItems = [];
-      let compositeSuccess = false;
+        const activeUpdates = [];
+        const newRealItems = [];
 
-      for (const result of settled) {
-        if (result.status === 'fulfilled') {
-          const payload = result.value;
-          if (payload.mode === 'composite') {
-            if (payload.ok) {
-              compositeSuccess = true;
-              if (payload.isNew) {
+        for (const result of settled) {
+          if (result.status === 'fulfilled') {
+            const { res, item, isNew } = result.value;
+            if (res.success) {
+              if (isNew) {
                 results.created++;
-                successfulTempIds.add(payload.item._tempId);
+                successfulTempIds.add(item._tempId);
+                newRealItems.push(res.product);
               } else {
                 results.updated++;
+                activeUpdates.push(res.product);
               }
             } else {
               results.failed++;
-              console.error(`Failed to save item ${payload.item?.name}:`, payload.error);
-            }
-            continue;
-          }
-
-          const { res, item, isNew } = payload;
-          if (res.success) {
-            if (isNew) {
-              results.created++;
-              successfulTempIds.add(item._tempId);
-              newRealItems.push(res.product);
-            } else {
-              results.updated++;
-              activeUpdates.push(res.product);
-            }
-
-            if (res.warnings && res.warnings.length > 0) {
-              res.warnings.forEach(warning => {
-                toast(warning, {
-                  icon: '\u{1F4A1}',
-                  duration: 4000,
-                  style: {
-                    background: '#FEF3C7',
-                    color: '#92400E',
-                    border: '1px solid #FCD34D'
-                  }
-                });
-              });
+              console.error(`Failed to save item ${item.name}:`, res.error);
             }
           } else {
             results.failed++;
-            console.error(`Failed to save item ${item.name}:`, res.error);
+            console.error('Error saving item:', result.reason);
           }
-        } else {
-          results.failed++;
-          console.error(`Error saving item:`, result.reason);
         }
-      }
 
-      if (compositeSuccess && typeof refreshData === 'function') {
-        try {
-          await refreshData();
-        } catch (e) {
-          console.warn('[handleExcelSave] refreshData after composite save:', e);
-        }
-      } else if (compositeSuccess) {
-        setProducts((prev) => prev.filter((p) => !p._tempId || !successfulTempIds.has(p._tempId)));
-      } else {
         setProducts((prev) => {
-          let next = prev.filter(p => !p._tempId || !successfulTempIds.has(p._tempId));
-
+          let next = prev.filter((p) => !p._tempId || !successfulTempIds.has(p._tempId));
           if (activeUpdates.length > 0) {
-            const updateMap = new Map(activeUpdates.map(u => [u.id, u]));
-            next = next.map(p => updateMap.get(p.id) || p);
+            const updateMap = new Map(activeUpdates.map((u) => [u.id, u]));
+            next = next.map((p) => updateMap.get(p.id) || p);
           }
-
           if (newRealItems.length > 0) {
             next = [...next, ...newRealItems];
           }
-
           const seen = new Set();
-          return next.filter(p => {
+          return next.filter((p) => {
             const key = p.id || p._tempId;
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
           });
         });
+      }
+
+      if (useCompositeSave && compositeSuccess && typeof refreshData === 'function') {
+        try {
+          await refreshData();
+        } catch (e) {
+          console.warn('[handleExcelSave] refreshData after composite save:', e);
+        }
+      } else if (useCompositeSave && compositeSuccess) {
+        setProducts((prev) => prev.filter((p) => !p._tempId || !successfulTempIds.has(p._tempId)));
       }
 
       toast.dismiss('excel-save');
@@ -808,20 +826,60 @@ export function InventoryManager({
     f.toLowerCase().includes('matrix')
   );
 
+  const countryIso = regionalPack?.countryIso || standards.countryCode || 'PK';
 
+  const getFieldSuggestions = useCallback(
+    (accessorKey, row) =>
+      getInventoryFieldSuggestions(accessorKey, {
+        category,
+        countryIso,
+        products,
+        row,
+      }),
+    [category, countryIso, products]
+  );
 
   const handleUpdateProduct = async (productData, opts = {}) => {
     const { closeForm = true } = opts;
     const old = [...products];
     try {
       if (onUpdate) {
-        await onUpdate(productData);
+        // Use composite upsert for updates (unified path)
+        const mapped = mapExcelRowForSave({ ...productData, business_id: businessId }, category);
+        const original = products.find((p) => p.id === productData.id);
+        
+        // Build composite params with relational data preservation
+        const params = prepareCompositeUpsertFromRow(
+          {
+            ...mapped,
+            id: productData.id,
+            batches: filterMeaningfulBatches(mapped.batches ?? original?.batches ?? []),
+            serial_numbers: filterMeaningfulSerials(
+              mapped.serial_numbers ??
+                mapped.serialNumbers ??
+                original?.serial_numbers ??
+                original?.serialNumbers ??
+                []
+            ),
+          },
+          category,
+          businessId
+        );
+        
+        params.productData.id = productData.id;
+        params.isUpdate = true;
+        params.productId = productData.id;
+        
+        await onUpdate(params);
+        
         if (closeForm) {
           setShowProductFormInternal(false);
           setEditingProduct(null);
         }
         return;
       }
+      
+      // Fallback for controlled components without onUpdate
       const res = await updateProductAction(productData.id, businessId, productData);
       if (res.success) {
         setProducts(prev => prev.map(p => p.id === productData.id ? res.product : p));
@@ -1074,9 +1132,7 @@ export function InventoryManager({
 
   // Column Definitions with Optimized Widths & Alignment
   const columns = useMemo(() => {
-    // Base Columns with Professional Styling
-    const baseCols = [
-      {
+    const actionsCol = {
         id: 'actions',
         header: '',
         size: 50,
@@ -1135,240 +1191,170 @@ export function InventoryManager({
             </DropdownMenuContent>
           </DropdownMenu>
         ),
-      },
-      {
-        id: 'name',
-        accessorKey: 'name',
-        header: 'PRODUCT NAME',
-        size: 220,
-        minSize: 180,
-        cell: ({ row }) => {
-          const p = row.original;
-          return (
-            <div className="flex min-w-0 flex-col gap-0 py-0 leading-tight">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <ProductThumbnail
-                  product={p}
-                  businessCategory={business?.category}
-                  size="sm"
-                  className="flex-shrink-0 border border-gray-100"
-                />
-                <div className="min-w-0 flex-1">
-                  <span className="line-clamp-1 text-xs font-semibold leading-tight text-gray-900">{p.name}</span>
-                  {p.brand && (
-                    <span className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">{p.brand}</span>
-                  )}
-                </div>
-              </div>
-              {p.is_active === false && (
-                <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
-                  Inactive
-                </span>
-              )}
-            </div>
-          );
-        },
-      },
-      {
-        id: 'sku',
-        accessorKey: 'sku',
-        header: 'SKU',
-        size: 110,
-        minSize: 90,
-        cell: ({ row }) => <span className="font-mono text-[11px] text-gray-700">{row.original.sku || '-'}</span>
-      },
-      {
-        id: 'category',
-        accessorKey: 'category',
-        header: 'CATEGORY',
-        size: 130,
-        minSize: 110,
-        cell: ({ row }) => (
-          <span className="block max-w-full truncate whitespace-nowrap rounded border border-gray-200 bg-gray-50 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-gray-700">
-            {row.original.category}
-          </span>
-        )
-      },
-      {
-        id: 'stock',
-        accessorKey: 'stock',
-        header: () => <div className="text-right font-semibold">STOCK</div>,
-        size: 90,
-        minSize: 80,
-        cell: ({ row }) => {
-          const stock = Number(row.original.stock ?? 0);
-          const minStock = Number(row.original.min_stock ?? row.original.minStock ?? 10);
-          const safeStock = Number.isFinite(stock) ? stock : 0;
-          const safeMin = Number.isFinite(minStock) ? minStock : 10;
-          const isLow = safeStock <= safeMin;
+    };
 
-          return (
-            <div className="flex w-full min-w-0 items-center justify-end gap-1.5 pr-0.5 tabular-nums">
-              <span
-                className={cn(
-                  'inline-block h-1.5 w-1.5 shrink-0 rounded-full',
-                  safeStock <= 0 ? 'animate-pulse bg-red-500' : isLow ? 'bg-amber-500' : 'bg-emerald-500'
-                )}
-                aria-hidden
+    const visualCellById = {
+      name: ({ row }) => {
+        const p = row.original;
+        return (
+          <div className="flex min-w-0 flex-col gap-0 py-0 leading-tight">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <ProductThumbnail
+                product={p}
+                businessCategory={business?.category}
+                size="sm"
+                className="flex-shrink-0 border border-gray-100"
               />
-              <span
-                className={cn(
-                  'min-w-[1.25rem] text-right text-xs font-semibold tabular-nums',
-                  safeStock <= 0 ? 'text-red-600' : isLow ? 'text-amber-700' : 'text-emerald-800'
+              <div className="min-w-0 flex-1">
+                <span className="line-clamp-1 text-xs font-semibold leading-tight text-gray-900">{p.name}</span>
+                {p.brand && (
+                  <span className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">{p.brand}</span>
                 )}
-              >
-                {safeStock}
-              </span>
-              {isLow && (
-                <span className="inline-flex shrink-0 items-center rounded border border-amber-200 bg-amber-50 px-1 py-0 text-[10px] font-bold uppercase leading-none text-amber-700">
-                  Low
-                </span>
-              )}
+              </div>
             </div>
-          );
-        },
+            {p.is_active === false && (
+              <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                Inactive
+              </span>
+            )}
+          </div>
+        );
       },
-      {
-        id: 'price',
-        accessorKey: 'price',
-        header: () => <div className="text-right font-semibold">PRICE</div>,
-        size: 110,
-        minSize: 100,
-        cell: ({ row }) => <div className="text-right font-semibold text-sm text-gray-900 tabular-nums pr-2">{formatCurrency(row.original.price || 0, standards.currency)}</div>
-      },
-      {
-        id: 'tax_percent',
-        accessorKey: 'tax_percent',
-        header: () => <div className="text-right font-semibold">TAX %</div>,
-        size: 80,
-        minSize: 70,
-        cell: ({ row }) => <div className="text-right text-xs font-medium text-gray-500 pr-2">{row.original.tax_percent ?? row.original.taxPercent ?? 17}%</div>
-      },
-      {
-        id: 'value',
-        accessorKey: 'value',
-        header: () => <div className="text-right font-semibold">VALUE</div>,
-        size: 120,
-        minSize: 110,
-        readOnly: true, // Calculated field
-        cell: ({ row }) => <div className="text-right text-sm text-gray-500 font-medium italic tabular-nums pr-2 bg-gray-50/50 h-full flex items-center justify-end w-full">{formatCurrency((row.original.price || 0) * (row.original.stock || 0), standards.currency)}</div>
-      }
-    ];
-
-    // Extended Features Columns (Batch, Expiry, Manufacturing) - Professional Styling
-    if (isBatchEnabled) {
-      baseCols.push({
-        id: 'batch_number',
-        accessorKey: 'batch_number',
-        header: getDomainBatchLabel(category),
-        size: 130,
-        minSize: 110,
-        cell: ({ row }) => {
-          const batches = row.original.batches || [];
-          const singleBatch = row.original.batch_number;
-
-          if (batches.length > 0) {
-            return (
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-mono text-[10px]">
-                {batches.length} {batches.length === 1 ? 'Batch' : 'Batches'}
-              </Badge>
-            );
-          }
-          return singleBatch ? (
-            <span className="font-mono text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
-              {singleBatch}
+      sku: ({ row }) => <span className="font-mono text-[11px] text-gray-700">{row.original.sku || '-'}</span>,
+      category: ({ row }) => (
+        <span className="block max-w-full truncate whitespace-nowrap rounded border border-gray-200 bg-gray-50 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-gray-700">
+          {row.original.category}
+        </span>
+      ),
+      stock: ({ row }) => {
+        const stock = Number(row.original.stock ?? 0);
+        const minStock = Number(row.original.min_stock ?? row.original.minStock ?? 10);
+        const safeStock = Number.isFinite(stock) ? stock : 0;
+        const safeMin = Number.isFinite(minStock) ? minStock : 10;
+        const isLow = safeStock <= safeMin;
+        return (
+          <div className="flex w-full min-w-0 items-center justify-end gap-1.5 pr-0.5 tabular-nums">
+            <span
+              className={cn(
+                'inline-block h-1.5 w-1.5 shrink-0 rounded-full',
+                safeStock <= 0 ? 'animate-pulse bg-red-500' : isLow ? 'bg-amber-500' : 'bg-emerald-500'
+              )}
+              aria-hidden
+            />
+            <span
+              className={cn(
+                'min-w-[1.25rem] text-right text-xs font-semibold tabular-nums',
+                safeStock <= 0 ? 'text-red-600' : isLow ? 'text-amber-700' : 'text-emerald-800'
+              )}
+            >
+              {safeStock}
             </span>
-          ) : <span className="text-gray-300">-</span>;
-        }
-      });
-    }
-
-    if (isSerialEnabled) {
-      baseCols.push({
-        id: 'serials',
-        accessorKey: 'serial_numbers',
-        header: getDomainSerialLabel(category),
-        size: 110,
-        minSize: 100,
-        cell: ({ row }) => {
-          const serials = row.original.serial_numbers || [];
-          if (serials.length > 0) {
-            return (
-              <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 font-mono text-[10px]">
-                {serials.length} Items
-              </Badge>
-            );
-          }
-          return <span className="text-gray-300">-</span>;
-        }
-      });
-    }
-
-    if (isManufacturingEnabled) {
-      baseCols.push({
-        id: 'mfg_date',
-        accessorKey: 'manufacturing_date',
-        header: 'MFG DATE',
-        size: 100,
-        minSize: 90,
-        cell: ({ row }) => <span className="text-xs text-gray-500">{row.original.manufacturing_date ? new Date(row.original.manufacturing_date).toLocaleDateString('en-GB') : '-'}</span>
-      });
-    }
-
-    if (isExpiryEnabled) {
-      baseCols.push({
-        id: 'expiry_date',
-        accessorKey: 'expiry_date',
-        header: 'EXPIRY',
-        size: 100,
-        minSize: 90,
-        cell: ({ row }) => {
-          const expiry = row.original.expiry_date;
-          if (!expiry) return <span className="text-gray-300">-</span>;
-
-          const now = new Date();
-          const horizonMs = now.getTime() + 30 * 24 * 60 * 60 * 1000;
-          const isExpired = new Date(expiry) < now;
-          const isExpiringSoon = new Date(expiry).getTime() < horizonMs;
-
+            {isLow && (
+              <span className="inline-flex shrink-0 items-center rounded border border-amber-200 bg-amber-50 px-1 py-0 text-[10px] font-bold uppercase leading-none text-amber-700">
+                Low
+              </span>
+            )}
+          </div>
+        );
+      },
+      price: ({ row }) => (
+        <div className="text-right font-semibold text-sm text-gray-900 tabular-nums pr-2">
+          {formatCurrency(row.original.price || 0, standards.currency)}
+        </div>
+      ),
+      tax_percent: ({ row }) => (
+        <div className="text-right text-xs font-medium text-gray-500 pr-2">
+          {row.original.tax_percent ?? row.original.taxPercent ?? 17}%
+        </div>
+      ),
+      value: ({ row }) => (
+        <div className="text-right text-sm text-gray-500 font-medium italic tabular-nums pr-2 bg-gray-50/50 h-full flex items-center justify-end w-full">
+          {formatCurrency((row.original.price || 0) * (row.original.stock || 0), standards.currency)}
+        </div>
+      ),
+      batch_number: ({ row }) => {
+        const batches = row.original.batches || [];
+        const singleBatch = row.original.batch_number;
+        if (batches.length > 0) {
           return (
-            <span className={cn(
-              "text-xs font-medium px-2 py-0.5 rounded",
-              isExpired ? 'bg-red-50 text-red-600 border border-red-100' :
-                isExpiringSoon ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                  'text-gray-600'
-            )}>
-              {new Date(expiry).toLocaleDateString('en-GB')}
-            </span>
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-mono text-[10px]">
+              {batches.length} {batches.length === 1 ? 'Batch' : 'Batches'}
+            </Badge>
           );
         }
-      });
-    }
+        return singleBatch ? (
+          <span className="font-mono text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
+            {singleBatch}
+          </span>
+        ) : <span className="text-gray-300">-</span>;
+      },
+      serials: ({ row }) => {
+        const serials = row.original.serial_numbers || [];
+        if (serials.length > 0) {
+          return (
+            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 font-mono text-[10px]">
+              {serials.length} Items
+            </Badge>
+          );
+        }
+        return <span className="text-gray-300">-</span>;
+      },
+      mfg_date: ({ row }) => (
+        <span className="text-xs text-gray-500">
+          {row.original.manufacturing_date ? new Date(row.original.manufacturing_date).toLocaleDateString('en-GB') : '-'}
+        </span>
+      ),
+      expiry_date: ({ row }) => {
+        const expiry = row.original.expiry_date;
+        if (!expiry) return <span className="text-gray-300">-</span>;
+        const now = new Date();
+        const horizonMs = now.getTime() + 30 * 24 * 60 * 60 * 1000;
+        const isExpired = new Date(expiry) < now;
+        const isExpiringSoon = new Date(expiry).getTime() < horizonMs;
+        return (
+          <span className={cn(
+            'text-xs font-medium px-2 py-0.5 rounded',
+            isExpired ? 'bg-red-50 text-red-600 border border-red-100' :
+              isExpiringSoon ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                'text-gray-600'
+          )}>
+            {new Date(expiry).toLocaleDateString('en-GB')}
+          </span>
+        );
+      },
+    };
 
-    // Domain Specific Columns (Dynamic) - Clean & Compact
-    if (domainKnowledge?.productFields) {
-      const standardFields = ['name', 'price', 'stock', 'category', 'sku', 'barcode', 'expiry_date', 'batch_number', 'manufacturing_date', 'brand', 'images'];
+    const headerOverrides = {
+      batch_number: getDomainBatchLabel(category),
+      serials: getDomainSerialLabel(category),
+      stock: () => <div className="text-right font-semibold">STOCK</div>,
+      price: () => <div className="text-right font-semibold">PRICE</div>,
+      tax_percent: () => <div className="text-right font-semibold">TAX %</div>,
+      value: () => <div className="text-right font-semibold">VALUE</div>,
+    };
 
-      domainKnowledge.productFields.forEach(field => {
-        const attrKey = resolveDomainFieldKey(field, category);
-        if (standardFields.includes(attrKey)) return;
+    const sharedCols = buildInventoryGridColumns(category, {
+      mode: 'visual',
+      currencySymbol: standards.currencySymbol,
+      business,
+    });
 
-        baseCols.push({
-          id: `domain_${attrKey}`,
-          header: field.replace(/_/g, ' ').toUpperCase(),
-          accessorKey: `domain_data.${attrKey}`,
-          size: 120,
-          minSize: 100,
-          cell: ({ row }) => {
-            const val = readDomainFieldValue(row.original.domain_data, field, category) ?? '-';
-            return <span className="text-xs text-gray-600 line-clamp-1">{String(val)}</span>;
-          }
-        });
-      });
-    }
+    const dataCols = sharedCols.map((col) => {
+      const out = { ...col, readOnly: col.readOnly ?? (col.id === 'value' || col.id === 'serials') };
+      if (headerOverrides[col.id]) out.header = headerOverrides[col.id];
+      if (visualCellById[col.id]) out.cell = visualCellById[col.id];
+      if (col.id?.startsWith('domain_')) {
+        const attrKey = col.accessorKey?.replace('domain_data.', '') || col.id.replace('domain_', '');
+        out.cell = ({ row }) => {
+          const val = readDomainFieldValue(row.original.domain_data, attrKey, category) ?? '-';
+          return <span className="text-xs text-gray-600 line-clamp-1">{String(val)}</span>;
+        };
+      }
+      return out;
+    });
 
-    return baseCols;
-  }, [domainKnowledge, isExpiryEnabled, isBatchEnabled, isManufacturingEnabled, isSerialEnabled, isVariantEnabled, category]);
+    return [actionsCol, ...dataCols];
+  }, [domainKnowledge, isExpiryEnabled, isBatchEnabled, isManufacturingEnabled, isSerialEnabled, isVariantEnabled, category, standards.currency, standards.currencySymbol, business?.category]);
 
   // Removed standard columns.push since it's now in useMemo initialization
 
@@ -1426,10 +1412,15 @@ export function InventoryManager({
         </div>
       ),
     };
+    const dataCols = buildInventoryGridColumns(category, {
+      mode: 'busy',
+      currencySymbol: standards.currencySymbol,
+      business,
+    });
     return [
       statusCol,
       pinnedActions,
-      ...getDomainTableColumns(category, standards.currencySymbol)
+      ...dataCols,
     ].filter(Boolean);
   }, [category, columns, standards.currencySymbol]);
 
@@ -1489,7 +1480,7 @@ export function InventoryManager({
           efficiencyClass:
             abcAnalysis.length > 0
               ? `Class ${abcStats.A.count >= abcStats.B.count && abcStats.A.count >= abcStats.C.count ? 'A' : abcStats.B.count >= abcStats.C.count ? 'B' : 'C'}`
-              : ', ',
+              : 'N/A',
         }}
       />
 
@@ -1661,89 +1652,46 @@ export function InventoryManager({
                   data={productsToDisplay}
                   columns={gridColumns}
                   category={category}
+                  getFieldSuggestions={getFieldSuggestions}
                   onRowClick={(product) => {
                     setEditingProduct(product);
                     setShowProductFormInternal(true);
                   }}
                   onAddRow={async () => {
-                    // One-click quick add for Busy Mode
-                    if (onQuickAdd) {
-                      await onQuickAdd();
-                    } else {
-                      await (onAdd ? onAdd() : setShowProductFormInternal(true));
-                    }
+                    const previousRow = getLastRowForDefaults(productsToDisplay);
+                    const newRow = buildNewInventoryRow(category, businessId, previousRow, { countryIso });
+                    setProducts((prev) => [...prev, newRow]);
                   }}
                   className="h-full"
                   onDeleteRow={(product) => setProductToDelete(product)}
                   onAdvancedSettings={(product) => { setSelectedProduct(product); setShowAdvancedFeatures(true); }}
                   onCellEdit={async (product, field, value) => {
-                    // [OK] ENHANCED: Preserve batches, add error handling, optimistic updates
-                    let processedValue = value;
-                    const numericFields = [
-                      'stock', 'price', 'cost_price', 'costPrice',
-                      'minStock', 'min_stock', 'maxStock', 'max_stock',
-                      'reorderPoint', 'reorder_point', 'reorderQuantity', 'reorder_quantity',
-                      'mrp', 'taxPercent', 'tax_percent', 'unitcost'
-                    ];
-
-                    if (numericFields.includes(field) || field.includes('width') || field.includes('length')) {
-                      const n = parseFloat(String(value).replace(/,/g, ''));
-                      processedValue = Number.isFinite(n) ? n : 0;
-                    }
+                    const scalarKey = field.includes('.') ? field.split('.').pop() : field;
+                    const processedValue = processFieldValue(scalarKey, value);
 
                     const prevFieldVal = readInventoryFieldValue(product, field, domainKnowledge, category);
                     if (busyFieldValueUnchanged(prevFieldVal, processedValue)) {
                       return;
                     }
 
-                    let updatedProduct;
-                    try {
-                      updatedProduct = structuredClone(product);
-                    } catch {
-                      updatedProduct = { ...product };
-                    }
-                    updatedProduct.domain_data = parseProductDomainData(updatedProduct.domain_data);
+                    let updatedProduct = mapProductField(
+                      { ...product, domain_data: parseProductDomainData(product.domain_data) },
+                      field,
+                      value,
+                      domainKnowledge
+                    );
 
-                    // Handle nested keys (e.g., 'domain_data.article')
-                    if (field.includes('.')) {
-                      const parts = field.split('.');
-                      let current = updatedProduct;
-                      for (let i = 0; i < parts.length - 1; i++) {
-                        if (!current[parts[i]]) current[parts[i]] = {};
-                        current = current[parts[i]];
-                      }
-                      current[parts[parts.length - 1]] = processedValue;
-                    } else {
-                      // Check if it's a domain field that should be in domain_data
-                      const isDomainField = domainKnowledge?.productFields?.some(
-                        (f) => resolveDomainFieldKey(f, category) === field || normalizeKey(f) === field
-                      );
-                      if (isDomainField) {
-                        const domainKey = resolveDomainFieldKey(
-                          domainKnowledge.productFields.find(
-                            (f) => resolveDomainFieldKey(f, category) === field || normalizeKey(f) === field
-                          ) || field,
-                          category
-                        );
-                        updatedProduct.domain_data = {
-                          ...updatedProduct.domain_data,
-                          [domainKey]: processedValue,
-                        };
-                        if (domainKey === 'vehiclemake') {
-                          updatedProduct.brand = processedValue;
-                        }
-                      } else {
-                        updatedProduct[field] = processedValue;
-                      }
-                    }
-
-                    if (field === 'unitcost') {
+                    if (field === 'unitcost' || field === 'domain_data.unitcost') {
                       const n = Number(processedValue);
                       if (Number.isFinite(n) && n >= 0) updatedProduct.cost_price = n;
                     }
+                    if (field === 'domain_data.vehiclemake') {
+                      updatedProduct.brand = processedValue;
+                    }
 
-                    // [OK] CRITICAL: Only meaningful batch/serial rows, placeholders must not block headline stock saves
                     const originalProduct = products.find((p) => rowsMatchInventoryRow(p, product));
+                    updatedProduct = preserveRelationalData(updatedProduct, originalProduct);
+
                     const meaningfulBatches = isBatchTrackingEnabled(category)
                       ? filterMeaningfulBatches(originalProduct?.batches || updatedProduct.batches || [])
                       : [];
@@ -1759,18 +1707,35 @@ export function InventoryManager({
                     updatedProduct.batches = meaningfulBatches;
                     updatedProduct.serial_numbers = meaningfulSerials;
 
-                    // Draft rows (no persisted id): local state only, never call updateProductAction
+                    // Draft rows (no persisted id): local state; persist via composite once name is set
                     if (!updatedProduct?.id) {
                       setProducts((prev) =>
                         prev.map((p) => (rowsMatchInventoryRow(p, product) ? updatedProduct : p))
                       );
-                      if (typeof window !== 'undefined') {
-                        const rk = updatedProduct._tempId != null ? String(updatedProduct._tempId) : '';
-                        if (rk) {
-                          window.dispatchEvent(
-                            new CustomEvent('tenvo:inventory-busy-cell-saved', { detail: { rowKey: rk, field } })
+                      const tempKey = updatedProduct._tempId != null ? String(updatedProduct._tempId) : '';
+                      const trimmedName = String(updatedProduct.name || '').trim();
+                      if (
+                        tempKey &&
+                        trimmedName &&
+                        typeof onUpdate === 'function' &&
+                        !busyDraftCreateRef.current.has(tempKey)
+                      ) {
+                        busyDraftCreateRef.current.add(tempKey);
+                        try {
+                          await handleCreateProduct(
+                            { ...updatedProduct, business_id: businessId },
+                            { closeForm: false, silentToast: true }
                           );
+                          setProducts((prev) => prev.filter((p) => p._tempId !== updatedProduct._tempId));
+                        } catch (createErr) {
+                          busyDraftCreateRef.current.delete(tempKey);
+                          console.error('Busy draft create failed:', createErr);
                         }
+                      }
+                      if (typeof window !== 'undefined' && tempKey) {
+                        window.dispatchEvent(
+                          new CustomEvent('tenvo:inventory-busy-cell-saved', { detail: { rowKey: tempKey, field } })
+                        );
                       }
                       return;
                     }
@@ -1787,7 +1752,26 @@ export function InventoryManager({
 
                     try {
                       if (onUpdate) {
-                        await onUpdate(updatedProduct);
+                        const mappedForSave = mapExcelRowForSave(updatedProduct, category);
+                        await onUpdate({
+                          ...leanProductPayloadForUpdate(mappedForSave),
+                          id: updatedProduct.id,
+                          business_id: businessId,
+                          batches:
+                            meaningfulBatches.length > 0
+                              ? meaningfulBatches
+                              : filterMeaningfulBatches(mappedForSave.batches ?? originalProduct?.batches ?? []),
+                          serial_numbers:
+                            meaningfulSerials.length > 0
+                              ? meaningfulSerials
+                              : filterMeaningfulSerials(
+                                  mappedForSave.serial_numbers ??
+                                    mappedForSave.serialNumbers ??
+                                    originalProduct?.serial_numbers ??
+                                    originalProduct?.serialNumbers ??
+                                    []
+                                ),
+                        });
                         if (busyCellSaveGenRef.current.get(saveKey) !== gen) return;
                         if (typeof window !== 'undefined') {
                           window.dispatchEvent(
@@ -2054,23 +2038,13 @@ export function InventoryManager({
                     Switch Product
                   </Button>
                 </div>
-                <VariantManager
-                  value={selectedProduct.variants || []}
-                  onChange={async (variants) => {
-                    const updatedProduct = { ...selectedProduct, variants };
-                    // Optimistic update
-                    setSelectedProduct(updatedProduct);
-                    // Persist to server
-                    try {
-                      await handleUpdateProduct(updatedProduct, { closeForm: false });
-                    } catch (err) {
-                      // Rollback on error
-                      setSelectedProduct(selectedProduct);
-                      console.error('Failed to update variants:', err);
-                    }
-                  }}
+                <VariantMatrixEditor
                   product={selectedProduct}
-                  category={category}
+                  businessId={selectedProduct.business_id || business?.id}
+                  onVariantsUpdated={async () => {
+                    await refreshData?.();
+                  }}
+                  onClose={() => setSelectedProduct(null)}
                 />
               </div>
             ) : (
@@ -2588,10 +2562,8 @@ export function InventoryManager({
               if (editingProduct) {
                 await handleUpdateProduct({ ...editingProduct, ...data }, { closeForm: true });
               } else {
-                await handleAddProduct(data);
+                await handleCreateProduct(data, { closeForm: true });
               }
-              setShowProductFormInternal(false);
-              setEditingProduct(null);
             }}
             onCancel={() => {
               setShowProductFormInternal(false);
@@ -2694,7 +2666,7 @@ export function InventoryManager({
         isOpen={showQuickAddModal}
         onClose={() => setShowQuickAddModal(false)}
         onSave={async (data) => {
-          await handleAddProduct(data);
+          await handleCreateProduct(data, { closeForm: false });
           setShowQuickAddModal(false);
         }}
         category={category}
@@ -2714,7 +2686,7 @@ export function InventoryManager({
         <QuickAddTemplates
           domain={category}
           currency={currency}
-          onAddProduct={handleAddProduct}
+          onAddProduct={handleCreateProduct}
           open={showTemplatesModal}
           onOpenChange={setShowTemplatesModal}
           hideTrigger
@@ -2727,6 +2699,15 @@ export function InventoryManager({
         data={products}
         columns={columns.filter(c => c.id !== 'actions')}
         onSave={handleExcelSave}
+        getFieldSuggestions={getFieldSuggestions}
+        onAddRow={(previousRow) =>
+          buildNewInventoryRow(
+            category,
+            businessId,
+            previousRow || getLastRowForDefaults(products),
+            { countryIso }
+          )
+        }
         onDeleteRow={async (row) => {
           if (row?.id) {
             await handleDeleteProduct(row.id);

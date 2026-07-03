@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Menu, X, ChevronDown, Package, Receipt, Briefcase, Store, Factory, Globe, ShoppingBag, UtensilsCrossed, Megaphone, Heart, Brain } from 'lucide-react';
+import { Menu, X, ChevronDown, Package, Receipt, Briefcase, Store, Factory, Globe, ShoppingBag, UtensilsCrossed, Megaphone, Heart, Brain, Shirt, Pill, Cog, CarFront, Sofa, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackNavMenuOpen, trackCTAClick } from '@/lib/analytics/tracking';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -13,6 +13,7 @@ import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 import { cn } from '@/lib/utils';
 import { MARKETING_NAV_HEIGHT } from '@/lib/utils/marketingLayout';
 import { modulesForNav } from '@/lib/marketing/capabilities';
+import { INDUSTRY_PLANS_NAV, listIndustryPlanNavItems } from '@/lib/marketing/domainPackageNav';
 
 /**
  * MarketingNav Component
@@ -25,7 +26,7 @@ export default function MarketingNav({
   showAuthButtons = true
 }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState(null);
   const [scrolled, setScrolled] = useState(false);
@@ -62,6 +63,16 @@ export default function MarketingNav({
     router.push(href);
   };
 
+  const handleLogout = async () => {
+    trackCTAClick('nav', 'Log out', '/login');
+    setMobileMenuOpen(false);
+    try {
+      await signOut();
+    } catch {
+      router.push('/login');
+    }
+  };
+
   const navClasses = `sticky top-0 z-50 transition-all duration-300 ${transparent && !scrolled
       ? 'bg-transparent'
       : 'bg-white/90 backdrop-blur-2xl border-b border-neutral-200/50 shadow-[0_4px_24px_-12px_rgba(0,0,0,0.1)]'
@@ -73,6 +84,16 @@ export default function MarketingNav({
   const enterpriseCore = modulesForNav('enterpriseCore');
   const verticals = modulesForNav('verticals');
   const growth = modulesForNav('growth');
+  const industryPlans = listIndustryPlanNavItems();
+
+  const industryPlanIcons = {
+    Shirt,
+    Pill,
+    Cog,
+    CarFront,
+    Sofa,
+    Sparkles,
+  };
 
   const navIcons = {
     inventory: Package,
@@ -91,7 +112,7 @@ export default function MarketingNav({
   const verticalHrefs = {
     pos: '/features#pos-hospitality',
     manufacturing: '/features#manufacturing',
-    'sales-pipeline': '/register?domain=wholesale-distribution',
+    'sales-pipeline': '/solutions/clothing-commerce#wholesale',
     storefront: '/features#storefront',
     restaurant: '/features#pos-hospitality',
   };
@@ -99,7 +120,7 @@ export default function MarketingNav({
   return (
     <nav className={navClasses} aria-label="Primary marketing">
       <div className="mx-auto max-w-[1440px] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(0.25rem,env(safe-area-inset-top))] sm:pl-7 sm:pr-7 lg:pl-10 lg:pr-10 xl:pl-14 xl:pr-14 2xl:pl-16 2xl:pr-16">
-        <div className={cn('flex items-center justify-between gap-3 sm:gap-6 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:justify-items-stretch lg:gap-x-8 xl:gap-x-10', MARKETING_NAV_HEIGHT)}>
+        <div className={cn('flex items-center justify-between gap-3 sm:gap-6 xl:grid xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:items-center xl:justify-items-stretch xl:gap-x-8 2xl:gap-x-10', MARKETING_NAV_HEIGHT)}>
           {/* Logo - keep a hard gutter so the first nav control never overlaps the wordmark */}
           <Link
             href="/"
@@ -110,7 +131,7 @@ export default function MarketingNav({
 
           {/* Desktop: primary links in the middle column (minmax(0,1fr) allows shrink without colliding into logo) */}
           <div
-            className="hidden min-w-0 justify-self-stretch overflow-visible lg:flex lg:items-center lg:justify-center lg:pl-2 xl:pl-4 2xl:pl-6"
+            className="hidden min-w-0 justify-self-stretch overflow-visible xl:flex xl:items-center xl:justify-center xl:pl-4 2xl:pl-6"
             role="navigation"
             aria-label="Product pages"
           >
@@ -171,6 +192,48 @@ export default function MarketingNav({
                 </div>
               </NavDropdown>
 
+              <NavDropdown
+                label={INDUSTRY_PLANS_NAV.label}
+                isOpen={expandedMenu === 'industry-plans'}
+                onToggle={() => toggleMenu('industry-plans')}
+                triggerClassName={navItemClass}
+              >
+                <div className="w-[min(96vw,40rem)] p-4 sm:p-6">
+                  <div className="mb-4 flex items-start justify-between gap-4 border-b border-neutral-100 pb-4">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                        {INDUSTRY_PLANS_NAV.hubEyebrow}
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-neutral-600">
+                        Vertical module mixes, limits, and storefront presets
+                      </p>
+                    </div>
+                    <Link
+                      href={INDUSTRY_PLANS_NAV.hubPath}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-brand-primary transition-colors hover:bg-brand-primary/5"
+                      onClick={() => setExpandedMenu(null)}
+                    >
+                      View all
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                    </Link>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {industryPlans.map((item) => {
+                      const Icon = industryPlanIcons[item.icon] || Sparkles;
+                      return (
+                        <DropdownLink
+                          key={item.key}
+                          href={item.href}
+                          icon={<Icon className="w-5 h-5" />}
+                          title={item.label}
+                          desc={item.tagline}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </NavDropdown>
+
               <button type="button" className={navItemClass} onClick={() => router.push('/features')}>
                 Features
               </button>
@@ -222,14 +285,23 @@ export default function MarketingNav({
           {/* Right: auth (desktop) + menu toggle (mobile). WhatsApp / currency live in footer & contact. */}
           <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 sm:gap-3">
             {showAuthButtons ? (
-              <div className="hidden items-center gap-2 border-l border-neutral-200/80 pl-3 sm:gap-2.5 sm:pl-4 lg:flex xl:gap-3 xl:pl-5">
+              <div className="hidden items-center gap-2 border-l border-neutral-200/80 pl-3 sm:gap-2.5 sm:pl-4 xl:flex xl:gap-3 xl:pl-5">
                 {user ? (
-                  <Button
-                    onClick={() => handleCTAClick('nav', 'Enter Dashboard', '/multi-business')}
-                    className="h-10 shrink-0 rounded-full bg-brand-primary px-4 font-semibold text-white shadow-brand transition-all hover:bg-brand-primary-dark active:scale-[0.98] xl:px-5"
-                  >
-                    Enter Dashboard
-                  </Button>
+                  <>
+                    <Button
+                      onClick={() => handleCTAClick('nav', 'Enter Dashboard', '/multi-business')}
+                      className="h-10 shrink-0 rounded-full bg-brand-primary px-4 font-semibold text-white shadow-brand transition-all hover:bg-brand-primary-dark active:scale-[0.98] xl:px-5"
+                    >
+                      Enter Dashboard
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={handleLogout}
+                      className="h-10 shrink-0 rounded-lg px-2.5 font-semibold text-neutral-700 hover:bg-neutral-100 xl:px-3"
+                    >
+                      Log out
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Button
@@ -254,7 +326,7 @@ export default function MarketingNav({
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-xl p-2 text-gray-600 transition-colors hover:bg-gray-100 lg:hidden"
+              className="rounded-xl p-2 text-gray-600 transition-colors hover:bg-gray-100 xl:hidden"
               aria-label="Toggle menu"
               aria-expanded={mobileMenuOpen}
             >
@@ -264,9 +336,9 @@ export default function MarketingNav({
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile / tablet menu (shown below xl where the horizontal nav has no room) */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-gray-100 bg-white animate-in slide-in-from-top-4 duration-300 max-h-[calc(100dvh-3.5rem-env(safe-area-inset-top))] overflow-y-auto overscroll-contain">
+        <div className="xl:hidden border-t border-gray-100 bg-white animate-in slide-in-from-top-4 duration-300 max-h-[calc(100dvh-3.5rem-env(safe-area-inset-top))] overflow-y-auto overscroll-contain">
           <div className="space-y-1 p-4 pb-6">
             <button
               className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-neutral-50 hover:text-brand-primary-dark"
@@ -280,6 +352,26 @@ export default function MarketingNav({
             >
               Pricing
             </button>
+            <p className="px-3 pt-3 text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
+              {INDUSTRY_PLANS_NAV.label}
+            </p>
+            <button
+              type="button"
+              className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-bold text-brand-primary transition-colors hover:bg-brand-primary/5"
+              onClick={() => router.push(INDUSTRY_PLANS_NAV.hubPath)}
+            >
+              Compare all industry plans
+            </button>
+            {industryPlans.map((item) => (
+              <button
+                key={item.href}
+                type="button"
+                className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-neutral-50 hover:text-brand-primary-dark"
+                onClick={() => router.push(item.href)}
+              >
+                {item.label}
+              </button>
+            ))}
             <button
               className="w-full rounded-xl px-3 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-neutral-50 hover:text-brand-primary-dark"
               onClick={() => router.push('/solutions/marketing-crm')}
@@ -332,12 +424,21 @@ export default function MarketingNav({
           {showAuthButtons && (
             <div className="flex flex-col gap-2 border-t border-neutral-100 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
               {user ? (
-                <Button
-                  className="w-full h-12 bg-brand-primary font-semibold text-white rounded-xl shadow-brand"
-                  onClick={() => handleCTAClick('mobile-nav', 'Enter Dashboard', '/multi-business')}
-                >
-                  Enter Dashboard
-                </Button>
+                <>
+                  <Button
+                    className="w-full h-12 bg-brand-primary font-semibold text-white rounded-xl shadow-brand"
+                    onClick={() => handleCTAClick('mobile-nav', 'Enter Dashboard', '/multi-business')}
+                  >
+                    Enter Dashboard
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 font-bold rounded-xl"
+                    onClick={handleLogout}
+                  >
+                    Log out
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button

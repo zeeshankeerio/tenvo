@@ -20,6 +20,7 @@ import {
   resolvePharmacyCategoryNav,
 } from '@/lib/storefront/pharmacyStorefront';
 import { PharmacyMobileMenu } from '@/components/storefront/pharmacy/PharmacyMobileMenu';
+import { resolveStorefrontLogo } from '@/lib/storefront/resolveStorefrontLogo';
 import { usePharmacyChrome } from '@/components/storefront/pharmacy/PharmacyChromeContext';
 
 /**
@@ -46,6 +47,7 @@ export function PharmacySiteHeader({ business, settings }) {
   const contact = resolveStoreContact({ business, settings });
   const storeRoot = `/store/${businessDomain}`;
   const displayName = formatPharmacyStoreName(business?.business_name);
+  const storeLogoUrl = resolveStorefrontLogo(business, settings);
   const announcement = settings?.announcement || 'Genuine medicines · Pharmacist support';
   const freeShip = settings?.freeShippingThreshold;
   const categoryItems = resolvePharmacyCategoryNav(settings, storeRoot);
@@ -148,9 +150,9 @@ export function PharmacySiteHeader({ business, settings }) {
           <div className="space-y-2 py-2 lg:hidden">
             <div className="flex items-center gap-2">
               <Link href={storeRoot} className="flex min-w-0 shrink-0 items-center gap-2">
-                {business?.logo_url ? (
+                {storeLogoUrl ? (
                   <SmartProductImage
-                    src={business.logo_url}
+                    src={storeLogoUrl}
                     alt={displayName}
                     width={96}
                     height={28}
@@ -186,9 +188,9 @@ export function PharmacySiteHeader({ business, settings }) {
           {/* Desktop main bar */}
           <div className="hidden h-[60px] items-center gap-4 lg:flex">
             <Link href={storeRoot} className="flex shrink-0 items-center gap-2.5">
-              {business?.logo_url ? (
+              {storeLogoUrl ? (
                 <SmartProductImage
-                  src={business.logo_url}
+                  src={storeLogoUrl}
                   alt={displayName}
                   width={132}
                   height={36}

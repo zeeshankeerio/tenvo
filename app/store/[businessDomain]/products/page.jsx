@@ -10,6 +10,14 @@ import { SearchBar } from '@/components/storefront/SearchBar';
 import { CategoryNav } from '@/components/storefront/CategoryNav';
 import { ProductsSkeleton } from '@/components/storefront/LoadingSkeletons';
 import { SortDropdown, ActiveFilters, ViewToggle } from '@/components/storefront/ProductsToolbar';
+import { isDemoStoreDomain } from '@/lib/storefront/elevatedStorefrontTenant';
+import {
+  isFitnessElevatedStore,
+  filterFitnessShopCategories,
+  buildFitnessShopCatalog,
+  paginateFitnessShopCatalog,
+  isFitnessBookableCategory,
+} from '@/lib/storefront/fitnessStorefront';
 
 export async function generateMetadata({ params, searchParams }) {
   const { businessDomain } = await params;
@@ -61,6 +69,7 @@ export default async function ProductsPage({ params, searchParams }) {
   }
 
   const { business } = businessResult;
+  const fitnessStore = isFitnessElevatedStore(business.category);
 
   // Parse filters from search params
   const filters = {
@@ -83,6 +92,9 @@ export default async function ProductsPage({ params, searchParams }) {
     body: typeof sp?.body === 'string' ? sp.body : undefined,
     fuel: typeof sp?.fuel === 'string' ? sp.fuel : undefined,
     condition: typeof sp?.condition === 'string' ? sp.condition : undefined,
+    fabric: typeof sp?.fabric === 'string' ? sp.fabric : undefined,
+    sourcing: typeof sp?.sourcing === 'string' ? sp.sourcing : undefined,
+    size: typeof sp?.size === 'string' ? sp.size : undefined,
     page: parseInt(sp?.page || '1', 10) || 1,
     limit: 24,
   };
@@ -90,9 +102,14 @@ export default async function ProductsPage({ params, searchParams }) {
 
   // Fetch categories for filters
   const categoriesResult = await getCategories(business.id);
-  const categories = categoriesResult.success ? categoriesResult.categories : [];
+  const categoriesRaw = categoriesResult.success ? categoriesResult.categories : [];
+  const categories = fitnessStore ? filterFitnessShopCategories(categoriesRaw) : categoriesRaw;
 
   const categoryMeta = filters.category ? categories.find((c) => c.slug === filters.category) : null;
+  const bookableCategoryRequested =
+    fitnessStore &&
+    filters.category &&
+    isFitnessBookableCategory({ slug: filters.category, name: categoryMeta?.name || filters.category });
   const heroTitle = filters.search
     ? filters.searchMode === 'partNumber'
       ? `Part number: ${filters.search}`
@@ -106,8 +123,12 @@ export default async function ProductsPage({ params, searchParams }) {
     : filters.brand && filters.model
       ? `Parts for ${filters.brand} ${filters.model}`
       : filters.brand
-        ? `Parts for ${filters.brand}`
-        : filters.onSale
+        ? `Shop ${filters.brand}`
+        : filters.fabric
+          ? `${filters.fabric} collection`
+          : filters.sourcing
+            ? `${filters.sourcing.charAt(0).toUpperCase()}${filters.sourcing.slice(1)} fashion`
+            : filters.onSale
           ? 'On sale'
           : filters.sort === 'newest'
             ? 'New arrivals'
@@ -135,9 +156,13 @@ export default async function ProductsPage({ params, searchParams }) {
           </nav>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{heroTitle}</h1>
           <p className="text-gray-600">
-            {filters.search
-              ? `Found listings across ${business.business_name}. Use filters to narrow results.`
-              : `Shop the catalog at ${business.business_name}. Prices and availability update in real time.`}
+            {bookableCategoryRequested
+              ? 'Memberships and personal training are booked from the gym homepage, not the supplement shop.'
+              : filters.search
+                ? `Found listings across ${business.business_name}. Use filters to narrow results.`
+                : fitnessStore
+                  ? `Supplements, nutrition, and gym gear from ${business.business_name}. Memberships and training sessions are booked separately.`
+                  : `Shop the catalog at ${business.business_name}. Prices and availability update in real time.`}
           </p>
         </div>
       </div>
@@ -194,11 +219,13 @@ export default async function ProductsPage({ params, searchParams }) {
             
             {/* Products */}
             <Suspense fallback={<ProductsSkeleton count={12} density="catalog" />}>
-              <ProductGridContent 
+              <ProductGridContent
                 businessId={business.id}
                 businessDomain={businessDomain}
                 filters={filters}
                 view={view}
+                fitnessStore={fitnessStore}
+                bookableCategoryRequested={bookableCategoryRequested}
               />
             </Suspense>
           </main>
@@ -208,9 +235,82 @@ export default async function ProductsPage({ params, searchParams }) {
   );
 }
 
-async function ProductGridContent({ businessId, businessDomain, filters, view = 'grid' }) {
-  const result = await getProducts(businessId, filters);
-  
+async function ProductGridContent({
+  businessId,
+  businessDomain,
+  filters,
+  view = 'grid',
+  fitnessStore = false,
+  bookableCategoryRequested = false,
+}) {
+  if (bookableCategoryRequested) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white px-6 py-12 text-center">
+        <p className="text-sm text-gray-600">
+          Memberships and training sessions are not sold through the supplement catalog.
+        </p>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href={`/store/${businessDomain}#memberships`}
+            className="inline-flex items-center rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:border-rose-400"
+          >
+            View memberships
+          </Link>
+          <Link
+            href={`/store/${businessDomain}#training`}
+            className="inline-flex items-center rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:border-rose-400"
+          >
+            View training
+          </Link>
+          <Link
+            href={`/store/${businessDomain}/products`}
+            className="inline-flex items-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+          >
+            Shop supplements
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (fitnessStore && isDemoStoreDomain(businessDomain)) {
+    const catalogResult = await getProducts(businessId, {
+      fitnessShopCatalog: true,
+      page: 1,
+      limit: 500,
+      sort: 'popularity',
+    });
+
+    if (!catalogResult.success) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-500">Failed to load products</p>
+        </div>
+      );
+    }
+
+    const merged = buildFitnessShopCatalog(catalogResult.products, businessDomain);
+    const { products, total, hasMore } = paginateFitnessShopCatalog(merged, filters);
+
+    return (
+      <ProductGrid
+        products={products}
+        total={total}
+        hasMore={hasMore}
+        businessDomain={businessDomain}
+        currentPage={filters.page}
+        filters={filters}
+        view={view}
+        density="catalog"
+      />
+    );
+  }
+
+  const result = await getProducts(businessId, {
+    ...filters,
+    fitnessShopCatalog: fitnessStore || undefined,
+  });
+
   if (!result.success) {
     return (
       <div className="text-center py-12">
@@ -218,9 +318,9 @@ async function ProductGridContent({ businessId, businessDomain, filters, view = 
       </div>
     );
   }
-  
+
   const { products, total, hasMore } = result;
-  
+
   return (
     <ProductGrid
       products={products}

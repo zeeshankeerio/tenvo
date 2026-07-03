@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   ClipboardList,
   Loader2,
+  Trash2,
+  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -42,15 +44,23 @@ function formatDistanceToNow(dateString) {
 
 const notificationIcons = {
   order: ShoppingCart,
+  storefront_order: ShoppingCart,
   payment: DollarSign,
   inventory: Package,
+  low_stock: AlertTriangle,
+  out_of_stock: AlertTriangle,
+  storefront_contact: MessageSquare,
   system: AlertCircle,
 };
 
 const notificationColors = {
   order: 'bg-info-light text-info-dark',
+  storefront_order: 'bg-info-light text-info-dark',
   payment: 'bg-success-light text-success-dark',
   inventory: 'bg-warning-light text-warning-dark',
+  low_stock: 'bg-warning-light text-warning-dark',
+  out_of_stock: 'bg-danger-light text-danger-dark',
+  storefront_contact: 'bg-brand-50 text-brand-primary-dark',
   system: 'bg-brand-50 text-brand-primary-dark',
 };
 
@@ -66,6 +76,7 @@ export function NotificationBell({ className }) {
     markAsRead,
     markAllAsRead,
     dismissNotification,
+    clearAll,
     refetch,
   } = useNotifications();
   const { alerts, alertCount, handleAlertClick } = useHubOperationalAlerts();
@@ -160,12 +171,25 @@ export function NotificationBell({ className }) {
                     {isConnected ? ' · Live' : ' · Saved'}
                   </p>
                 </div>
-                {unreadCount > 0 && (
-                  <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-7 text-[11px]">
-                    <Check className="mr-1 h-3 w-3" />
-                    Mark read
-                  </Button>
-                )}
+                <div className="flex items-center gap-1">
+                  {unreadCount > 0 && (
+                    <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-7 text-[11px]">
+                      <Check className="mr-1 h-3 w-3" />
+                      Mark read
+                    </Button>
+                  )}
+                  {sortedNotifications.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearAll}
+                      className="h-7 text-[11px] text-neutral-500 hover:text-danger-dark"
+                    >
+                      <Trash2 className="mr-1 h-3 w-3" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {error && (

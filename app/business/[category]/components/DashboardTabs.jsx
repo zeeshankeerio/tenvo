@@ -40,6 +40,7 @@ const ShiftScheduler = dynamic(() => import('@/components/hr/ShiftScheduler').th
 const ApprovalInbox = dynamic(() => import('@/components/workflow/ApprovalInbox').then(mod => mod.ApprovalInbox));
 const WorkflowBuilder = dynamic(() => import('@/components/workflow/WorkflowBuilder').then(mod => mod.WorkflowBuilder));
 const LoyaltyManager = dynamic(() => import('@/components/crm/LoyaltyManager').then(mod => mod.LoyaltyManager));
+const MembershipManager = dynamic(() => import('@/components/crm/MembershipManager').then(mod => mod.MembershipManager));
 const PosRefundPanel = dynamic(() => import('@/components/pos/PosRefundPanel').then(mod => mod.PosRefundPanel));
 const AuditTrailViewer = dynamic(() => import('@/components/audit/AuditTrailViewer').then(mod => mod.AuditTrailViewer));
 const PromotionEngine = dynamic(() => import('@/components/crm/PromotionEngine').then(mod => mod.PromotionEngine));
@@ -49,11 +50,12 @@ const AIInsightsPanel = dynamic(() => import('@/components/intelligence/AIInsigh
 const ReportBuilder = dynamic(() => import('@/components/reports/ReportBuilder').then(mod => mod.ReportBuilder));
 const StoreSettingsManager = dynamic(() => import('@/components/StoreSettingsManager').then(mod => mod.StoreSettingsManager));
 const OrdersManager = dynamic(() => import('@/components/orders/OrdersManager').then(mod => mod.OrdersManager));
+const CustomerInquiriesManager = dynamic(() => import('@/components/crm/CustomerInquiriesManager').then(mod => mod.CustomerInquiriesManager));
 const StorefrontTabShell = dynamic(() => import('@/components/storefront/mobile/StorefrontTabShell').then(mod => mod.StorefrontTabShell));
 const TabGuard = dynamic(() => import('@/components/guards/TabGuard').then(mod => mod.TabGuard));
 const ResourceLimitBanner = dynamic(() => import('@/components/ui/ResourceLimitBanner').then(mod => mod.ResourceLimitBanner));
 const NotificationBell = dynamic(() => import('@/components/notifications/NotificationBell').then(mod => mod.NotificationBell));
-import { isPosRelevant, isHospitality, isCampaignRelevant } from '@/lib/config/domains';
+import { isPosRelevant, isHospitality, isCampaignRelevant, isMembershipRelevant } from '@/lib/config/domains';
 
 export function DashboardTabs({
     activeTab,
@@ -92,6 +94,7 @@ export function DashboardTabs({
     const posRelevant = isPosRelevant(category, domainKnowledge);
     const hospitalityDomain = isHospitality(category);
     const campaignRelevant = isCampaignRelevant(category, domainKnowledge);
+    const membershipRelevant = isMembershipRelevant(category);
 
     // Memoized Filtering Logic
     const filteredProducts = React.useMemo(() => {
@@ -266,9 +269,9 @@ export function DashboardTabs({
                         <DomainDashboard
                             businessId={business?.id}
                             category={category}
-                            invoices={filteredInvoices}
-                            products={filteredProducts}
-                            customers={filteredCustomers}
+                            invoices={invoices}
+                            products={products}
+                            customers={customers}
                             dateRange={dateRange}
                             currency={currency}
                             onQuickAction={handlers.handleQuickAction}
@@ -389,6 +392,7 @@ export function DashboardTabs({
                             <CustomersTab
                                 customers={filteredCustomers}
                                 businessId={business?.id}
+                                category={category}
                                 onCustomerDelete={handleDeleteCustomer}
                                 onAdd={() => setShowCustomerForm(true)}
                                 onUpdate={(customer) => {
@@ -814,6 +818,15 @@ export function DashboardTabs({
                     )}
                 </TabsContent>
 
+                {/* --- Customer Inquiries Tab - Storefront contact messages --- */}
+                <TabsContent value="inquiries" className="space-y-6 outline-none">
+                    {wrapTab(
+                        <StorefrontTabShell activeTab="inquiries">
+                            <CustomerInquiriesManager business={business} />
+                        </StorefrontTabShell>
+                    )}
+                </TabsContent>
+
                 <TabsContent value="restaurant" className="space-y-6 outline-none">
                     {wrapTab(
                         <TabGuard
@@ -1054,6 +1067,16 @@ export function DashboardTabs({
                                     <LoyaltyManager businessId={business?.id} />
                                 </div>
                             </div>
+                            </StorefrontTabShell>
+                        </TabGuard>
+                    )}
+                </TabsContent>
+
+                <TabsContent value="memberships" className="space-y-6 outline-none">
+                    {wrapTab(
+                        <TabGuard tabKey="memberships" role={role} planTier={planTier} domainCheck={membershipRelevant} domainTitle="Memberships not relevant for this domain" domainMessage="Membership management is available for gym, spa, salon, and similar service verticals." requiredPlan="professional" featureName="Membership Management" onUpgrade={() => handleTabChange('settings')}>
+                            <StorefrontTabShell activeTab="memberships">
+                            <MembershipManager businessId={business?.id} category={category} />
                             </StorefrontTabShell>
                         </TabGuard>
                     )}

@@ -10,6 +10,7 @@ import { createBusiness, checkDomainAvailabilityAction, completeRegistrationSetu
 import { domainKnowledge, getDomainKnowledge } from '@/lib/domainKnowledge';
 import { getBrandPlaceholderExamples } from '@/lib/regionalMarket/index.js';
 import { PLAN_TIERS, PLAN_ORDER, resolvePlanTier } from '@/lib/config/plans';
+import { getDomainPackage } from '@/lib/config/domainPackages';
 import { suggestPlanTier } from '@/lib/config/domains';
 import {
     getRegionalStandards,
@@ -175,6 +176,7 @@ function buildRegistrationFormState(persisted) {
         handle: persisted?.handle || '',
         category: persisted?.category || '',
         planTier: persisted?.planTier || 'free',
+        domainPackageKey: persisted?.domainPackageKey || '',
         logo: persisted?.logo || '',
         currency,
         ntn: persisted?.ntn || '',
@@ -291,6 +293,32 @@ export default function RegisterWizard() {
                 const resolved = resolvePlanTier(planParam);
                 if (PLAN_TIERS[resolved]) {
                     next = { ...next, planTier: resolved };
+                }
+            }
+            const packageParam = params.get('package');
+            if (packageParam) {
+                const pkg = getDomainPackage(packageParam);
+                if (pkg) {
+                    next = { ...next, domainPackageKey: packageParam };
+                    if (!domainParam && pkg.defaultVertical && domainKnowledge[pkg.defaultVertical]) {
+                        const recommendedPlan = recommendedPlanForDomain(pkg.defaultVertical);
+                        next = {
+                            ...next,
+                            category: pkg.defaultVertical,
+                            planTier:
+                                PLAN_ORDER[next.planTier] >= PLAN_ORDER[pkg.recommendedPlanTier || recommendedPlan]
+                                    ? next.planTier
+                                    : pkg.recommendedPlanTier || recommendedPlan,
+                        };
+                    } else if (pkg.recommendedPlanTier && PLAN_TIERS[pkg.recommendedPlanTier]) {
+                        next = {
+                            ...next,
+                            planTier:
+                                PLAN_ORDER[next.planTier] >= PLAN_ORDER[pkg.recommendedPlanTier]
+                                    ? next.planTier
+                                    : pkg.recommendedPlanTier,
+                        };
+                    }
                 }
             }
             return next;
@@ -470,6 +498,7 @@ export default function RegisterWizard() {
             domain: formData.handle,
             category: formData.category || 'retail-shop',
             planTier: formData.planTier || 'free',
+            domainPackageKey: formData.domainPackageKey || undefined,
             currency: formData.currency,
             ntn: formData.ntn,
             description: formData.storeTagline || null,
@@ -504,6 +533,20 @@ export default function RegisterWizard() {
         }
 
         clearRegistrationData();
+        
+        // Check if approval is required (Zoho/Busy-style workflow)
+        if (bizResult.requiresApproval) {
+            // Redirect to pending approval page
+            const pendingPath = `/pending-approval`;
+            if (typeof window !== 'undefined') {
+                window.location.assign(pendingPath);
+            } else {
+                router.replace(pendingPath);
+            }
+            return;
+        }
+        
+        // Platform owner or auto-approved - go directly to dashboard
         const dashboardDomain = String(formData.handle || '').trim().toLowerCase();
         const dashboardPath = `/business/${encodeURIComponent(dashboardDomain)}?tab=dashboard`;
         if (typeof window !== 'undefined') {

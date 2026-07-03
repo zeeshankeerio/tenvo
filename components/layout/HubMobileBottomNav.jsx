@@ -36,7 +36,10 @@ export function HubMobileBottomNav() {
 
   if (!ready) return null;
 
-  const hrefFor = (key) => (key === 'dashboard' ? baseUrl : `${baseUrl}?tab=${key}`);
+  const hrefFor = (key, item) => {
+    if (item?.externalPath) return item.externalPath;
+    return key === 'dashboard' ? baseUrl : `${baseUrl}?tab=${key}`;
+  };
 
   return (
     <>
@@ -68,7 +71,7 @@ export function HubMobileBottomNav() {
             return (
               <li key={item.key} className="flex-1">
                 <Link
-                  href={hrefFor(item.key)}
+                  href={hrefFor(item.key, item)}
                   className={cn(
                     'flex flex-col items-center gap-0.5 px-1 py-2 transition-colors',
                     isActive ? 'text-brand-primary' : 'text-gray-500',
@@ -101,7 +104,7 @@ export function HubMobileBottomNav() {
                 onClick={() => {
                   if (item.locked) return;
                   setMoreOpen(false);
-                  router.push(hrefFor(item.key));
+                  router.push(hrefFor(item.key, item));
                 }}
               />
             ))}

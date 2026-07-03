@@ -11,12 +11,12 @@ import { BusinessLoadingBoundary } from '@/components/guards/BusinessLoadingBoun
 const PlatformAdminPanel = React.lazy(() => import('@/components/admin/PlatformAdminPanel'));
 
 export default function AdminPage() {
-    const { isLoading, isPlatformOwner } = useBusiness();
+    const { isLoading, isPlatformAdmin } = useBusiness();
 
     return (
         <main className="max-w-7xl mx-auto px-4 py-6 md:px-6 space-y-6">
             <BusinessLoadingBoundary isLoading={isLoading}>
-                {isPlatformOwner ? (
+                {isPlatformAdmin ? (
                     <Suspense
                         fallback={
                             <div className="flex items-center justify-center py-20">
@@ -36,7 +36,7 @@ export default function AdminPage() {
                         </CardHeader>
                         <CardContent className="space-y-4 text-sm text-gray-600">
                             <p>
-                                Platform administration is available only to the platform owner account.
+                                Platform administration is available to platform owner and platform admin accounts.
                             </p>
                             <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 w-fit">
                                 <ShieldCheck className="w-4 h-4" />

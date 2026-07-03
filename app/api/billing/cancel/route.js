@@ -3,7 +3,8 @@ import { prismaBase } from '@/lib/db';
 import { cancelSubscription } from '@/lib/payments/stripe';
 import { getSessionUser } from '@/lib/auth/session';
 import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
-import { isManualBillingMode } from '@/lib/config/billingMode';
+import { assertBillingRole } from '@/lib/tenancy/billingAccess';
+import { shouldUseDevInstantBilling } from '@/lib/config/billingMode';
 
 /**
  * POST /api/billing/cancel
@@ -40,6 +41,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
     }
 
+    // Cancellation is a destructive billing action — owner/admin only
+    const roleCheck = await assertBillingRole({ userId: sessionWrap.user.id, businessId, sessionUser: sessionWrap.user });
+    if (!roleCheck.allowed) {
+      return NextResponse.json({ error: roleCheck.error, code: 'INSUFFICIENT_ROLE' }, { status: 403 });
+    }
+
     const business = await prismaBase.businesses.findUnique({
       where: { id: businessId },
     });
@@ -48,7 +55,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
     }
 
-    if (isManualBillingMode()) {
+    if (shouldUseDevInstantBilling()) {
       await prismaBase.$transaction(async (tx) => {
         await tx.businesses.update({
           where: { id: business.id },

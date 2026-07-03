@@ -12,7 +12,6 @@ import { AgingReportsPanel } from '@/components/reports/AgingReportsPanel';
 import toast from 'react-hot-toast';
 
 // Helper for row rendering
-/** @type {React.FC<{label: string, amount: number, type?: 'normal'|'total', indent?: boolean, currency?: import('@/lib/currency').CurrencyCode}>} */
 const ReportRow = ({ label, amount, type = 'normal', indent = false, currency = 'PKR' }) => (
     <div className={`flex justify-between py-2 border-b border-gray-50 ${type === 'total' ? 'font-bold bg-gray-50/50 px-2 rounded mt-1' : ''} ${indent ? 'pl-8' : ''}`}>
         <span className={`${type === 'total' ? 'text-gray-900' : 'text-gray-600'}`}>{label}</span>
@@ -38,8 +37,10 @@ const SectionHeader = ({ title, icon: Icon, color }) => (
  * @param {string} [props.category] optional, reserved for future domain-specific report chrome
  */
 export default function FinancialReports({ businessId }) {
-    const { business, currency: businessCurrencyCode } = useBusiness();
+    const { business, currency: businessCurrencyCode, regionalPack } = useBusiness();
     const reportCurrency = businessCurrencyCode || 'PKR';
+    const taxIdLabel = regionalPack?.taxIdLabel || 'Tax ID';
+    const taxIdLine = business?.ntn ? `${taxIdLabel}: ${business.ntn}` : null;
     const [activeTab, setActiveTab] = useState('pl');
     const [loading, setLoading] = useState(false);
 
@@ -252,7 +253,7 @@ export default function FinancialReports({ businessId }) {
                                     )}
                                     {(business?.ntn || business?.address) && (
                                         <p className="text-gray-500 text-xs mt-1">
-                                            {[business.ntn ? `NTN: ${business.ntn}` : null, business.address].filter(Boolean).join(' · ')}
+                                            {[taxIdLine, business.address].filter(Boolean).join(' · ')}
                                         </p>
                                     )}
                                     <p className="text-gray-500 text-sm mt-1">
@@ -356,7 +357,7 @@ export default function FinancialReports({ businessId }) {
                                     )}
                                     {(business?.ntn || business?.address) && (
                                         <p className="text-gray-500 text-xs mt-1">
-                                            {[business.ntn ? `NTN: ${business.ntn}` : null, business.address].filter(Boolean).join(' · ')}
+                                            {[taxIdLine, business.address].filter(Boolean).join(' · ')}
                                         </p>
                                     )}
                                     <p className="text-gray-500 text-sm mt-1">
@@ -437,7 +438,7 @@ export default function FinancialReports({ businessId }) {
                                     )}
                                     {(business?.ntn || business?.address) && (
                                         <p className="text-gray-500 text-xs mt-1">
-                                            {[business.ntn ? `NTN: ${business.ntn}` : null, business.address].filter(Boolean).join(' · ')}
+                                            {[taxIdLine, business.address].filter(Boolean).join(' · ')}
                                         </p>
                                     )}
                                     <p className="text-gray-500 text-sm mt-1">

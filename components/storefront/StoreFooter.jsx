@@ -18,8 +18,9 @@ import { getStoreFooterCopy } from '@/lib/storefront/storeFooterCopy';
 import { isAutoDealershipStore, getDealershipFooterColumns } from '@/lib/storefront/autoDealership';
 import { isAutoMarketplaceStore, getMarketplaceFooterColumns } from '@/lib/storefront/autoMarketplace';
 import { isPharmacyElevatedStore, getPharmacyFooterColumns, formatPharmacyStoreName } from '@/lib/storefront/pharmacyStorefront';
-import { isAutoPartsStore } from '@/lib/storefront/autoParts';
-import { resolveTcdDealershipLogo } from '@/lib/storefront/tenvoCarDealershipBrand';
+import { isFitnessElevatedStore, getFitnessFooterColumns, formatFitnessStoreName } from '@/lib/storefront/fitnessStorefront';
+import { getTenantMeetingUrl, shouldOfferTenantMeetingLink } from '@/lib/storefront/storefrontBooking';
+import { resolveStorefrontLogo } from '@/lib/storefront/resolveStorefrontLogo';
 
 const TRUST_ICONS = {
   truck: Truck,
@@ -78,6 +79,11 @@ export function StoreFooter({ business, settings }) {
   const dealershipFooter = isAutoDealershipStore(business?.category);
   const marketplaceFooter = isAutoMarketplaceStore(business?.category);
   const pharmacyFooter = isPharmacyElevatedStore(business?.category);
+  const fitnessFooter = isFitnessElevatedStore(business?.category);
+  const fitnessMeetingUrl =
+    fitnessFooter && shouldOfferTenantMeetingLink(business, business?.category, settings)
+      ? getTenantMeetingUrl(business, settings)
+      : null;
   const dealershipColumns = dealershipFooter
     ? getDealershipFooterColumns(`/store/${businessDomain}`, { country: business?.country, settings })
     : [];
@@ -87,17 +93,25 @@ export function StoreFooter({ business, settings }) {
   const pharmacyColumns = pharmacyFooter
     ? getPharmacyFooterColumns(`/store/${businessDomain}`)
     : [];
-  const darkPortalFooter = dealershipFooter || marketplaceFooter;
-  const skipFooterTrustStrip = darkPortalFooter || isAutoPartsStore(business?.category);
+  const fitnessColumns = fitnessFooter
+    ? getFitnessFooterColumns(`/store/${businessDomain}`, categories || [])
+    : [];
+  const darkPortalFooter = dealershipFooter || marketplaceFooter || fitnessFooter;
+  // Generic trust badges (Fast delivery, secure payment, etc.) removed from all storefront footers.
+  const skipFooterTrustStrip = true;
   const portalColumns = dealershipFooter
     ? dealershipColumns
     : marketplaceFooter
       ? marketplaceColumns
-      : pharmacyColumns;
+      : fitnessFooter
+        ? fitnessColumns
+        : pharmacyColumns;
   const displayStoreName = pharmacyFooter
     ? formatPharmacyStoreName(storeName)
-    : storeName;
-  const storeLogoUrl = resolveTcdDealershipLogo(business, settings, business?.logo_url);
+    : fitnessFooter
+      ? formatFitnessStoreName(storeName)
+      : storeName;
+  const storeLogoUrl = resolveStorefrontLogo(business, settings);
 
   const handleNewsletter = async (e) => {
     e.preventDefault();
@@ -157,12 +171,54 @@ export function StoreFooter({ business, settings }) {
   return (
     <footer
       className={cn(
-        'border-t pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0',
-        darkPortalFooter && 'border-neutral-800 bg-neutral-950 text-neutral-300',
-        pharmacyFooter && 'border-emerald-100 bg-white text-slate-600',
-        !darkPortalFooter && !pharmacyFooter && 'border-[var(--store-footer-border)] bg-[var(--store-footer-bg)] text-slate-600'
+        'pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0',
+        fitnessFooter && 'border-t border-white/10 bg-black text-neutral-300',
+        darkPortalFooter && !fitnessFooter && 'border-t border-neutral-800 bg-neutral-950 text-neutral-300',
+        pharmacyFooter && !fitnessFooter && 'border-t border-emerald-100 bg-white text-slate-600',
+        !darkPortalFooter && !pharmacyFooter && !fitnessFooter && 'border-t border-[var(--store-footer-border)] bg-[var(--store-footer-bg)] text-slate-600'
       )}
     >
+      {fitnessFooter ? (
+        <div className="border-b border-white/10 bg-black">
+          <div className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+            <div className="flex flex-col items-center gap-6 text-center lg:flex-row lg:justify-between lg:text-left">
+              <div className="max-w-xl">
+                <h2 className="text-xl font-semibold text-white sm:text-2xl">Train wild today</h2>
+                <p className="mt-2 text-sm text-white/60 sm:text-base">
+                  Shop supplements online or book a session to start your workout journey.
+                </p>
+              </div>
+              <div className="flex w-full flex-wrap items-center justify-center gap-3 sm:w-auto lg:justify-end">
+                <Link
+                  href={`/store/${businessDomain}/products`}
+                  className="inline-flex min-w-[140px] flex-1 items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 sm:flex-none"
+                  style={{ backgroundColor: '#fff' }}
+                >
+                  Shop the store
+                </Link>
+                {fitnessMeetingUrl ? (
+                  <a
+                    href={fitnessMeetingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-w-[140px] flex-1 items-center justify-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:border-rose-500/40 hover:bg-white/5 sm:flex-none"
+                  >
+                    Schedule online
+                    <ExternalLink className="h-4 w-4 opacity-70" aria-hidden />
+                  </a>
+                ) : (
+                  <Link
+                    href={`/store/${businessDomain}/contact`}
+                    className="inline-flex min-w-[140px] flex-1 items-center justify-center rounded-xl border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:border-rose-500/40 hover:bg-white/5 sm:flex-none"
+                  >
+                    Contact us
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {/* Trust strip — skipped on template verticals (homepage already has trust blocks) */}
       {!skipFooterTrustStrip ? (
       <div
@@ -221,7 +277,7 @@ export function StoreFooter({ business, settings }) {
       <div
         className={cn(
           'mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8',
-          pharmacyFooter ? 'py-6 lg:py-8' : darkPortalFooter ? 'py-6 lg:py-8' : 'py-8 lg:py-12'
+          pharmacyFooter ? 'py-6 lg:py-8' : darkPortalFooter ? 'py-5 lg:py-6' : 'py-8 lg:py-12'
         )}
       >
         {/* Mobile trust pills — skipped on template verticals (homepage trust blocks) */}
@@ -260,7 +316,7 @@ export function StoreFooter({ business, settings }) {
           )}
         >
           {/* Brand */}
-          <div className={cn('col-span-2 space-y-3', pharmacyFooter ? 'lg:col-span-3' : 'space-y-4 lg:col-span-4')}>
+          <div className={cn('col-span-2 space-y-3', pharmacyFooter ? 'lg:col-span-3' : fitnessFooter ? 'lg:col-span-4' : 'space-y-4 lg:col-span-4')}>
             <div className="flex items-center gap-2.5">
               {storeLogoUrl ? (
                 <SmartProductImage
@@ -289,13 +345,13 @@ export function StoreFooter({ business, settings }) {
 
             <p className={cn(
               'max-w-sm text-sm leading-relaxed',
-              darkPortalFooter ? 'text-neutral-400' : 'text-slate-500',
+              darkPortalFooter ? 'text-neutral-400 line-clamp-2' : 'text-slate-500',
               pharmacyFooter && 'line-clamp-2 text-xs sm:text-sm'
             )}>
               {footerCopy.tagline}
             </p>
 
-            <div className={cn('space-y-1.5 text-sm', pharmacyFooter && 'hidden sm:block')}>
+            <div className={cn('space-y-1.5 text-sm', (pharmacyFooter || fitnessFooter) && 'hidden sm:block')}>
               {contact.phone ? (
                 <a
                   href={`tel:${contact.phone}`}
@@ -357,7 +413,7 @@ export function StoreFooter({ business, settings }) {
                   <span>{locationLine}</span>
                 </div>
               ) : null}
-              {contact.businessHours ? (
+              {contact.businessHours && !fitnessFooter ? (
                 <div className={cn(
                   'flex items-start gap-2',
                   darkPortalFooter ? 'text-neutral-300' : 'text-slate-600'
@@ -393,8 +449,8 @@ export function StoreFooter({ business, settings }) {
 
           {(darkPortalFooter || pharmacyFooter) ? (
             portalColumns.map((col) => (
-              <div key={col.title} className={cn('self-start', pharmacyFooter ? 'col-span-1 lg:col-span-2' : 'lg:col-span-2')}>
-                <FooterLinkColumn title={col.title} links={col.links} dark={darkPortalFooter} compact={pharmacyFooter} />
+              <div key={col.title} className={cn('self-start', pharmacyFooter ? 'col-span-1 lg:col-span-2' : fitnessFooter ? 'col-span-1 lg:col-span-2' : 'lg:col-span-2')}>
+                <FooterLinkColumn title={col.title} links={col.links} dark={darkPortalFooter} compact={pharmacyFooter || fitnessFooter} />
               </div>
             ))
           ) : (
@@ -416,7 +472,7 @@ export function StoreFooter({ business, settings }) {
           ) : null}
 
           {/* Newsletter, dealership & pharmacy portal includes signup; marketplace omits */}
-          {(!darkPortalFooter || dealershipFooter || pharmacyFooter) ? (
+          {(!darkPortalFooter || dealershipFooter || pharmacyFooter) && !fitnessFooter ? (
           <div className={cn('col-span-2', pharmacyFooter ? 'lg:col-span-3' : 'lg:col-span-2')}>
             <h4 className={cn(
               'mb-2 text-xs font-semibold uppercase tracking-wider',
@@ -489,8 +545,8 @@ export function StoreFooter({ business, settings }) {
         {/* Bottom bar */}
         <div className={cn(
           'flex flex-col items-center gap-3 border-t pt-5 text-center lg:flex-row lg:justify-between lg:text-left',
-          darkPortalFooter ? 'border-neutral-800' : pharmacyFooter ? 'border-emerald-100' : 'border-slate-100',
-          pharmacyFooter ? 'mt-6' : 'mt-10'
+          fitnessFooter ? 'border-white/10' : darkPortalFooter ? 'border-neutral-800' : pharmacyFooter ? 'border-emerald-100' : 'border-slate-100',
+          pharmacyFooter ? 'mt-6' : fitnessFooter ? 'mt-8' : 'mt-10'
         )}>
           <p className={cn('text-xs', darkPortalFooter ? 'text-neutral-500' : 'text-slate-500')}>
             © {new Date().getFullYear()}{' '}

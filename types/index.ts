@@ -341,6 +341,10 @@ export interface Customer {
     domain_data: Record<string, any>;
     opening_balance: number;
     filer_status: string;
+    type?: string | null;
+    notes?: string | null;
+    is_active?: boolean;
+    is_deleted?: boolean;
 }
 
 export interface InvoiceItem {

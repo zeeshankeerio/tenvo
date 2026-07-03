@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { caseStudies } from '@/lib/marketing/case-studies';
 import { MARKETING_SITEMAP_ROUTES } from '@/lib/marketing/seo';
 import { getSiteUrl } from '@/lib/marketing/site-url';
+import { listDomainPackages } from '@/lib/config/domainPackages';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = getSiteUrl();
@@ -21,5 +22,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.65,
   }));
 
-  return [...marketing, ...caseStudyPages];
+  const industryPlanPages = listDomainPackages().map((pkg) => ({
+    url: `${base}${pkg.marketingPath || `/solutions/${pkg.slug}`}`,
+    lastModified,
+    changeFrequency: 'monthly' as const,
+    priority: 0.75,
+  }));
+
+  return [...marketing, ...industryPlanPages, ...caseStudyPages];
 }

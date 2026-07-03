@@ -6,13 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Download, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { accountingAPI } from '@/lib/api/accounting';
+import { useBusiness } from '@/lib/context/BusinessContext';
 import toast from 'react-hot-toast';
 
 /**
  * @param {Object} props
  * @param {string} props.businessId
  */
-export default function TrialBalanceView({ businessId, currency = 'PKR' }) {
+export default function TrialBalanceView({ businessId, currency: currencyProp }) {
+    const { currency: contextCurrency } = useBusiness();
+    const currency = currencyProp || contextCurrency || 'PKR';
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({ trialBalance: [], totals: { debit: 0, credit: 0, balanced: false } });
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);

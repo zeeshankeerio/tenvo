@@ -17,6 +17,8 @@ import { isImmersiveFinderHero, resolveStorefrontCurrency } from '@/lib/storefro
 import { isPharmacyElevatedStore, formatPharmacyStoreName, getPharmacyHeroSlides, resolvePharmacyQuickSearchTerms } from '@/lib/storefront/pharmacyStorefront';
 import { isFurnitureElevatedStore, formatFurnitureStoreName, getFurnitureHeroSlides, resolveFurnitureQuickSearchTerms } from '@/lib/storefront/furnitureStorefront';
 import { isRestaurantElevatedStore, formatRestaurantStoreName, getRestaurantHeroSlides, resolveRestaurantQuickSearchTerms } from '@/lib/storefront/restaurantStorefront';
+import { isFitnessElevatedStore, formatFitnessStoreName, getFitnessHeroSlides, resolveFitnessHeroQuickLinks, resolveFitnessShowcaseProducts } from '@/lib/storefront/fitnessStorefront';
+import { getTenantMeetingUrl, shouldOfferTenantMeetingLink } from '@/lib/storefront/storefrontBooking';
 import { isAutoDealershipStore } from '@/lib/storefront/autoDealership';
 import { TENVO_VEHICLES_METADATA } from '@/lib/storefront/tenvoVehiclesAssets';
 import { isAutoMarketplaceStore } from '@/lib/storefront/autoMarketplace';
@@ -25,28 +27,31 @@ import { StoreBuyerSupportStrip } from '@/components/storefront/StoreBuyerSuppor
 import { DomainHeroRouter } from '@/components/storefront/sections/DomainHeroRouter';
 import { DomainQuickActions } from '@/components/storefront/sections/DomainQuickActions';
 import { DomainDealStrip } from '@/components/storefront/sections/DomainDealStrip';
-import { DomainServicePills } from '@/components/storefront/sections/DomainServicePills';
 import { DomainEditorialSpotlight } from '@/components/storefront/sections/DomainEditorialSpotlight';
 import { StoreMarketingSections } from '@/components/storefront/sections/StoreMarketingSections';
 import { TopCollectionsCarousel } from '@/components/storefront/sections/TopCollectionsCarousel';
 import { TopPicksSection } from '@/components/storefront/sections/TopPicksSection';
 import { FashionDepartmentSections } from '@/components/storefront/sections/fashion/FashionDepartmentSections';
+import { FashionCircleShowcase } from '@/components/storefront/sections/fashion/FashionCircleShowcase';
+import { StoreReveal } from '@/components/storefront/effects/StoreReveal';
 import { trimToShowcaseRows } from '@/lib/storefront/showcaseProducts';
 import { ensureRailProducts } from '@/lib/utils/storefrontProductRail';
 import { buildTopCollections, getTopCollectionsTitle } from '@/lib/storefront/topCollections';
 import { buildTopPicksProducts } from '@/lib/storefront/topPicks';
 import { buildFashionHomeSections } from '@/lib/storefront/fashionHomeSections';
+import { getFashionEditorialConfig } from '@/lib/storefront/fashionEditorial';
 import { DealershipHomeSections } from '@/components/storefront/sections/dealership/DealershipHomeSections';
 import { MarketplaceHomeSections } from '@/components/storefront/sections/marketplace/MarketplaceHomeSections';
 import { PharmacyHomeSections } from '@/components/storefront/sections/pharmacy/PharmacyHomeSections';
 import { FurnitureHomeSections } from '@/components/storefront/sections/furniture/FurnitureHomeSections';
 import { RestaurantHomeSections } from '@/components/storefront/sections/restaurant/RestaurantHomeSections';
+import { FitnessHomeSections } from '@/components/storefront/sections/fitness/FitnessHomeSections';
 import { AutoPartsHomeSections } from '@/components/storefront/sections/autoparts/AutoPartsHomeSections';
 import { isAutoPartsStore } from '@/lib/storefront/autoParts';
 import { cn } from '@/lib/utils';
 import {
-  Truck, Shield, RotateCcw, Star, Zap, Leaf, Clock, Gift,
-  Lock, Tag, ArrowRight, ChevronRight, Package, Sparkles,
+  Truck, RotateCcw,
+  ArrowRight, ChevronRight, Package, Sparkles,
   ShoppingBag
 } from 'lucide-react';
 
@@ -61,7 +66,9 @@ export async function generateMetadata({ params }) {
       ? formatFurnitureStoreName(business.business_name)
       : isRestaurantElevatedStore(business.category)
         ? formatRestaurantStoreName(business.business_name)
-        : business.business_name;
+        : isFitnessElevatedStore(business.category)
+          ? formatFitnessStoreName(business.business_name)
+          : business.business_name;
 
   let description = business.description;
   let keywords = `${storeName}, online store, ${business.city || 'Pakistan'}`;
@@ -81,6 +88,9 @@ export async function generateMetadata({ params }) {
   } else if (isRestaurantElevatedStore(business.category)) {
     description = description || `Order fresh meals and catering from ${storeName}. Browse the live menu with delivery and pickup options.`;
     keywords = `${storeName}, online menu, food ordering${business.city ? `, ${business.city}` : ''}`;
+  } else if (isFitnessElevatedStore(business.category)) {
+    description = description || `Train wild at ${storeName}. Shop supplements, memberships, and book personal training online.`;
+    keywords = `${storeName}, gym, fitness, supplements${business.city ? `, ${business.city}` : ''}`;
   } else {
     description = description || `Shop online at ${storeName}.`;
   }
@@ -97,13 +107,6 @@ export async function generateMetadata({ params }) {
     },
   };
 }
-
-// ─── Icon map for trust badges ────────────────────────────────────────────────
-const BADGE_ICONS = {
-  truck: Truck, shield: Shield, refresh: RotateCcw, star: Star,
-  zap: Zap, leaf: Leaf, clock: Clock, gift: Gift, lock: Lock,
-  tag: Tag, user: Shield, package: Package,
-};
 
 function StoreSectionHeader({ title, subtitle, href, accent, linkLabel = 'View all' }) {
   return (
@@ -153,14 +156,15 @@ export default async function StoreHomePage({ params }) {
   const pharmacyElevatedHero = heroPreset.type === 'pharmacy-elevated';
   const furnitureElevatedHero = heroPreset.type === 'furniture-elevated';
   const restaurantElevatedHero = heroPreset.type === 'restaurant-elevated';
+  const fitnessElevatedHero = heroPreset.type === 'fitness-elevated';
   const autoPartsHero = finderHero && isAutoPartsStore(business.category);
-  const skipHomeNavSections = finderHero || editorialHero || dealershipHero || marketplaceHero || pharmacyElevatedHero || furnitureElevatedHero || restaurantElevatedHero;
+  const skipHomeNavSections = finderHero || editorialHero || dealershipHero || marketplaceHero || pharmacyElevatedHero || furnitureElevatedHero || restaurantElevatedHero || fitnessElevatedHero;
   const copy = getStoreHomeCopy(business, domainCfg, landing);
   const contact = resolveStoreContact({ business, settings });
 
-  const needsCatalogBackfill = !editorialHero && !dealershipHero && !marketplaceHero && !autoPartsHero && !furnitureElevatedHero && !restaurantElevatedHero;
+  const needsCatalogBackfill = !editorialHero && !dealershipHero && !marketplaceHero && !autoPartsHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero;
 
-  const [featuredResult, newArrivalsResult, categoriesResult, onSaleResult, topCatalogResult, catalogSnapshotResult, dealershipCatalogResult, marketplaceCatalogResult, pharmacyCatalogResult, furnitureCatalogResult, restaurantCatalogResult, autoPartsCatalogResult, catalogBackfillResult] = await Promise.all([
+  const [featuredResult, newArrivalsResult, categoriesResult, onSaleResult, topCatalogResult, catalogSnapshotResult, dealershipCatalogResult, marketplaceCatalogResult, pharmacyCatalogResult, furnitureCatalogResult, restaurantCatalogResult, fitnessCatalogResult, autoPartsCatalogResult, catalogBackfillResult] = await Promise.all([
     getProducts(business.id, { limit: 12, sort: 'featured' }),
     getProducts(business.id, { limit: 16, sort: 'newest' }),
     getCategories(business.id),
@@ -184,6 +188,9 @@ export default async function StoreHomePage({ params }) {
       ? getProducts(business.id, { limit: 48, sort: 'popularity' })
       : Promise.resolve({ success: false, products: [] }),
     restaurantElevatedHero
+      ? getProducts(business.id, { limit: 48, sort: 'popularity' })
+      : Promise.resolve({ success: false, products: [] }),
+    fitnessElevatedHero
       ? getProducts(business.id, { limit: 48, sort: 'popularity' })
       : Promise.resolve({ success: false, products: [] }),
     autoPartsHero
@@ -242,14 +249,47 @@ export default async function StoreHomePage({ params }) {
         12
       )
     : [];
+  const fashionConfig = editorialHero ? getFashionEditorialConfig(settings) : null;
   const fashionDepartments = editorialHero
-    ? buildFashionHomeSections({
-        businessDomain,
-        businessCategory: business.category,
-        categories,
-        products: catalogSnapshotResult.success ? catalogSnapshotResult.products : [],
-        newArrivalProducts: newArrivalsRaw,
-      })
+    ? (() => {
+        const built = buildFashionHomeSections({
+          businessDomain,
+          businessCategory: business.category,
+          categories,
+          products: catalogSnapshotResult.success ? catalogSnapshotResult.products : [],
+          newArrivalProducts: newArrivalsRaw,
+          offerProducts: onSaleProductsRaw,
+        });
+        if (!built || !fashionConfig) return built;
+        return {
+          ...built,
+          unstitched: {
+            ...built.unstitched,
+            title: fashionConfig.unstitchedTitle || built.unstitched.title,
+            show: built.unstitched.show && fashionConfig.showUnstitched,
+          },
+          readyToWear: {
+            ...built.readyToWear,
+            title: fashionConfig.readyToWearTitle || built.readyToWear.title,
+            show: built.readyToWear.show && fashionConfig.showReadyToWear,
+          },
+          accessories: {
+            ...built.accessories,
+            title: fashionConfig.accessoriesTitle || built.accessories.title,
+            show: built.accessories.show && fashionConfig.showAccessories,
+          },
+          offers: {
+            ...built.offers,
+            title: fashionConfig.offersTitle || built.offers.title,
+            show: built.offers.show && fashionConfig.showOffers,
+          },
+          newArrivals: {
+            ...built.newArrivals,
+            title: fashionConfig.newArrivalsTitle || built.newArrivals.title,
+            show: built.newArrivals.show && fashionConfig.showNewArrivals,
+          },
+        };
+      })()
     : null;
 
   const pharmacyProducts = pharmacyCatalogResult.success
@@ -264,12 +304,49 @@ export default async function StoreHomePage({ params }) {
     ? restaurantCatalogResult.products
     : buildTopPicksProducts(featuredProducts, popularityBackfill, 48);
 
+  const fitnessProducts = resolveFitnessShowcaseProducts(
+    fitnessCatalogResult.success
+      ? fitnessCatalogResult.products
+      : buildTopPicksProducts(featuredProducts, popularityBackfill, 48),
+    businessDomain
+  );
+
   const restaurantStoreName = formatRestaurantStoreName(business.business_name);
+  const fitnessStoreName = formatFitnessStoreName(business.business_name);
   const pharmacyStoreName = formatPharmacyStoreName(business.business_name);
   const furnitureStoreName = formatFurnitureStoreName(business.business_name);
   const coverImageUrl = business.cover_image_url?.startsWith('http') ? business.cover_image_url : null;
 
-  const immersiveHeroPreset = restaurantElevatedHero
+  const tenantMeetingUrl = shouldOfferTenantMeetingLink(business, business.category, settings)
+    ? getTenantMeetingUrl(business, settings)
+    : null;
+
+  const immersiveHeroPreset = fitnessElevatedHero
+    ? {
+        ...heroPreset,
+        settings,
+        storeName: fitnessStoreName,
+        businessCategory: business.category,
+        meetingUrl: tenantMeetingUrl || undefined,
+        coverImage: coverImageUrl,
+        country: business.country || settings?.contact?.country || null,
+        categories,
+        quickLinks: resolveFitnessHeroQuickLinks(
+          heroPreset.base,
+          settings,
+          fitnessProducts,
+          categories,
+          businessDomain
+        ),
+        slides: getFitnessHeroSlides(heroPreset.base, settings, {
+          storeName: fitnessStoreName,
+          businessDomain,
+          businessDescription: business.description || settings?.description,
+          coverImage: coverImageUrl,
+          products: fitnessProducts,
+        }),
+      }
+    : restaurantElevatedHero
     ? {
         ...heroPreset,
         settings,
@@ -314,7 +391,9 @@ export default async function StoreHomePage({ params }) {
               products: furnitureProducts,
             }),
           }
-        : heroPreset;
+        : editorialHero
+          ? { ...heroPreset, hideRating: fashionConfig ? !fashionConfig.showHeroRating : false }
+          : heroPreset;
 
   const autoPartsProducts = autoPartsCatalogResult.success
     ? autoPartsCatalogResult.products
@@ -322,12 +401,18 @@ export default async function StoreHomePage({ params }) {
 
   return (
     <div className={cn(
-      'min-h-screen antialiased text-slate-900 selection:bg-slate-200',
-      editorialHero ? 'bg-stone-50' : dealershipHero || marketplaceHero || pharmacyElevatedHero || furnitureElevatedHero || restaurantElevatedHero || autoPartsHero ? 'bg-white' : 'bg-slate-50'
+      'min-h-screen antialiased selection:bg-slate-200',
+      fitnessElevatedHero
+        ? 'bg-black text-white'
+        : editorialHero
+          ? 'bg-stone-50 text-slate-900'
+          : dealershipHero || marketplaceHero || pharmacyElevatedHero || furnitureElevatedHero || restaurantElevatedHero || autoPartsHero
+            ? 'bg-white text-slate-900'
+            : 'bg-slate-50 text-slate-900'
     )}>
 
       {/* ── Announcement Banner ─────────────────────────────────────────────── */}
-      {hero.banner && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero ? (
+      {hero.banner && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero ? (
         <div
           className="md:hidden text-white text-center py-2 px-4 text-xs font-medium truncate"
           style={{ backgroundColor: accent }}
@@ -549,29 +634,50 @@ export default async function StoreHomePage({ params }) {
         />
       )}
 
-      {editorialHero && landing.servicePills?.length > 0 && (
-        <DomainServicePills pills={landing.servicePills} accent={accent} />
-      )}
-
-      {editorialHero && topCollections.length > 0 && (
-        <TopCollectionsCarousel title={topCollectionsTitle} items={topCollections} />
-      )}
-
-      {editorialHero && topPicksProducts.length >= 2 && (
-        <TopPicksSection
-          products={topPicksProducts}
+      {fitnessElevatedHero && (
+        <FitnessHomeSections
           businessDomain={businessDomain}
           businessCategory={business.category}
+          business={business}
+          categories={categories}
+          products={fitnessProducts}
+          currency={storeCurrency}
+          accent={accent}
+          base={heroPreset.base}
+          settings={settings}
+          storeName={fitnessStoreName}
+          businessDescription={business.description || settings?.description}
+          country={business.country || settings?.contact?.country}
         />
+      )}
+
+      {editorialHero && fashionConfig?.showTopCollections && topCollections.length > 0 && (
+        <StoreReveal enabled={fashionConfig.animations}>
+          <TopCollectionsCarousel title={topCollectionsTitle} items={topCollections} autoScroll={fashionConfig.animations !== false} />
+        </StoreReveal>
+      )}
+
+      {editorialHero && fashionConfig?.showTopPicks && topPicksProducts.length >= 2 && (
+        <StoreReveal enabled={fashionConfig.animations}>
+          <TopPicksSection
+            products={topPicksProducts}
+            businessDomain={businessDomain}
+            businessCategory={business.category}
+            autoScroll={fashionConfig.animations}
+            accent={accent}
+          />
+        </StoreReveal>
       )}
 
       {editorialHero && fashionDepartments && (
         <FashionDepartmentSections
           sections={fashionDepartments}
           businessDomain={businessDomain}
-          editorialSpotlight={landing.spotlights?.[0]}
+          editorialSpotlight={fashionConfig?.showEditorialSpotlight ? landing.spotlights?.[0] : null}
           accent={accent}
           accentDark={accentDark}
+          animations={fashionConfig ? fashionConfig.animations : true}
+          renderReadyToWear={false}
         />
       )}
 
@@ -620,47 +726,16 @@ export default async function StoreHomePage({ params }) {
       />
       )}
 
-      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
-        <DomainServicePills pills={landing.servicePills} accent={accent} />
-      )}
-
-      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
+      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && !autoPartsHero && (
         <DomainDealStrip dealStrip={landing.dealStrip} accent={accent} accentDark={accentDark} />
       )}
 
-      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
+      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && !autoPartsHero && (
         <StoreMarketingSections
           sections={settings?.pageSections}
           businessDomain={businessDomain}
           accent={accent}
         />
-      )}
-
-      {/* ── Trust Badges (tablet+), skip on parts / editorial / dealership ─ */}
-      {!finderHero && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && (
-        <section className="hidden md:block border-b bg-white">
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {domainCfg.trustBadges.map((badge, i) => {
-              const Icon = BADGE_ICONS[badge.icon] || Shield;
-              return (
-                <div key={i} className="flex items-center gap-4 group">
-                  <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
-                    style={{ backgroundColor: accentLight }}
-                  >
-                    <Icon className="w-6 h-6" style={{ color: accent }} />
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900 text-sm">{badge.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{badge.subtitle}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
       )}
 
       {/* ── Category Cards Grid (tablet+) ─────────────────────────────────── */}
@@ -714,7 +789,7 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {/* ── Featured / primary catalog ───────────────────────────────────── */}
-      {featuredRow.length > 0 && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
+      {featuredRow.length > 0 && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && !autoPartsHero && (
         <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
           <StoreSectionHeader
             title={copy.featuredTitle}
@@ -764,14 +839,11 @@ export default async function StoreHomePage({ params }) {
         </section>
       )}
 
-      {/* ── On Sale, editorial stores need ≥2 items; sparse rows use horizontal rail ─ */}
-      {onSaleRow.length >= (editorialHero ? 2 : 1) && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !autoPartsHero && (
-        <section
-          className={cn(
-            'mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-10',
-            editorialHero && 'border-t border-stone-200 bg-white'
-          )}
-        >
+      {/* ── On Sale (retail grid). Editorial stores use the fashion Offers rail
+             (FashionDepartmentSections) instead, so skip this to avoid a
+             duplicate section and a retail-vs-editorial card clash. ───────── */}
+      {onSaleRow.length >= 1 && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && !autoPartsHero && (
+        <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
           <StoreSectionHeader
             title={copy.onSaleTitle}
             subtitle={copy.onSaleSubtitle}
@@ -785,15 +857,14 @@ export default async function StoreHomePage({ params }) {
               catalogPool={popularityBackfill}
               businessDomain={businessDomain}
               showResultsCount={false}
-              density={editorialHero ? 'default' : 'showcase'}
-              layout={editorialHero && onSaleRow.length < 6 ? 'rail' : 'grid'}
+              density="showcase"
             />
           </Suspense>
         </section>
       )}
 
       {/* ── Free shipping promo (desktop), skip on editorial (avoids 3rd accent banner) ─ */}
-      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && (
+      {!editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && (
       <section className="hidden md:block mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div
           className="relative overflow-hidden rounded-3xl p-8 sm:p-12"
@@ -837,8 +908,23 @@ export default async function StoreHomePage({ params }) {
         />
       )}
 
+      {/* ── Shop by category (Ready to Wear) — anchored just before the footer ─ */}
+      {editorialHero && fashionDepartments?.readyToWear?.show && fashionDepartments.readyToWear.circles?.length > 0 && (
+        <StoreReveal enabled={fashionConfig?.animations !== false}>
+          <FashionCircleShowcase
+            title={fashionDepartments.readyToWear.title}
+            circles={fashionDepartments.readyToWear.circles}
+            viewAllHref={fashionDepartments.readyToWear.viewAllHref}
+            showDivider
+            variant="muted"
+            animate={fashionConfig?.animations !== false}
+            accent={accent}
+          />
+        </StoreReveal>
+      )}
+
       {/* ── New Arrivals (only when catalog has more beyond featured) ───────── */}
-      {showNewArrivals && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && (
+      {showNewArrivals && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && (
         <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
           <StoreSectionHeader
             title={copy.newArrivalsTitle}
@@ -858,68 +944,8 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {/* ── Mobile buyer support ───────────────────────────────────────────── */}
-      {!dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && (
+      {!dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && (
       <StoreBuyerSupportStrip businessDomain={businessDomain} accent={accent} />
-      )}
-
-      {/* ── Store CTA strip (desktop, complements light footer) ─────────── */}
-      {contact.hasAnyContact && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && (
-        <section className="hidden lg:block border-t border-slate-200 bg-white">
-          <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-slate-100 bg-[var(--store-accent-light)] px-6 py-5">
-              <div className="flex items-center gap-4 min-w-0">
-                {business.logo_url ? (
-                  <SmartProductImage src={business.logo_url} alt={business.business_name} width={120} height={40} className="h-10 w-auto object-contain" />
-                ) : (
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shrink-0"
-                    style={{ backgroundColor: accent }}
-                  >
-                    {business.business_name?.charAt(0)}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="font-bold text-slate-900 truncate">{business.business_name}</p>
-                  {(contact.city || contact.country) && (
-                    <p className="text-slate-500 text-sm truncate">
-                      {[contact.city, contact.country].filter(Boolean).join(', ')}
-                    </p>
-                  )}
-                  {contact.businessHours ? (
-                    <p className="text-slate-400 text-xs mt-0.5">{contact.businessHours}</p>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
-                {contact.phone && (
-                  <a href={`tel:${contact.phone}`} className="hover:text-[var(--store-accent)] transition-colors">
-                    {contact.phone}
-                  </a>
-                )}
-                {contact.email && (
-                  <a href={`mailto:${contact.email}`} className="hover:text-[var(--store-accent)] transition-colors break-all">
-                    {contact.email}
-                  </a>
-                )}
-                {contact.showContactPageCta && (
-                  <Link href={`/store/${businessDomain}/contact`} className="font-semibold hover:text-[var(--store-accent)] transition-colors">
-                    Contact us →
-                  </Link>
-                )}
-              </div>
-
-              <Link
-                href={`/store/${businessDomain}/products`}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all hover:opacity-95 shrink-0"
-                style={{ backgroundColor: accent }}
-              >
-                <ShoppingBag className="w-4 h-4" />
-                Start Shopping
-              </Link>
-            </div>
-          </div>
-        </section>
       )}
 
       {featuredProducts.length === 0 &&

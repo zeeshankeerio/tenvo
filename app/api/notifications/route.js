@@ -130,14 +130,25 @@ export async function DELETE(request) {
 
     const { searchParams } = new URL(request.url);
     const notificationId = searchParams.get('id');
+    const businessId = searchParams.get('businessId');
+    const clearAll = searchParams.get('all') === 'true';
 
-    if (!notificationId) {
+    if (!notificationId && !(clearAll && businessId)) {
       return NextResponse.json({ error: 'Notification ID required' }, { status: 400 });
     }
 
     const client = await pool.connect();
 
     try {
+      if (clearAll && businessId) {
+        await assertNotificationBusinessAccess(session, businessId, client);
+        await client.query(
+          'UPDATE notifications SET is_dismissed = true WHERE business_id = $1 AND is_dismissed = false',
+          [businessId]
+        );
+        return NextResponse.json({ success: true });
+      }
+
       const owned = await client.query(
         'SELECT business_id FROM notifications WHERE id = $1',
         [notificationId]

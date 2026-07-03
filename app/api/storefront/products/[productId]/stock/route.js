@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { checkProductStock } from '@/lib/actions/storefront/products';
+import pool from '@/lib/db';
+import { resolveStorefrontProductId } from '@/lib/utils/storefrontProductRef';
 
 /**
  * POST /api/storefront/products/[productId]/stock
@@ -37,45 +39,54 @@ export async function POST(request, { params }) {
       );
     }
 
-    const pool = (await import('@/lib/db')).default;
     const client = await pool.connect();
     let product = null;
 
     try {
+      const resolvedProductId = await resolveStorefrontProductId(client, productId, businessId);
+      if (!resolvedProductId) {
+        return NextResponse.json({ message: 'Product not found' }, { status: 404 });
+      }
+
       let productRow;
       if (variantId) {
         const res = await client.query(
-          `SELECT p.id, p.name, p.business_id, p.slug,
+          `SELECT p.id, p.name, p.business_id, p.slug, p.tax_percent,
                   COALESCE(pv.price, p.price) as price,
                   COALESCE(pv.image_url, p.image_url) as image_url,
-                  pv.attribute_1_value, pv.attribute_2_value
+                  pv.variant_name, pv.size, pv.color, pv.material
            FROM products p
            JOIN product_variants pv ON pv.id = $1::uuid AND pv.product_id = p.id::uuid
            WHERE p.id = $2::uuid AND p.business_id = $3::uuid AND pv.business_id = $3::uuid
              AND COALESCE(p.is_deleted, false) = false AND p.is_active = true`,
-          [variantId, productId, businessId]
+          [variantId, resolvedProductId, businessId]
         );
         productRow = res.rows[0];
         if (productRow) {
-          const variantParts = [productRow.attribute_1_value, productRow.attribute_2_value]
+          const variantParts = [productRow.size, productRow.color, productRow.material]
             .filter(Boolean).join(' / ');
           product = {
             ...productRow,
             price: parseFloat(productRow.price),
-            variantName: variantParts || null,
+            taxPercent: parseFloat(productRow.tax_percent || 0),
+            variantName: productRow.variant_name || variantParts || null,
           };
         }
       } else {
         const res = await client.query(
-          `SELECT id, name, business_id, slug, price, image_url
+          `SELECT id, name, business_id, slug, price, image_url, tax_percent
            FROM products
            WHERE id = $1::uuid AND business_id = $2::uuid
              AND COALESCE(is_deleted, false) = false AND is_active = true`,
-          [productId, businessId]
+          [resolvedProductId, businessId]
         );
         productRow = res.rows[0];
         if (productRow) {
-          product = { ...productRow, price: parseFloat(productRow.price) };
+          product = {
+            ...productRow,
+            price: parseFloat(productRow.price),
+            taxPercent: parseFloat(productRow.tax_percent || 0),
+          };
         }
       }
     } finally {

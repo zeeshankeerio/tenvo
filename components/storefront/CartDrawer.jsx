@@ -5,7 +5,7 @@ import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, Plus, Minus, Trash2, ArrowRight,
-  Truck, Package
+  Truck, Package, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -19,9 +19,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 export function CartDrawer() {
   const router = useRouter();
 
-  const { cart, updateQuantity, removeItem, calculateTotals, isLoading, isOpen, setIsOpen } = useCart();
-  const { currency, businessDomain, settings } = useStorefront();
+  const { cart, updateQuantity, removeItem, calculateTotals, isLoading, isOpen, setIsOpen, clearCart } = useCart();
+  const { currency, businessDomain, settings, businessId } = useStorefront();
   const { subtotal, itemCount } = calculateTotals();
+  const cartMismatch = Boolean(
+    cart.businessId && businessId && cart.businessId !== businessId
+  );
 
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
   const remaining = Math.max(0, freeShippingThreshold - subtotal);
@@ -39,6 +42,10 @@ export function CartDrawer() {
   };
 
   const handleCheckout = () => {
+    if (cartMismatch) {
+      toast.error('Your cart contains items from another store. Please clear your cart.');
+      return;
+    }
     setIsOpen(false);
     router.push(`/store/${businessDomain}/checkout`);
   };
@@ -83,6 +90,24 @@ export function CartDrawer() {
           <>
             {/* ── Cart Items ───────────────────────────────────────────── */}
             <div className="flex-1 overflow-y-auto">
+              {cartMismatch && (
+                <div className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-amber-900">Items from another store</p>
+                    <button
+                      type="button"
+                      className="text-xs text-amber-800 underline mt-1"
+                      onClick={() => {
+                        clearCart();
+                        toast.success('Cart cleared');
+                      }}
+                    >
+                      Clear cart
+                    </button>
+                  </div>
+                </div>
+              )}
               <AnimatePresence mode="popLayout">
                 {cart.items.map((item, index) => (
                   <motion.div
@@ -226,6 +251,7 @@ export function CartDrawer() {
                 <Button
                   size="lg"
                   className="w-full gap-2 rounded-xl font-bold"
+                  disabled={cartMismatch}
                   onClick={handleCheckout}
                 >
                   Checkout

@@ -20,7 +20,7 @@ Customer **AR invoices** (invoices you issue to *your* customers) are separate f
 
 ### 1. Stripe (production default)
 
-1. **Checkout** — `POST /api/billing/create-checkout` → `lib/payments/stripe.js` `createCheckoutSession` with `metadata.businessId`, `planTier`. Success/cancel URLs return to **`/business/{domain}?tab=settings&…`** (see `lib/utils/billingReturnUrls.js`).
+1. **Checkout** — `POST /api/billing/create-checkout` → `lib/payments/stripe.js` `createCheckoutSession` with `metadata.businessId`, `planTier` and/or `domainPackageKey`. Amounts come from **`lib/payments/stripeCatalog.js`** (`PLAN_TIERS` + `lib/config/domainPackages.js`) via inline **`price_data`** — dashboard Price IDs / `STRIPE_PRICE_*` env vars are optional legacy fallbacks only. Success/cancel URLs return to **`/business/{domain}?tab=settings&…`** (see `lib/utils/billingReturnUrls.js`).
 2. **Webhook** — `POST /api/webhooks/stripe` (uses **`prismaBase`**, not tenant `db` — see `AGENTS.md`).
    - `checkout.session.completed` → sets `plan_tier`, `stripe_subscription_*`, **`stripe_subscription_status`** from the live Stripe subscription (e.g. **`trialing`**), sets **`plan_expires_at`** from **`trial_end`** while trialing (clears when **active**), writes `subscription_history` with the same status.
    - `invoice.payment_succeeded` → sets status **active**, clears **`plan_expires_at`** (paid period).
@@ -37,11 +37,21 @@ Same checkout route **skips Stripe** and updates Postgres only (`stripe_subscrip
 ### 3. Platform admin — plan changes & manual renew
 
 - **`updateBusinessPlan(businessId, newPlanTier, expiresAt?)`** — sets tier + limits + optional expiry; appends **`subscription_history`** (`platform_admin_plan_change`).
-- **`recordManualSubscriptionPayment({...})`** — for **real offline PSP / bank** payments: extends `plan_expires_at` from `max(now, current_expiry)`, applies paid tier limits, sets `stripe_subscription_status` to **`manual_payment_active`**, writes **`subscription_history`** with `status: manual_payment_received` and reference/notes/amount metadata. **Does not** call Stripe.
+- **`recordManualSubscriptionPayment({...})`** — for **real offline PSP / bank** payments: extends `plan_expires_at` from `max(now, current_expiry)`, applies paid tier limits and optional **domain package** packaging via **`getBillingActivationPayload`**, sets `stripe_subscription_status` to **`manual_payment_active`**, writes **`subscription_history`** with `status: manual_payment_received` and reference/notes/amount metadata. **Does not** call Stripe.
+- **`approveManualSubscriptionPaymentRequest` / `rejectManualSubscriptionPaymentRequest`** — review owner-submitted offline payments stored in **`settings.billing.pending_manual_payment`**.
 
-UI: **Platform Admin → Businesses → Details** includes a short form to record a manual payment.
+UI: **Platform Admin → Businesses → Details** includes manual payment recording and approve/reject for pending owner requests.
 
-**Marketing paths:** `/pricing` lists the same **`PLAN_TIERS`** as registration and in-app billing. Guests use **`/register?planTier=…`**; logged-in users can use **`/contact?topic=subscription&planTier=…`** (form pre-fills) or **Book demo** (`/demo`) for sales-led activation and manual payment recording as above.
+### 3b. Business owner — offline payment self-serve
+
+1. Owner pays JazzCash / EasyPaisa / bank using platform payee details (`TENVO_MANUAL_PAYMENT_*` env vars).
+2. **Settings → Billing → Pay offline** (`components/billing/ManualPaymentRequestPanel.jsx`) — submit transaction ID, method, optional amount, and target **plan tier** or **domain package** (e.g. `clothing-commerce`).
+3. Request is stored as **`settings.billing.pending_manual_payment`** with status **`pending`**.
+4. Platform admin verifies and **Approves** → same **`applyManualSubscriptionPaymentTx`** path as direct admin record; request moves to history.
+
+Server actions: **`lib/actions/basic/billing.js`** (`submitManualSubscriptionPaymentRequestAction`, `getManualSubscriptionPaymentContextAction`). Shared apply logic: **`lib/payments/manualSubscriptionPayment.js`**.
+
+**Marketing paths:** `/pricing` lists the same **`PLAN_TIERS`** as registration and in-app billing. Domain suites (e.g. **`/solutions/clothing-commerce`**) link to registration with **`?package=clothing-commerce`**. Guests use **`/register?planTier=…`**; logged-in users can use **`/contact?topic=subscription&planTier=…`** (form pre-fills) or **Book demo** (`/demo`) for sales-led activation and manual payment recording as above.
 
 ### 4. Access control vs “billing health”
 
@@ -67,21 +77,23 @@ Limits (**seats**, **max_products**, **max_warehouses**) always follow **`plan_t
 
 | Topic | Today | Suggested next step |
 |--------|--------|---------------------|
-| **Easypaisa / JazzCash / one-link** | Not integrated | Add PSP webhooks or reconciliation jobs → call **`recordManualSubscriptionPayment`** or a Stripe-only path when you unify on Stripe. |
-| **`useSubscription` → `/api/billing/update`** | `POST /api/billing/update` changes the Stripe subscription price, merges `planTier` / `businessId` on subscription metadata for webhooks, and applies `getPlanTierQuotaUpdateData` locally after Stripe. Manual billing mode updates Postgres only. | Configure `STRIPE_PRICE_*` for every sellable tier × currency you expose in the app. |
+| **Easypaisa / JazzCash / one-link** | Owner submit + admin approve; admin direct record | Optional PSP webhooks → call **`applyManualSubscriptionPaymentTx`** when you automate reconciliation. |
+| **`useSubscription` → `/api/billing/update`** | `POST /api/billing/update` changes the Stripe subscription using **dynamic catalog prices** (`ensureStripePriceForCatalogItem`), merges `planTier` / `domainPackageKey` / `businessId` on subscription metadata for webhooks, and applies activation payload locally after Stripe. Manual billing mode updates Postgres only. | Ensure Stripe account currency/tax settings match PKR/USD catalog; optional `STRIPE_AUTOMATIC_TAX=true`. |
 | **Explicit grace end date** | Implicit (Stripe lifecycle + `plan_expires_at`) | Optional column e.g. `subscription_grace_until` for non-Stripe dunning. |
-| **Owner self-serve “I paid”** | Not built | Ticket + attachment → ops approves → same server action as admin. |
+| **Owner self-serve “I paid”** | **Built** — Settings → Billing offline panel; admin approve/reject | Email notify on submit/approve; optional auto-match by amount. |
 
 ## Related files
 
 - `app/api/webhooks/stripe/route.js` — Stripe events → `businesses` + `subscription_history`
 - `app/api/billing/create-checkout/route.js`, `app/api/billing/update/route.js`, `cancel/route.js`, `portal/route.js`, `subscription/route.js`
 - `lib/payments/stripe.js`, `lib/hooks/useSubscription.js`
-- `lib/actions/admin/platform.js` — `updateBusinessPlan`, `recordManualSubscriptionPayment`, `extendTrial`, `updateBusinessPackaging`
+- `lib/actions/admin/platform.js` — `updateBusinessPlan`, `recordManualSubscriptionPayment`, `approveManualSubscriptionPaymentRequest`, `extendTrial`, `updateBusinessPackaging`
+- `lib/actions/basic/billing.js` — owner offline payment submit/context
 - `lib/actions/basic/business.js` — `createBusiness`, `updateOwnerBusinessPackagingAction`
 - `lib/utils/businessPackagingSettings.js` — shared merge for `settings.packaging`
 - `lib/subscription/effectivePlanAccess.js` — `planHasFeatureWithPackaging`, `getPackagingFromSettings`
-- `components/SettingsManager.jsx` — Billing + owner **Custom module access** UI
+- `components/SettingsManager.jsx` — Billing + owner **Custom module access** + **offline payment** panel
+- `components/billing/ManualPaymentRequestPanel.jsx` — owner txn ID submit UI
 - `components/billing/SubscriptionBillingBanner.jsx` — billing reminders
 - `docs/PAYMENTS_ENV_AND_SETUP.md` — env vars, manual vs Stripe, NOWPayments, official doc links
 - `docs/subscription-analysis.md` — packaging / tiers vs Zoho (separate from payment rails)

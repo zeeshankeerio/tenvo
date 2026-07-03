@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
-import { formatCurrency } from '@/lib/currency';
+import { resolveStorefrontCurrency } from '@/lib/storefront/storefrontRegional';
 import { resolveStoreContact } from '@/lib/storefront/businessContact';
 import { Truck, Clock, MapPin, Package, AlertCircle } from 'lucide-react';
 
@@ -22,7 +22,7 @@ export default async function ShippingPage({ params }) {
   const accent = getStoreAccentColor(settings, business.category);
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
   const returnDays = settings?.returnPolicyDays || 7;
-  const currency = settings?.currency || 'PKR';
+  const currency = resolveStorefrontCurrency(settings, business);
   const standardFlat = settings?.shippingStandardFee ?? 150;
   const expressFlat = settings?.shippingExpressFee ?? 300;
   const contact = resolveStoreContact({ business, settings });

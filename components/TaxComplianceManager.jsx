@@ -93,7 +93,7 @@ export function TaxComplianceManager({ invoices = [], purchaseOrders = [], busin
 
     const taxMetrics = useMemo(() => {
         const totalSales = periodInvoices.reduce((sum, inv) => sum + (Number(inv.subtotal ?? inv.grand_total) || 0), 0);
-        const outputTax = periodInvoices.reduce((sum, inv) => sum + (Number(inv.tax_total) || 0), 0);
+        const outputTax = periodInvoices.reduce((sum, inv) => sum + (Number(inv.tax_total ?? inv.total_tax) || 0), 0);
         const totalPurchases = periodPurchases.reduce((sum, po) => sum + (Number(po.subtotal ?? po.total_amount) || 0), 0);
         const inputTax = periodPurchases.reduce((sum, po) => sum + (Number(po.tax_total) || 0), 0);
 

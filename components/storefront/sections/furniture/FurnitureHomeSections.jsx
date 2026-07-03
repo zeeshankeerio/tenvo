@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Truck, Shield, Palette, Home, MapPin, Mail } from 'lucide-react';
+import { ArrowRight, Palette, Home, MapPin, Mail } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { StoreProductRail } from '@/components/storefront/StoreProductRail';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
@@ -17,17 +17,9 @@ import {
   resolveFurnitureCuratedTabs,
   resolveFurniturePromoBanners,
   resolveFurnitureEditorialBanners,
-  resolveFurnitureTrustPillars,
   resolveFurnitureTestimonials,
   formatFurnitureStoreName,
 } from '@/lib/storefront/furnitureStorefront';
-
-const TRUST_ICONS = {
-  delivery: Truck,
-  custom: Palette,
-  warranty: Shield,
-  homes: Home,
-};
 
 /**
  * Woodin elevated furniture homepage — Homelo / COMFY / Fantastic Furniture flow.
@@ -52,7 +44,6 @@ export function FurnitureHomeSections({
   const roomCollections = resolveFurnitureRoomCollections(settings, storeBase, ctx);
   const promoBanners = resolveFurniturePromoBanners(settings, products, businessDomain, businessCategory);
   const editorialBanners = resolveFurnitureEditorialBanners(settings, products, businessDomain, businessCategory);
-  const trustPillars = resolveFurnitureTrustPillars(settings, businessDomain);
   const curatedTabs = resolveFurnitureCuratedTabs(settings, categories);
   const testimonials = resolveFurnitureTestimonials(settings, businessDomain);
   const displayName = formatFurnitureStoreName(storeName);
@@ -90,33 +81,6 @@ export function FurnitureHomeSections({
                 </span>
               </Link>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Trust strip */}
-      <section className="border-b border-amber-50 bg-[#faf7f2] py-3 sm:py-4">
-        <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
-          <div className="flex gap-2.5 overflow-x-auto scrollbar-hide sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible lg:grid-cols-4">
-            {trustPillars.map((pillar) => {
-              const Icon = TRUST_ICONS[pillar.id] || Shield;
-              return (
-                <div
-                  key={pillar.id}
-                  className="flex min-w-[72%] shrink-0 items-center gap-2 rounded-xl border border-amber-100/80 bg-white/90 px-3 py-2.5 text-xs font-semibold text-amber-950 sm:min-w-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:text-sm"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-amber-800 shadow-sm">
-                    <Icon className="h-4 w-4" aria-hidden />
-                  </span>
-                  <span>
-                    {pillar.label}
-                    {pillar.desc ? (
-                      <span className="hidden font-normal text-stone-500 lg:block">{pillar.desc}</span>
-                    ) : null}
-                  </span>
-                </div>
-              );
-            })}
           </div>
         </div>
       </section>

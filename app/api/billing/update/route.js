@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import { prismaBase } from '@/lib/db';
-import { getPriceIdForPlan, updateSubscription, getSubscription } from '@/lib/payments/stripe';
+import { updateSubscription, getSubscription, getStripe } from '@/lib/payments/stripe';
 import { getSessionUser } from '@/lib/auth/session';
 import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
-import { isManualBillingMode } from '@/lib/config/billingMode';
-import { getPlanTierQuotaUpdateData, resolvePlanTier } from '@/lib/config/plans';
+import { assertBillingRole } from '@/lib/tenancy/billingAccess';
+import { shouldUseDevInstantBilling } from '@/lib/config/billingMode';
+import { resolvePlanTier } from '@/lib/config/plans';
+import { resolveBillableSku } from '@/lib/payments/billingSku';
+import {
+  ensureStripePriceForCatalogItem,
+  normalizeBillingCurrency,
+} from '@/lib/payments/stripeCatalog';
+import { mergeBusinessSettingsForBilling } from '@/lib/payments/billingActivation';
 
 /**
  * POST /api/billing/update
- * Body: { business_id?, businessId?, newPlanTier, currency?, prorationBehavior? }
- * Upgrades/downgrades an existing Stripe subscription, or applies tier in manual billing mode.
+ * Body: { business_id?, businessId?, newPlanTier?, domainPackageKey?, currency?, prorationBehavior? }
  */
 export async function POST(request) {
   try {
@@ -24,6 +30,7 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const {
       newPlanTier,
+      domainPackageKey,
       currency: bodyCurrency,
       prorationBehavior = 'create_prorations',
       business_id: businessIdSnake,
@@ -38,9 +45,9 @@ export async function POST(request) {
       );
     }
 
-    if (!newPlanTier || typeof newPlanTier !== 'string') {
+    if (!newPlanTier && !domainPackageKey) {
       return NextResponse.json(
-        { error: 'newPlanTier is required', code: 'MISSING_PLAN_TIER' },
+        { error: 'newPlanTier or domainPackageKey is required', code: 'MISSING_BILLING_SKU' },
         { status: 400 }
       );
     }
@@ -54,6 +61,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
     }
 
+    // Plan upgrades/downgrades are owner/admin only
+    const roleCheck = await assertBillingRole({ userId: sessionWrap.user.id, businessId, sessionUser: sessionWrap.user });
+    if (!roleCheck.allowed) {
+      return NextResponse.json({ error: roleCheck.error, code: 'INSUFFICIENT_ROLE' }, { status: 403 });
+    }
+
     const business = await prismaBase.businesses.findUnique({
       where: { id: businessId },
     });
@@ -61,17 +74,43 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
     }
 
-    const resolved = resolvePlanTier(newPlanTier);
-    const quota = getPlanTierQuotaUpdateData(resolved);
-    if (!quota) {
+    let currency = typeof bodyCurrency === 'string' ? normalizeBillingCurrency(bodyCurrency) : null;
+    if (!currency) {
+      const stripeSub = business.stripe_subscription_id
+        ? await getSubscription(business.stripe_subscription_id)
+        : null;
+      const fromStripe = stripeSub?.items?.data?.[0]?.price?.currency;
+      currency = fromStripe ? normalizeBillingCurrency(fromStripe) : null;
+    }
+    if (!currency && business.currency) {
+      currency = normalizeBillingCurrency(business.currency);
+    }
+    if (!currency) {
+      currency = 'pkr';
+    }
+
+    const billable = resolveBillableSku({
+      planTier: newPlanTier,
+      domainPackageKey,
+      currency,
+    });
+    if (!billable) {
       return NextResponse.json(
-        { error: 'Unknown plan tier', code: 'INVALID_PLAN' },
+        { error: 'Unknown or non-billable plan/package', code: 'INVALID_BILLING_SKU' },
         { status: 400 }
       );
     }
 
+    const { catalog: catalogItem, activation } = billable;
+
+    const resolved = resolvePlanTier(activation.planTier);
     const currentResolved = resolvePlanTier(business.plan_tier);
-    if (currentResolved === resolved) {
+
+    const sameTier =
+      currentResolved === resolved &&
+      !domainPackageKey &&
+      !catalogItem.domainPackageKey;
+    if (sameTier) {
       return NextResponse.json({
         success: true,
         noOp: true,
@@ -91,11 +130,16 @@ export async function POST(request) {
       );
     }
 
-    if (isManualBillingMode()) {
+    if (shouldUseDevInstantBilling()) {
+      const nextSettings = mergeBusinessSettingsForBilling(
+        business.settings,
+        activation.settingsPatch
+      );
       await prismaBase.businesses.update({
         where: { id: businessId },
         data: {
-          ...quota,
+          ...activation.quota,
+          settings: nextSettings,
           stripe_subscription_status: 'manual_dev',
           plan_expires_at: null,
           updated_at: new Date(),
@@ -111,6 +155,7 @@ export async function POST(request) {
             metadata: {
               manualBilling: true,
               previous_plan_tier: business.plan_tier,
+              domainPackageKey: activation.domainPackageKey,
               updatedBy: sessionWrap.user.id,
             },
           },
@@ -122,6 +167,7 @@ export async function POST(request) {
         success: true,
         manual: true,
         planTier: resolved,
+        domainPackageKey: activation.domainPackageKey,
         code: 'MANUAL_BILLING_PLAN_APPLIED',
       });
     }
@@ -136,29 +182,15 @@ export async function POST(request) {
       );
     }
 
-    let currency = typeof bodyCurrency === 'string' ? bodyCurrency.toLowerCase() : null;
-    if (!currency) {
-      const stripeSub = await getSubscription(business.stripe_subscription_id);
-      const fromStripe = stripeSub?.items?.data?.[0]?.price?.currency;
-      currency = fromStripe ? String(fromStripe).toLowerCase() : null;
-    }
-    if (!currency && business.currency) {
-      currency = String(business.currency).toLowerCase();
-    }
-    if (!currency) {
-      currency = 'pkr';
-    }
-
-    const priceId = getPriceIdForPlan(resolved, currency);
-    if (!priceId) {
+    const stripe = getStripe();
+    if (!stripe) {
       return NextResponse.json(
-        {
-          error: `No Stripe price is configured for plan "${resolved}" in ${currency}. Add the matching STRIPE_PRICE_* env var or pass currency.`,
-          code: 'MISSING_PRICE_ID',
-        },
-        { status: 400 }
+        { error: 'Payment provider not configured', code: 'STRIPE_NOT_CONFIGURED' },
+        { status: 503 }
       );
     }
+
+    const priceId = await ensureStripePriceForCatalogItem(stripe, catalogItem);
 
     const updateResult = await updateSubscription(business.stripe_subscription_id, {
       newPriceId: priceId,
@@ -166,6 +198,11 @@ export async function POST(request) {
       metadata: {
         businessId,
         planTier: resolved,
+        ...(activation.domainPackageKey
+          ? { domainPackageKey: activation.domainPackageKey }
+          : {}),
+        billingKind: catalogItem.kind,
+        catalogLookupKey: catalogItem.lookupKey,
       },
     });
 
@@ -176,11 +213,18 @@ export async function POST(request) {
       );
     }
 
+    const nextSettings = mergeBusinessSettingsForBilling(
+      business.settings,
+      activation.settingsPatch
+    );
+
     await prismaBase.businesses.update({
       where: { id: businessId },
       data: {
-        ...quota,
-        stripe_subscription_status: updateResult.subscription?.status || business.stripe_subscription_status,
+        ...activation.quota,
+        settings: nextSettings,
+        stripe_subscription_status:
+          updateResult.subscription?.status || business.stripe_subscription_status,
         updated_at: new Date(),
       },
     });
@@ -194,7 +238,8 @@ export async function POST(request) {
           stripe_subscription_id: business.stripe_subscription_id,
           metadata: {
             previous_plan_tier: business.plan_tier,
-            price_id: priceId,
+            catalog_lookup_key: catalogItem.lookupKey,
+            domainPackageKey: activation.domainPackageKey,
             currency,
             updatedBy: sessionWrap.user.id,
           },
@@ -207,6 +252,7 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       planTier: resolved,
+      domainPackageKey: activation.domainPackageKey,
       subscriptionId: business.stripe_subscription_id,
       subscriptionStatus: updateResult.subscription?.status ?? null,
     });

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, ArrowRight, ArrowLeft, Trash2, Plus, Minus,
-  AlertCircle, Truck, Package, Tag
+  AlertCircle, Truck, Package, Tag, BadgeCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,14 +17,15 @@ import { formatCurrency } from '@/lib/currency';
 import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { isMembershipRelevant } from '@/lib/config/domains';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CartPage({ params }) {
   const { businessDomain } = use(params);
   const router = useRouter();
-  const { cart, updateQuantity, removeItem, isLoading, calculateTotals, hydrated } = useCart();
-  const { currency, settings, business } = useStorefront();
+  const { cart, updateQuantity, removeItem, isLoading, calculateTotals, hydrated, clearCart, setCheckoutAdjustments } = useCart();
+  const { currency, settings, business, businessId } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
 
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
@@ -34,18 +35,73 @@ export default function CartPage({ params }) {
   const [promoCode, setPromoCode] = useState('');
   const [promoError, setPromoError] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
+  const [memberEmail, setMemberEmail] = useState('');
+  const [memberDiscount, setMemberDiscount] = useState(0);
+  const [memberDiscountLabel, setMemberDiscountLabel] = useState('');
   const [applyingPromo, setApplyingPromo] = useState(false);
+  const [applyingMemberDiscount, setApplyingMemberDiscount] = useState(false);
   const [shippingMethod, setShippingMethod] = useState('standard');
 
   const { subtotal, itemCount } = calculateTotals();
+  const membershipStoreEnabled = isMembershipRelevant(business?.category);
+  const totalDiscount = Math.min(subtotal, promoDiscount + memberDiscount);
+
+  const cartMismatch = Boolean(
+    cart.businessId && businessId && cart.businessId !== businessId
+  );
 
   const shippingCost = shippingMethod === 'express' ? 300
     : shippingMethod === 'pickup' ? 0
     : subtotal >= freeShippingThreshold ? 0 : 150;
   const tax = subtotal * taxRate;
-  const total = subtotal + shippingCost + tax - promoDiscount;
+  const total = subtotal + shippingCost + tax - totalDiscount;
   const remaining = Math.max(0, freeShippingThreshold - subtotal);
   const progressPct = Math.min(100, (subtotal / freeShippingThreshold) * 100);
+
+  const saveCheckoutAdjustments = useCallback(
+    (overrides = {}) => {
+      const nextPromoCode = overrides.promoCode ?? promoCode;
+      const nextPromoDiscount = overrides.promoDiscount ?? promoDiscount;
+      const nextMemberEmail = overrides.memberEmail ?? memberEmail;
+      const nextMemberDiscount = overrides.memberDiscount ?? memberDiscount;
+      const nextMemberLabel = overrides.memberDiscountLabel ?? memberDiscountLabel;
+      const hasPromo = String(nextPromoCode || '').trim() && nextPromoDiscount > 0;
+      const hasMember = nextMemberDiscount > 0;
+      if (!hasPromo && !hasMember) {
+        setCheckoutAdjustments(null);
+        return;
+      }
+      setCheckoutAdjustments({
+        promoCode: hasPromo ? String(nextPromoCode).trim().toUpperCase() : null,
+        memberEmail: String(nextMemberEmail || '').trim() || null,
+        memberPricingRequested: hasMember,
+        promoDiscount: hasPromo ? nextPromoDiscount : 0,
+        memberDiscount: hasMember ? nextMemberDiscount : 0,
+        memberDiscountLabel: nextMemberLabel || '',
+      });
+    },
+    [
+      promoCode,
+      promoDiscount,
+      memberEmail,
+      memberDiscount,
+      memberDiscountLabel,
+      setCheckoutAdjustments,
+    ]
+  );
+
+  useEffect(() => {
+    if (!hydrated || !cart.checkoutAdjustments) return;
+    const adj = cart.checkoutAdjustments;
+    if (adj.promoCode) setPromoCode(adj.promoCode);
+    if (adj.memberEmail) setMemberEmail(adj.memberEmail);
+    if (adj.promoDiscount) setPromoDiscount(adj.promoDiscount);
+    if (adj.memberDiscount) {
+      setMemberDiscount(adj.memberDiscount);
+      setMemberDiscountLabel(adj.memberDiscountLabel || '');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once from persisted cart adjustments
+  }, [hydrated]);
 
   const handleQty = (item, newQty) => {
     if (newQty < 1) {
@@ -66,17 +122,59 @@ export default function CartPage({ params }) {
       const res = await fetch(`/api/storefront/${businessDomain}/promo/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: promoCode.trim().toUpperCase(), subtotal }),
+        body: JSON.stringify({
+          code: promoCode.trim().toUpperCase(),
+          subtotal,
+          customerEmail: memberEmail.trim(),
+        }),
       });
-      if (!res.ok) throw new Error('Invalid or expired promo code');
-      const data = await res.json();
-      setPromoDiscount(data.discount || 0);
-      toast.success(`Promo applied! You save ${formatCurrency(data.discount, currency)}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Invalid or expired promo code');
+      const nextPromoDiscount = data.discount || 0;
+      setPromoDiscount(nextPromoDiscount);
+      toast.success(`Promo applied! You save ${formatCurrency(nextPromoDiscount, currency)}`);
+      saveCheckoutAdjustments({ promoDiscount: nextPromoDiscount });
     } catch (err) {
       setPromoError(err.message);
       setPromoDiscount(0);
     } finally {
       setApplyingPromo(false);
+    }
+  };
+
+  const applyMemberDiscount = async () => {
+    if (!memberEmail.trim()) {
+      toast.error('Enter the email on your membership account');
+      return;
+    }
+    setApplyingMemberDiscount(true);
+    setPromoError('');
+    try {
+      const res = await fetch(`/api/storefront/${businessDomain}/promo/member-discount`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerEmail: memberEmail.trim(), subtotal }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'No member discount available');
+      const nextMemberDiscount = data.discount || 0;
+      const nextLabel = data.planName
+        ? `${data.planName} (${data.percent}% off)`
+        : `${data.percent}% member discount`;
+      setMemberDiscount(nextMemberDiscount);
+      setMemberDiscountLabel(nextLabel);
+      toast.success(data.message || 'Member pricing applied');
+      saveCheckoutAdjustments({
+        memberDiscount: nextMemberDiscount,
+        memberDiscountLabel: nextLabel,
+        memberEmail: memberEmail.trim(),
+      });
+    } catch (err) {
+      setMemberDiscount(0);
+      setMemberDiscountLabel('');
+      toast.error(err.message);
+    } finally {
+      setApplyingMemberDiscount(false);
     }
   };
 
@@ -134,6 +232,29 @@ export default function CartPage({ params }) {
             <ArrowLeft className="w-4 h-4" /> Continue Shopping
           </Link>
         </div>
+
+        {cartMismatch && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-900">Cart from another store</p>
+              <p className="text-sm text-amber-800 mt-1">
+                These items belong to a different storefront. Clear the cart to continue shopping here.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3 rounded-lg border-amber-300 text-amber-900 hover:bg-amber-100"
+                onClick={() => {
+                  clearCart();
+                  toast.success('Cart cleared');
+                }}
+              >
+                Clear cart
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Free shipping progress */}
         {remaining > 0 && (
@@ -298,6 +419,44 @@ export default function CartPage({ params }) {
 
                   <Separator />
 
+                  {membershipStoreEnabled ? (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        <BadgeCheck className="w-3.5 h-3.5 inline mr-1" />
+                        Member pricing
+                      </p>
+                      <div className="flex gap-2">
+                        <Input
+                          type="email"
+                          placeholder="Membership email"
+                          value={memberEmail}
+                          onChange={(e) => setMemberEmail(e.target.value)}
+                          className="rounded-xl text-sm"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={applyMemberDiscount}
+                          disabled={applyingMemberDiscount || !memberEmail.trim()}
+                          className="rounded-xl flex-shrink-0"
+                        >
+                          {applyingMemberDiscount ? '…' : 'Apply'}
+                        </Button>
+                      </div>
+                      {memberDiscount > 0 ? (
+                        <p className="text-xs text-violet-700 mt-1.5 font-medium">
+                          ✓ {memberDiscountLabel || 'Member discount'} — save {formatCurrency(memberDiscount, currency)}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-gray-400 mt-1.5">
+                          Active members get plan perks on shop items when benefits are configured.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {membershipStoreEnabled ? <Separator /> : null}
+
                   {/* Promo code */}
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
@@ -329,7 +488,7 @@ export default function CartPage({ params }) {
                     )}
                     {promoDiscount > 0 && (
                       <p className="text-xs text-green-600 mt-1.5 font-medium">
-                        ✓ Saving {formatCurrency(promoDiscount, currency)}
+                        ✓ Promo saving {formatCurrency(promoDiscount, currency)}
                       </p>
                     )}
                   </div>
@@ -352,9 +511,15 @@ export default function CartPage({ params }) {
                       <span className="text-gray-500">Tax ({Math.round(taxRate * 100)}%)</span>
                       <span className="font-medium">{formatCurrency(tax, currency)}</span>
                     </div>
+                    {memberDiscount > 0 && (
+                      <div className="flex justify-between text-violet-700">
+                        <span>Member discount</span>
+                        <span className="font-medium">-{formatCurrency(memberDiscount, currency)}</span>
+                      </div>
+                    )}
                     {promoDiscount > 0 && (
                       <div className="flex justify-between text-green-600">
-                        <span>Discount</span>
+                        <span>Promo discount</span>
                         <span className="font-medium">-{formatCurrency(promoDiscount, currency)}</span>
                       </div>
                     )}
@@ -373,7 +538,11 @@ export default function CartPage({ params }) {
                     size="lg"
                     className="w-full gap-2 rounded-xl font-bold"
                     style={{ backgroundColor: accent }}
-                    onClick={() => router.push(`/store/${businessDomain}/checkout?shipping=${shippingMethod}`)}
+                    disabled={cartMismatch}
+                    onClick={() => {
+                      saveCheckoutAdjustments();
+                      router.push(`/store/${businessDomain}/checkout?shipping=${shippingMethod}`);
+                    }}
                   >
                     Proceed to Checkout
                     <ArrowRight className="w-5 h-5" />

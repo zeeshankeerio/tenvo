@@ -3,13 +3,13 @@ import { getBusinessByDomain } from '@/lib/actions/storefront/business';
 import { getProductBySlug, getRelatedProducts } from '@/lib/actions/storefront/products';
 import { ProductGallery } from '@/components/storefront/ProductGallery';
 import { ProductInfo } from '@/components/storefront/ProductInfo';
-import { ProductVariants } from '@/components/storefront/ProductVariants';
-import { AddToCartSection } from '@/components/storefront/AddToCartSection';
+import { ProductPurchasePanel } from '@/components/storefront/ProductPurchasePanel';
 import { RelatedProducts } from '@/components/storefront/RelatedProducts';
 import { ProductReviews } from '@/components/storefront/ProductReviews';
 import { ProductBreadcrumbs } from '@/components/storefront/ProductBreadcrumbs';
 import { ProductTabs } from '@/components/storefront/ProductTabs';
 import { Truck, Shield, RotateCcw } from 'lucide-react';
+import { resolveStorefrontCurrency } from '@/lib/storefront/storefrontRegional';
 import { formatCurrency } from '@/lib/currency';
 import { getOpenGraphProductImageUrl, getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { buildProductJsonLd } from '@/lib/storefront/jsonLd';
@@ -99,7 +99,7 @@ export default async function ProductDetailPage({ params }) {
 }
 
 function ProductContent({ product, relatedProducts, businessDomain, settings, business }) {
-  const storeCurrency = settings?.currency || 'PKR';
+  const storeCurrency = resolveStorefrontCurrency(settings, business);
   const catalogImage = getEffectiveProductImageUrl(product, business.category);
   const productLd = buildProductJsonLd({
     business,
@@ -153,16 +153,7 @@ function ProductContent({ product, relatedProducts, businessDomain, settings, bu
               businessDomain={businessDomain}
             />
             
-            {/* Variants Selection */}
-            {product.has_variants && (
-              <ProductVariants 
-                product={product}
-                businessDomain={businessDomain}
-              />
-            )}
-            
-            {/* Add to Cart */}
-            <AddToCartSection 
+            <ProductPurchasePanel
               product={product}
               businessDomain={businessDomain}
             />

@@ -14,13 +14,13 @@ export function SubscriptionBillingBanner() {
   const pathParts = pathname?.split('/') || [];
   const businessSlug = pathParts[2] || business?.domain || '';
 
-  const [status, setStatus] = useState(null);
+  const [banner, setBanner] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       if (!business?.id) {
-        setStatus(null);
+        setBanner(null);
         return;
       }
       try {
@@ -29,18 +29,48 @@ export function SubscriptionBillingBanner() {
         );
         if (!res.ok) return;
         const data = await res.json();
-        if (!cancelled) {
-          const sub = data.subscription;
-          const attention =
-            sub?.needsBillingAttention === true ||
-            (sub?.needsBillingAttention == null &&
-              ['past_due', 'unpaid', 'incomplete', 'incomplete_expired', 'cancellation_scheduled'].includes(
-                sub?.status || ''
-              ));
-          setStatus(attention ? sub?.status || null : null);
+        if (cancelled) return;
+
+        const sub = data.subscription;
+        const attention =
+          sub?.needsBillingAttention === true ||
+          (sub?.needsBillingAttention == null &&
+            ['past_due', 'unpaid', 'incomplete', 'incomplete_expired', 'cancellation_scheduled'].includes(
+              sub?.status || ''
+            ));
+
+        if (attention) {
+          setBanner({
+            tone: 'warning',
+            label:
+              sub?.status === 'cancellation_scheduled'
+                ? 'Your subscription is scheduled to cancel at the end of the billing period.'
+                : 'There is a problem with your subscription billing. Update payment to avoid interruption.',
+          });
+          return;
         }
+
+        if (data.manualPayment?.pending) {
+          setBanner({
+            tone: 'info',
+            label:
+              'Your offline payment is under review. Access upgrades after our team verifies the transaction.',
+          });
+          return;
+        }
+
+        if (data.manualPayment?.accessExpiresSoon && sub?.endDate) {
+          const expiry = new Date(sub.endDate).toLocaleDateString();
+          setBanner({
+            tone: 'warning',
+            label: `Your offline-billed access expires on ${expiry}. Renew from Settings → Billing to avoid downgrade.`,
+          });
+          return;
+        }
+
+        setBanner(null);
       } catch {
-        if (!cancelled) setStatus(null);
+        if (!cancelled) setBanner(null);
       }
     }
     void load();
@@ -49,35 +79,34 @@ export function SubscriptionBillingBanner() {
     };
   }, [business?.id]);
 
-  if (!status) return null;
+  if (!banner) return null;
 
-  const needsAttention = ['past_due', 'unpaid', 'incomplete', 'incomplete_expired', 'cancellation_scheduled'].includes(
-    status
-  );
-
-  if (!needsAttention) return null;
-
-  const label =
-    status === 'cancellation_scheduled'
-      ? 'Your subscription is scheduled to cancel at the end of the billing period.'
-      : 'There is a problem with your subscription billing. Update payment to avoid interruption.';
-
-  const paymentsHref = businessSlug
-    ? `/business/${businessSlug}/store-settings/payments`
+  const settingsHref = businessSlug
+    ? `/business/${businessSlug}?tab=settings`
     : '/pricing';
+
+  const toneClasses =
+    banner.tone === 'info'
+      ? 'border-sky-200 bg-sky-50 text-sky-950'
+      : 'border-amber-200 bg-amber-50 text-amber-950';
+
+  const buttonClasses =
+    banner.tone === 'info'
+      ? 'bg-sky-900 hover:bg-sky-800'
+      : 'bg-amber-900 hover:bg-amber-800';
 
   return (
     <div
-      className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 shadow-sm"
+      className={`mb-4 rounded-lg border px-4 py-3 text-sm shadow-sm ${toneClasses}`}
       role="status"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-medium">{label}</p>
+        <p className="font-medium">{banner.label}</p>
         <Link
-          href={paymentsHref}
-          className="inline-flex shrink-0 items-center justify-center rounded-md bg-amber-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-800"
+          href={settingsHref}
+          className={`inline-flex shrink-0 items-center justify-center rounded-md px-3 py-1.5 text-xs font-semibold text-white transition ${buttonClasses}`}
         >
-          Open payments and billing
+          Open billing settings
         </Link>
       </div>
     </div>

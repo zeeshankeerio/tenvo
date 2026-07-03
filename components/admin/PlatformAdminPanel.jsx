@@ -5,7 +5,7 @@ import {
     Shield, Users, Building2, CreditCard, UserCog, Search,
     ChevronDown, ChevronRight, MoreVertical, RefreshCcw,
     TrendingUp, UserPlus, Clock, AlertTriangle, Check, X,
-    Crown, ArrowUpRight, Eye, Edit2, Trash2, Ban,
+    Crown, Eye, Edit2, Trash2, Ban,
     Activity, BarChart3, Layers, Mail, Calendar, Flag, LayoutGrid, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,20 +17,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import {
     listAllBusinesses,
-    listAllUsers,
     getBusinessDetails,
     updateBusinessPlan,
     recordManualSubscriptionPayment,
+    approveManualSubscriptionPaymentRequest,
+    rejectManualSubscriptionPaymentRequest,
     updateBusinessPackaging,
     updateBusinessLimitOverrides,
     changeUserRole,
     deactivateBusinessUser,
     getSubscriptionStats,
     extendTrial,
-    setPlatformRole,
+    getPlatformMetrics,
 } from '@/lib/actions/admin/platform';
 import { PLAN_TIERS, PLAN_FEATURE_TOGGLE_KEYS, FEATURE_LABELS, resolvePlanTier, FEATURE_MIN_PLAN } from '@/lib/config/plans';
 import { getPackagingFromSettings } from '@/lib/subscription/effectivePlanAccess';
+import { getManualPaymentRequestState } from '@/lib/payments/manualPaymentRequests';
+import { listDomainPackages } from '@/lib/config/domainPackages';
 import {
     PLAN_LIMIT_OVERRIDE_KEYS,
     LIMIT_OVERRIDE_LABELS,
@@ -40,22 +43,27 @@ import {
 import { ROLE_DESCRIPTIONS, TRIAL_CONFIG } from '@/lib/config/platform';
 import { FeatureFlagManager } from './FeatureFlagManager';
 import { UserManagement } from './UserManagement';
+import { PlatformSubscriptionsPanel } from './PlatformSubscriptionsPanel';
+import { PlatformPackagesPanel } from './PlatformPackagesPanel';
+import { RegistrationApprovalsPanel } from './RegistrationApprovalsPanel';
 import toast from 'react-hot-toast';
 
 // --- Sub-views ---------------------------------------------------------------
 
 const ADMIN_TABS = [
     { key: 'overview', label: 'Overview', icon: Activity },
+    { key: 'registrations', label: 'Registrations', icon: UserPlus },
     { key: 'businesses', label: 'Businesses', icon: Building2 },
     { key: 'users', label: 'Users', icon: Users },
     { key: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
+    { key: 'packages', label: 'Packages', icon: Layers },
     { key: 'roles', label: 'Roles & Access', icon: UserCog },
     { key: 'features', label: 'Feature Flags', icon: Flag },
 ];
 
 // --- Overview Panel ----------------------------------------------------------
 
-function OverviewPanel({ stats, isLoading }) {
+function OverviewPanel({ stats, metrics, isLoading }) {
     if (isLoading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -68,14 +76,16 @@ function OverviewPanel({ stats, isLoading }) {
         );
     }
 
-    const totals = stats?.totals || {};
+    const totals = stats?.totals || metrics || {};
     const planDist = stats?.planDistribution || [];
+    const monthlyRevenue = metrics?.monthlyRevenue ?? 0;
+    const recentBusinesses = metrics?.recentBusinesses || [];
 
     const kpis = [
-        { label: 'Total Businesses', value: totals.total_businesses || 0, icon: Building2, color: 'text-blue-600 bg-blue-50' },
-        { label: 'Total Users', value: totals.total_users || 0, icon: Users, color: 'text-wine-600 bg-wine-50' },
-        { label: 'Business Owners', value: totals.total_owners || 0, icon: Crown, color: 'text-amber-600 bg-amber-50' },
-        { label: 'Active Members', value: totals.total_active_members || 0, icon: UserPlus, color: 'text-green-600 bg-green-50' },
+        { label: 'Total Businesses', value: totals.total_businesses ?? metrics?.totalBusinesses ?? 0, icon: Building2, color: 'text-blue-600 bg-blue-50' },
+        { label: 'Total Users', value: totals.total_users ?? metrics?.totalUsers ?? 0, icon: Users, color: 'text-wine-600 bg-wine-50' },
+        { label: 'Monthly Revenue', value: monthlyRevenue ? `PKR ${(monthlyRevenue / 100).toLocaleString()}` : 'PKR 0', icon: TrendingUp, color: 'text-emerald-600 bg-emerald-50' },
+        { label: 'Active Members', value: totals.total_active_members ?? 0, icon: UserPlus, color: 'text-green-600 bg-green-50' },
     ];
 
     return (
@@ -152,6 +162,33 @@ function OverviewPanel({ stats, isLoading }) {
                     )}
                 </CardContent>
             </Card>
+
+            {recentBusinesses.length > 0 && (
+                <Card className="border-none shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-base font-bold flex items-center gap-2">
+                            <UserPlus className="w-4 h-4" />
+                            Recent Signups
+                        </CardTitle>
+                        <CardDescription>Latest businesses registered on the platform</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            {recentBusinesses.map((biz) => (
+                                <div key={biz.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 text-sm">
+                                    <div>
+                                        <p className="font-semibold text-gray-900">{biz.business_name}</p>
+                                        <p className="text-xs text-gray-500 capitalize">{biz.category?.replace(/-/g, ' ') || 'General'}</p>
+                                    </div>
+                                    <span className="text-xs text-gray-400">
+                                        {biz.created_at ? new Date(biz.created_at).toLocaleDateString() : '—'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 }
@@ -359,7 +396,10 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
     const [manualNotes, setManualNotes] = useState('');
     const [manualAmount, setManualAmount] = useState('');
     const [manualTier, setManualTier] = useState('__current__');
+    const [manualPackage, setManualPackage] = useState('__none__');
+    const [manualGrantAccess, setManualGrantAccess] = useState(false);
     const [manualSaving, setManualSaving] = useState(false);
+    const [approveSaving, setApproveSaving] = useState(false);
     const [adminPackagingMode, setAdminPackagingMode] = useState('tier');
     const [adminFeatureOverrides, setAdminFeatureOverrides] = useState({});
     const [packagingSaving, setPackagingSaving] = useState(false);
@@ -372,37 +412,81 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
     );
 
     const paidTierKeys = Object.keys(PLAN_TIERS).filter((k) => k !== 'free');
+    const domainPackageOptions = listDomainPackages();
 
     const handleManualPayment = async () => {
         const tierArg = manualTier === '__current__' ? null : manualTier;
-        if (!tierArg && business.plan_tier === 'free') {
-            toast.error('Select a paid plan tier, or set plan from the list first.');
+        const packageArg = manualPackage === '__none__' ? null : manualPackage;
+        if (!tierArg && !packageArg && business.plan_tier === 'free') {
+            toast.error('Select a paid plan tier or domain package.');
             return;
         }
         setManualSaving(true);
         try {
             const res = await recordManualSubscriptionPayment({
                 businessId: business.id,
-                planTier: tierArg,
+                planTier: packageArg ? null : tierArg,
+                domainPackageKey: packageArg,
                 extendDays: parseInt(manualDays, 10) || 30,
-                amountMinor: manualAmount.trim() ? parseInt(manualAmount, 10) : null,
+                amountMajor: manualAmount.trim() ? parseInt(manualAmount, 10) : null,
                 currency: 'PKR',
                 paymentReference: manualRef.trim(),
+                paymentMethod: 'admin_recorded',
                 notes: manualNotes.trim(),
+                grantAccess: manualGrantAccess,
             });
             if (res.success) {
                 toast.success(
-                    `Manual payment recorded. Access through ${new Date(res.planExpiresAt).toLocaleDateString()}`
+                    res.grantedAccess
+                        ? `Payment recorded and dashboard access enabled. Access through ${new Date(res.planExpiresAt).toLocaleDateString()}`
+                        : `Manual payment recorded. Access through ${new Date(res.planExpiresAt).toLocaleDateString()}`
                 );
                 setManualRef('');
                 setManualNotes('');
                 setManualAmount('');
+                setManualGrantAccess(false);
                 onRefresh();
             } else {
                 toast.error(res.error || 'Failed to record payment');
             }
         } finally {
             setManualSaving(false);
+        }
+    };
+
+    const handleApprovePendingPayment = async () => {
+        setApproveSaving(true);
+        try {
+            const res = await approveManualSubscriptionPaymentRequest({
+                businessId: business.id,
+                extendDays: parseInt(manualDays, 10) || 30,
+            });
+            if (res.success) {
+                toast.success(`Approved. Access through ${new Date(res.planExpiresAt).toLocaleDateString()}`);
+                onRefresh();
+            } else {
+                toast.error(res.error || 'Approval failed');
+            }
+        } finally {
+            setApproveSaving(false);
+        }
+    };
+
+    const handleRejectPendingPayment = async () => {
+        setApproveSaving(true);
+        try {
+            const res = await rejectManualSubscriptionPaymentRequest({
+                businessId: business.id,
+                reviewNotes: manualNotes.trim(),
+            });
+            if (res.success) {
+                toast.success('Payment request rejected');
+                onRefresh();
+            } else {
+                toast.error(res.error || 'Rejection failed');
+            }
+        } finally {
+            setApproveSaving(false);
         }
     };
 
@@ -418,6 +502,10 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
         }
         return typeof s === 'object' && !Array.isArray(s) ? s : {};
     }, [business?.settings]);
+
+    const manualPaymentState = getManualPaymentRequestState(bizSettings);
+    const pendingOwnerPayment =
+        manualPaymentState.pending?.status === 'pending' ? manualPaymentState.pending : null;
 
     useEffect(() => {
         const pkg = getPackagingFromSettings(bizSettings);
@@ -584,9 +672,37 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                         <div>
                             <h4 className="font-bold text-sm text-emerald-950">Manual payment &amp; renewal</h4>
                             <p className="text-xs text-emerald-900/80 mt-1">
-                                Record Easypaisa, JazzCash, bank transfer, or other offline payments. Extends access from today or current expiry, writes audit history, sets status to <code className="text-[10px] bg-white/60 px-1 rounded">manual_payment_active</code>.
+                                Record Easypaisa, JazzCash, bank transfer, or approve owner-submitted references. Applies plan tier or vertical package with custom packaging when configured.
                             </p>
                         </div>
+
+                        {pendingOwnerPayment ? (
+                            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 space-y-2">
+                                <p className="text-xs font-semibold text-amber-950">Owner payment pending approval</p>
+                                <ul className="text-xs text-amber-900/90 space-y-0.5">
+                                    <li>Reference: <strong>{pendingOwnerPayment.paymentReference}</strong></li>
+                                    <li>Method: {pendingOwnerPayment.paymentMethod || '—'}</li>
+                                    {pendingOwnerPayment.domainPackageKey ? (
+                                        <li>Package: {pendingOwnerPayment.domainPackageKey}</li>
+                                    ) : (
+                                        <li>Plan: {pendingOwnerPayment.planTier || business.plan_tier}</li>
+                                    )}
+                                    {pendingOwnerPayment.amountMajor ? (
+                                        <li>Amount: PKR {pendingOwnerPayment.amountMajor.toLocaleString()}</li>
+                                    ) : null}
+                                </ul>
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                    <Button type="button" size="sm" disabled={approveSaving} onClick={() => void handleApprovePendingPayment()}>
+                                        {approveSaving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                                        Approve &amp; activate
+                                    </Button>
+                                    <Button type="button" size="sm" variant="outline" disabled={approveSaving} onClick={() => void handleRejectPendingPayment()}>
+                                        Reject
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : null}
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div className="space-y-1">
                                 <Label className="text-xs">Plan tier</Label>
@@ -599,6 +715,22 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                                         {paidTierKeys.map((tier) => (
                                             <SelectItem key={tier} value={tier}>
                                                 {PLAN_TIERS[tier]?.name || tier}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-xs">Domain package (optional)</Label>
+                                <Select value={manualPackage} onValueChange={setManualPackage}>
+                                    <SelectTrigger className="h-8 text-xs bg-white">
+                                        <SelectValue placeholder="Package" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__none__">None (plan tier only)</SelectItem>
+                                        {domainPackageOptions.map((pkg) => (
+                                            <SelectItem key={pkg.key} value={pkg.key}>
+                                                {pkg.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -624,13 +756,13 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-xs">Amount (minor units, optional)</Label>
+                                <Label className="text-xs">Amount PKR (optional)</Label>
                                 <Input
                                     className="h-8 text-xs bg-white"
                                     type="number"
                                     value={manualAmount}
                                     onChange={(e) => setManualAmount(e.target.value)}
-                                    placeholder="e.g. paisa"
+                                    placeholder="e.g. 12999"
                                 />
                             </div>
                             <div className="space-y-1 sm:col-span-2">
@@ -643,6 +775,17 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                                 />
                             </div>
                         </div>
+                        <label className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50/70 px-3 py-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={manualGrantAccess}
+                                onChange={(e) => setManualGrantAccess(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
+                            />
+                            <span className="text-xs text-slate-700">
+                                <span className="font-semibold text-slate-900">Also enable dashboard access</span> — approves the registration ({business.approval_status === 'approved' || business.approval_status === 'auto_approved' ? 'already has access' : 'currently gated'}) so the owner can sign in immediately.
+                            </span>
+                        </label>
                         <Button
                             type="button"
                             size="sm"
@@ -650,7 +793,11 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
                             disabled={manualSaving}
                             onClick={() => void handleManualPayment()}
                         >
-                            {manualSaving ? 'Saving…' : 'Record manual payment & extend access'}
+                            {manualSaving
+                                ? 'Saving…'
+                                : manualGrantAccess
+                                    ? 'Record payment & enable access'
+                                    : 'Record manual payment & extend access'}
                         </Button>
                     </div>
 
@@ -864,197 +1011,6 @@ function BusinessDetailModal({ details, onClose, onRefresh }) {
     );
 }
 
-// --- Users Panel -------------------------------------------------------------
-
-function UsersPanel() {
-    const [users, setUsers] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [page, setPage] = useState(1);
-    const [search, setSearch] = useState('');
-    const [loading, setLoading] = useState(true);
-
-    const fetchUsers = useCallback(async () => {
-        setLoading(true);
-        const res = await listAllUsers({ page, limit: 20, search });
-        if (res.success) {
-            setUsers(res.users);
-            setTotal(res.total);
-        } else {
-            toast.error(res.error || 'Failed to load users');
-        }
-        setLoading(false);
-    }, [page, search]);
-
-    useEffect(() => { fetchUsers(); }, [fetchUsers]);
-
-    const handleSetPlatformRole = async (userId, newRole) => {
-        const res = await setPlatformRole(userId, newRole);
-        if (res.success) {
-            toast.success(`Platform role updated to ${newRole}`);
-            fetchUsers();
-        } else {
-            toast.error(res.error);
-        }
-    };
-
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                        placeholder="Search users by name or email..."
-                        value={search}
-                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                        className="pl-10"
-                    />
-                </div>
-                <Button variant="outline" size="sm" onClick={fetchUsers}>
-                    <RefreshCcw className="w-4 h-4 mr-1" /> Refresh
-                </Button>
-            </div>
-
-            <p className="text-xs text-gray-500">{total} total users</p>
-
-            {loading ? (
-                <div className="space-y-3">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="h-16 bg-gray-50 rounded-xl animate-pulse" />
-                    ))}
-                </div>
-            ) : users.length === 0 ? (
-                <Card className="p-8 text-center">
-                    <Users className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">No users found</p>
-                </Card>
-            ) : (
-                <div className="space-y-2">
-                    {users.map(user => (
-                        <Card key={user.id} className="border-none shadow-sm">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-wine-600 text-white rounded-xl flex items-center justify-center text-sm font-bold shrink-0">
-                                            {user.name?.substring(0, 2).toUpperCase() || user.email?.substring(0, 2).toUpperCase()}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-sm font-bold text-gray-900 truncate">{user.name || 'Unnamed'}</p>
-                                                {user.platform_role === 'admin' && (
-                                                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-wine-100 text-wine-700">
-                                                        Platform Admin
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                                            {user.businesses && user.businesses.length > 0 && (
-                                                <div className="flex flex-wrap gap-1 mt-1">
-                                                    {user.businesses.map((b, i) => (
-                                                        <span key={i} className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-600">
-                                                            {b.business_name} ({b.role})
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <span className="text-[10px] text-gray-400">
-                                            Joined {new Date(user.createdAt).toLocaleDateString()}
-                                        </span>
-                                        <Select
-                                            defaultValue={user.platform_role || 'user'}
-                                            onValueChange={(val) => handleSetPlatformRole(user.id, val)}
-                                        >
-                                            <SelectTrigger className="w-28 h-7 text-xs">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="user">User</SelectItem>
-                                                <SelectItem value="admin">Platform Admin</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            )}
-
-            {total > 20 && (
-                <div className="flex items-center justify-between pt-2">
-                    <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</Button>
-                    <span className="text-xs text-gray-500">Page {page} of {Math.ceil(total / 20)}</span>
-                    <Button variant="outline" size="sm" disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>Next</Button>
-                </div>
-            )}
-        </div>
-    );
-}
-
-// --- Subscriptions Panel -----------------------------------------------------
-
-function SubscriptionsPanel({ stats, isLoading }) {
-    if (isLoading) {
-        return <div className="h-40 bg-gray-50 rounded-xl animate-pulse" />;
-    }
-
-    const planDist = stats?.planDistribution || [];
-    const totals = stats?.totals || {};
-
-    return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {Object.entries(PLAN_TIERS).map(([key, plan]) => {
-                    const planData = planDist.find(p => p.plan_tier === key);
-                    const count = parseInt(planData?.count || 0);
-                    const trials = parseInt(planData?.active_trials || 0);
-                    const expired = parseInt(planData?.expired_trials || 0);
-                    return (
-                        <Card key={key} className="border-none shadow-sm">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h4 className="font-bold text-sm">{plan.name}</h4>
-                                    <span className="text-lg font-semibold text-gray-900">{count}</span>
-                                </div>
-                                <div className="space-y-1 text-xs">
-                                    <div className="flex justify-between text-gray-500">
-                                        <span>Price</span>
-                                        <span className="font-semibold">
-                                            {plan.price_pkr === 0 ? 'Free' : `PKR ${plan.price_pkr?.toLocaleString()}/mo`}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between text-gray-500">
-                                        <span>Max Users</span>
-                                        <span className="font-semibold">{plan.limits.max_users === -1 ? '∞' : plan.limits.max_users}</span>
-                                    </div>
-                                    <div className="flex justify-between text-gray-500">
-                                        <span>Max Products</span>
-                                        <span className="font-semibold">{plan.limits.max_products === -1 ? '∞' : plan.limits.max_products}</span>
-                                    </div>
-                                    {trials > 0 && (
-                                        <div className="flex justify-between text-amber-600 font-medium">
-                                            <span>Active Trials</span>
-                                            <span>{trials}</span>
-                                        </div>
-                                    )}
-                                    {expired > 0 && (
-                                        <div className="flex justify-between text-red-500 font-medium">
-                                            <span>Expired Trials</span>
-                                            <span>{expired}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-            </div>
-        </div>
-    );
-}
-
 // --- Roles & Access Panel ----------------------------------------------------
 
 function RolesPanel() {
@@ -1105,15 +1061,22 @@ function RolesPanel() {
 export default function PlatformAdminPanel() {
     const [activeTab, setActiveTab] = useState('overview');
     const [stats, setStats] = useState(null);
+    const [metrics, setMetrics] = useState(null);
     const [statsLoading, setStatsLoading] = useState(true);
 
     useEffect(() => {
         (async () => {
             setStatsLoading(true);
             try {
-                const res = await getSubscriptionStats();
-                if (res.success) {
-                    setStats(res);
+                const [statsRes, metricsRes] = await Promise.all([
+                    getSubscriptionStats(),
+                    getPlatformMetrics(),
+                ]);
+                if (statsRes.success) {
+                    setStats(statsRes);
+                }
+                if (metricsRes.success) {
+                    setMetrics(metricsRes);
                 }
             } catch (err) {
                 console.error('[PlatformAdmin] Failed to load stats:', err);
@@ -1161,10 +1124,12 @@ export default function PlatformAdminPanel() {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'overview' && <OverviewPanel stats={stats} isLoading={statsLoading} />}
+            {activeTab === 'overview' && <OverviewPanel stats={stats} metrics={metrics} isLoading={statsLoading} />}
+            {activeTab === 'registrations' && <RegistrationApprovalsPanel embedded />}
             {activeTab === 'businesses' && <BusinessesPanel />}
             {activeTab === 'users' && <UserManagement />}
-            {activeTab === 'subscriptions' && <SubscriptionsPanel stats={stats} isLoading={statsLoading} />}
+            {activeTab === 'subscriptions' && <PlatformSubscriptionsPanel stats={stats} isLoading={statsLoading} />}
+            {activeTab === 'packages' && <PlatformPackagesPanel />}
             {activeTab === 'roles' && <RolesPanel />}
             {activeTab === 'features' && <FeatureFlagManager />}
         </div>

@@ -4,11 +4,25 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { useRailAutoScroll } from '@/lib/hooks/storefront/useRailAutoScroll';
+import { FashionSectionHeader } from './FashionSectionHeader';
 import { cn } from '@/lib/utils';
 
 /**
- * Centered circular category row (Ready to Wear / Accessories).
- * Wraps on large screens; horizontal scroll on small viewports when needed.
+ * Premium single-row circular category showcase (Ready to Wear / Accessories).
+ * Always a single horizontal row: it auto-scrolls and exposes overlay arrows
+ * when the tiles overflow, and stays centered when they fit. Circles pick up
+ * the store accent colour on hover for a boutique feel.
+ *
+ * @param {{
+ *   title: string;
+ *   circles?: Array<{ id: string; label: string; href: string; image: string }>;
+ *   viewAllHref?: string;
+ *   showDivider?: boolean;
+ *   variant?: 'white' | 'muted';
+ *   animate?: boolean;
+ *   accent?: string;
+ * }} props
  */
 export function FashionCircleShowcase({
   title,
@@ -16,16 +30,28 @@ export function FashionCircleShowcase({
   viewAllHref,
   showDivider = false,
   variant = 'muted',
+  animate = true,
+  accent = '#1c1917',
 }) {
   const trackRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  // Assume overflow for longer rows to avoid an initial centered → left shift.
+  const [overflowing, setOverflowing] = useState(circles.length > 5);
+
+  useRailAutoScroll(trackRef, {
+    enabled: animate && circles.length > 4,
+    interval: 3400,
+    step: 132,
+  });
 
   const updateScroll = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
+    const overflow = el.scrollWidth - el.clientWidth > 8;
+    setOverflowing(overflow);
     setCanScrollLeft(el.scrollLeft > 8);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+    setCanScrollRight(overflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
   }, []);
 
   useEffect(() => {
@@ -41,81 +67,70 @@ export function FashionCircleShowcase({
   }, [circles, updateScroll]);
 
   const scrollByDir = (dir) => {
-    trackRef.current?.scrollBy({ left: dir * 220, behavior: 'smooth' });
+    trackRef.current?.scrollBy({ left: dir * 264, behavior: 'smooth' });
   };
 
   if (circles.length < 2) return null;
 
-  const bgClass = variant === 'white' ? 'bg-white' : 'bg-[#f5f5f4]';
+  const bgClass = variant === 'white' ? 'bg-white' : 'bg-[#f7f6f5]';
 
   return (
     <section
-      className={cn(
-        'py-8 sm:py-10',
-        bgClass,
-        showDivider && 'border-t border-stone-200'
-      )}
+      className={cn('py-12 sm:py-16', bgClass, showDivider && 'border-t border-stone-200')}
+      style={{ '--sf-accent': accent }}
     >
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col items-center gap-3 sm:mb-7">
-          <h2 className="text-center text-lg font-semibold uppercase tracking-[0.18em] text-stone-900 sm:text-xl">
-            {title}
-          </h2>
-          <div className="flex items-center gap-2">
-            {viewAllHref ? (
-              <Link
-                href={viewAllHref}
-                className="mr-1 text-xs font-semibold uppercase tracking-wide text-stone-500 transition hover:text-stone-800"
-              >
-                View all
-              </Link>
-            ) : null}
+        <FashionSectionHeader title={title} viewAllHref={viewAllHref} accent={accent} dense />
+
+        <div className="relative">
+          {overflowing && canScrollLeft ? (
             <button
               type="button"
               onClick={() => scrollByDir(-1)}
-              disabled={!canScrollLeft}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-900 text-white transition hover:opacity-90 disabled:opacity-30"
+              className="absolute -left-1 top-[42%] z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white/95 text-stone-700 shadow-md backdrop-blur transition hover:text-stone-900 sm:flex"
               aria-label={`Previous ${title}`}
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
+          ) : null}
+          {overflowing && canScrollRight ? (
             <button
               type="button"
               onClick={() => scrollByDir(1)}
-              disabled={!canScrollRight}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-900 text-white transition hover:opacity-90 disabled:opacity-30"
+              className="absolute -right-1 top-[42%] z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white/95 text-stone-700 shadow-md backdrop-blur transition hover:text-stone-900 sm:flex"
               aria-label={`Next ${title}`}
             >
               <ChevronRight className="h-4 w-4" />
             </button>
-          </div>
-        </div>
+          ) : null}
 
-        <div className="relative -mx-2 sm:mx-0">
           <div
             ref={trackRef}
             className={cn(
-              'flex gap-4 px-2 pb-1 sm:gap-5 sm:px-0',
-              'max-lg:overflow-x-auto max-lg:[-ms-overflow-style:none] max-lg:[scrollbar-width:none] max-lg:[&::-webkit-scrollbar]:hidden',
-              'lg:mx-auto lg:max-w-5xl lg:flex-wrap lg:justify-center lg:overflow-visible lg:gap-x-6 lg:gap-y-7'
+              'flex gap-5 pb-1 sm:gap-8',
+              'overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+              !overflowing && 'justify-center',
+              animate && 'sf-stagger'
             )}
           >
             {circles.map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
-                className="group flex w-[84px] shrink-0 flex-col items-center sm:w-[96px] lg:w-[100px]"
+                className="group flex w-[92px] shrink-0 flex-col items-center sm:w-[104px] lg:w-[116px]"
               >
-                <div className="relative h-[84px] w-[84px] overflow-hidden rounded-full border border-stone-200 bg-white shadow-sm transition group-hover:shadow-md sm:h-[96px] sm:w-[96px] lg:h-[100px] lg:w-[100px]">
-                  <SmartProductImage
-                    src={item.image}
-                    alt=""
-                    fill
-                    className="object-cover transition duration-500 group-hover:scale-105"
-                    sizes="100px"
-                  />
+                <div className="rounded-full border-2 border-transparent p-1 transition-colors duration-300 group-hover:border-[color:var(--sf-accent)]">
+                  <div className="relative h-[84px] w-[84px] overflow-hidden rounded-full bg-stone-100 shadow-sm ring-1 ring-stone-200/70 transition-shadow duration-300 group-hover:shadow-md sm:h-[96px] sm:w-[96px] lg:h-[108px] lg:w-[108px]">
+                    <SmartProductImage
+                      src={item.image}
+                      alt=""
+                      fill
+                      className="object-cover transition duration-500 group-hover:scale-[1.08]"
+                      sizes="120px"
+                    />
+                  </div>
                 </div>
-                <p className="mt-2.5 max-w-[96px] text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-stone-900 sm:text-[11px]">
+                <p className="mt-3 max-w-[108px] text-center text-[10px] font-semibold uppercase leading-tight tracking-[0.08em] text-stone-800 transition-colors group-hover:text-[color:var(--sf-accent)] sm:text-[11px]">
                   {item.label}
                 </p>
               </Link>

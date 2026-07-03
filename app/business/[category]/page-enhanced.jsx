@@ -344,16 +344,17 @@ export default function BusinessDashboard() {
           </Card>
         </TabsContent>
 
-        {/* Inventory Tab */}
+        {/* Inventory Tab — demo/mock only; use DashboardClient for production composite upsert + InventoryService */}
         <TabsContent value="inventory" className="space-y-6">
           <InventoryManager
             products={products}
             onUpdate={(updatedProduct) => {
-              setProducts(
-                products.map((p) =>
-                  p.id === updatedProduct.id ? updatedProduct : p
-                )
-              );
+              setProducts((prev) => {
+                if (updatedProduct?.id) {
+                  return prev.map((p) => (p.id === updatedProduct.id ? { ...p, ...updatedProduct } : p));
+                }
+                return [...prev, { ...updatedProduct, id: updatedProduct.id ?? Date.now() }];
+              });
             }}
             onAdd={() => setShowProductForm(true)}
             onDelete={handleDeleteProduct}

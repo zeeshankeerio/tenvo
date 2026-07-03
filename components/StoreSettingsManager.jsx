@@ -33,6 +33,8 @@ import { isAutoPartsStore } from '@/lib/storefront/autoParts';
 import { isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
 import { isPharmacyElevatedStore } from '@/lib/storefront/pharmacyStorefront';
 import { isFurnitureElevatedStore } from '@/lib/storefront/furnitureStorefront';
+import { isFitnessElevatedStore } from '@/lib/storefront/fitnessStorefront';
+import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
 import { canConfigureTenantMeetingUrl, normalizeTenantMeetingUrl } from '@/lib/storefront/storefrontBooking';
 
 // ── Image Upload Field ────────────────────────────────────────────────────────
@@ -217,8 +219,42 @@ export function StoreSettingsManager({ business, category }) {
       featuredRailTitle: '',
       featuredRailSubtitle: '',
     },
+    fitness: {
+      showPrograms: true,
+      showMemberships: true,
+      showBenefits: true,
+      showTrainers: false,
+      showBookingStrip: true,
+      showPromoBanners: true,
+      showTrustPillars: false,
+      heroTitle: '',
+      heroSubtitle: '',
+      searchPlaceholder: '',
+      supplementRailTitle: '',
+      featuredRailTitle: '',
+      featuredRailSubtitle: '',
+      membershipSectionTitle: '',
+      membershipSectionSubtitle: '',
+    },
     booking: {
       meetingUrl: '',
+    },
+    fashion: {
+      animations: true,
+      showHeroRating: true,
+      showTopCollections: true,
+      showTopPicks: true,
+      showEditorialSpotlight: true,
+      showUnstitched: true,
+      showReadyToWear: true,
+      showAccessories: true,
+      showOffers: true,
+      showNewArrivals: true,
+      unstitchedTitle: '',
+      readyToWearTitle: '',
+      accessoriesTitle: '',
+      offersTitle: '',
+      newArrivalsTitle: '',
     },
   });
 
@@ -228,6 +264,8 @@ export function StoreSettingsManager({ business, category }) {
   const restaurantStore = isRestaurantElevatedStore(category || business?.category);
   const pharmacyStore = isPharmacyElevatedStore(category || business?.category);
   const furnitureStore = isFurnitureElevatedStore(category || business?.category);
+  const fitnessStore = isFitnessElevatedStore(category || business?.category);
+  const fashionStore = isFashionEditorialStore(category || business?.category);
   const businessForBookingGate = useMemo(
     () => ({
       ...business,
@@ -307,10 +345,20 @@ export function StoreSettingsManager({ business, category }) {
       ...prev,
       furniture: { ...(prev.furniture || {}), [key]: val },
     }));
+  const setFitness = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      fitness: { ...(prev.fitness || {}), [key]: val },
+    }));
   const setBooking = (key, val) =>
     setSettings((prev) => ({
       ...prev,
       booking: { ...(prev.booking || {}), [key]: val },
+    }));
+  const setFashion = (key, val) =>
+    setSettings((prev) => ({
+      ...prev,
+      fashion: { ...(prev.fashion || {}), [key]: val },
     }));
   const setSocialLink = (key, val) => setSettings(prev => ({ ...prev, socialLinks: { ...prev.socialLinks, [key]: val } }));
   const setBrand = (key, val) => setSettings(prev => ({ ...prev, brand: { ...prev.brand, [key]: val } }));
@@ -1190,6 +1238,215 @@ export function StoreSettingsManager({ business, category }) {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {fitnessStore ? (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Megaphone className="w-4 h-4" /> Gym & fitness storefront
+                </CardTitle>
+                <CardDescription>
+                  Toggle homepage sections and hero copy. Products, memberships, and supplements come from live inventory.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ['showPrograms', 'Training programs row', false],
+                    ['showMemberships', 'Membership packages', false],
+                    ['showBenefits', 'Extra benefits', false],
+                    ['showTrainers', 'Meet the coaches', true],
+                    ['showBookingStrip', 'Book your slot strip', false],
+                    ['showPromoBanners', 'Promo banner row', false],
+                    ['showTrustPillars', 'Trust pillars strip', true],
+                  ].map(([key, label, optIn]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Switch
+                        checked={optIn ? settings.fitness?.[key] === true : settings.fitness?.[key] !== false}
+                        onCheckedChange={(v) => setFitness(key, v)}
+                      />
+                      <Label className="text-sm">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Hero title</Label>
+                    <Input
+                      value={settings.fitness?.heroTitle || ''}
+                      onChange={(e) => setFitness('heroTitle', e.target.value)}
+                      placeholder="Be fierce. Train wild."
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Search placeholder</Label>
+                    <Input
+                      value={settings.fitness?.searchPlaceholder || ''}
+                      onChange={(e) => setFitness('searchPlaceholder', e.target.value)}
+                      placeholder="Search supplements, gear, memberships…"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Hero subtitle</Label>
+                    <Input
+                      value={settings.fitness?.heroSubtitle || ''}
+                      onChange={(e) => setFitness('heroSubtitle', e.target.value)}
+                      placeholder="Strength, mobility, and conditioning…"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Supplements rail title</Label>
+                    <Input
+                      value={settings.fitness?.supplementRailTitle || ''}
+                      onChange={(e) => setFitness('supplementRailTitle', e.target.value)}
+                      placeholder="Fuel your training"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Featured rail title</Label>
+                    <Input
+                      value={settings.fitness?.featuredRailTitle || ''}
+                      onChange={(e) => setFitness('featuredRailTitle', e.target.value)}
+                      placeholder="Top picks"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Featured rail subtitle</Label>
+                    <Input
+                      value={settings.fitness?.featuredRailSubtitle || ''}
+                      onChange={(e) => setFitness('featuredRailSubtitle', e.target.value)}
+                      placeholder="Bestsellers from your gym"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Membership section title</Label>
+                    <Input
+                      value={settings.fitness?.membershipSectionTitle || ''}
+                      onChange={(e) => setFitness('membershipSectionTitle', e.target.value)}
+                      placeholder="Gents gym & ladies section plans"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Membership section subtitle</Label>
+                    <Input
+                      value={settings.fitness?.membershipSectionSubtitle || ''}
+                      onChange={(e) => setFitness('membershipSectionSubtitle', e.target.value)}
+                      placeholder="Monthly through annual passes from your catalog"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Membership SKUs, PT sessions, and supplement grids read from inventory categories (Memberships, Personal Training, Classes, supplements). Category tile photos use your category image, a product photo from that category, or gym archive art until you upload images in inventory. Enable Meet the coaches only after adding trainer profiles in settings. Use booking meeting URL above for Calendly-style scheduling.
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {fashionStore ? (
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Palette className="w-4 h-4" /> Clothing & textile storefront
+                </CardTitle>
+                <CardDescription>
+                  Control the editorial homepage look and feel. Sections are built from your live
+                  categories and inventory; toggle what shows and rename each row.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                  <Switch
+                    checked={settings.fashion?.animations !== false}
+                    onCheckedChange={(v) => setFashion('animations', v)}
+                  />
+                  <div>
+                    <Label className="text-sm">Scroll & motion effects</Label>
+                    <p className="text-xs text-gray-400">
+                      Lightweight fade-in, staggered tiles, and gentle auto-scrolling category
+                      rows. Automatically disabled for visitors who prefer reduced motion.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Homepage sections
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ['showHeroRating', 'Hero rating / social proof'],
+                    ['showTopCollections', 'Top collections carousel'],
+                    ['showTopPicks', 'Top picks product row'],
+                    ['showEditorialSpotlight', 'Editorial spotlight banner'],
+                    ['showUnstitched', 'Unstitched category grid'],
+                    ['showReadyToWear', 'Ready to wear row'],
+                    ['showAccessories', 'Accessories row'],
+                    ['showOffers', 'Offers / sale rail'],
+                    ['showNewArrivals', 'New arrivals rail'],
+                  ].map(([key, label]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Switch
+                        checked={settings.fashion?.[key] !== false}
+                        onCheckedChange={(v) => setFashion(key, v)}
+                      />
+                      <Label className="text-sm">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Section titles (optional)
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Unstitched title</Label>
+                    <Input
+                      value={settings.fashion?.unstitchedTitle || ''}
+                      onChange={(e) => setFashion('unstitchedTitle', e.target.value)}
+                      placeholder="UNSTITCHED"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Ready to wear title</Label>
+                    <Input
+                      value={settings.fashion?.readyToWearTitle || ''}
+                      onChange={(e) => setFashion('readyToWearTitle', e.target.value)}
+                      placeholder="READY TO WEAR"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Accessories title</Label>
+                    <Input
+                      value={settings.fashion?.accessoriesTitle || ''}
+                      onChange={(e) => setFashion('accessoriesTitle', e.target.value)}
+                      placeholder="ACCESSORIES"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Offers title</Label>
+                    <Input
+                      value={settings.fashion?.offersTitle || ''}
+                      onChange={(e) => setFashion('offersTitle', e.target.value)}
+                      placeholder="OFFERS & SALE"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>New arrivals title</Label>
+                    <Input
+                      value={settings.fashion?.newArrivalsTitle || ''}
+                      onChange={(e) => setFashion('newArrivalsTitle', e.target.value)}
+                      placeholder="NEW ARRIVALS"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Hero slides and department imagery adapt to your store type (boutique, textile,
+                  leather, jewellery) and use your category and product photos. Set your accent color
+                  under Branding and the top announcement strip under Content.
+                </p>
               </CardContent>
             </Card>
           ) : null}

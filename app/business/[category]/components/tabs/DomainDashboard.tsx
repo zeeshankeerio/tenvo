@@ -6,7 +6,7 @@ import {
     CreditCard, Clock,
     Zap, ArrowUpRight, ArrowDownRight,
     Boxes, Warehouse, RotateCcw, BadgeDollarSign,
-    Package, FileText, BarChart3, Plus, CheckCircle2, AlertTriangle
+    Package, FileText, BarChart3, Plus
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,10 @@ import { PredictivePlanningPortlet } from '../islands/portlets/PredictivePlannin
 import { AgenticAuditPortlet } from '../islands/portlets/AgenticAuditPortlet.client';
 import NetsuiteDashboard from '../islands/NetsuiteDashboard.client';
 import { DashboardMobileHub } from '@/components/dashboard/mobile/DashboardMobileHub';
+import { EasyBusinessDashboard } from '@/components/dashboard/easy/EasyBusinessDashboard';
+import { DomainOperationsPanel } from '@/components/dashboard/easy/DomainOperationsPanel';
+import { IndustryInsights } from '../islands/IndustryInsights.client';
+import { resolveProductStock } from '@/lib/dashboard/easyDashboardHelpers';
 
 // ===============================================================
 // TYPES & INTERFACES
@@ -57,6 +61,7 @@ interface InvoiceItemLike {
 interface InvoiceLike {
     status?: string;
     date?: string | Date;
+    due_date?: string | Date;
     customer_id?: string | number | null;
     customer_name?: string;
     grand_total?: number | string;
@@ -361,7 +366,7 @@ export function DomainDashboard({
 
     const lowStockFallback = useMemo(() => {
         return products.filter((product: ProductLike) => {
-            const stock = Number(product?.stock) || 0;
+            const stock = resolveProductStock(product);
             const safetyStock =
                 Number(product?.reorder_point) ||
                 Number(product?.min_stock) ||
@@ -372,9 +377,17 @@ export function DomainDashboard({
     }, [products]);
 
     const overdueInvoicesFallback = useMemo(() => {
+        const now = new Date();
         return invoices.filter((invoice: InvoiceLike) => {
             const status = String(invoice?.status || '').toLowerCase();
-            return status.includes('overdue') || status.includes('unpaid');
+            if (status.includes('overdue')) return true;
+            if (['paid', 'cancelled', 'draft', 'voided'].includes(status)) return false;
+            const dueRaw = invoice?.due_date;
+            if (dueRaw) {
+                const due = new Date(dueRaw);
+                if (!Number.isNaN(due.getTime()) && due < now) return true;
+            }
+            return status.includes('unpaid');
         }).length;
     }, [invoices]);
 
@@ -386,9 +399,9 @@ export function DomainDashboard({
     }, [invoices]);
 
     const remindersData = useMemo(() => ({
-        lowStock: dashboardMetrics?.alerts?.lowStock ?? lowStockFallback,
-        overdueInvoices: dashboardMetrics?.alerts?.overdueInvoices ?? overdueInvoicesFallback,
-        pendingOrders: dashboardMetrics?.orders?.pending ?? pendingOrdersFallback
+        lowStock: Math.max(lowStockFallback, dashboardMetrics?.alerts?.lowStock ?? 0),
+        overdueInvoices: Math.max(overdueInvoicesFallback, dashboardMetrics?.alerts?.overdueInvoices ?? 0),
+        pendingOrders: Math.max(pendingOrdersFallback, dashboardMetrics?.orders?.pending ?? 0),
     }), [dashboardMetrics, lowStockFallback, overdueInvoicesFallback, pendingOrdersFallback]);
 
     const domainEfficiency = useMemo(() => {
@@ -407,7 +420,7 @@ export function DomainDashboard({
     const inventoryValue = useMemo(() => {
         const summaryInventory = Number(accountingSummary?.inventoryValue);
         const catalogValue = products.reduce((sum: number, product: ProductLike) => {
-            const stock = Number(product?.stock) || 0;
+            const stock = resolveProductStock(product);
             const unitCost = Number(product?.cost_price) || Number(product?.purchase_price) || Number(product?.price) || 0;
             return sum + Math.max(0, stock) * Math.max(0, unitCost);
         }, 0);
@@ -419,7 +432,7 @@ export function DomainDashboard({
     }, [products, accountingSummary?.inventoryValue]);
 
     const inStockUnits = useMemo(() => {
-        return products.reduce((sum: number, product: ProductLike) => sum + Math.max(0, Number(product?.stock) || 0), 0);
+        return products.reduce((sum: number, product: ProductLike) => sum + resolveProductStock(product), 0);
     }, [products]);
 
     const avgOrderValue = useMemo(() => {
@@ -648,6 +661,46 @@ export function DomainDashboard({
 
     const intelligentInsights = useMemo(() => {
         const insights = [] as Array<{ title: string; text: string; tone: string; actionTab: string }>;
+        const intel = (domainKnowledge?.intelligence ?? {}) as Record<string, unknown>;
+
+        if (intel.seasonality) {
+            const currentMonth = new Date().toLocaleString('default', { month: 'long' });
+            const peakMonths = Array.isArray(intel.peakMonths) ? intel.peakMonths as string[] : [];
+            const isPeak = peakMonths.includes(currentMonth);
+            if (isPeak) {
+                insights.push({
+                    title: 'Seasonal Peak',
+                    text: `${String(intel.seasonality)} peak (${currentMonth}). Buffer safety stock on fast movers before demand spikes.`,
+                    tone: 'indigo',
+                    actionTab: 'inventory',
+                });
+            } else if (peakMonths.length > 0) {
+                insights.push({
+                    title: 'Seasonal Planning',
+                    text: `Next peak window: ${peakMonths[0]}. Align procurement ${Number(intel.leadTime) || 14} days ahead of demand.`,
+                    tone: 'slate',
+                    actionTab: 'purchases',
+                });
+            }
+        }
+
+        if (intel.perishability && String(intel.perishability).toLowerCase() !== 'low') {
+            insights.push({
+                title: 'Shelf-Life Risk',
+                text: `${String(intel.perishability).toUpperCase()} perishability vertical. Prioritize FEFO picks and expiry checks on inbound stock.`,
+                tone: 'amber',
+                actionTab: 'inventory',
+            });
+        }
+
+        if (Number(intel.demandVolatility) > 0.6) {
+            insights.push({
+                title: 'Demand Volatility',
+                text: 'Elevated demand swings detected for this vertical. Widen reorder buffers on A-class SKUs.',
+                tone: 'rose',
+                actionTab: 'reports',
+            });
+        }
 
         if (remindersData.lowStock > 0) {
             insights.push({
@@ -704,7 +757,7 @@ export function DomainDashboard({
         }
 
         return insights;
-    }, [remindersData, campaignEnabled, revenueTrendSigned, periodMetrics.currentExpenses, expenseTrend]);
+    }, [remindersData, campaignEnabled, revenueTrendSigned, periodMetrics.currentExpenses, expenseTrend, domainKnowledge?.intelligence]);
 
     if (isLoading) {
         return (
@@ -727,12 +780,6 @@ export function DomainDashboard({
     if (isEasyMode) {
         const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
         const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening';
-        const easyPresetOptions: Array<{ id: 'today' | '7d' | '30d' | 'mtd'; label: string }> = [
-            { id: 'today', label: 'Today' },
-            { id: '7d', label: '7 Days' },
-            { id: '30d', label: '30 Days' },
-            { id: 'mtd', label: 'MTD' }
-        ];
 
         const easyCommandStrip = [
             {
@@ -765,62 +812,8 @@ export function DomainDashboard({
         const easySmartInsights = intelligentInsights.filter(
             (insight) => !(remindersData.lowStock > 0 && insight.title === 'Predictive Restock')
         );
-        const easyInsightsToRender = (easySmartInsights.length > 0 ? easySmartInsights : intelligentInsights).slice(0, 3);
-
-        const easyKpis = [
-            {
-                label: 'Revenue',
-                value: formatCurrencyCompact(dashboardMetrics?.revenue ?? periodMetrics.currentRevenue),
-                subValue: periodLabel,
-                icon: TrendingUp,
-                color: 'bg-emerald-500',
-                trend: Number(revenueTrendSigned.toFixed(1)),
-            },
-            {
-                label: 'Orders',
-                value: dashboardMetrics?.orders?.total ?? periodMetrics.currentOrders,
-                subValue: `${periodMetrics.soldUnits} units sold`,
-                icon: ShoppingCart,
-                color: ordersTrend < -10 ? 'bg-rose-500' : 'bg-cyan-600',
-                trend: Number(ordersTrend.toFixed(1)),
-            },
-            {
-                label: 'Inventory value',
-                value: formatCurrencyCompact(inventoryValue),
-                subValue: `${inStockUnits.toLocaleString()} units on hand · valued at cost`,
-                icon: Boxes,
-                color: 'bg-brand-primary-dark',
-                trend: undefined,
-            },
-            {
-                label: 'Receivables Due',
-                value: formatCurrencyCompact(outstandingAmount),
-                subValue: openInvoicesCount > 0 ? `${openInvoicesCount} open invoice${openInvoicesCount === 1 ? '' : 's'}` : 'Nothing outstanding',
-                icon: CreditCard,
-                color: outstandingAmount > 0 ? 'bg-rose-500' : 'bg-slate-500',
-                trend: undefined,
-            },
-            {
-                label: 'Active Customers',
-                value: dashboardMetrics?.customers?.active ?? periodMetrics.currentCustomers,
-                subValue: 'Buying in current period',
-                icon: Users,
-                color: 'bg-cyan-500',
-                trend: Number(customerTrend.toFixed(1)),
-            },
-            {
-                label: 'Low Stock',
-                value: remindersData.lowStock,
-                subValue: remindersData.lowStock > 0
-                    ? 'Below minimum, review shelf'
-                    : coverageDays > 365
-                        ? 'Coverage looks stable'
-                        : `${coverageDays} days coverage`,
-                icon: Package,
-                color: remindersData.lowStock > 0 ? 'bg-amber-500' : 'bg-emerald-600',
-                trend: undefined,
-            },
-        ];
+        const easyOperationalInsights =
+            easySmartInsights.length > 0 ? easySmartInsights : intelligentInsights;
 
         const easyActions = [
             { id: 'new-invoice', label: 'New Invoice', desc: 'Create a sale', icon: Plus, color: 'bg-slate-900 hover:bg-slate-800 text-white border border-slate-900' },
@@ -865,557 +858,60 @@ export function DomainDashboard({
             { id: 'new-invoice', label: 'Issue your first invoice' }
         ];
 
-        // Recent invoices for quick view
-        const recentInvoices = [...invoices]
-            .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
-            .slice(0, 5);
-
-        /** Same-length window immediately before the selected range (matches `periodMetrics` logic). */
-        const priorWindowLabel = (() => {
-            const from = new Date(dateRange.from);
-            const to = new Date(dateRange.to);
-            const len = Math.max(1, to.getTime() - from.getTime());
-            const priorEnd = new Date(from.getTime());
-            const priorStart = new Date(from.getTime() - len);
-            const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-            return `${priorStart.toLocaleDateString(undefined, opts)} - ${priorEnd.toLocaleDateString(undefined, opts)}`;
-        })();
-
-        const deltaVisual = (pct: number, mode: 'growth' | 'expense') => {
-            const p = Number(pct);
-            if (!Number.isFinite(p)) {
-                return { text: ', ', className: 'text-slate-400 font-semibold tabular-nums' };
-            }
-            const r = Math.round(p * 10) / 10;
-            if (Math.abs(r) < 0.05) {
-                return { text: '0%', className: 'text-slate-400 font-semibold tabular-nums' };
-            }
-            const sign = r > 0 ? '+' : '';
-            const text = `${sign}${r}%`;
-            if (mode === 'expense') {
-                if (r > 10) return { text, className: 'text-amber-700 font-semibold tabular-nums' };
-                if (r < -0.05) return { text, className: 'text-emerald-700 font-semibold tabular-nums' };
-                return { text, className: 'text-slate-700 font-semibold tabular-nums' };
-            }
-            return {
-                text,
-                className: r >= 0 ? 'text-emerald-700 font-semibold tabular-nums' : 'text-rose-700 font-semibold tabular-nums',
-            };
-        };
-
-        const revDelta = deltaVisual(Number(revenueTrendSigned), 'growth');
-        const ordDelta = deltaVisual(Number(ordersTrend), 'growth');
-        const custDelta = deltaVisual(Number(customerTrend), 'growth');
-        const expDelta = deltaVisual(Number(expenseTrend), 'expense');
-
-        const domainVerticalLabel = getDomainKnowledge(category).name;
+        const domainVerticalLabel =
+            (domainKnowledge as { name?: string } | undefined)?.name || getDomainKnowledge(category).name;
 
         return (
-            <div className="space-y-3 lg:space-y-4 w-full text-slate-700 bg-[#f4f7f9] p-0 lg:p-1">
-                <DashboardMobileHub
-                    mode="easy"
-                    greeting={greeting}
-                    userName={userName}
-                    businessName={business?.name}
-                    periodLabel={periodLabel}
-                    presetOptions={easyPresetOptions}
-                    activePreset={activePreset === 'custom' || activePreset === '90d' || activePreset === 'last_month' || activePreset === 'ytd' ? '30d' : activePreset}
-                    onDateRangePresetChange={(preset) =>
-                        onDateRangePresetChange?.(preset as 'today' | '7d' | '30d' | '90d' | 'mtd' | 'last_month' | 'ytd')
-                    }
-                    kpiStrip={easyCommandStrip.map((item) => ({
-                        label: item.label.replace(' invoices', '').replace('Invoices', 'Invoices'),
-                        value: item.value,
-                        alert: item.tone.includes('rose') || item.tone.includes('amber'),
-                        tone: item.tone,
-                    }))}
-                    quickActions={easyActions.map((action) => ({
-                        id: action.id,
-                        label: action.label,
-                        sublabel: action.desc,
-                        icon: action.icon,
-                    }))}
-                    onQuickAction={onQuickAction}
-                    healthPanels={easyHealthPanels}
-                    reminders={remindersData}
-                    hasCoreData={hasCoreData}
-                    quickSetupSteps={quickSetupSteps}
-                />
-
-                <div className="hidden lg:grid grid-cols-1 xl:grid-cols-12 gap-4 xl:items-stretch">
-                    <Card className="xl:col-span-8 border border-slate-200 bg-white shadow-sm rounded-lg overflow-hidden h-full flex flex-col">
-                        <CardContent className="p-4 sm:p-5 flex flex-col flex-1">
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 pb-3 border-b border-slate-100">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 shrink-0">Registered business</span>
-                                <span className="text-sm font-semibold text-slate-900 truncate max-w-[min(100%,16rem)] sm:max-w-[20rem]" title={business?.name || undefined}>
-                                    {business?.name?.trim() || 'Your workspace'}
-                                </span>
-                                <span className="hidden sm:inline text-slate-300 select-none" aria-hidden>
-                                    |
-                                </span>
-                                <span className="text-xs font-semibold text-slate-600">{domainVerticalLabel}</span>
-                                <span className="hidden sm:inline text-slate-300 select-none" aria-hidden>
-                                    |
-                                </span>
-                                <span className="text-xs font-semibold text-slate-500 tabular-nums">Reporting · {currency}</span>
-                                {business?.country ? (
-                                    <>
-                                        <span className="hidden md:inline text-slate-300 select-none" aria-hidden>
-                                            |
-                                        </span>
-                                        <span className="text-[11px] font-medium text-slate-500">{business.country}</span>
-                                    </>
-                                ) : null}
-                            </div>
-
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-4 pb-4 border-b border-slate-100">
-                                <div>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Easy mode command board</p>
-                                    </div>
-                                    <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900">
-                                        {greeting}, {userName}.
-                                    </h1>
-                                    <p className="text-xs text-slate-500">
-                                        Revenue, orders, stock, and receivables in one view, period:{' '}
-                                        <span className="font-semibold text-slate-600">{periodLabel}</span>.
-                                    </p>
-                                </div>
-                                <div className="flex flex-wrap gap-1.5 bg-slate-100 p-1 rounded border border-slate-200 shrink-0">
-                                    {easyPresetOptions.map((preset) => (
-                                        <button
-                                            key={preset.id}
-                                            type="button"
-                                            onClick={() => onDateRangePresetChange?.(preset.id)}
-                                            className={cn(
-                                                'rounded px-3 py-1 text-[11px] font-bold uppercase tracking-wider transition-all',
-                                                activePreset === preset.id
-                                                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
-                                                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/50'
-                                            )}
-                                        >
-                                            {preset.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="mt-4">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Quick actions</p>
-                                <div
-                                    role="toolbar"
-                                    aria-label="Common business tasks"
-                                    className="flex gap-2 overflow-x-auto pb-1 pt-0.5 scroll-smooth [scrollbar-width:thin]"
-                                >
-                                    {easyActions.map((action) => {
-                                        const ActionIcon = action.icon;
-                                        return (
-                                            <button
-                                                key={action.id}
-                                                type="button"
-                                                onClick={() => onQuickAction?.(action.id)}
-                                                className={cn(
-                                                    'shrink-0 flex items-center gap-2.5 rounded-xl border border-slate-200/80 px-3 py-2.5 min-w-[10.25rem] sm:min-w-[11rem] text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99]',
-                                                    action.color
-                                                )}
-                                            >
-                                                <span className="rounded-lg bg-white/70 p-1.5 border border-slate-200/60 text-slate-700">
-                                                    <ActionIcon className="w-4 h-4 shrink-0" aria-hidden />
-                                                </span>
-                                                <span className="min-w-0 flex-1">
-                                                    <span className="block text-xs font-semibold leading-tight">{action.label}</span>
-                                                    <span className="block text-[10px] opacity-80 font-semibold leading-snug mt-0.5 line-clamp-2">
-                                                        {action.desc}
-                                                    </span>
-                                                </span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <p className="mt-5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Today at a glance</p>
-                            <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2.5">
-                                {easyCommandStrip.map((item) => {
-                                    const Hi = item.icon;
-                                    return (
-                                        <div
-                                            key={item.label}
-                                            className="rounded-lg border border-slate-100 bg-slate-50/90 px-2.5 py-2 hover:bg-slate-100/60 transition-colors flex gap-2 items-start"
-                                        >
-                                            <div className="mt-0.5 rounded-md bg-white p-1 border border-slate-100 text-slate-500">
-                                                <Hi className="w-3.5 h-3.5" aria-hidden />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 leading-tight">
-                                                    {item.label}
-                                                </p>
-                                                <p className={cn('mt-0.5 text-base font-semibold tabular-nums', item.tone)}>{item.value}</p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Operational Pulse, compact 2×2 (Zoho-style density) */}
-                    <Card className="xl:col-span-4 border border-slate-200 bg-white shadow-sm rounded-lg h-full flex flex-col">
-                        <CardContent className="p-4 flex flex-col flex-1">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
-                                <div className="flex items-center gap-2">
-                                    <Zap className="w-4 h-4 text-amber-500 shrink-0" />
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-700">Operational pulse</p>
-                                </div>
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden />
-                            </div>
-                            <div className="mt-3 grid grid-cols-2 gap-2 flex-1 content-start">
-                                {easyHealthPanels.map((panel) => (
-                                    <div
-                                        key={panel.label}
-                                        className="rounded-lg border border-slate-100 bg-slate-50/90 px-2.5 py-2 min-h-[4.25rem] flex flex-col justify-between"
-                                    >
-                                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 leading-tight line-clamp-2">{panel.label}</p>
-                                        <p className={cn('text-sm font-semibold tabular-nums mt-0.5', panel.tone)}>{panel.value}</p>
-                                        <p className="text-[10px] text-slate-400 font-medium leading-snug line-clamp-2 mt-0.5">{panel.detail}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {!hasCoreData && (
-                    <Card className="hidden lg:block border border-cyan-100 bg-cyan-50/40 shadow-sm rounded-lg">
-                        <CardContent className="p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                            <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-700">Quick Setup</p>
-                                <p className="mt-1 text-sm font-bold text-slate-800">Complete the three core steps below to unlock richer KPI coverage and better easy-mode insights.</p>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {quickSetupSteps.map((step) => (
-                                    <Button key={step.id} size="sm" variant="outline" className="h-8 text-[11px] font-bold" onClick={() => onQuickAction?.(step.id)}>
-                                        {step.label}
-                                    </Button>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* 6 Key KPIs - Left Accent Border Style */}
-                <div className="hidden lg:grid grid-cols-2 xl:grid-cols-6 gap-3">
-                    {easyKpis.map(kpi => {
-                        const borderColors: Record<string, string> = {
-                            'bg-emerald-500': 'border-l-4 border-l-emerald-500',
-                            'bg-brand-primary': 'border-l-4 border-l-brand-primary',
-                            'bg-brand-primary-dark': 'border-l-4 border-l-brand-primary-dark',
-                            'bg-rose-500': 'border-l-4 border-l-rose-500',
-                            'bg-slate-500': 'border-l-4 border-l-slate-400',
-                            'bg-cyan-500': 'border-l-4 border-l-cyan-500',
-                            'bg-cyan-600': 'border-l-4 border-l-cyan-600',
-                            'bg-amber-500': 'border-l-4 border-l-amber-500',
-                            'bg-emerald-600': 'border-l-4 border-l-emerald-600'
-                        };
-                        const textColors: Record<string, string> = {
-                            'bg-emerald-500': 'text-emerald-600',
-                            'bg-brand-primary': 'text-brand-primary',
-                            'bg-brand-primary-dark': 'text-brand-primary-dark',
-                            'bg-rose-500': 'text-rose-600',
-                            'bg-slate-500': 'text-slate-500',
-                            'bg-cyan-500': 'text-cyan-600',
-                            'bg-cyan-600': 'text-cyan-700',
-                            'bg-amber-500': 'text-amber-600',
-                            'bg-emerald-600': 'text-emerald-600'
-                        };
-
-                        const borderClass = borderColors[kpi.color] || 'border-l-4 border-l-slate-200';
-                        const textClass = textColors[kpi.color] || 'text-slate-500';
-
-                        return (
-                            <Card key={kpi.label} className={cn("border border-slate-200 shadow-sm hover:shadow transition-shadow bg-white rounded-lg overflow-hidden", borderClass)}>
-                                <CardContent className="p-3.5">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{kpi.label}</span>
-                                        <div className={cn("p-1.5 rounded bg-slate-50 border border-slate-100", textClass)}>
-                                            <kpi.icon className="w-3.5 h-3.5 shrink-0" />
-                                        </div>
-                                    </div>
-                                    <div className="flex items-baseline justify-between mt-1">
-                                        <p className="text-lg font-semibold text-slate-900 tracking-tight">{kpi.value}</p>
-                                        {kpi.trend !== undefined && kpi.trend !== 0 && (
-                                            <span className={cn("text-[10px] font-semibold flex items-center gap-0.5",
-                                                kpi.trend > 0 ? "text-emerald-600" : "text-rose-600"
-                                            )}>
-                                                {kpi.trend > 0 ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
-                                                {Math.abs(kpi.trend)}%
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="text-[10px] text-slate-500 font-semibold mt-1.5 truncate">{kpi.subValue}</p>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
-                </div>
-
-                <div
-                    role="region"
-                    aria-label={`Change versus prior period ${priorWindowLabel}`}
-                    title={`Compared to the previous window of equal length ending just before your range: ${priorWindowLabel}`}
-                    className="hidden lg:block rounded-lg border border-slate-200 bg-white shadow-sm px-3 py-2.5 sm:px-4"
-                >
-                    <div className="flex flex-col gap-2.5">
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 shrink-0">
-                                Vs prior period
-                            </p>
-                            <p className="sr-only">
-                                Percentages compare {periodLabel} to the immediately preceding period of the same length ({priorWindowLabel}).
-                            </p>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-slate-700 min-w-0">
-                                <span className="inline-flex items-center gap-1.5">
-                                    <span className="text-slate-500 font-semibold">Revenue</span>
-                                    <span className={revDelta.className}>{revDelta.text}</span>
-                                </span>
-                                <span className="inline-flex items-center gap-1.5">
-                                    <span className="text-slate-500 font-semibold">Orders</span>
-                                    <span className={ordDelta.className}>{ordDelta.text}</span>
-                                </span>
-                                <span className="inline-flex items-center gap-1.5">
-                                    <span className="text-slate-500 font-semibold">Customers</span>
-                                    <span className={custDelta.className}>{custDelta.text}</span>
-                                </span>
-                                <span className="inline-flex items-center gap-1.5">
-                                    <span className="text-slate-500 font-semibold">Spend</span>
-                                    <span className={expDelta.className}>{expDelta.text}</span>
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex justify-end border-t border-slate-100 pt-2.5">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="h-8 text-[11px] font-bold border-slate-200 text-slate-700 hover:bg-slate-50"
-                                onClick={() => onQuickAction?.('reports')}
-                            >
-                                Open charts & reports
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <Card className="border border-slate-200 shadow-sm bg-white rounded-lg flex flex-col min-h-0">
-                        <CardContent className="p-4 flex flex-col flex-1">
-                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5 mb-3 shrink-0">
-                                <BarChart3 className="w-4 h-4 text-brand-primary shrink-0" />
-                                <div>
-                                    <h2 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Smart insights</h2>
-                                    <p className="text-[10px] text-slate-400 mt-0.5">Guided next steps from your live data for this period.</p>
-                                </div>
-                            </div>
-                            <div className="space-y-2 flex-1 min-h-0">
-                                {easyInsightsToRender.map((insight, idx) => {
-                                    const defaultStyle = { border: 'border-l-slate-400', bg: 'bg-slate-50/40', text: 'text-slate-700' };
-                                    const toneColors: Record<string, { border: string; bg: string; text: string }> = {
-                                        indigo: { border: 'border-l-indigo-500', bg: 'bg-indigo-50/40', text: 'text-indigo-700' },
-                                        emerald: { border: 'border-l-emerald-500', bg: 'bg-emerald-50/40', text: 'text-emerald-700' },
-                                        amber: { border: 'border-l-amber-500', bg: 'bg-amber-50/40', text: 'text-amber-700' },
-                                        rose: { border: 'border-l-rose-500', bg: 'bg-rose-50/40', text: 'text-rose-700' },
-                                        slate: defaultStyle,
-                                    };
-                                    const style = toneColors[insight.tone] || defaultStyle;
-
-                                    return (
-                                        <button
-                                            key={`${insight.title}-${idx}`}
-                                            type="button"
-                                            onClick={() => onQuickAction?.(insight.actionTab)}
-                                            className={cn(
-                                                'w-full rounded-lg border border-slate-200 border-l-4 p-2.5 text-left transition-all hover:shadow-sm bg-slate-50/50',
-                                                style.border,
-                                                insight.tone === 'indigo' && 'hover:bg-indigo-50',
-                                                insight.tone === 'emerald' && 'hover:bg-emerald-50',
-                                                insight.tone === 'amber' && 'hover:bg-amber-50',
-                                                insight.tone === 'rose' && 'hover:bg-rose-50',
-                                                insight.tone === 'slate' && 'hover:bg-slate-100/50'
-                                            )}
-                                        >
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{insight.title}</p>
-                                            <p className="mt-1 text-xs font-semibold text-slate-700 leading-snug">{insight.text}</p>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border border-slate-200 shadow-sm bg-white rounded-lg shrink-0 flex flex-col">
-                        <CardContent className="p-4 flex flex-col flex-1">
-                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5 mb-3">
-                                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" aria-hidden />
-                                <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Needs attention</p>
-                                    <p className="text-[10px] text-slate-400 mt-0.5">Stock and collections items that may need action.</p>
-                                </div>
-                            </div>
-                            {remindersData.lowStock === 0 && remindersData.overdueInvoices === 0 ? (
-                                <div className="flex items-center gap-2 text-emerald-700">
-                                    <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden />
-                                    <span className="text-xs font-semibold leading-snug">
-                                        No urgent stock or overdue invoice issues for this period.
-                                    </span>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-2">
-                                    {remindersData.lowStock > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => onQuickAction?.('inventory')}
-                                            className="flex items-center justify-between gap-2 rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 text-left hover:bg-amber-50 transition-colors"
-                                        >
-                                            <span className="text-xs font-semibold text-amber-900">
-                                                <span className="font-semibold tabular-nums">{remindersData.lowStock}</span> SKU
-                                                {remindersData.lowStock === 1 ? '' : 's'} below safety stock
-                                            </span>
-                                            <span className="text-[10px] font-bold text-amber-700 uppercase shrink-0">Restock →</span>
-                                        </button>
-                                    )}
-                                    {remindersData.overdueInvoices > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => onQuickAction?.('invoices')}
-                                            className="flex items-center justify-between gap-2 rounded-lg border border-rose-100 bg-rose-50/60 px-3 py-2 text-left hover:bg-rose-50 transition-colors"
-                                        >
-                                            <span className="text-xs font-semibold text-rose-900">
-                                                <span className="font-semibold tabular-nums">{remindersData.overdueInvoices}</span>{' '}
-                                                overdue invoice{remindersData.overdueInvoices === 1 ? '' : 's'}
-                                            </span>
-                                            <span className="text-[10px] font-bold text-rose-700 uppercase shrink-0">Collect →</span>
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-                    {/* Recent Transactions Table */}
-                    <div className="xl:col-span-8">
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                                <FileText className="w-4 h-4 text-brand-primary shrink-0" />
-                                <h2 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Recent Transactions</h2>
-                            </div>
-                            <button
-                                onClick={() => onQuickAction?.('invoices')}
-                                className="text-xs font-bold text-brand-primary hover:underline"
-                            >
-                                View All {'→'}
-                            </button>
-                        </div>
-                        {recentInvoices.length === 0 ? (
-                            <Card className="border-dashed border-2 border-slate-200 bg-slate-50/50 rounded-md">
-                                <CardContent className="p-8 text-center">
-                                    <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                    <p className="text-xs font-bold text-slate-600">No transactions yet</p>
-                                    <p className="text-[11px] text-slate-400 mt-0.5">Create your first invoice to get started</p>
-                                    <Button
-                                        size="sm"
-                                        className="mt-3 font-bold h-7 bg-emerald-600 hover:bg-emerald-700 text-white"
-                                        onClick={() => onQuickAction?.('new-invoice')}
-                                    >
-                                        <Plus className="w-3.5 h-3.5 mr-1" />
-                                        Create Invoice
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden rounded-lg">
-                                <div className="divide-y divide-slate-100">
-                                    {recentInvoices.map((inv, idx) => {
-                                        const status = String(inv.status || 'draft').toLowerCase();
-                                        const statusColors: Record<string, string> = {
-                                            paid: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-                                            unpaid: 'bg-amber-50 text-amber-700 border-amber-100',
-                                            pending: 'bg-amber-50 text-amber-700 border-amber-100',
-                                            overdue: 'bg-rose-50 text-rose-700 border-rose-100',
-                                            draft: 'bg-slate-50 text-slate-600 border-slate-200',
-                                        };
-                                        return (
-                                            <div key={idx} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-7 h-7 bg-slate-50 border border-slate-100 rounded-md flex items-center justify-center text-slate-500">
-                                                        <FileText className="w-3.5 h-3.5" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-bold text-slate-900">{inv.customer_name || 'Walk-in Customer'}</p>
-                                                        <p className="text-[10px] text-slate-400 font-semibold">{inv.date ? new Date(inv.date).toLocaleDateString('en-PK') : ''}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right flex items-center gap-4">
-                                                    <div className="text-right">
-                                                        <p className="text-xs font-semibold text-slate-900">{formatCurrencyCompact(Number(inv.grand_total) || Number(inv.amount) || 0)}</p>
-                                                    </div>
-                                                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider", statusColors[status] || statusColors.draft)}>
-                                                        {status}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </Card>
-                        )}
-                    </div>
-
-                    {/* Business Snapshot List Card */}
-                    <div className="xl:col-span-4 space-y-4">
-                        <Card className="border border-slate-200 shadow-sm bg-white rounded-lg">
-                            <CardContent className="p-5">
-                                <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
-                                    <BarChart3 className="w-4 h-4 text-brand-primary shrink-0" />
-                                    <div className="min-w-0">
-                                        <h2 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Business snapshot</h2>
-                                        <p className="text-[10px] text-slate-400 font-medium mt-0.5 truncate" title={business?.name || undefined}>
-                                            {business?.name?.trim() || 'Workspace'} · {domainVerticalLabel}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="space-y-2.5">
-                                    <div className="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-slate-50/50 transition-colors px-1">
-                                        <p className="text-[11px] font-bold text-slate-600">Products In Catalog</p>
-                                        <p className="text-sm font-semibold text-slate-900">{products.length}</p>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-slate-50/50 transition-colors px-1">
-                                        <p className="text-[11px] font-bold text-slate-600">Open invoices</p>
-                                        <p className="text-sm font-semibold text-slate-900 tabular-nums">{openInvoicesCount}</p>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-slate-50/50 transition-colors px-1">
-                                        <p className="text-[11px] font-bold text-slate-600">Low-stock SKUs</p>
-                                        <p className={cn('text-sm font-semibold tabular-nums', remindersData.lowStock > 0 ? 'text-amber-600' : 'text-slate-900')}>{remindersData.lowStock}</p>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-slate-50/50 transition-colors px-1">
-                                        <div>
-                                            <p className="text-[11px] font-bold text-slate-600">Returns</p>
-                                            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{returnRate.toFixed(1)}% return rate</p>
-                                        </div>
-                                        <p className="text-sm font-semibold text-slate-900">{periodMetrics.returnInvoices}</p>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 hover:bg-slate-50/50 transition-colors px-1">
-                                        <p className="text-[11px] font-bold text-slate-600">Stock Check Recency</p>
-                                        <p className="text-sm font-semibold text-slate-900">{stockCheckRecencyDisplay}</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </div>
+            <EasyBusinessDashboard
+                businessId={activeBusinessId}
+                business={business}
+                category={category}
+                currency={currency}
+                domainKnowledge={domainKnowledge as Record<string, unknown> | undefined}
+                domainVerticalLabel={domainVerticalLabel}
+                periodLabel={periodLabel}
+                activePreset={activePreset}
+                onQuickAction={onQuickAction}
+                onDateRangePresetChange={onDateRangePresetChange}
+                dateRange={dateRange}
+                invoices={invoices as unknown as Array<Record<string, unknown>>}
+                products={products as unknown as Array<Record<string, unknown>>}
+                customers={customers as unknown as Array<Record<string, unknown>>}
+                expenseBreakdown={expenseBreakdown as unknown as Array<Record<string, unknown>>}
+                chartData={chartData}
+                dashboardMetrics={dashboardMetrics as unknown as Record<string, unknown> | null}
+                formatCurrencyCompact={formatCurrencyCompact}
+                greeting={greeting}
+                userName={userName}
+                commandStrip={easyCommandStrip}
+                healthPanels={easyHealthPanels}
+                insights={easyOperationalInsights}
+                reminders={remindersData}
+                hasCoreData={hasCoreData}
+                quickSetupSteps={quickSetupSteps}
+                quickActions={easyActions}
+                domainEfficiency={domainEfficiency}
+                periodMetrics={periodMetrics}
+                revenueTrend={Number(revenueTrendSigned)}
+                ordersTrend={Number(ordersTrend)}
+                customerTrend={Number(customerTrend)}
+                expenseTrend={Number(expenseTrend)}
+                outstandingAmount={outstandingAmount}
+                openInvoicesCount={openInvoicesCount}
+                inventoryValue={inventoryValue}
+                inStockUnits={inStockUnits}
+                coverageDays={coverageDays}
+                avgOrderValue={avgOrderValue}
+                returnRate={returnRate}
+                paidOrderRateDisplay={paidOrderRateDisplay}
+                paidOrderRate={paidOrderRate}
+                cashFlowCurrent={Number(dashboardMetrics?.cashFlow?.current || 0)}
+                cashFlowGrowth={Number(dashboardMetrics?.cashFlow?.growth || 0)}
+                campaignEnabled={campaignEnabled}
+                multiLocationEnabled={multiLocationEnabled}
+                warehouseUtilizationDisplay={warehouseUtilizationDisplay}
+                stockCheckRecencyDisplay={stockCheckRecencyDisplay}
+            />
         );
     }
 
@@ -1748,6 +1244,21 @@ export function DomainDashboard({
             <div className="hidden lg:flex flex-col gap-2.5 order-2 lg:order-2 lg:col-span-3 min-h-0">
                 <RemindersPortlet data={remindersData} onItemClick={onQuickAction} />
 
+                <IndustryInsights category={category} domainKnowledge={domainKnowledge as Record<string, unknown> | undefined} />
+
+                <DomainOperationsPanel
+                    businessId={activeBusinessId}
+                    business={business}
+                    category={category}
+                    domainKnowledge={domainKnowledge as Record<string, unknown> | undefined}
+                    dateRange={dateRange}
+                    periodLabel={periodLabel}
+                    formatCurrencyCompact={formatCurrencyCompact}
+                    onQuickAction={onQuickAction}
+                    isActive
+                    variant="compact"
+                />
+
                 <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm shrink-0">
                     <div className="flex items-center gap-2 mb-3">
                         <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
@@ -1804,7 +1315,7 @@ export function DomainDashboard({
                                         </p>
                                     </div>
                                     <p className="text-base font-semibold text-slate-900 tabular-nums shrink-0 whitespace-nowrap">
-                                        {(dashboardMetrics?.customers?.active ?? 0).toLocaleString()}
+                                        {(dashboardMetrics?.customers?.active ?? periodMetrics.currentCustomers).toLocaleString()}
                                     </p>
                                 </div>
                                 <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-2.5 py-2 flex items-center justify-between gap-3">

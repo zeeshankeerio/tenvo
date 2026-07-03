@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
-import { getDomainKnowledge } from '@/lib/domainKnowledge';
+import { getDomainKnowledgeForBusiness } from '@/lib/utils/businessRegionalContext';
+import { EMPTY_VALUE } from '@/lib/utils/copyTypography';
 import {
     getAnalyticsBundleAction,
     getDemandForecastAction,
@@ -78,9 +79,9 @@ function ForecastRow({ item }) {
                 <p className="text-sm font-bold text-gray-800 truncate">{item.name}</p>
                 <p className="text-[10px] text-gray-400">
                     Stock: {item.current}
-                    {' � '}
+                    {' · '}
                     Forecast: {item.forecast}/mo
-                    {' � '}
+                    {' · '}
                     Recommended: {item.recommended}
                 </p>
             </div>
@@ -179,7 +180,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
         setProductCount(0);
         try {
             const filter = buildDateFilter(dateRange);
-            const domainIntel = getDomainKnowledge(category)?.intelligence ?? {};
+            const domainIntel = getDomainKnowledgeForBusiness(category, business)?.intelligence ?? {};
             const [bundleRes, forecastRes, promoRes, restockRes] = await Promise.allSettled([
                 getAnalyticsBundleAction(effectiveBusinessId, filter),
                 getDemandForecastAction(effectiveBusinessId, domainIntel, true, filter),
@@ -204,7 +205,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
         } finally {
             setLoading(false);
         }
-    }, [effectiveBusinessId, dateRange, category]);
+    }, [effectiveBusinessId, dateRange, category, business]);
 
     useEffect(() => {
         void Promise.resolve().then(() => loadAll());
@@ -230,7 +231,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                     </div>
                     <div>
                         <h2 className="text-lg font-semibold text-gray-900">AI Analytics & Insights</h2>
-                        <p className="text-xs text-gray-400">Predictive analytics � Anomaly detection � Smart recommendations</p>
+                        <p className="text-xs text-gray-400">Predictive analytics · Anomaly detection · Smart recommendations</p>
                     </div>
                 </div>
                 <button onClick={loadAll} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
@@ -369,7 +370,7 @@ export function AIInsightsPanel({ businessId, category = 'retail-shop', dateRang
                                         Stock: <b>{s.stock}</b>
                                     </span>
                                     <span className="text-gray-600">
-                                        Forecast: <b>{fc ?? ', '}</b>/mo
+                                        Forecast: <b>{fc ?? EMPTY_VALUE}</b>/mo
                                     </span>
                                     <span
                                         className={cn(

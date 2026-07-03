@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -41,6 +41,15 @@ import { trackEvent, EVENTS } from '@/lib/analytics/tracking';
 import { cn } from '@/lib/utils';
 import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
 import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
+import {
+  ScrollReveal,
+  AnimatedCounter,
+  ScrollProgress,
+  GradientMesh,
+  ScrollIndicator,
+  CardLift,
+  PulseDot,
+} from '@/components/marketing/effects/ModernEffects';
 
 export default function Home() {
   const { user } = useAuth();
@@ -172,6 +181,9 @@ export default function Home() {
   return (
     <MarketingLayout transparentNav={true} mainBottomClass={MARKETING_MAIN_BOTTOM_STICKY}>
 
+      {/* Scroll Progress Indicator */}
+      <ScrollProgress />
+
       {/* STICKY CTA - mobile: 3-col grid (Book | Trial | Close) + generous pr for assistant FAB; sm+: strip layout */}
       <div
         className={`fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white shadow-[0_-3px_16px_-6px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out ${showStickyCta ? 'translate-y-0' : 'translate-y-full'}`}
@@ -228,32 +240,54 @@ export default function Home() {
         </div>
       </div>
 
-      <HomeHero
-        workspaceHref={workspaceHref}
-        workspaceCtaMobile={workspaceCtaMobile}
-        workspaceCtaDesktop={workspaceCtaDesktop}
-      />
+      <section className="relative overflow-hidden">
+        <GradientMesh variant="hero" />
+        
+        <div className="relative z-10">
+          <HomeHero
+            workspaceHref={workspaceHref}
+            workspaceCtaMobile={workspaceCtaMobile}
+            workspaceCtaDesktop={workspaceCtaDesktop}
+          />
+        </div>
 
-      <HomeTrustStrip />
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
+          <ScrollIndicator />
+        </div>
+      </section>
 
-      <CommerceAndIntelligenceSection />
+      <ScrollReveal direction="fade" threshold={0.3}>
+        <HomeTrustStrip />
+      </ScrollReveal>
 
-      <DemoStoreGallery variant="featured" />
+      <ScrollReveal direction="up" threshold={0.2}>
+        <CommerceAndIntelligenceSection />
+      </ScrollReveal>
 
-      <HomeProductDemoSection />
+      <ScrollReveal direction="up" threshold={0.2}>
+        <DemoStoreGallery variant="featured" />
+      </ScrollReveal>
 
-      <CompetitorComparisonSection />
+      <ScrollReveal direction="up" threshold={0.2}>
+        <HomeProductDemoSection />
+      </ScrollReveal>
 
-      <HomeToolkitSection />
+      <ScrollReveal direction="up" threshold={0.2}>
+        <CompetitorComparisonSection />
+      </ScrollReveal>
+
+      <ScrollReveal direction="up" threshold={0.2}>
+        <HomeToolkitSection />
+      </ScrollReveal>
 
       {/* 4. EXCEL-FIRST & SPREADSHEET POWER SIMULATOR */}
-      <section className="bg-neutral-50 border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28">
-        <div className={MARKETING_CONTAINER}>
-
+      <section className="relative bg-neutral-50 border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28 overflow-hidden">
+        <GradientMesh variant="subtle" />
+        <div className={cn(MARKETING_CONTAINER, 'relative z-10')}>
           <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
 
             {/* Left Content column */}
-            <div className="lg:col-span-5 space-y-6">
+            <ScrollReveal direction="left" threshold={0.2} className="lg:col-span-5 space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-amber-800">
                 <FileSpreadsheet className="h-4 w-4" />
                 Excel-First Capability
@@ -262,32 +296,30 @@ export default function Home() {
                 No more manual data-entry agony.
               </h3>
               <p className="text-base text-neutral-600 font-medium leading-relaxed">
-                Most platforms break when you upload an Excel sheet. TENVO has a native, full-screen **Excel Mode** that lets you copy-paste rows directly from your existing spreadsheets, perform bulk operations, and validates every single cell with crystal clear feedback.
+                Most platforms break when you upload an Excel sheet. TENVO has a native, full-screen Excel Mode that lets you copy-paste rows directly from your existing spreadsheets, perform bulk operations, and validates every single cell with crystal clear feedback.
               </p>
 
               <ul className="space-y-3 font-semibold text-neutral-700">
-                <li className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-800">
-                    <Check className="w-4 h-4" />
-                  </div>
-                  <span>Direct Excel (.xlsx) file drag-and-drop</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-800">
-                    <Check className="w-4 h-4" />
-                  </div>
-                  <span>Real-time cell error reporting (Row & Column)</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-800">
-                    <Check className="w-4 h-4" />
-                  </div>
-                  <span>100% round-trip validation guarantee</span>
-                </li>
+                {[
+                  'Direct Excel (.xlsx) file drag-and-drop',
+                  'Real-time cell error reporting (Row & Column)',
+                  '100% round-trip validation guarantee',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 shrink-0">
+                      <Check className="w-4 h-4" />
+                    </div>
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
 
               <div className="flex flex-wrap items-center gap-2 pt-4">
-                <Button onClick={runExcelSimulation} disabled={simulationStatus === 'processing'} className="h-11 rounded-xl bg-brand-primary px-5 font-semibold uppercase tracking-wider text-white hover:bg-brand-primary-dark sm:h-12 sm:rounded-2xl sm:px-6">
+                <Button
+                  onClick={runExcelSimulation}
+                  disabled={simulationStatus === 'processing'}
+                  className="h-11 rounded-xl bg-brand-primary px-5 font-semibold uppercase tracking-wider text-white hover:bg-brand-primary-dark hover:scale-[1.02] active:scale-100 transition-all sm:h-12 sm:rounded-2xl sm:px-6"
+                >
                   {simulationStatus === 'processing' ? 'Validating Sheet...' : 'Simulate Excel Upload'}
                 </Button>
                 {simulationStatus !== 'idle' && (
@@ -296,19 +328,20 @@ export default function Home() {
                   </Button>
                 )}
               </div>
-            </div>
+            </ScrollReveal>
 
             {/* Right Simulator column */}
-            <div className="min-w-0 rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-sm sm:p-6 lg:col-span-7 lg:rounded-[2.5rem]">
+            <ScrollReveal direction="right" threshold={0.2} className="min-w-0 rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-sm sm:p-6 lg:col-span-7 lg:rounded-[2.5rem]">
               <div className="mb-4 flex flex-col gap-3 border-b border-neutral-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <h4 className="text-base font-semibold text-neutral-900 sm:text-lg">Spreadsheet Import Preview</h4>
                   <p className="mt-0.5 text-[11px] font-semibold text-neutral-500 sm:text-xs">Validating 4 lines of imported products</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 self-start sm:self-center">
-                  <span className={`h-2.5 w-2.5 rounded-full ${simulationStatus === 'idle' ? 'bg-neutral-300' :
-                    simulationStatus === 'processing' ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'
-                    }`} />
+                  <PulseDot
+                    color={simulationStatus === 'idle' ? 'neutral-300' : simulationStatus === 'processing' ? 'amber-400' : 'emerald-500'}
+                    size="sm"
+                  />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 sm:text-xs">
                     {simulationStatus === 'idle' ? 'Ready to parse' :
                       simulationStatus === 'processing' ? 'Validating FBR & SKU' : 'Partial Import Available'}
@@ -321,34 +354,25 @@ export default function Home() {
                 {excelRows.map((row, idx) => (
                   <div
                     key={idx}
-                    className={`rounded-xl border p-3 ${
-                      row.status === 'failed'
-                        ? 'border-red-200 bg-red-50/40'
-                        : row.status === 'success'
-                          ? 'border-emerald-200/80 bg-emerald-50/30'
-                          : 'border-neutral-100 bg-neutral-50/60'
-                    }`}
+                    className={cn(
+                      'rounded-xl border p-3 transition-colors duration-300',
+                      row.status === 'failed' ? 'border-red-200 bg-red-50/40' :
+                      row.status === 'success' ? 'border-emerald-200/80 bg-emerald-50/30' :
+                      'border-neutral-100 bg-neutral-50/60'
+                    )}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="font-mono text-[11px] font-bold text-neutral-900">{row.sku}</span>
-                      {row.status === 'pending' && (
-                        <span className="shrink-0 rounded bg-neutral-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Pending</span>
-                      )}
-                      {row.status === 'success' && (
-                        <span className="shrink-0 rounded bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-emerald-700">Ready</span>
-                      )}
-                      {row.status === 'failed' && (
-                        <span className="shrink-0 rounded bg-red-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-red-700">Error</span>
-                      )}
+                      {row.status === 'pending' && <span className="shrink-0 rounded bg-neutral-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Pending</span>}
+                      {row.status === 'success' && <span className="shrink-0 rounded bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-emerald-700">Ready</span>}
+                      {row.status === 'failed' && <span className="shrink-0 rounded bg-red-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-red-700">Error</span>}
                     </div>
                     <p className="mt-1.5 text-sm font-medium leading-snug text-neutral-800">{row.name}</p>
                     <div className="mt-2 flex items-center justify-between text-xs">
                       <span className="font-semibold uppercase tracking-wide text-neutral-400">Initial stock</span>
                       <span className="font-bold tabular-nums text-neutral-900">{row.stock}</span>
                     </div>
-                    {row.error ? (
-                      <p className="mt-2 text-[10px] font-semibold leading-relaxed text-red-700">{row.error}</p>
-                    ) : null}
+                    {row.error ? <p className="mt-2 text-[10px] font-semibold leading-relaxed text-red-700">{row.error}</p> : null}
                   </div>
                 ))}
               </div>
@@ -366,20 +390,19 @@ export default function Home() {
                   </thead>
                   <tbody>
                     {excelRows.map((row, idx) => (
-                      <tr key={idx} className="border-b border-neutral-100 text-xs font-medium text-neutral-800 hover:bg-neutral-50">
+                      <tr key={idx} className={cn(
+                        'border-b border-neutral-100 text-xs font-medium text-neutral-800 transition-colors duration-300',
+                        row.status === 'failed' ? 'bg-red-50/30' :
+                        row.status === 'success' ? 'bg-emerald-50/20' :
+                        'hover:bg-neutral-50'
+                      )}>
                         <td className="p-3 font-mono font-bold">{row.sku}</td>
                         <td className="p-3">{row.name}</td>
-                        <td className="p-3 font-bold">{row.stock}</td>
+                        <td className="p-3 font-bold tabular-nums">{row.stock}</td>
                         <td className="p-3">
-                          {row.status === 'pending' && (
-                            <span className="rounded bg-neutral-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Pending</span>
-                          )}
-                          {row.status === 'success' && (
-                            <span className="rounded bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-emerald-700">Ready</span>
-                          )}
-                          {row.status === 'failed' && (
-                            <span className="rounded bg-red-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-red-700">Error</span>
-                          )}
+                          {row.status === 'pending' && <span className="rounded bg-neutral-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Pending</span>}
+                          {row.status === 'success' && <span className="rounded bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-emerald-700">Ready</span>}
+                          {row.status === 'failed' && <span className="rounded bg-red-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-red-700">Error</span>}
                         </td>
                       </tr>
                     ))}
@@ -387,97 +410,73 @@ export default function Home() {
                 </table>
               </div>
 
-              {/* Error Box representation if validation finished */}
               {simulationStatus === 'done' && (
-                <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-3 sm:rounded-2xl sm:p-4">
+                <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-3 sm:rounded-2xl sm:p-4 animate-fade-in-up">
                   <Info className="mt-0.5 h-5 w-5 shrink-0 text-red-700" />
                   <div className="min-w-0">
                     <h5 className="text-sm font-bold text-red-900">SKU Duplication Error found (Row 3)</h5>
                     <p className="mt-1 text-xs font-semibold leading-relaxed text-red-700">
-                      TENVO caught a critical SKU collision. Traditional ERPs would fail the whole import. TENVO allows you to **import only the 3 valid rows** and provides a fixed Excel sheet with highlighted columns to resolve.
+                      TENVO caught a critical SKU collision. Import only the 3 valid rows and download a fixed Excel sheet with highlighted columns to resolve.
                     </p>
                   </div>
                 </div>
               )}
-            </div>
+            </ScrollReveal>
 
           </div>
-
         </div>
       </section>
 
       {/* 5. INTERACTIVE MARGIN-FIRST PRICING CALCULATOR */}
-      <section className="bg-white border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28">
-        <div className={MARKETING_CONTAINER}>
-
+      <section className="relative bg-white border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28 overflow-hidden">
+        <GradientMesh variant="subtle" />
+        <div className={cn(MARKETING_CONTAINER, 'relative z-10')}>
           <div className="grid lg:grid-cols-12 gap-12 items-center">
 
-            {/* Right Interactive Simulator Column (rendered on left in visual desktop flow for variety) */}
-            <div className="lg:col-span-6 bg-neutral-50 border border-neutral-200/80 rounded-[2.5rem] p-6 lg:p-10 order-2 lg:order-1">
+            {/* Left Interactive Simulator */}
+            <ScrollReveal direction="left" threshold={0.2} className="lg:col-span-6 bg-neutral-50 border border-neutral-200/80 rounded-[2.5rem] p-6 lg:p-10 order-2 lg:order-1">
               <h4 className="font-semibold text-neutral-900 text-xl mb-6">Interactive Margin-First Engine</h4>
-
               <div className="space-y-6">
 
-                {/* Cost Input */}
-                <div>
+                <div className="group">
                   <div className="flex justify-between mb-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Unit Cost (PKR)</label>
-                    <span className="text-xs font-mono font-bold text-neutral-800">PKR {calcCost.toLocaleString()}</span>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 group-hover:text-brand-primary transition-colors duration-200">Unit Cost (PKR)</label>
+                    <span className="text-xs font-mono font-bold text-neutral-800 tabular-nums">PKR {calcCost.toLocaleString()}</span>
                   </div>
-                  <input
-                    type="range"
-                    min="100"
-                    max="10000"
-                    step="50"
-                    value={calcCost}
+                  <input type="range" min="100" max="10000" step="50" value={calcCost}
                     onChange={(e) => setCalcCost(Number(e.target.value))}
-                    className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
-                  />
+                    className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-brand-primary" />
                   <div className="flex justify-between text-[10px] font-bold text-neutral-400 mt-1">
-                    <span>PKR 100</span>
-                    <span>PKR 10,000</span>
+                    <span>PKR 100</span><span>PKR 10,000</span>
                   </div>
                 </div>
 
-                {/* Margin % Input */}
-                <div>
+                <div className="group">
                   <div className="flex justify-between mb-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Target Profit Margin (%)</label>
-                    <span className="text-xs font-mono font-bold text-neutral-800">{calcMargin}%</span>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500 group-hover:text-brand-primary transition-colors duration-200">Target Profit Margin (%)</label>
+                    <span className="text-xs font-mono font-bold text-neutral-800 tabular-nums">{calcMargin}%</span>
                   </div>
-                  <input
-                    type="range"
-                    min="5"
-                    max="80"
-                    step="1"
-                    value={calcMargin}
+                  <input type="range" min="5" max="80" step="1" value={calcMargin}
                     onChange={(e) => setCalcMargin(Number(e.target.value))}
-                    className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
-                  />
+                    className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-brand-primary" />
                   <div className="flex justify-between text-[10px] font-bold text-neutral-400 mt-1">
-                    <span>5%</span>
-                    <span>80%</span>
+                    <span>5%</span><span>80%</span>
                   </div>
                 </div>
 
-                {/* FBR Tax Rate Input */}
                 <div>
                   <div className="flex justify-between mb-2">
                     <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500">FBR Sales Tax GST (%)</label>
-                    <span className="text-xs font-mono font-bold text-neutral-800">{calcTaxRate}%</span>
+                    <span className="text-xs font-mono font-bold text-neutral-800 tabular-nums">{calcTaxRate}%</span>
                   </div>
-                  <select
-                    value={calcTaxRate}
-                    onChange={(e) => setCalcTaxRate(Number(e.target.value))}
-                    className="w-full h-11 px-4 border border-neutral-200 bg-white rounded-xl text-sm font-bold text-neutral-800"
-                  >
+                  <select value={calcTaxRate} onChange={(e) => setCalcTaxRate(Number(e.target.value))}
+                    className="w-full h-11 px-4 border border-neutral-200 bg-white rounded-xl text-sm font-bold text-neutral-800 transition-colors hover:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30">
                     <option value={0}>0% (Tax Exempt / Exports)</option>
                     <option value={15}>15% (Local Sales Tax)</option>
                     <option value={18}>18% (Standard FBR GST)</option>
                   </select>
                 </div>
 
-                {/* Calculation Summary Results Card */}
                 <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 space-y-3 shadow-sm">
                   <div className="flex justify-between text-xs font-semibold text-neutral-500 border-b border-neutral-100 pb-2">
                     <span>Target Profit Margin</span>
@@ -489,15 +488,16 @@ export default function Home() {
                   </div>
                   <div className="flex justify-between items-center text-sm font-semibold text-neutral-900 pt-1">
                     <span>Final Retail Price</span>
-                    <span className={cn(MARKETING_STAT_VALUE, 'text-xl text-brand-primary')}>PKR {finalSellingPrice.toLocaleString()}</span>
+                    <span className={cn(MARKETING_STAT_VALUE, 'text-xl text-brand-primary tabular-nums')}>
+                      PKR {finalSellingPrice.toLocaleString()}
+                    </span>
                   </div>
                 </div>
-
               </div>
-            </div>
+            </ScrollReveal>
 
-            {/* Left Content Column */}
-            <div className="lg:col-span-6 space-y-6 order-1 lg:order-2">
+            {/* Right Content Column */}
+            <ScrollReveal direction="right" threshold={0.2} className="lg:col-span-6 space-y-6 order-1 lg:order-2">
               <div className="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-brand-primary">
                 <Receipt className="h-4 w-4" />
                 Margin-First Strategy
@@ -508,118 +508,78 @@ export default function Home() {
               <p className="text-base text-neutral-600 font-medium leading-relaxed">
                 With inflation and supply chain volatility, inventory cost shifts happen daily in Pakistan. TENVO handles this elegantly. Rather than setting static prices that drift into loss, you define your target profit margin per product category. When vendor cost rises, TENVO recalculates optimal selling prices automatically.
               </p>
-
               <ul className="space-y-3 font-semibold text-neutral-700">
-                <li className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-brand-50 flex items-center justify-center text-brand-primary">
-                    <Check className="w-4 h-4" />
-                  </div>
-                  <span>Automatic price adjustment based on live product costs</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-brand-50 flex items-center justify-center text-brand-primary">
-                    <Check className="w-4 h-4" />
-                  </div>
-                  <span>Built-in local FBR sales tax (GST) calculations</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-brand-50 flex items-center justify-center text-brand-primary">
-                    <Check className="w-4 h-4" />
-                  </div>
-                  <span>Real-time margin safety reports on owner dashboards</span>
-                </li>
+                {[
+                  'Automatic price adjustment based on live product costs',
+                  'Built-in local FBR sales tax (GST) calculations',
+                  'Real-time margin safety reports on owner dashboards',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-full bg-brand-50 flex items-center justify-center text-brand-primary shrink-0">
+                      <Check className="w-4 h-4" />
+                    </div>
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
-            </div>
+            </ScrollReveal>
 
           </div>
-
         </div>
       </section>
 
-      {/* 5.5 LIVE WAREHOUSE OPERATIONAL SIMULATOR (NEW ADVANCED FEATURE) */}
-      <section className="bg-white border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28">
-        <div className={MARKETING_CONTAINER}>
+      {/* 5.5 LIVE WAREHOUSE OPERATIONAL SIMULATOR */}
+      <section className="relative bg-white border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28 overflow-hidden">
+        <GradientMesh variant="subtle" />
+        <div className={cn(MARKETING_CONTAINER, 'relative z-10')}>
 
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-neutral-800">
-              <Cpu className="h-4 w-4" /> Live Operational Terminal
+          <ScrollReveal direction="up" threshold={0.2}>
+            <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-neutral-800">
+                <Cpu className="h-4 w-4" /> Live Operational Terminal
+              </div>
+              <h3 className={MARKETING_SECTION_HEADING}>
+                Test drive the TENVO operating system.
+              </h3>
+              <p className="text-lg text-neutral-500 font-medium">
+                We built an advanced operations engine. Interact with the demo terminal below to see Excel import, replenishment drafts, and GST invoice previews.
+              </p>
             </div>
-            <h3 className={MARKETING_SECTION_HEADING}>
-              Test drive the TENVO operating system.
-            </h3>
-            <p className="text-lg text-neutral-500 font-medium">
-              We built an advanced operations engine. Interact with the demo terminal below to see Excel import, replenishment drafts, and GST invoice previews.
-            </p>
-          </div>
+          </ScrollReveal>
 
           <div className="grid lg:grid-cols-12 gap-12 items-stretch">
 
             {/* Left Controls column */}
             <div className="lg:col-span-4 space-y-3 flex flex-col justify-center">
 
-              <button
-                onClick={() => setActiveTerminalTab('stocktake')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeTerminalTab === 'stocktake'
-                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                  }`}
-              >
-                <div className={`p-3 rounded-xl ${activeTerminalTab === 'stocktake' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
-                  <Package className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-base text-neutral-900">1. Scan & Reconcile</h4>
-                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Simulate stock count audits and damaged inventory adjustments.</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setActiveTerminalTab('reorder')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeTerminalTab === 'reorder'
-                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                  }`}
-              >
-                <div className={`p-3 rounded-xl ${activeTerminalTab === 'reorder' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
-                  <Settings className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-base text-neutral-900">2. Low Stock &rarr; Auto PO</h4>
-                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Watch the system draft supplier purchase orders when inventory falls low.</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setActiveTerminalTab('fbr')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeTerminalTab === 'fbr'
-                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                  }`}
-              >
-                <div className={`p-3 rounded-xl ${activeTerminalTab === 'fbr' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
-                  <Receipt className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-base text-neutral-900">3. GST invoice preview</h4>
-                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Receipt-style preview with standard 18% GST math on live invoices.</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setActiveTerminalTab('packaging')}
-                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-start gap-4 ${activeTerminalTab === 'packaging'
-                  ? 'bg-neutral-50 border-brand-primary shadow-sm'
-                  : 'bg-white border-neutral-200/80 hover:border-neutral-300'
-                  }`}
-              >
-                <div className={`p-3 rounded-xl ${activeTerminalTab === 'packaging' ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'}`}>
-                  <Truck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-base text-neutral-900">4. Intelligent Packaging</h4>
-                  <p className="text-xs text-neutral-500 mt-1 font-semibold">Auto-calculate box size limits and print carrier labels (TCS/Leopards).</p>
-                </div>
-              </button>
+              {[
+                { key: 'stocktake', Icon: Package, label: '1. Scan & Reconcile', desc: 'Simulate stock count audits and damaged inventory adjustments.' },
+                { key: 'reorder', Icon: Settings, label: '2. Low Stock â†’ Auto PO', desc: 'Watch the system draft supplier purchase orders when inventory falls low.' },
+                { key: 'fbr', Icon: Receipt, label: '3. GST Invoice Preview', desc: 'Receipt-style preview with standard 18% GST math on live invoices.' },
+                { key: 'packaging', Icon: Truck, label: '4. Intelligent Packaging', desc: 'Auto-calculate box size limits and print carrier labels (TCS/Leopards).' },
+              ].map(({ key, Icon, label, desc }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTerminalTab(key)}
+                  className={cn(
+                    'w-full text-left p-5 rounded-2xl border transition-all duration-200 flex items-start gap-4',
+                    activeTerminalTab === key
+                      ? 'bg-neutral-50 border-brand-primary shadow-sm scale-[1.01]'
+                      : 'bg-white border-neutral-200/80 hover:border-neutral-300 hover:bg-neutral-50/50'
+                  )}
+                >
+                  <div className={cn(
+                    'p-3 rounded-xl transition-colors duration-200',
+                    activeTerminalTab === key ? 'bg-brand-primary text-white' : 'bg-neutral-100 text-neutral-600'
+                  )}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-base text-neutral-900">{label}</h4>
+                    <p className="text-xs text-neutral-500 mt-1 font-semibold">{desc}</p>
+                  </div>
+                </button>
+              ))}
 
             </div>
 
@@ -738,7 +698,7 @@ export default function Home() {
                       <div className="p-3 border border-orange-200 bg-orange-50 rounded-xl flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="h-2 w-2 rounded-full bg-orange-500 animate-ping" />
-                          <span className="text-xs font-semibold text-orange-950 uppercase tracking-wider">⚠️ Low Stock Detected ({jeansStock} / 100)</span>
+                          <span className="text-xs font-semibold text-orange-950 uppercase tracking-wider">âš ï¸ Low Stock Detected ({jeansStock} / 100)</span>
                         </div>
                         <span className="text-[10px] font-semibold text-orange-800 uppercase bg-orange-100 px-2 py-0.5 rounded">Action Required</span>
                       </div>
@@ -919,261 +879,223 @@ export default function Home() {
         </div>
       </section>
 
-      <HomeIndustrySolutionsSection />
+      <ScrollReveal direction="up" threshold={0.2}>
+        <HomeIndustrySolutionsSection />
+      </ScrollReveal>
 
-      {/* 7. UNIQUE BENEFITS & COMPETITIVE ANALYSIS - Pure Light Theme */}
-      <section className="bg-white border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28">
-        <div className={MARKETING_CONTAINER}>
 
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className={MARKETING_EYEBROW}>Why Choose Tenvo</h2>
-            <h3 className={MARKETING_SECTION_HEADING}>
-              What makes TENVO unique?
-            </h3>
-            <p className="text-lg text-neutral-500 font-medium">
-              We built an enterprise inventory system specifically for Pakistani businesses, addressing the critical issues competitors ignore.
-            </p>
-          </div>
+      {/* 7. UNIQUE BENEFITS & COMPETITIVE ANALYSIS */}
+      <section className="relative bg-white border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28 overflow-hidden">
+        <GradientMesh variant="subtle" />
+        <div className={cn(MARKETING_CONTAINER, 'relative z-10')}>
 
-          {/* Core Unique selling points */}
+          <ScrollReveal direction="up" threshold={0.2}>
+            <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+              <h2 className={MARKETING_EYEBROW}>Why Choose Tenvo</h2>
+              <h3 className={MARKETING_SECTION_HEADING}>
+                What makes TENVO unique?
+              </h3>
+              <p className="text-lg text-neutral-500 font-medium">
+                We built an enterprise inventory system specifically for Pakistani businesses, addressing the critical issues competitors ignore.
+              </p>
+            </div>
+          </ScrollReveal>
+
           <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <div className="p-8 border border-neutral-200/80 rounded-[2rem] bg-neutral-50 space-y-4">
-              <h4 className="font-semibold text-lg text-neutral-900">1. Urdu Language Support</h4>
-              <p className="text-sm text-neutral-600 font-medium leading-relaxed">
-                Your office managers might prefer English, but your warehouse team on the ground doesn’t have to suffer. TENVO features a full **Urdu UI toggle** designed for easy catalog searches, barcode scanning, and transfer entries.
-              </p>
-            </div>
-
-            <div className="p-8 border border-neutral-200/80 rounded-[2rem] bg-neutral-50 space-y-4">
-              <h4 className="font-semibold text-lg text-neutral-900">2. Zero-Data-Loss Migration</h4>
-              <p className="text-sm text-neutral-600 font-medium leading-relaxed">
-                Moving systems is scary. TENVO assigns a **dedicated migration manager** to every single enterprise customer. We map your current Excel files, verify duplicate SKU databases, and transfer everything for free.
-              </p>
-            </div>
-
-            <div className="p-8 border border-neutral-200/80 rounded-[2rem] bg-neutral-50 space-y-4">
-              <h4 className="font-semibold text-lg text-neutral-900">3. Local Cloud & Offline POS</h4>
-              <p className="text-sm text-neutral-600 font-medium leading-relaxed">
-                Load dashboards instantly with zero lag. Our local cloud server architecture guarantees fast access times inside Pakistan, coupled with offline point-of-sale terminals that sync data automatically when internet recovers.
-              </p>
-            </div>
+            {[
+              {
+                num: '1.',
+                title: 'Urdu Language Support',
+                body: "Your office managers might prefer English, but your warehouse team on the ground doesn't have to suffer. TENVO features a full Urdu UI toggle designed for easy catalog searches, barcode scanning, and transfer entries.",
+              },
+              {
+                num: '2.',
+                title: 'Zero-Data-Loss Migration',
+                body: 'Moving systems is scary. TENVO assigns a dedicated migration manager to every single enterprise customer. We map your current Excel files, verify duplicate SKU databases, and transfer everything for free.',
+              },
+              {
+                num: '3.',
+                title: 'Local Cloud & Offline POS',
+                body: 'Load dashboards instantly with zero lag. Our local cloud server architecture guarantees fast access times inside Pakistan, coupled with offline point-of-sale terminals that sync automatically when internet recovers.',
+              },
+            ].map((card, i) => (
+              <ScrollReveal key={i} direction="up" delay={i * 100} threshold={0.2}>
+                <CardLift className="h-full">
+                  <div className="p-8 border border-neutral-200/80 rounded-[2rem] bg-neutral-50 space-y-4 h-full hover:border-brand-primary/30 transition-colors duration-300">
+                    <h4 className="font-semibold text-lg text-neutral-900">{card.num} {card.title}</h4>
+                    <p className="text-sm text-neutral-600 font-medium leading-relaxed">{card.body}</p>
+                  </div>
+                </CardLift>
+              </ScrollReveal>
+            ))}
           </div>
 
-          {/* Comparison Table: Traditional vs Basic vs Tenvo */}
-          <div className="bg-white border border-neutral-200/80 rounded-[2.5rem] p-6 lg:p-10 overflow-x-auto shadow-sm">
-            <h4 className="font-semibold text-neutral-900 text-xl mb-2">Operating model comparison</h4>
-            <p className="text-xs text-neutral-500 font-semibold mb-6 max-w-2xl">
-              For a buyer-style view versus typical storefront-first or multi-app suites, see{' '}
-              <Link href="/why-tenvo" className="text-brand-primary font-semibold hover:underline">Why TENVO</Link>.
-            </p>
+          <ScrollReveal direction="up" threshold={0.1}>
+            <div className="bg-white border border-neutral-200/80 rounded-[2.5rem] p-6 lg:p-10 overflow-x-auto shadow-sm">
+              <h4 className="font-semibold text-neutral-900 text-xl mb-2">Operating model comparison</h4>
+              <p className="text-xs text-neutral-500 font-semibold mb-6 max-w-2xl">
+                For a buyer-style view versus typical storefront-first or multi-app suites, see{' '}
+                <Link href="/why-tenvo" className="text-brand-primary font-semibold hover:underline">Why TENVO</Link>.
+              </p>
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-neutral-200 font-semibold text-[10px] uppercase tracking-wider text-neutral-400">
+                    <th className="p-4">Key Capabilities</th>
+                    <th className="p-4">Traditional ERPs</th>
+                    <th className="p-4">Spreadsheets</th>
+                    <th className="p-4 text-brand-primary">TENVO Inventory Engine</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['Branded store + POS + warehouse in one rhythm', 'Heavy customization', 'Manual links', 'Designed together'],
+                    ['Web orders in the same queue as counter & B2B', 'Often separate modules', 'Fragmented tabs', 'Single order hub'],
+                    ['Implementation Time', '6 - 12 Months', 'Manual Setup (Days)', 'Go live in 4 Days'],
+                    ['Excel Paste & Import', 'Partial / Strict formatting', 'Native', 'Native (with cell validation)'],
+                    ['Batch & Expiry Warning', 'Complex add-on module', 'Manual tracking / Missing', 'Built-in (with expiry alerts)'],
+                    ['Pakistan tax setup', 'Custom expensive wrappers', 'Impossible', 'Compliant & Automatic'],
+                    ['Multichannel Sell Sync', 'Rigid API integrations', 'Manual entry drift', 'Daraz & Shopify native API'],
+                    ['Upfront Licensing Cost', 'PKR 500,000+', 'PKR 0', 'Free Trial, scale from PKR 4,500/mo'],
+                  ].map(([feature, erp, sheet, tenvo], i) => (
+                    <tr key={i} className="border-b border-neutral-100 text-xs font-semibold text-neutral-700 hover:bg-neutral-50/80 transition-colors duration-150">
+                      <td className="p-4 font-bold text-neutral-900">{feature}</td>
+                      <td className="p-4 text-neutral-400">{erp}</td>
+                      <td className="p-4 text-neutral-400">{sheet}</td>
+                      <td className="p-4 text-brand-primary font-bold">{tenvo}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </ScrollReveal>
 
-            <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="border-b border-neutral-200 font-semibold text-[10px] uppercase tracking-wider text-neutral-400">
-                  <th className="p-4">Key Capabilities</th>
-                  <th className="p-4">Traditional ERPs</th>
-                  <th className="p-4">Spreadsheets</th>
-                  <th className="p-4 text-brand-primary">TENVO Inventory Engine</th>
-                </tr>
-              </thead>
-              <tbody>
+        </div>
+      </section>
 
-                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
-                  <td className="p-4 font-bold text-neutral-900">Branded store + POS + warehouse in one rhythm</td>
-                  <td className="p-4 text-neutral-400">Heavy customization</td>
-                  <td className="p-4 text-neutral-400">Manual links</td>
-                  <td className="p-4 text-brand-primary font-bold">Designed together</td>
-                </tr>
+      <ScrollReveal direction="up" threshold={0.2}>
+        <HomeOnboardingPathSection />
+      </ScrollReveal>
 
-                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
-                  <td className="p-4 font-bold text-neutral-900">Web orders in the same queue as counter & B2B</td>
-                  <td className="p-4 text-neutral-400">Often separate modules</td>
-                  <td className="p-4 text-neutral-400">Fragmented tabs</td>
-                  <td className="p-4 text-brand-primary font-bold">Single order hub</td>
-                </tr>
+      <ScrollReveal direction="up" threshold={0.2}>
+        <HomeSecurityTrustSection />
+      </ScrollReveal>
 
-                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
-                  <td className="p-4 font-bold text-neutral-900">Implementation Time</td>
-                  <td className="p-4 text-neutral-400">6 - 12 Months</td>
-                  <td className="p-4 text-neutral-400">Manual Setup (Days)</td>
-                  <td className="p-4 text-brand-primary font-bold">Go live in 4 Days</td>
-                </tr>
+      <ScrollReveal direction="fade" threshold={0.2}>
+        <HomeIntegrationMarquee compact />
+      </ScrollReveal>
 
-                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
-                  <td className="p-4 font-bold text-neutral-900">Excel Paste & Import</td>
-                  <td className="p-4 text-neutral-400">Partial / Strict formatting</td>
-                  <td className="p-4 text-brand-primary">Native</td>
-                  <td className="p-4 text-brand-primary font-bold">Native (with cell validation)</td>
-                </tr>
+      {/* 10. FAQ */}
+      <section className="relative bg-neutral-50 border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28 overflow-hidden">
+        <GradientMesh variant="subtle" />
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
 
-                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
-                  <td className="p-4 font-bold text-neutral-900">Batch & Expiry Warning</td>
-                  <td className="p-4 text-neutral-400">Complex add-on module</td>
-                  <td className="p-4 text-neutral-400">Manual tracking / Missing</td>
-                  <td className="p-4 text-brand-primary font-bold">Built-in (with expiry alerts)</td>
-                </tr>
+          <ScrollReveal direction="up" threshold={0.3}>
+            <div className="text-center mb-16 space-y-4">
+              <h2 className={MARKETING_EYEBROW}>Frequently Asked Questions</h2>
+              <h3 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
+                Everything you need to know.
+              </h3>
+              <p className="text-sm text-neutral-500 font-semibold">
+                Can&apos;t find the answer you&apos;re looking for? Reach out to our dedicated support squad.
+              </p>
+            </div>
+          </ScrollReveal>
 
-                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
-                  <td className="p-4 font-bold text-neutral-900">Pakistan tax setup</td>
-                  <td className="p-4 text-neutral-400">Custom expensive wrappers</td>
-                  <td className="p-4 text-neutral-400">Impossible</td>
-                  <td className="p-4 text-brand-primary font-bold">Compliant & Automatic</td>
-                </tr>
-
-                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-700">
-                  <td className="p-4 font-bold text-neutral-900">Multichannel Sell Sync</td>
-                  <td className="p-4 text-neutral-400">Rigid API integrations</td>
-                  <td className="p-4 text-neutral-400">Manual entry drift</td>
-                  <td className="p-4 text-brand-primary font-bold">Daraz & Shopify native API</td>
-                </tr>
-
-                <tr className="text-xs font-semibold text-neutral-700">
-                  <td className="p-4 font-bold text-neutral-900">Upfront Licensing Cost</td>
-                  <td className="p-4 text-neutral-400">PKR 500,000+</td>
-                  <td className="p-4 text-brand-primary">PKR 0</td>
-                  <td className="p-4 text-brand-primary font-bold">Free Trial, scale from PKR 4,500/mo</td>
-                </tr>
-
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {[
+              {
+                q: 'Can I really import native Excel files directly?',
+                a: "Yes! Unlike traditional ERP platforms that fail if your spreadsheet isn't formatted perfectly, TENVO supports direct upload of native .xlsx files. Our interface checks your columns in real-time, displays explicit warnings for duplicate SKU codes or invalid prices, and allows you to partially import valid lines while providing a fixed Excel output file for errors.",
+              },
+              {
+                q: 'Is TENVO compliant with FBR tax laws?',
+                a: 'TENVO features a localized tax ledger that calculates standard 18% GST (and configurable provincial rates) per invoice line. We provide audit-ready logs and export-oriented summaries for your filing workflow. Live FBR IRIS sync is on the roadmap.',
+              },
+              {
+                q: 'How does the Urdu language toggle work?',
+                a: 'We realize warehouse teams may prefer Urdu for floor tasks. TENVO includes a language toggle with growing Urdu strings for core hub actions — full product localization is expanding release by release.',
+              },
+              {
+                q: 'Will we lose data during our migration?',
+                a: 'Never. Every single enterprise client is assigned a dedicated human Migration Manager. We review your messy old spreadsheets, check for SKU overlaps, verify existing supplier ledgers, perform sandbox test uploads, and ensure 100% data round-trip validation before switching your physical warehouse operations live.',
+              },
+            ].map((faq, index) => (
+              <ScrollReveal key={index} direction="up" delay={index * 60} threshold={0.1}>
+                <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm hover:border-neutral-300 transition-colors duration-200">
+                  <button
+                    onClick={() => toggleFaq(index)}
+                    className="w-full flex items-center justify-between p-6 text-left group hover:bg-neutral-50/60 transition-colors duration-200"
+                    aria-expanded={expandedFaq === index}
+                  >
+                    <span className="font-semibold text-neutral-800 text-sm sm:text-base group-hover:text-brand-primary transition-colors duration-200">
+                      {faq.q}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        'w-5 h-5 shrink-0 ml-4 text-neutral-400 transition-all duration-300',
+                        'group-hover:text-brand-primary',
+                        expandedFaq === index ? 'rotate-180 text-brand-primary' : ''
+                      )}
+                    />
+                  </button>
+                  {expandedFaq === index && (
+                    <div className="px-6 pb-6 border-t border-neutral-100 animate-fade-in-up">
+                      <p className="pt-4 text-sm text-neutral-600 leading-relaxed font-medium">
+                        {faq.a}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </ScrollReveal>
+            ))}
           </div>
 
         </div>
       </section>
 
-      <HomeOnboardingPathSection />
+      {/* 11. FINAL CTA */}
+      <section className="relative bg-white py-10 sm:py-14 lg:py-24 overflow-hidden">
+        <GradientMesh variant="hero" />
+        <div className={cn(MARKETING_CONTAINER, 'relative z-10')}>
+          <ScrollReveal direction="up" threshold={0.3}>
+            <div className="relative rounded-[3rem] p-8 sm:p-12 lg:p-16 text-center space-y-6 overflow-hidden border border-neutral-200/80 bg-white/80 backdrop-blur-sm shadow-sm">
+              {/* Subtle inner gradient orbs */}
+              <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-brand-primary/8 blur-3xl" aria-hidden />
+              <div className="pointer-events-none absolute -right-16 -bottom-16 h-56 w-56 rounded-full bg-brand-secondary/6 blur-3xl" aria-hidden />
 
-      <HomeSecurityTrustSection />
+              <p className="relative z-10 text-[11px] font-semibold text-brand-primary uppercase tracking-[0.32em]">Ready to take command?</p>
+              <h3 className="relative z-10 text-3xl sm:text-5xl font-semibold text-neutral-900 tracking-tight max-w-4xl mx-auto">
+                Unify your warehouse, sales, and accounts today.
+              </h3>
+              <p className="relative z-10 max-w-2xl mx-auto text-sm sm:text-base text-neutral-600 font-medium leading-relaxed">
+                Join operational teams moving from spreadsheets to one connected workspace — inventory, storefront, POS, and finance with Pakistan-first tax configuration.
+              </p>
 
-      <HomeIntegrationMarquee compact />
-
-      {/* 10. EXPANDABLE COMPREHENSIVE FAQ - Pure Light Theme */}
-      <section className="bg-neutral-50 border-b border-neutral-200/80 py-10 sm:py-16 lg:py-28">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-
-          <div className="text-center mb-16 space-y-4">
-            <h2 className={MARKETING_EYEBROW}>Frequently Asked Questions</h2>
-            <h3 className="text-3xl sm:text-4xl font-semibold text-neutral-900 tracking-tight">
-              Everything you need to know.
-            </h3>
-            <p className="text-sm text-neutral-500 font-semibold">
-              Can’t find the answer you’re looking for? Reach out to our dedicated support squad.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-
-            {/* FAQ Item 1 */}
-            <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm">
-              <button
-                onClick={() => toggleFaq(0)}
-                className="w-full flex items-center justify-between p-6 text-left"
-              >
-                <span className="font-semibold text-neutral-800 text-sm sm:text-base">Can I really import native Excel files directly?</span>
-                <ChevronDown className={`w-5 h-5 text-neutral-400 transition-transform ${expandedFaq === 0 ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedFaq === 0 && (
-                <div className="p-6 pt-0 border-t border-neutral-100">
-                  <p className="text-xs text-neutral-500 leading-relaxed font-semibold">
-                    Yes! Unlike traditional ERP platforms that fail if your spreadsheet isn&apos;t formatted perfectly, TENVO supports direct upload of native `.xlsx` files. Our interface checks your columns in real-time, displays explicit warnings for duplicate SKU codes or invalid prices, and allows you to partially import valid lines while providing a fixed Excel output file for errors.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* FAQ Item 2 */}
-            <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm">
-              <button
-                onClick={() => toggleFaq(1)}
-                className="w-full flex items-center justify-between p-6 text-left"
-              >
-                <span className="font-semibold text-neutral-800 text-sm sm:text-base">Is TENVO compliant with FBR tax laws?</span>
-                <ChevronDown className={`w-5 h-5 text-neutral-400 transition-transform ${expandedFaq === 1 ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedFaq === 1 && (
-                <div className="p-6 pt-0 border-t border-neutral-100">
-                  <p className="text-xs text-neutral-500 leading-relaxed font-semibold">
-                    TENVO features a localized tax ledger that calculates standard 18% GST (and configurable provincial rates) per invoice line. We provide audit-ready logs and export-oriented summaries for your filing workflow. Live FBR IRIS sync is on the roadmap.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* FAQ Item 3 */}
-            <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm">
-              <button
-                onClick={() => toggleFaq(2)}
-                className="w-full flex items-center justify-between p-6 text-left"
-              >
-                <span className="font-semibold text-neutral-800 text-sm sm:text-base">How does the Urdu language toggle work?</span>
-                <ChevronDown className={`w-5 h-5 text-neutral-400 transition-transform ${expandedFaq === 2 ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedFaq === 2 && (
-                <div className="p-6 pt-0 border-t border-neutral-100">
-                  <p className="text-xs text-neutral-500 leading-relaxed font-semibold">
-                    We realize warehouse teams may prefer Urdu for floor tasks. TENVO includes a language toggle with growing Urdu strings for core hub actions - full product localization is expanding release by release.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* FAQ Item 4 */}
-            <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm">
-              <button
-                onClick={() => toggleFaq(3)}
-                className="w-full flex items-center justify-between p-6 text-left"
-              >
-                <span className="font-semibold text-neutral-800 text-sm sm:text-base">Will we lose data during our migration?</span>
-                <ChevronDown className={`w-5 h-5 text-neutral-400 transition-transform ${expandedFaq === 3 ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedFaq === 3 && (
-                <div className="p-6 pt-0 border-t border-neutral-100">
-                  <p className="text-xs text-neutral-500 leading-relaxed font-semibold">
-                    Never. Every single enterprise client is assigned a dedicated human Migration Manager. We review your messy old spreadsheets, check for SKU overlaps, verify existing supplier ledgers, perform sandbox test uploads, and ensure 100% data round-trip validation before switching your physical warehouse operations live.
-                  </p>
-                </div>
-              )}
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* 11. HIGH IMPACT CALL-TO-ACTION (CTA) - Pure Light Theme */}
-      <section className="bg-white py-10 sm:py-14 lg:py-24">
-        <div className={MARKETING_CONTAINER}>
-
-          <div className="bg-neutral-50 border border-neutral-200/80 rounded-[3rem] p-8 sm:p-12 lg:p-16 text-center space-y-6 relative overflow-hidden shadow-sm">
-            <h2 className="text-[11px] font-semibold text-brand-primary uppercase tracking-[0.32em]">Ready to take command?</h2>
-            <h3 className="text-3xl sm:text-5xl font-semibold text-neutral-900 tracking-tight max-w-4xl mx-auto">
-              Unify your warehouse, sales, and accounts today.
-            </h3>
-            <p className="max-w-2xl mx-auto text-sm sm:text-base text-neutral-600 font-medium leading-relaxed">
-              Join operational teams moving from spreadsheets to one connected workspace - inventory, storefront, POS, and finance with Pakistan-first tax configuration. Start free today.
-            </p>
-
-            <div className="pt-4 flex flex-col sm:flex-row justify-center gap-4">
-              <Button asChild size="lg" className="h-14 rounded-xl bg-brand-primary hover:bg-brand-primary-dark text-white px-8 text-base font-semibold uppercase tracking-[0.15em] shadow-md transition-all">
-                <Link
-                  href={workspaceHref}
-                  onClick={() => trackHeroCta('footer_workspace', workspaceHref)}
+              <div className="relative z-10 pt-4 flex flex-col sm:flex-row justify-center gap-4">
+                <Button
+                  asChild size="lg"
+                  className="h-14 rounded-xl bg-brand-primary hover:bg-brand-primary-dark text-white px-8 text-base font-semibold uppercase tracking-[0.15em] shadow-md hover:shadow-xl hover:scale-[1.03] active:scale-100 transition-all duration-300"
                 >
-                  {workspaceCtaDesktop}
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="h-14 rounded-xl border-neutral-300 bg-white hover:border-brand-primary hover:text-brand-primary px-8 text-base font-semibold uppercase tracking-[0.15em] transition-all">
-                <Link href="/pricing">View Pricing Plans</Link>
-              </Button>
+                  <Link href={workspaceHref} onClick={() => trackHeroCta('footer_workspace', workspaceHref)}>
+                    {workspaceCtaDesktop}
+                  </Link>
+                </Button>
+                <Button
+                  asChild size="lg" variant="outline"
+                  className="h-14 rounded-xl border-neutral-300 bg-white hover:border-brand-primary hover:text-brand-primary hover:scale-[1.02] active:scale-100 px-8 text-base font-semibold uppercase tracking-[0.15em] transition-all duration-300"
+                >
+                  <Link href="/pricing">View Pricing Plans</Link>
+                </Button>
+              </div>
+
+              <p className="relative z-10 text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                No credit card required &bull; 14-day free trial &bull; Custom migration included
+              </p>
             </div>
-
-            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
-              No credit card required &bull; 14-day free trial &bull; Custom migration included
-            </p>
-          </div>
-
+          </ScrollReveal>
         </div>
       </section>
+
 
     </MarketingLayout>
   );

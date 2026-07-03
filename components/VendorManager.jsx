@@ -31,7 +31,8 @@ import { Badge } from '@/components/ui/badge';
  * Handles supplier database with Supabase integration
  */
 export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, category = 'retail-shop', businessId }) {
-  const { business } = useBusiness();
+  const { business, currency: businessCurrency } = useBusiness();
+  const currency = businessCurrency || 'PKR';
   const colors = getDomainColors(category);
   const [searchTerm, setSearchTerm] = useState('');
   const [vendorToView, setVendorToView] = useState(null);
@@ -79,7 +80,7 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
       header: 'Payables',
       cell: ({ row }) => (
         <span className={`font-semibold ${Number(row.original.outstanding_balance) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-          {formatCurrency(row.original.outstanding_balance || 0, 'PKR')}
+          {formatCurrency(row.original.outstanding_balance || 0, currency)}
         </span>
       ),
     },
@@ -163,7 +164,7 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
           { label: 'Vendors', value: vendors.length },
           {
             label: 'Payables',
-            value: formatCurrency(vendors.reduce((s, v) => s + (Number(v.outstanding_balance) || 0), 0), 'PKR'),
+            value: formatCurrency(vendors.reduce((s, v) => s + (Number(v.outstanding_balance) || 0), 0), currency),
             valueTone: 'text-red-600',
           },
         ]}
@@ -202,7 +203,7 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
           <CardContent className="pt-6">
             <p className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Total Payables</p>
             <p className="text-2xl font-semibold text-red-600">
-              {formatCurrency(vendors.reduce((s, v) => s + (Number(v.outstanding_balance) || 0), 0), 'PKR')}
+              {formatCurrency(vendors.reduce((s, v) => s + (Number(v.outstanding_balance) || 0), 0), currency)}
             </p>
           </CardContent>
         </Card>
@@ -286,7 +287,7 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
                   entityId={vendorToView?.id}
                   entityType="vendor"
                   businessId={businessId}
-                  currency="PKR"
+                  currency={currency}
                   colors={colors}
                 />
               </TabsContent>

@@ -3,7 +3,8 @@ import { prismaBase } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth/session';
 import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
 import { getSubscription, listStripeCustomerInvoices } from '@/lib/payments/stripe';
-import { isManualBillingMode } from '@/lib/config/billingMode';
+import { shouldUseDevInstantBilling, isStripeCheckoutEnabled } from '@/lib/config/billingMode';
+import { getManualPaymentRequestState } from '@/lib/payments/manualPaymentRequests';
 
 /**
  * GET /api/billing/subscription?business_id=...
@@ -45,13 +46,15 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
     }
 
+    const stripeEnabled = isStripeCheckoutEnabled();
+
     let stripeSubscription = null;
-    if (business.stripe_subscription_id && !isManualBillingMode()) {
+    if (business.stripe_subscription_id && stripeEnabled) {
       stripeSubscription = await getSubscription(business.stripe_subscription_id);
     }
 
     let invoices = [];
-    if (!isManualBillingMode() && business.stripe_customer_id) {
+    if (stripeEnabled && business.stripe_customer_id) {
       invoices = await listStripeCustomerInvoices(business.stripe_customer_id, 10);
     }
 
@@ -92,8 +95,30 @@ export async function GET(request) {
       status === 'cancellation_scheduled' ||
       graceWhilePaidTier;
 
+    const settingsObj =
+      business.settings && typeof business.settings === 'object' && !Array.isArray(business.settings)
+        ? business.settings
+        : {};
+    const manualPayment = getManualPaymentRequestState(settingsObj);
+    const pendingManualPayment =
+      manualPayment.pending?.status === 'pending' ? manualPayment.pending : null;
+
+    let manualAccessExpiresSoon = false;
+    if (status === 'manual_payment_active' && business.plan_expires_at) {
+      const msUntilExpiry = new Date(business.plan_expires_at).getTime() - Date.now();
+      manualAccessExpiresSoon = msUntilExpiry > 0 && msUntilExpiry <= 7 * 24 * 60 * 60 * 1000;
+    }
+
     return NextResponse.json({
-      billingMode: isManualBillingMode() ? 'manual' : 'stripe',
+      billingMode: shouldUseDevInstantBilling() ? 'manual' : 'stripe',
+      stripeCheckoutAvailable: stripeEnabled,
+      devInstantBilling: shouldUseDevInstantBilling(),
+      offlinePaymentAvailable: true,
+      manualPayment: {
+        pending: pendingManualPayment,
+        recentHistory: manualPayment.history.slice(0, 5),
+        accessExpiresSoon: manualAccessExpiresSoon,
+      },
       subscription: {
         planTier: business.plan_tier,
         status,

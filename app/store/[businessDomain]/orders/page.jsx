@@ -33,13 +33,15 @@ const STATUS_CONFIG = {
   shipped:    { label: 'Shipped',    color: 'bg-indigo-100 text-indigo-700', icon: Truck },
   delivered:  { label: 'Delivered',  color: 'bg-green-100 text-green-700',   icon: CheckCircle },
   cancelled:  { label: 'Cancelled',  color: 'bg-red-100 text-red-700',       icon: XCircle },
+  refunded:   { label: 'Refunded',   color: 'bg-gray-100 text-gray-600',     icon: RefreshCw },
 };
 
 const PAYMENT_CONFIG = {
-  pending:  { label: 'Unpaid',   color: 'bg-amber-100 text-amber-700' },
-  paid:     { label: 'Paid',     color: 'bg-green-100 text-green-700' },
-  failed:   { label: 'Failed',   color: 'bg-red-100 text-red-700' },
-  refunded: { label: 'Refunded', color: 'bg-gray-100 text-gray-600' },
+  pending:           { label: 'Unpaid',            color: 'bg-amber-100 text-amber-700' },
+  awaiting_payment:  { label: 'Awaiting Payment',  color: 'bg-amber-100 text-amber-700' },
+  paid:              { label: 'Paid',              color: 'bg-green-100 text-green-700' },
+  failed:            { label: 'Failed',            color: 'bg-red-100 text-red-700' },
+  refunded:          { label: 'Refunded',          color: 'bg-gray-100 text-gray-600' },
 };
 
 function fmtDate(d) {

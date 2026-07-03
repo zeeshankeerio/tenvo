@@ -18,26 +18,46 @@ export function ShortcutsHelp({ isOpen, onClose }) {
             icon: <LayoutGrid className="w-4 h-4" />,
             shortcuts: [
                 { keys: ["Alt", "1-5"], action: "Switch Main Tabs" },
-                { keys: ["Alt", "V"], action: "Switch to Visual View" },
-                { keys: ["Alt", "B"], action: "Switch to Busy Mode" },
+                { keys: ["Alt", "V"], action: "Visual table view" },
+                { keys: ["Alt", "B"], action: "Busy grid view (inventory tab)" },
+                { keys: ["Alt", "C"], action: "Cards view (mobile-friendly)" },
             ]
         },
         {
-            title: "Data Entry (Busy Mode)",
+            title: "Excel Mode (full-screen)",
             icon: <Table className="w-4 h-4" />,
             shortcuts: [
-                { keys: ["Click"], action: "Edit cell (Busy / Excel)" },
+                { keys: ["Ctrl", "S"], action: "Save all changes" },
+                { keys: ["Ctrl", "Z"], action: "Undo" },
+                { keys: ["Ctrl", "Y"], action: "Redo" },
+                { keys: ["Ctrl", "D"], action: "Duplicate last row (Excel modal)" },
+                { keys: ["Typeahead"], action: "Name, SKU, brand, category, domain fields suggest as you type" },
+            ]
+        },
+        {
+            title: "Data Entry (Busy / Excel grid)",
+            icon: <Table className="w-4 h-4" />,
+            shortcuts: [
+                { keys: ["Click"], action: "Edit cell" },
                 { keys: ["Arrows"], action: "Navigate cells" },
                 { keys: ["Enter"], action: "Edit cell / move down" },
                 { keys: ["Esc"], action: "Cancel editing" },
-                { keys: ["Tab"], action: "Save & next cell" },
+                { keys: ["Tab"], action: "Save and next cell" },
                 { keys: ["F2"], action: "Edit selected cell" },
-                { keys: ["Ctrl", "Shift", "N"], action: "Add new row" },
+                { keys: ["Ctrl", "Shift", "N"], action: "Add new inline row" },
                 { keys: ["Shift", "Enter"], action: "Add new row" },
+                { keys: ["Ctrl", "D"], action: "Fill value into cell below" },
                 { keys: ["Backspace"], action: "Clear cell" },
                 { keys: ["Ctrl", "Delete"], action: "Delete row" },
                 { keys: ["Ctrl", "C"], action: "Copy cell value" },
                 { keys: ["Ctrl", "V"], action: "Paste cell value" },
+            ]
+        },
+        {
+            title: "Command Center toggle",
+            icon: <Zap className="w-4 h-4" />,
+            shortcuts: [
+                { keys: ["Global Busy"], action: "Formula bar density (not the same as Busy grid view)" },
             ]
         },
         {

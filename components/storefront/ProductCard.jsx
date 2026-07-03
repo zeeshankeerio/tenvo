@@ -13,6 +13,11 @@ import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { getEffectiveProductImageUrl, getFallbackProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { isAutoPartsFinderStore } from '@/lib/storefront/partsFinder';
+import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
+import { isFitnessElevatedStore } from '@/lib/storefront/fitnessStorefront';
+import { getStorefrontStockState } from '@/lib/storefront/storefrontStockUi';
+import { isStorefrontProductUuid } from '@/lib/utils/storefrontProductRef';
+import { resolveSourcingBadge } from '@/lib/storefront/productAttributeChips';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
@@ -29,6 +34,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
   const { currency, settings, business, businessId } = useStorefront();
 
   const accent = getStoreAccentColor(settings, business?.category);
+  const fitnessStore = isFitnessElevatedStore(business?.category);
   const displayImage = getEffectiveProductImageUrl(product, business?.category);
   const imageFallback =
     product?.image_url?.trim()
@@ -38,9 +44,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
   const isDense = variant === 'dense';
   const isCompact = variant === 'compact' || isDense;
 
-  const isOutOfStock = product.stock !== null && product.stock !== undefined && product.stock <= 0;
-  const isLowStock =
-    product.stock !== null && product.stock !== undefined && product.stock > 0 && product.stock <= 5;
+  const { stock, isOutOfStock, isLowStock } = getStorefrontStockState(product);
 
   const discount =
     product.compare_price && Number(product.compare_price) > Number(product.price)
@@ -50,6 +54,8 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
   const categoryLabel = product.category_name || product.category;
   const brandLabel = product.brand?.trim();
   const showPartsMeta = isAutoPartsFinderStore(business?.category);
+  const showFashionMeta = isFashionEditorialStore(business?.category);
+  const sourcingBadge = showFashionMeta ? resolveSourcingBadge(product.domain_data) : null;
   const partNumber = product.domain_data?.partnumber;
   const fitmentHint = showPartsMeta
     ? [product.domain_data?.vehiclemake, product.domain_data?.vehiclemodel].filter(Boolean).join(' ')
@@ -59,6 +65,11 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
+
+    if (product.catalog_preview || !isStorefrontProductUuid(product.id)) {
+      window.location.href = productHref;
+      return;
+    }
 
     setIsAdding(true);
     try {
@@ -92,18 +103,21 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
       whileHover={isDense ? undefined : { y: -3 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        'group relative flex h-full flex-col overflow-hidden bg-white transition-shadow duration-300',
-        isDense
-          ? 'rounded-lg border border-slate-100 hover:border-slate-200 hover:shadow-md'
-          : 'rounded-xl border border-gray-100 hover:shadow-xl sm:rounded-2xl',
-        variant === 'compact' && !isDense && 'p-2 sm:p-3'
+        'group relative flex h-full flex-col overflow-hidden transition-shadow duration-300',
+        fitnessStore
+          ? 'fitness-product-card rounded-xl border hover:border-rose-500/30 hover:shadow-[0_8px_30px_rgba(225,29,72,0.12)]'
+          : isDense
+            ? 'rounded-lg border border-slate-100 bg-white hover:border-slate-200 hover:shadow-md'
+            : 'rounded-xl border border-gray-100 bg-white hover:shadow-xl sm:rounded-2xl',
+        variant === 'compact' && !isDense && !fitnessStore && 'p-2 sm:p-3'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
         className={cn(
-          'relative overflow-hidden bg-slate-50',
+          'relative overflow-hidden',
+          fitnessStore ? 'bg-zinc-900' : 'bg-slate-50',
           isDense ? 'aspect-square' : isCompact ? 'aspect-square rounded-lg sm:rounded-xl' : 'aspect-square sm:aspect-[4/5]'
         )}
       >
@@ -114,7 +128,10 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
               alt={product.name}
               fill
               fallbackSrc={imageFallback && imageFallback !== displayImage ? imageFallback : undefined}
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              className={cn(
+                'transition-transform duration-500 group-hover:scale-[1.03]',
+                fitnessStore ? 'object-contain p-2' : 'object-cover'
+              )}
               sizes={
                 isDense
                   ? '(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw'
@@ -147,10 +164,20 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
               NEW
             </Badge>
           )}
+          {sourcingBadge === 'local' ? (
+            <Badge className="border-0 bg-emerald-600 px-1.5 py-0 text-[10px] font-semibold text-white">
+              Local
+            </Badge>
+          ) : null}
+          {sourcingBadge === 'imported' ? (
+            <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-semibold">
+              Imported
+            </Badge>
+          ) : null}
           {isLowStock && !isDense && (
             <Badge className="border-0 bg-orange-500 px-1.5 py-0 text-[10px] font-bold text-white">
               <Zap className="mr-0.5 inline h-2.5 w-2.5" />
-              {product.stock} left
+              {stock} left
             </Badge>
           )}
         </div>
@@ -200,7 +227,10 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
 
         {isDense && categoryLabel && (
           <div className="pointer-events-none absolute bottom-2 left-2 z-10">
-            <span className="rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-600 shadow-sm">
+            <span className={cn(
+              'rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm',
+              fitnessStore ? 'bg-black/70 text-white/90' : 'bg-white/95 text-slate-600'
+            )}>
               {categoryLabel}
             </span>
           </div>
@@ -243,13 +273,19 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
         )}
       >
         {!isDense && categoryLabel && (
-          <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          <p className={cn(
+            'truncate text-[10px] font-semibold uppercase tracking-wider',
+            fitnessStore ? 'fitness-product-meta' : 'text-slate-400'
+          )}>
             {categoryLabel}
           </p>
         )}
 
         {isDense && brandLabel && (
-          <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          <p className={cn(
+            'truncate text-[10px] font-semibold uppercase tracking-wide',
+            fitnessStore ? 'fitness-product-meta' : 'text-slate-500'
+          )}>
             {brandLabel}
           </p>
         )}
@@ -257,7 +293,8 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
         <Link href={productHref} className="flex-1">
           <h3
             className={cn(
-              'line-clamp-2 leading-snug text-slate-900 transition-colors group-hover:text-slate-700',
+              'fitness-product-title line-clamp-2 leading-snug transition-colors',
+              fitnessStore ? 'text-white group-hover:text-rose-100' : 'text-slate-900 group-hover:text-slate-700',
               isDense ? 'text-[11px] font-semibold sm:text-xs' : 'text-xs font-semibold sm:text-sm'
             )}
           >
@@ -286,7 +323,8 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
         <div className={cn('flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5', isDense ? 'pt-0.5' : 'pt-0.5')}>
           <span
             className={cn(
-              'store-price font-extrabold tabular-nums text-slate-900',
+              'store-price font-extrabold tabular-nums',
+              fitnessStore ? 'text-white' : 'text-slate-900',
               isDense ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'
             )}
           >

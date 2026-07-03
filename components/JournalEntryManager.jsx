@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Trash2, Save, Loader2, AlertCircle, FileText } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { accountingAPI } from '@/lib/api/accounting';
+import { useBusiness } from '@/lib/context/BusinessContext';
 import toast from 'react-hot-toast';
 import { Combobox } from '@/components/ui/combobox';
 
@@ -19,6 +20,8 @@ import { Combobox } from '@/components/ui/combobox';
  * @param {any} [props.colors]
  */
 export default function JournalEntryManager({ businessId, onSuccess, colors }) {
+    const { currency: businessCurrency } = useBusiness();
+    const currency = businessCurrency || 'PKR';
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [accounts, setAccounts] = useState([]);
@@ -281,10 +284,10 @@ export default function JournalEntryManager({ businessId, onSuccess, colors }) {
                                     </Button>
                                 </td>
                                 <td className={`px-4 py-3 text-right ${totals.debit !== totals.credit ? 'text-red-500' : 'text-gray-900'}`}>
-                                    {formatCurrency(totals.debit, 'PKR')}
+                                    {formatCurrency(totals.debit, currency)}
                                 </td>
                                 <td className={`px-4 py-3 text-right ${totals.debit !== totals.credit ? 'text-red-500' : 'text-gray-900'}`}>
-                                    {formatCurrency(totals.credit, 'PKR')}
+                                    {formatCurrency(totals.credit, currency)}
                                 </td>
                                 <td></td>
                             </tr>
@@ -298,7 +301,7 @@ export default function JournalEntryManager({ businessId, onSuccess, colors }) {
                         {totals.diff > 0.01 ? (
                             <span className="flex items-center text-red-600 bg-red-50 px-3 py-1.5 rounded-full font-medium">
                                 <AlertCircle className="w-4 h-4 mr-2" />
-                                Out of balance by {formatCurrency(totals.diff, 'PKR')}
+                                Out of balance by {formatCurrency(totals.diff, currency)}
                             </span>
                         ) : totals.debit > 0 ? (
                             <span className="flex items-center text-green-600 bg-green-50 px-3 py-1.5 rounded-full font-medium">

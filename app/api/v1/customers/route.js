@@ -70,7 +70,18 @@ export async function POST(request) {
         const { business_id: businessId, ...customerData } = body;
         if (!businessId) return NextResponse.json({ error: 'business_id required' }, { status: 400 });
 
-        await withGuard(businessId, { permission: 'customers.create' });
+        // Count current customers and enforce plan limit
+        const countRes = await pool.query(
+            `SELECT COUNT(*) FROM customers WHERE business_id = $1 AND is_active = true`,
+            [businessId]
+        );
+        const currentCount = parseInt(countRes.rows[0].count, 10);
+
+        await withGuard(businessId, {
+            permission: 'customers.create',
+            limitKey: 'max_customers',
+            currentCount,
+        });
 
         const client = await pool.connect();
         try {
@@ -93,7 +104,11 @@ export async function POST(request) {
         }
     } catch (error) {
         console.error('POST /api/v1/customers error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const status = error.code === 'LIMIT_REACHED' ? 403
+            : error.code === 'UNAUTHENTICATED' ? 401
+            : error.code === 'PERMISSION_DENIED' ? 403
+            : 500;
+        return NextResponse.json({ error: error.message, code: error.code }, { status });
     }
 }
 

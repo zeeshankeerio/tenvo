@@ -282,6 +282,9 @@ function BusinessDashboardContent() {
       case 'loyalty':
         handleTabChange('loyalty');
         break;
+      case 'memberships':
+        handleTabChange('memberships');
+        break;
       case 'audit':
       case 'audit-trail':
         handleTabChange('audit');

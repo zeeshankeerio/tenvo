@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
+import { useRailAutoScroll } from '@/lib/hooks/storefront/useRailAutoScroll';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getEffectiveProductImageUrl, getFallbackProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { formatCurrency } from '@/lib/currency';
@@ -131,6 +132,8 @@ export function TopPicksSection({
   businessCategory,
   title = TOP_PICKS_COPY.title,
   subtitle = TOP_PICKS_COPY.subtitle,
+  autoScroll = true,
+  accent = '#1c1917',
 }) {
   const trackRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -138,6 +141,8 @@ export function TopPicksSection({
 
   const featuredThree = products.slice(0, 3);
   const carouselProducts = products.slice(0, 12);
+
+  useRailAutoScroll(trackRef, { enabled: autoScroll && carouselProducts.length > 3, interval: 4000 });
 
   const updateScrollState = useCallback(() => {
     const el = trackRef.current;
@@ -171,10 +176,15 @@ export function TopPicksSection({
   return (
     <section className="bg-white py-12 sm:py-16">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 text-center sm:mb-10">
+        <div className="mb-8 flex flex-col items-center text-center sm:mb-10">
           <h2 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-[1.75rem]">
             {title}
           </h2>
+          <span
+            className="mt-3 block h-[3px] w-10 rounded-full"
+            style={{ backgroundColor: accent }}
+            aria-hidden
+          />
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-stone-500 sm:text-base">
             {subtitle}
           </p>

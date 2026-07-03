@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Bell, Shield, Truck } from 'lucide-react';
+import { ArrowRight, Bell } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { StoreProductRail } from '@/components/storefront/StoreProductRail';
 import { cn } from '@/lib/utils';
@@ -14,17 +14,9 @@ import {
   resolvePharmacyPromoBanners,
   resolvePharmacyCareByCondition,
   resolvePharmacyBrands,
-  resolvePharmacyTrustPillars,
   resolvePharmacySeoBlocks,
   formatPharmacyStoreName,
 } from '@/lib/storefront/pharmacyStorefront';
-
-const TRUST_ICONS = {
-  genuine: Shield,
-  delivery: Truck,
-  refill: Bell,
-  support: Shield,
-};
 
 function PharmacySeoBlock({ storeName, businessDescription, country, settings, businessDomain }) {
   const config = getPharmacyConfig(settings, businessDomain);
@@ -86,7 +78,6 @@ export function PharmacyHomeSections({
   const promoBanners = resolvePharmacyPromoBanners(settings, products, businessDomain, businessCategory);
   const careItems = resolvePharmacyCareByCondition(settings, storeBase, ctx);
   const brands = resolvePharmacyBrands(settings, products, businessDomain);
-  const trustPillars = resolvePharmacyTrustPillars(settings, businessDomain);
   const featuredTitle = config.featuredRailTitle || 'Top selling';
   const featuredSubtitle =
     config.featuredRailSubtitle || `Popular products from ${displayName}`;
@@ -122,32 +113,6 @@ export function PharmacyHomeSections({
           </div>
         </section>
       )}
-
-      <section className="border-b border-emerald-50 bg-emerald-50/60 py-3 sm:py-4">
-        <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
-          <div className="flex gap-2.5 overflow-x-auto scrollbar-hide sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible lg:grid-cols-4">
-            {trustPillars.map((pillar) => {
-              const Icon = TRUST_ICONS[pillar.id] || Shield;
-              return (
-                <div
-                  key={pillar.id}
-                  className="flex min-w-[72%] shrink-0 items-center gap-2 rounded-xl border border-emerald-100/80 bg-white/80 px-3 py-2.5 text-xs font-semibold text-emerald-900 sm:min-w-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:text-sm"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-emerald-600 shadow-sm">
-                    <Icon className="h-4 w-4" aria-hidden />
-                  </span>
-                  <span>
-                    {pillar.label}
-                    {pillar.desc ? (
-                      <span className="hidden font-normal text-slate-500 lg:block">{pillar.desc}</span>
-                    ) : null}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {topSelling.length > 0 && (
         <StoreProductRail

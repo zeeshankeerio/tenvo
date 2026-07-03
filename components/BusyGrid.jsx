@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronUp, Check, X, Plus, Trash2, Settings, AlertCircle, Copy, Sigma, FunctionSquare, Zap } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, X, Plus, Trash2, Settings, AlertCircle, Copy, FunctionSquare, Zap } from 'lucide-react';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import { translations } from '@/lib/translations';
 import { getDomainColors } from '@/lib/domainColors';
 import { useBusyMode } from '@/lib/context/BusyModeContext';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { readGridCellValue } from '@/lib/utils/inventoryGridColumns';
+import { isSuggestibleInventoryColumn } from '@/lib/utils/inventoryFieldSuggestions';
 
 /**
  * BusyGrid Component
@@ -46,6 +48,8 @@ export function BusyGrid({
     className,
     category = 'retail-shop',
     validationErrors = {}, // Added for visual feedback
+    /** Optional: (accessorKey, row) => string[] for datalist autocomplete */
+    getFieldSuggestions,
     /** Dense spreadsheet layout: light gridlines, compact rows, stable row order (no column sort). */
     variant = 'default',
 }) {
@@ -78,21 +82,9 @@ export function BusyGrid({
     const navContextRef = useRef({ columns, sortedData: [], getValue: () => '', onCellEdit: null, isExcel: false });
 
     const getValue = useCallback((row, accessor) => {
-        if (!accessor) return '';
-        if (!row) return '';
-        let raw;
-        if (accessor.includes('.')) {
-            raw = accessor.split('.').reduce((o, i) => (o ? o[i] : undefined), row);
-        } else {
-            raw = row[accessor];
-        }
-        if (raw == null || raw === '') return '';
-        if (typeof raw === 'object' && typeof raw.toNumber === 'function') {
-            const n = raw.toNumber();
-            return Number.isFinite(n) ? n : '';
-        }
-        return raw;
-    }, []);
+        if (!accessor || !row) return '';
+        return readGridCellValue(row, accessor, category);
+    }, [category]);
 
     const getColumnLetter = (index) => {
         let letter = '';
@@ -118,6 +110,24 @@ export function BusyGrid({
     }, [data, sortConfig, getValue, variant]);
 
     navContextRef.current = { columns, sortedData, getValue, onCellEdit, isExcel };
+
+    const columnSuggestionLists = useMemo(() => {
+        if (!getFieldSuggestions) return {};
+        const map = {};
+        columns.forEach((col) => {
+            const key = col.accessorKey;
+            if (!key || col.readOnly || !isSuggestibleInventoryColumn(key)) return;
+            const merged = new Set();
+            sortedData.forEach((row) => {
+                getFieldSuggestions(key, row).forEach((s) => merged.add(s));
+            });
+            if (merged.size === 0) {
+                getFieldSuggestions(key, {}).forEach((s) => merged.add(s));
+            }
+            map[key] = [...merged];
+        });
+        return map;
+    }, [columns, sortedData, getFieldSuggestions]);
 
     const isEditableColumn = useCallback((colIndex) => {
         const col = columns[colIndex];
@@ -468,15 +478,33 @@ export function BusyGrid({
                     clearSelectedCell();
                 }
                 break;
+            case 'Insert':
+                e.preventDefault();
+                onAddRow?.();
+                break;
             case 'n':
             case 'N':
-                if (e.ctrlKey && e.shiftKey) {
+                // Ctrl+Shift+N (Ctrl+N is reserved by the browser) or Alt+N adds a new row
+                if ((e.ctrlKey && e.shiftKey) || e.altKey) {
                     e.preventDefault();
                     onAddRow?.();
                 }
                 break;
             case 'c': if (e.ctrlKey) { e.preventDefault(); copyToClipboard(); } break;
             case 'v': if (e.ctrlKey) { e.preventDefault(); pasteFromClipboard(); } break;
+            case 'd':
+            case 'D':
+                if (e.ctrlKey && !e.shiftKey && isEditableColumn(selectedCell.col)) {
+                    e.preventDefault();
+                    const colDef = columns[selectedCell.col];
+                    const row = sortedData[selectedCell.row];
+                    const below = sortedData[selectedCell.row + 1];
+                    if (colDef?.accessorKey && row && below) {
+                        const val = getValue(row, colDef.accessorKey);
+                        onCellEdit?.(below, colDef.accessorKey, val ?? '');
+                    }
+                }
+                break;
             default:
                 if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) startEditing(e.key);
                 break;
@@ -656,6 +684,12 @@ export function BusyGrid({
 
                                         const cellFlashKey = `${rk}_${colIndex}`;
                                         const isFlashing = flashCell === cellFlashKey;
+                                        const suggestListId =
+                                            getFieldSuggestions &&
+                                            col.accessorKey &&
+                                            (columnSuggestionLists[col.accessorKey]?.length ?? 0) > 0
+                                                ? `busy-suggest-${col.accessorKey.replace(/\./g, '-')}`
+                                                : undefined;
                                         return (
                                             <td
                                                 key={colIndex}
@@ -684,10 +718,6 @@ export function BusyGrid({
                                                     }
                                                 }}
                                             >
-                                                {/* Smart Fill Handle (Busy Mode & Selected Only) */}
-                                                {isSelected && !isEditing && isBusyMode && (
-                                                    <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-indigo-600 border border-white z-50 cursor-crosshair shadow-sm hover:scale-125 transition-transform" />
-                                                )}
                                                 {isEditing ? (
                                                     <div className="absolute inset-0 z-40 p-0.5">
                                                         <input
@@ -697,6 +727,7 @@ export function BusyGrid({
                                                                 isNumericCellKey(col.accessorKey) ? 'decimal' : 'text'
                                                             }
                                                             autoComplete="off"
+                                                            list={suggestListId}
                                                             spellCheck={false}
                                                             aria-label={`Edit ${col.accessorKey}`}
                                                             className={cn(
@@ -804,7 +835,8 @@ export function BusyGrid({
                     {[
                         { k: 'Tab', l: 'Save+next' },
                         { k: 'F2', l: 'Edit' },
-                        { k: 'Ctrl+⇧+N', l: 'New row' },
+                        { k: 'Insert', l: 'New row' },
+                        { k: 'Ctrl+D', l: 'Fill down' },
                         { k: '↵', l: 'Down' },
                         { k: 'Bksp', l: 'Clear' },
                     ].map((btn) => (
@@ -827,6 +859,13 @@ export function BusyGrid({
                     <button className="w-full text-left px-4 py-2 hover:bg-red-50 flex items-center gap-3 text-sm text-red-600" onClick={() => { onDeleteRow?.(sortedData[contextMenu.rowIndex]); setContextMenu(null); }}><Trash2 className="w-4 h-4" /><div className="flex flex-col"><span className="font-bold">Delete</span><span className="text-[10px] text-red-400">DEL</span></div></button>
                 </div>
             )}
+            {Object.entries(columnSuggestionLists).map(([accessorKey, options]) => (
+                <datalist key={accessorKey} id={`busy-suggest-${accessorKey.replace(/\./g, '-')}`}>
+                    {options.map((opt) => (
+                        <option key={opt} value={opt} />
+                    ))}
+                </datalist>
+            ))}
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

@@ -6,17 +6,39 @@ This repo wires **SaaS subscription billing** to **Stripe** (cards, Checkout, Cu
 
 ---
 
-## 1. Manual billing (no Stripe, local / UAT)
+## 1. Billing modes (card + offline together)
 
-| Variable | Value |
-|----------|--------|
-| `BILLING_MODE` | `manual` or `dev` |
+| Variable | Value | Effect |
+|----------|--------|--------|
+| `BILLING_MODE` | `stripe` or omit | Card checkout via Stripe when `STRIPE_SECRET_KEY` is set. Offline payment always available. |
+| `BILLING_MODE` | `manual` or `dev` | **Without** `STRIPE_SECRET_KEY`: instant plan apply in Postgres (UAT). **With** Stripe keys: card checkout **and** offline payment both work. |
 
-Effect: `create-checkout`, `cancel`, and `update` subscription routes **only update Postgres** (`lib/config/billingMode.js`). Good for testing tiers without cards.
+`shouldUseDevInstantBilling()` in `lib/config/billingMode.js` controls dev-only instant apply (manual mode + no Stripe keys).
 
-**NOWPayments (crypto)** is independent: `/api/billing/crypto/*` stays available whenever `NOWPAYMENTS_API_KEY` is set, regardless of `BILLING_MODE`.
+**NOWPayments (crypto)** is independent: `/api/billing/crypto/*` stays available whenever `NOWPAYMENTS_API_KEY` is set.
 
-Production card billing: omit `BILLING_MODE` or set `stripe` (default in `getBillingMode()` when unset).
+Production: `BILLING_MODE=stripe` (or unset) + `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`. Amounts come from `lib/payments/stripeCatalog.js` (no dashboard Price IDs required).
+
+---
+
+## 1b. Offline payments (JazzCash / EasyPaisa / bank)
+
+Available in **all** billing modes (including production Stripe):
+
+1. Pay to your platform wallet or bank account (details below).
+2. Submit transaction ID in **Settings → Billing → Pay offline** (`ManualPaymentRequestPanel`).
+3. Platform admin **Approves** in **Platform Admin → Business details** (or records payment directly).
+
+| Variable | Purpose |
+|----------|---------|
+| `TENVO_MANUAL_PAYMENT_JAZZCASH` | JazzCash number shown to owners |
+| `TENVO_MANUAL_PAYMENT_EASYPAISA` | EasyPaisa number |
+| `TENVO_MANUAL_PAYMENT_BANK` | Bank transfer instructions (name, title, IBAN) |
+| `TENVO_BILLING_SUPPORT_EMAIL` | Optional support contact in billing copy |
+
+Activation uses **`applyManualSubscriptionPaymentTx`** (`lib/payments/manualSubscriptionPayment.js`) for both admin record and owner approve flows. Supports **plan tier** and **domain package** SKUs (e.g. `clothing-commerce`).
+
+Run `npm run verify:manual-billing` after edits to this flow.
 
 ---
 
@@ -28,7 +50,7 @@ Production card billing: omit `BILLING_MODE` or set `stripe` (default in `getBil
 |----------|---------|
 | `STRIPE_SECRET_KEY` | `sk_test_…` / `sk_live_…` — all server Stripe calls |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` from Stripe Dashboard or **Stripe CLI** `listen` |
-| `STRIPE_PRICE_*` | Price IDs per tier × currency — see `STRIPE_PRICE_IDS` in `lib/payments/stripe.js` and `.env.example` |
+| `STRIPE_PRICE_*` | **Optional (legacy).** SaaS amounts are derived from `lib/config/plans.js` and `lib/config/domainPackages.js` via `lib/payments/stripeCatalog.js` using Checkout `price_data` — no dashboard Price IDs required. |
 
 ### Optional (browser / Elements later)
 
@@ -47,7 +69,9 @@ This app’s handler: `POST /api/webhooks/stripe` (`app/api/webhooks/stripe/rout
 
 ### Product / price IDs
 
-Create **Products** and recurring **Prices** in Stripe (Dashboard or API), then map each to `STRIPE_PRICE_<tier>_monthly_<pkr|usd>` so `getPriceIdForPlan()` resolves checkout and `/api/billing/update`. Tier keys match `lib/config/plans.js` (`free`, `starter`, `professional`, `business`, `enterprise`). Legacy env vars `STRIPE_PRICE_GROWTH_*` still map to the **professional** tier if `STRIPE_PRICE_PROFESSIONAL_*` is unset.
+SaaS checkout uses **code-driven amounts** (`lib/payments/stripeCatalog.js` → Checkout `price_data`). You do **not** need dashboard Price IDs for standard flows.
+
+Optional legacy env `STRIPE_PRICE_*` still maps via `getPriceIdForPlan()` if you prefer dashboard prices. Tier keys match `lib/config/plans.js` (`free`, `starter`, `professional`, `business`, `enterprise`). Legacy `STRIPE_PRICE_GROWTH_*` maps to **professional** when `STRIPE_PRICE_PROFESSIONAL_*` is unset.
 
 ### Broader Stripe orientation
 
@@ -87,10 +111,11 @@ Implementation: `lib/payments/nowpayments.js`. **IPN verification** in that file
 ## 4. Quick checklist
 
 1. [ ] `.env` matches **`.env.example`** names (`STRIPE_SECRET_KEY`, not typos).
-2. [ ] `STRIPE_PRICE_*` set for every tier you sell × each currency (`pkr` / `usd`).
+2. [ ] Stripe keys + webhook secret set; catalog amounts live in `lib/config/plans.js` / `domainPackages.js` (optional `STRIPE_PRICE_*` legacy only).
 3. [ ] `STRIPE_WEBHOOK_SECRET` matches the endpoint signing the `POST /api/webhooks/stripe` payload.
 4. [ ] `BILLING_MODE=manual` only in dev/UAT.
-5. [ ] NOWPayments: API key set; IPN URL reachable in production; `NOWPAYMENTS_IPN_SECRET` set before trusting webhooks.
+5. [ ] Offline billing: set `TENVO_MANUAL_PAYMENT_*` payee details for owner-facing instructions.
+6. [ ] NOWPayments: API key set; IPN URL reachable in production; `NOWPAYMENTS_IPN_SECRET` set before trusting webhooks.
 
 ---
 

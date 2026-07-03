@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { resolveBrandMonogramUrl } from '@/lib/storefront/storefrontImagePlaceholders';
+import { isDeadImageUrl } from '@/lib/storefront/deadImageHosts';
 
 /**
  * Renders Next.js Image for https URLs, plain img for data: URIs and remote SVGs.
@@ -22,15 +23,18 @@ export function SmartProductImage({
   fallbackSrc,
   placeholderLabel,
 }) {
-  const [currentSrc, setCurrentSrc] = useState(src || '');
+  // Never render images from permanently-dead hosts; they only trigger failed
+  // optimizer fetches. Treat them as missing so the fallback/placeholder shows.
+  const safeSrc = isDeadImageUrl(src) ? '' : (src || '');
+  const [currentSrc, setCurrentSrc] = useState(safeSrc);
   const [failed, setFailed] = useState(false);
   const [fallbackFailed, setFallbackFailed] = useState(false);
 
   useEffect(() => {
-    setCurrentSrc(src || '');
+    setCurrentSrc(safeSrc);
     setFailed(false);
     setFallbackFailed(false);
-  }, [src]);
+  }, [safeSrc]);
 
   const activeSrc = failed && fallbackSrc && !fallbackFailed ? fallbackSrc : currentSrc;
   const monogramSrc =

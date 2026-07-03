@@ -3,7 +3,8 @@ import { prismaBase } from '@/lib/db';
 import { createBillingPortalSession } from '@/lib/payments/stripe';
 import { getSessionUser } from '@/lib/auth/session';
 import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
-import { isManualBillingMode } from '@/lib/config/billingMode';
+import { assertBillingRole } from '@/lib/tenancy/billingAccess';
+import { shouldUseDevInstantBilling } from '@/lib/config/billingMode';
 import { businessHubUrl } from '@/lib/utils/billingReturnUrls';
 
 /**
@@ -40,13 +41,19 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
     }
 
-    if (isManualBillingMode()) {
+    // Billing portal is owner/admin only
+    const roleCheck = await assertBillingRole({ userId: sessionWrap.user.id, businessId, sessionUser: sessionWrap.user });
+    if (!roleCheck.allowed) {
+      return NextResponse.json({ error: roleCheck.error, code: 'INSUFFICIENT_ROLE' }, { status: 403 });
+    }
+
+    if (shouldUseDevInstantBilling()) {
       return NextResponse.json({
         success: true,
         manual: true,
         code: 'MANUAL_BILLING_NO_PORTAL',
         message:
-          'Stripe Customer Portal is disabled while BILLING_MODE=manual. Change plans via checkout (same API), it updates the business record only.',
+          'Stripe Customer Portal requires STRIPE_SECRET_KEY. Subscribe via checkout or use offline payment in Settings → Billing.',
       });
     }
 

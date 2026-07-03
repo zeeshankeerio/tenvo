@@ -16,12 +16,14 @@ import {
     LayoutDashboard, Zap, Truck, Building2, CreditCard, Receipt,
     BarChart3, Landmark, Brain, Factory, UserCog, CheckSquare, ScrollText,
     Heart, Megaphone, UtensilsCrossed, RefreshCcw, ClipboardList, TrendingUp,
-    Warehouse, Calendar, ArrowLeftRight, BadgeDollarSign, Hash
+    Warehouse, Calendar, ArrowLeftRight, BadgeDollarSign, Hash, BadgeCheck
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
+import { isMembershipRelevant } from '@/lib/config/domains';
 
 export function CommandPalette() {
     const [open, setOpen] = useState(false);
+    const [membershipRelevant, setMembershipRelevant] = useState(false);
     const router = useRouter();
 
     // Command palette needs the current business domain, not category, to route correctly
@@ -51,6 +53,21 @@ export function CommandPalette() {
         document.addEventListener('keydown', down);
         return () => document.removeEventListener('keydown', down);
     }, []);
+
+    useEffect(() => {
+        if (!open || typeof window === 'undefined') return;
+        try {
+            const raw = localStorage.getItem('businessData');
+            if (raw) {
+                const biz = JSON.parse(raw);
+                setMembershipRelevant(isMembershipRelevant(biz.category));
+                return;
+            }
+        } catch {
+            // ignore
+        }
+        setMembershipRelevant(false);
+    }, [open]);
 
     const runCommand = useCallback((command) => {
         setOpen(false);
@@ -164,6 +181,12 @@ export function CommandPalette() {
                         <Heart className="mr-2 h-4 w-4" />
                         <span>Loyalty & CRM</span>
                     </CommandItem>
+                    {membershipRelevant ? (
+                    <CommandItem onSelect={() => goTab('memberships')}>
+                        <BadgeCheck className="mr-2 h-4 w-4" />
+                        <span>Memberships</span>
+                    </CommandItem>
+                    ) : null}
                     <CommandItem onSelect={() => goTab('refunds')}>
                         <RefreshCcw className="mr-2 h-4 w-4" />
                         <span>Refunds & Returns</span>

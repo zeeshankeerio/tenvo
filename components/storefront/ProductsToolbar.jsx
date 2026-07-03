@@ -6,6 +6,7 @@ import { X, SlidersHorizontal, ChevronDown, LayoutGrid, List, Check } from 'luci
 import { cn } from '@/lib/utils';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
 import { formatCurrency } from '@/lib/currency';
 
 const SORT_OPTIONS = [
@@ -113,6 +114,7 @@ export function ActiveFilters({ filters, businessDomain }) {
   const searchParams = useSearchParams();
   const { settings, business, categories, currency } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
+  const clothingStore = isFashionEditorialStore(business?.category);
 
   const activeFilters = [];
   if (filters.category) {
@@ -135,7 +137,21 @@ export function ActiveFilters({ filters, businessDomain }) {
     else if (mode === 'vin') label = `VIN / chassis: ${filters.search}`;
     activeFilters.push({ key: 'search', label });
   }
-  if (filters.brand)     activeFilters.push({ key: 'brand', label: `Make: ${filters.brand}` });
+  if (filters.brand) {
+    activeFilters.push({
+      key: 'brand',
+      label: clothingStore ? `Brand: ${filters.brand}` : `Make: ${filters.brand}`,
+    });
+  }
+  if (filters.fabric) activeFilters.push({ key: 'fabric', label: `Fabric: ${filters.fabric}` });
+  if (filters.sourcing) {
+    const src = String(filters.sourcing);
+    activeFilters.push({
+      key: 'sourcing',
+      label: `Sourcing: ${src.charAt(0).toUpperCase()}${src.slice(1)}`,
+    });
+  }
+  if (filters.size) activeFilters.push({ key: 'size', label: `Size: ${filters.size}` });
   if (filters.model)     activeFilters.push({ key: 'model', label: `Model: ${filters.model}` });
   if (filters.year)      activeFilters.push({ key: 'year', label: `Year: ${filters.year}` });
   if (filters.engine)    activeFilters.push({ key: 'engine', label: `Engine: ${filters.engine}` });

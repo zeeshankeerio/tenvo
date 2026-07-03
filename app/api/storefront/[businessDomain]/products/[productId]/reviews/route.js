@@ -99,9 +99,9 @@ export async function POST(request, { params }) {
     try {
       await client.query(
         `INSERT INTO product_reviews
-           (product_id, reviewer_name, reviewer_email, rating, title, body, is_approved, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, false, NOW())`,
-        [productId, reviewerName.trim(), reviewerEmail?.trim() || null, rating, title?.trim() || null, reviewBody?.trim() || null]
+           (product_id, business_id, reviewer_name, reviewer_email, rating, title, body, is_approved, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, false, NOW())`,
+        [productId, business.id, reviewerName.trim(), reviewerEmail?.trim() || null, rating, title?.trim() || null, reviewBody?.trim() || null]
       );
     } catch (e) {
       if (e.code !== '42P01') throw e;

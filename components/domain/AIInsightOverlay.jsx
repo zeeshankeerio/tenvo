@@ -21,10 +21,16 @@ export function AIInsightOverlay({ domain, items, businessId }) {
     const fetchInsights = async () => {
       setLoading(true);
       try {
-        const res = await getDomainIndustryInsightsAction(businessId, domain);
-        if (res.success) {
-          // Filter or adapt insights based on current items
-          setInsights(res.insights || []);
+        const res = await getDomainIndustryInsightsAction(businessId);
+        if (res.success && res.data) {
+          const d = res.data;
+          setInsights([
+            {
+              type: d.priority === 'high' ? 'opportunity' : d.priority === 'medium' ? 'strategy' : 'strategy',
+              title: d.current_status || 'Industry insight',
+              description: d.insight || d.suggested_action || '',
+            },
+          ]);
         }
       } catch (e) {
         console.error("Failed to fetch AI insights:", e);

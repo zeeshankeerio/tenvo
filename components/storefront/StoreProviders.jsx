@@ -10,7 +10,7 @@ import { CartProvider } from '@/lib/context/CartContext';
 export function StoreProviders({ business, settings, categories, plan, children }) {
   return (
     <StorefrontProvider business={business} settings={settings} categories={categories} plan={plan}>
-      <CartProvider>{children}</CartProvider>
+      <CartProvider businessId={business?.id}>{children}</CartProvider>
     </StorefrontProvider>
   );
 }

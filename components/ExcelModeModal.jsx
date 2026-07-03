@@ -1,14 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { X, Maximize2, Minimize2, Download, Save, Table2, AlertCircle, CheckCircle2, Loader2, Copy, Trash2, Eraser, Undo, Redo, Search, Sparkles, Columns, ChevronDown } from 'lucide-react';
+import { X, Maximize2, Minimize2, Download, Save, Table2, AlertCircle, CheckCircle2, Loader2, Copy, Trash2, Eraser, Undo, Redo, Search, Sparkles, Columns, ChevronDown, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { BusyGrid } from './BusyGrid';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getDomainColors } from '@/lib/domainColors';
-import { isBatchTrackingEnabled, isSerialTrackingEnabled } from '@/lib/utils/domainHelpers';
+import { isBatchTrackingEnabled, isSerialTrackingEnabled, getDomainProductFields, resolveDomainFieldKey, normalizeKey } from '@/lib/utils/domainHelpers';
+import { buildInventoryGridColumns, readGridCellValue } from '@/lib/utils/inventoryGridColumns';
+import { buildNewInventoryRow, getLastRowForDefaults } from '@/lib/utils/inventoryRowDefaults';
+import { mapProductField } from '@/lib/utils/productFieldMapper';
+import { detectColumnMapping, applyColumnMapping } from '@/lib/utils/inventoryColumnMapping';
+import { productSchema } from '@/lib/validation/schemas';
 import toast from 'react-hot-toast';
+
+/** Max rows loaded into Excel modal working set (Busy/Zoho-style performance). */
+const EXCEL_WORKSET_SIZE = 500;
 
 /**
  * Enhanced ExcelModeModal - Full-screen Excel-like data entry interface
@@ -23,6 +31,7 @@ export function ExcelModeModal({
     onAddRow,
     onDeleteRow,
     onSave,
+    getFieldSuggestions,
     category = 'retail-shop',
     entityType = 'products', // Added missing prop
     title = 'Excel Data Entry',
@@ -39,6 +48,7 @@ export function ExcelModeModal({
     const colPickerRef = useRef(null);
 
     const wasOpenRef = useRef(false);
+    const [sourceTotal, setSourceTotal] = useState(0);
 
     // History Tracking (Undo/Redo)
     const [history, setHistory] = useState([]);
@@ -49,17 +59,20 @@ export function ExcelModeModal({
     // Sync local data when modal opens (run only on initial open transition)
     useEffect(() => {
         if (isOpen && !wasOpenRef.current) {
-            const sanitizedData = data.map(item => {
+            const sanitizedAll = data.map(item => {
                 const newItem = { ...item };
-                // Flatten nested domain_data if needed or sanitize Dates
                 Object.keys(newItem).forEach(key => {
                     if (newItem[key] instanceof Date) newItem[key] = newItem[key].toISOString().split('T')[0];
                     if (newItem[key] && typeof newItem[key] === 'object' && newItem[key].toDate) newItem[key] = newItem[key].toDate().toISOString().split('T')[0];
                 });
                 return newItem;
             });
-            setLocalData(sanitizedData);
-            setHistory([JSON.stringify(sanitizedData)]); // Start history
+            setSourceTotal(sanitizedAll.length);
+            const initialChunk = sanitizedAll.length > EXCEL_WORKSET_SIZE
+                ? sanitizedAll.slice(0, EXCEL_WORKSET_SIZE)
+                : sanitizedAll;
+            setLocalData(initialChunk);
+            setHistory([JSON.stringify(initialChunk)]);
             setFuture([]);
             setHasUnsavedChanges(false);
             setValidationErrors({});
@@ -77,6 +90,24 @@ export function ExcelModeModal({
         });
         setFuture([]);
     }, []);
+
+    const handleLoadMoreRows = useCallback(() => {
+        const sanitizedAll = data.map(item => {
+            const newItem = { ...item };
+            Object.keys(newItem).forEach(key => {
+                if (newItem[key] instanceof Date) newItem[key] = newItem[key].toISOString().split('T')[0];
+                if (newItem[key] && typeof newItem[key] === 'object' && newItem[key].toDate) newItem[key] = newItem[key].toDate().toISOString().split('T')[0];
+            });
+            return newItem;
+        });
+        setLocalData((prev) => {
+            const nextChunk = sanitizedAll.slice(prev.length, prev.length + EXCEL_WORKSET_SIZE);
+            if (nextChunk.length === 0) return prev;
+            const merged = [...prev, ...nextChunk];
+            pushState(merged);
+            return merged;
+        });
+    }, [data, pushState]);
 
     const handleUndo = useCallback(() => {
         if (history.length <= 1) return;
@@ -110,29 +141,42 @@ export function ExcelModeModal({
         );
     }, [localData, searchQuery]);
 
+    const excelFieldSuggestions = useCallback(
+        (accessorKey, row) => {
+            const base = getFieldSuggestions ? getFieldSuggestions(accessorKey, row) : [];
+            const merged = new Set(base);
+            const scalarKey = accessorKey?.includes('.') ? accessorKey.split('.').pop() : accessorKey;
+            localData.forEach((r) => {
+                let val;
+                if (accessorKey?.startsWith('domain_data.')) {
+                    const domainKey = accessorKey.slice('domain_data.'.length);
+                    val = r?.domain_data?.[domainKey];
+                } else if (scalarKey) {
+                    val = r?.[scalarKey];
+                }
+                if (val != null && String(val).trim()) merged.add(String(val).trim());
+            });
+            return [...merged];
+        },
+        [getFieldSuggestions, localData]
+    );
+
     // Enhanced Columns
     const enhancedColumns = useMemo(() => {
-        const base = [...columns];
+        const isProducts = entityType === 'products' || !entityType;
+        let base = isProducts
+            ? [...buildInventoryGridColumns(category, { mode: 'excel' })]
+            : [...columns];
         const keys = new Set(base.map(c => c.accessorKey || c.id));
         const addIfMissing = (key, header, width) => {
-            if (!keys.has(key)) base.push({ accessorKey: key, header, width });
+            if (!keys.has(key)) {
+                base.push({ accessorKey: key, header, width });
+                keys.add(key);
+            }
         };
 
-        // Domain-specific tracking columns
-        if (isBatchTrackingEnabled(category)) {
-            addIfMissing('batch_number', 'Batch #', 120);
-            addIfMissing('batch_quantity', 'Batch Qty', 100);
-            addIfMissing('expiry_date', 'Expiry', 120);
-            addIfMissing('manufacturing_date', 'Mfg Date', 120);
-        }
-        if (isSerialTrackingEnabled(category)) {
-            addIfMissing('serial_number', 'Serial #', 150);
-        }
-
-        // Common product fields (if not already present)
-        if (entityType === 'products' || !entityType) {
+        if (isProducts) {
             addIfMissing('brand', 'Brand', 120);
-            addIfMissing('category', 'Category', 120);
             addIfMissing('hsn_code', 'HSN Code', 100);
             addIfMissing('sac_code', 'SAC Code', 100);
             addIfMissing('image_url', 'Image', 80);
@@ -142,6 +186,16 @@ export function ExcelModeModal({
             addIfMissing('min_stock', 'Min Stock', 90);
             addIfMissing('max_stock', 'Max Stock', 90);
             addIfMissing('reorder_point', 'Reorder Point', 110);
+        } else {
+            if (isBatchTrackingEnabled(category)) {
+                addIfMissing('batch_number', 'Batch #', 120);
+                addIfMissing('batch_quantity', 'Batch Qty', 100);
+                addIfMissing('expiry_date', 'Expiry', 120);
+                addIfMissing('manufacturing_date', 'Mfg Date', 120);
+            }
+            if (isSerialTrackingEnabled(category)) {
+                addIfMissing('serial_number', 'Serial #', 150);
+            }
         }
 
         // Common customer/vendor fields
@@ -166,7 +220,6 @@ export function ExcelModeModal({
         }
 
         let out = [...base];
-        const isProducts = entityType === 'products' || !entityType;
         if (isProducts && !out.some((c) => c.id === 'status_dot')) {
             out.unshift({
                 id: 'status_dot',
@@ -210,30 +263,85 @@ export function ExcelModeModal({
         return () => window.removeEventListener('beforeunload', onBeforeUnload);
     }, [isOpen, hasUnsavedChanges]);
 
-    // Validation
+    // Validation (aligned with productSchema)
     const validateRow = useCallback((row, rowKey) => {
         const errors = {};
-        if (!row.name || String(row.name).trim() === '') errors[`${rowKey}-name`] = 'Required';
-        const price = Number(row.price);
-        if (Number.isFinite(price) && price < 0) errors[`${rowKey}-price`] = 'Positive Only';
-        const stock = Number(row.stock);
-        if (Number.isFinite(stock) && stock < 0) errors[`${rowKey}-stock`] = 'Non-negative';
+        const payload = {
+            name: row.name ?? '',
+            sku: row.sku ?? null,
+            barcode: row.barcode ?? null,
+            brand: row.brand ?? null,
+            description: row.description ?? null,
+            category: row.category ?? null,
+            unit: row.unit || 'pcs',
+            price: Number(row.price) || 0,
+            cost_price: row.cost_price != null ? Number(row.cost_price) : null,
+            mrp: row.mrp != null ? Number(row.mrp) : null,
+            stock: Number(row.stock) || 0,
+            min_stock: row.min_stock != null ? Number(row.min_stock) : null,
+            max_stock: row.max_stock != null ? Number(row.max_stock) : null,
+            reorder_point: row.reorder_point != null ? Number(row.reorder_point) : null,
+            reorder_quantity: row.reorder_quantity != null ? Number(row.reorder_quantity) : null,
+            tax_percent: row.tax_percent != null ? Number(row.tax_percent) : 17,
+            hsn_code: row.hsn_code ?? null,
+            sac_code: row.sac_code ?? null,
+            business_id: row.business_id || businessId,
+            image_url: row.image_url ?? null,
+            is_active: row.is_active !== false,
+            domain_data: row.domain_data ?? {},
+            unit_conversions: row.unit_conversions ?? {},
+            expiry_date: row.expiry_date ?? null,
+            manufacturing_date: row.manufacturing_date ?? null,
+            batches: row.batches ?? [],
+            serial_numbers: row.serial_numbers ?? row.serialNumbers ?? [],
+            serialNumbers: row.serialNumbers ?? row.serial_numbers ?? [],
+            variants: row.variants ?? [],
+        };
+
+        const result = productSchema.safeParse(payload);
+        if (!result.success) {
+            for (const issue of result.error.issues) {
+                const field = issue.path[0];
+                if (field) errors[`${rowKey}-${field}`] = issue.message;
+            }
+        }
         return errors;
+    }, [businessId]);
+
+    // Empty row = no name, sku, or meaningful domain_data (zero price/stock alone is not empty)
+    const isEmptyRow = useCallback((row) => {
+        if (row.name != null && String(row.name).trim() !== '') return false;
+        if (row.sku != null && String(row.sku).trim() !== '') return false;
+        const dd = row.domain_data;
+        if (dd && typeof dd === 'object') {
+            if (Object.values(dd).some((v) => v != null && String(v).trim() !== '')) return false;
+        }
+        return true;
     }, []);
 
-    // Intelligent Empty Row Detection
-    const isEmptyRow = useCallback((row) => {
-        const fieldsToCheck = ['name', 'sku', 'price', 'stock'];
-        return fieldsToCheck.every(key => {
-            const val = row[key];
-            if (val === undefined || val === null || val === '') return true;
-            if (typeof val === 'number' && val === 0) {
-                // For price/stock, 0 is often the default, so we check if other fields are empty
-                return true;
-            }
-            return false;
-        });
-    }, []);
+    const exportCsv = useCallback(() => {
+        const cols = displayColumns.filter(
+            (c) => c.accessorKey && c.id !== 'status_dot' && c.accessorKey !== '__actions'
+        );
+        const header = cols.map((c) => (typeof c.header === 'string' ? c.header : c.accessorKey)).join(',');
+        const body = localData
+            .map((row) =>
+                cols
+                    .map((c) => {
+                        const val = readGridCellValue(row, c.accessorKey, category);
+                        return `"${String(val ?? '').replace(/"/g, '""')}"`;
+                    })
+                    .join(',')
+            )
+            .join('\n');
+        const blob = new Blob([[header, body].filter(Boolean).join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'inventory-export.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [displayColumns, localData, category]);
 
     const validateAllData = useCallback(() => {
         const allErrors = {};
@@ -249,11 +357,19 @@ export function ExcelModeModal({
     // Global Key Events
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (e.ctrlKey && e.key === 's') { e.preventDefault(); handleSave(); }
-            if (e.ctrlKey && e.key === 'z') { e.preventDefault(); handleUndo(); }
-            if (e.ctrlKey && e.key === 'y') { e.preventDefault(); handleRedo(); }
+            const key = e.key?.toLowerCase();
+            if (e.ctrlKey && key === 's') { e.preventDefault(); handleSave(); return; }
+            if (e.ctrlKey && key === 'z') { e.preventDefault(); handleUndo(); return; }
+            if (e.ctrlKey && key === 'y') { e.preventDefault(); handleRedo(); return; }
+            // Add a new blank row: Ctrl+N (best-effort; browsers may reserve it),
+            // Alt+N, or Insert — all reliable in-app fallbacks.
+            if ((e.ctrlKey && key === 'n' && !e.shiftKey) || (e.altKey && key === 'n') || e.key === 'Insert') {
+                e.preventDefault();
+                handleLocalAddRow();
+                return;
+            }
             // Duplicate Last Row Shortcut (Ctrl+D like Excel)
-            if (e.ctrlKey && e.key === 'd') {
+            if (e.ctrlKey && key === 'd') {
                 e.preventDefault();
                 if (localData.length > 0) handleLocalAddRow({ ...localData[localData.length - 1], _tempId: undefined, id: undefined });
             }
@@ -292,49 +408,17 @@ export function ExcelModeModal({
     };
 
     const handleLocalCellEdit = (row, key, value) => {
+        const domainKnowledge = { productFields: getDomainProductFields(category) };
         setLocalData(prev => {
             const newData = [...prev];
             const idx = newData.findIndex(r => r.id === row.id || (r._tempId && r._tempId === row._tempId));
             if (idx !== -1) {
-                const updated = { ...newData[idx] };
-                // Intelligent Data Cleansing
-                let cleanValue = value;
-
-                // Auto-convert numeric fields
-                const numericFields = ['price', 'stock', 'cost_price', 'mrp', 'min_stock', 'max_stock', 'reorder_point', 'reorder_quantity', 'tax_percent', 'value'];
-                // Handle nested numeric fields if needed, but for now flat fields
-
-                if (numericFields.includes(key)) {
-                    if (value === '' || value === null || value === undefined) {
-                        cleanValue = 0;
-                    } else if (typeof value === 'string') {
-                        // Remove currency symbols and commas if present
-                        const numStr = value.replace(/[^\d.-]/g, '');
-                        const parsed = parseFloat(numStr);
-                        cleanValue = isNaN(parsed) ? 0 : parsed;
-                    } else if (typeof value === 'number') {
-                        cleanValue = value;
-                    }
-                } else if (typeof value === 'string') {
-                    // Auto-trim and sanitize strings
-                    cleanValue = value.trim();
-                    // Auto-capitalize Names and SKUs if not already
-                    if (key === 'name' || key.includes('sku') || key.includes('code')) {
-                        if (cleanValue.length > 0 && cleanValue[0] === cleanValue[0].toLowerCase()) {
-                            cleanValue = cleanValue.charAt(0).toUpperCase() + cleanValue.slice(1);
-                        }
-                    }
-                }
-
-                if (key.includes('.')) {
-                    const keys = key.split('.');
-                    let curr = updated;
-                    for (let i = 0; i < keys.length - 1; i++) {
-                        if (!curr[keys[i]]) curr[keys[i]] = {};
-                        curr[keys[i]] = { ...curr[keys[i]] }; curr = curr[keys[i]];
-                    }
-                    curr[keys[keys.length - 1]] = cleanValue;
-                } else updated[key] = cleanValue;
+                const updated = mapProductField(
+                    { ...newData[idx], domain_data: newData[idx].domain_data || {} },
+                    key,
+                    value,
+                    domainKnowledge
+                );
                 newData[idx] = updated;
                 setHasUnsavedChanges(true);
                 pushState(newData);
@@ -371,16 +455,16 @@ export function ExcelModeModal({
             }
         }
 
+        const previousRow = cleanInitialData.name
+            ? cleanInitialData
+            : getLastRowForDefaults(localData);
         const newRow = {
-            _tempId: `${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-            name: '',
-            sku: '',
-            price: 0,
-            stock: 0,
-            business_id: businessId,
-            category: 'General',
+            ...(typeof onAddRow === 'function'
+                ? onAddRow(previousRow)
+                : buildNewInventoryRow(category, businessId, previousRow)),
             ...cleanInitialData,
-            ...onAddRow?.()
+            _tempId: crypto.randomUUID(),
+            business_id: businessId,
         };
 
         setLocalData(prev => {
@@ -397,43 +481,124 @@ export function ExcelModeModal({
         }, 100);
     };
 
+    const NUMERIC_PASTE_FIELDS = new Set([
+        'price', 'cost_price', 'mrp', 'stock', 'min_stock', 'reorder_point', 'tax_percent',
+    ]);
+    const coercePasteNumber = (val) => {
+        const n = parseFloat(String(val).replace(/,/g, '').replace(/[^0-9.\-]/g, ''));
+        return Number.isFinite(n) ? n : 0;
+    };
+
     const handlePasteFromExcel = async () => {
         try {
             const text = await navigator.clipboard.readText();
-            const lines = text.trim().split('\n').map(l => l.split('\t'));
-            if (lines.length === 0) return;
+            if (!text || !text.trim()) {
+                toast.error('Clipboard is empty. Copy cells from Excel/Sheets first.');
+                return;
+            }
+            const rows = text
+                .replace(/\r/g, '')
+                .split('\n')
+                .filter((l) => l.trim() !== '')
+                .map((l) => l.split('\t'));
+            if (rows.length === 0) return;
 
-            // Intelligence: Try to detect headers
-            const headerLine = lines[0].map(h => h.toLowerCase().trim());
-            const hasHeaders = headerLine.some(h => ['name', 'sku', 'price', 'qty', 'stock'].some(key => h.includes(key)));
-            const dataRows = hasHeaders ? lines.slice(1) : lines;
-            const mapping = hasHeaders ? {
-                name: headerLine.findIndex(h => h.includes('name')),
-                sku: headerLine.findIndex(h => h.includes('sku')),
-                price: headerLine.findIndex(h => h.includes('price')),
-                stock: headerLine.findIndex(h => h.includes('qty') || h.includes('stock')),
-                batch_number: headerLine.findIndex(h => h.includes('batch')),
-                expiry_date: headerLine.findIndex(h => h.includes('expiry'))
-            } : { name: 0, sku: 1, price: 2, stock: 3 };
+            const rowDefaults = buildNewInventoryRow(
+                category,
+                businessId,
+                getLastRowForDefaults(localData)
+            );
 
-            const mapped = dataRows.map(row => {
-                const item = { _tempId: Date.now() + Math.random(), business_id: businessId, category: 'General' };
-                Object.keys(mapping).forEach(key => {
-                    if (mapping[key] !== -1 && row[mapping[key]]) {
-                        const val = row[mapping[key]];
-                        if (['price', 'stock'].includes(key)) item[key] = parseFloat(val) || 0;
-                        else item[key] = val;
-                    }
+            // Domain (vertical-specific) header aliases → domain_data keys
+            const domainFields = getDomainProductFields(category);
+            const domainHeaderMap = new Map();
+            domainFields.forEach((field) => {
+                const key = resolveDomainFieldKey(field, category);
+                domainHeaderMap.set(normalizeKey(field).toLowerCase(), key);
+                domainHeaderMap.set(field.toLowerCase().replace(/\s+/g, '_'), key);
+                domainHeaderMap.set(key.toLowerCase(), key);
+            });
+
+            const firstLine = rows[0].map((h) => String(h ?? '').trim());
+            // Intelligent header detection: reuse the same engine as file import
+            const canonicalMapping = detectColumnMapping(firstLine);
+            const firstLineHasDomain = firstLine.some((h) =>
+                domainHeaderMap.has(h.toLowerCase().replace(/\s+/g, '_'))
+            );
+            const hasHeaders =
+                Object.keys(canonicalMapping).length > 0 || firstLineHasDomain;
+
+            const buildBaseItem = () => ({
+                ...rowDefaults,
+                _tempId: crypto.randomUUID(),
+                business_id: businessId,
+                domain_data: { ...rowDefaults.domain_data },
+            });
+
+            let mapped;
+            if (hasHeaders) {
+                const headers = firstLine;
+                const usedByCanonical = new Set(Object.values(canonicalMapping));
+                const domainColIdx = {};
+                headers.forEach((h, idx) => {
+                    if (usedByCanonical.has(h)) return;
+                    const norm = h.toLowerCase().replace(/\s+/g, '_');
+                    const domainKey = domainHeaderMap.get(norm) || domainHeaderMap.get(h.toLowerCase());
+                    if (domainKey && domainColIdx[domainKey] === undefined) domainColIdx[domainKey] = idx;
                 });
-                return item;
-            });
 
-            setLocalData(prev => {
+                mapped = rows.slice(1).map((cells) => {
+                    const rowObj = {};
+                    headers.forEach((h, idx) => { rowObj[h] = cells[idx]; });
+                    const canon = applyColumnMapping(rowObj, canonicalMapping);
+                    const item = buildBaseItem();
+                    Object.entries(canon).forEach(([field, val]) => {
+                        if (val == null || String(val).trim() === '') return;
+                        item[field] = NUMERIC_PASTE_FIELDS.has(field)
+                            ? coercePasteNumber(val)
+                            : String(val).trim();
+                    });
+                    Object.entries(domainColIdx).forEach(([domainKey, idx]) => {
+                        const v = cells[idx];
+                        if (v != null && String(v).trim() !== '') item.domain_data[domainKey] = String(v).trim();
+                    });
+                    return item;
+                });
+            } else {
+                // No recognizable header row → positional name / sku / price / stock
+                mapped = rows.map((cells) => {
+                    const item = buildBaseItem();
+                    if (cells[0] != null && String(cells[0]).trim() !== '') item.name = String(cells[0]).trim();
+                    if (cells[1] != null && String(cells[1]).trim() !== '') item.sku = String(cells[1]).trim();
+                    if (cells[2] != null && String(cells[2]).trim() !== '') item.price = coercePasteNumber(cells[2]);
+                    if (cells[3] != null && String(cells[3]).trim() !== '') item.stock = coercePasteNumber(cells[3]);
+                    return item;
+                });
+            }
+
+            mapped = mapped.filter(
+                (r) => (r.name && String(r.name).trim() !== '') || (r.sku && String(r.sku).trim() !== '')
+            );
+            if (mapped.length === 0) {
+                toast.error('No product rows detected in the pasted content.');
+                return;
+            }
+
+            setLocalData((prev) => {
                 const next = [...prev, ...mapped];
-                setHasUnsavedChanges(true); pushState(next); return next;
+                setHasUnsavedChanges(true);
+                pushState(next);
+                return next;
             });
-            toast.success(`Smart Paster: Imported ${mapped.length} rows`);
-        } catch (err) { toast.error('Paste failed'); }
+            const detectedCount = Object.keys(canonicalMapping).length;
+            toast.success(
+                `Smart Paste: imported ${mapped.length} row${mapped.length === 1 ? '' : 's'}` +
+                (hasHeaders && detectedCount ? ` · auto-mapped ${detectedCount} columns` : '')
+            );
+        } catch (err) {
+            console.error('Smart paste failed:', err);
+            toast.error('Paste failed. Copy cells from Excel/Sheets and try again.');
+        }
     };
 
     const handleClear = () => { if (window.confirm('Delete all products in this session?')) { setLocalData([]); setHasUnsavedChanges(true); pushState([]); } };
@@ -515,9 +680,20 @@ export function ExcelModeModal({
                             </h2>
                             <div className="flex items-center gap-3 mt-0.5">
                                 <Badge variant="secondary" className="bg-white/50 border-slate-200 text-slate-500 text-[10px] uppercase font-bold px-1.5 py-0">
-                                    {localData.length} rows
+                                    {localData.length}{sourceTotal > localData.length ? ` / ${sourceTotal}` : ''} rows
                                     {searchQuery.trim() ? ` · showing ${filteredData.length}` : ''}
                                 </Badge>
+                                {localData.length < sourceTotal && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 text-[10px] font-semibold uppercase"
+                                        onClick={handleLoadMoreRows}
+                                    >
+                                        Load {Math.min(EXCEL_WORKSET_SIZE, sourceTotal - localData.length)} more
+                                    </Button>
+                                )}
                                 {hasUnsavedChanges && <span className="flex items-center gap-1 text-[10px] font-bold text-orange-500 uppercase"><span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" /> Unsaved</span>}
                             </div>
                         </div>
@@ -544,6 +720,7 @@ export function ExcelModeModal({
                             <Button variant="ghost" size="icon" disabled={future.length === 0} onClick={handleRedo} className="h-9 w-9 rounded-none"><Redo className="w-4 h-4" /></Button>
                         </div>
 
+                        <Button variant="outline" size="sm" onClick={() => handleLocalAddRow()} className="h-10 px-4 font-bold border-2 border-blue-200 text-blue-700 hover:bg-blue-50" title="Add a new blank row (Ctrl+N / Alt+N / Insert)"><Plus className="w-4 h-4 mr-2" /> Add Row</Button>
                         <Button variant="outline" size="sm" onClick={handlePasteFromExcel} className="h-10 px-4 font-bold border-2 text-slate-700 hover:bg-slate-50"><Copy className="w-4 h-4 mr-2" /> Smart Paste</Button>
                         <Button variant="outline" size="sm" onClick={() => handleSave(false)} disabled={!hasUnsavedChanges || isSaving} className={cn("h-10 px-6 font-semibold border-2 transition-all shadow-sm", hasUnsavedChanges ? "bg-green-600 text-white border-green-700 hover:bg-green-700 hover:shadow-green-200" : "bg-white text-slate-400 border-slate-100")}>
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} SAVE
@@ -611,6 +788,7 @@ export function ExcelModeModal({
                         onCellEdit={handleLocalCellEdit}
                         onAddRow={handleLocalAddRow}
                         onDeleteRow={handleLocalDeleteRow}
+                        getFieldSuggestions={excelFieldSuggestions}
                         validationErrors={validationErrors}
                         category={category}
                         variant="excel"
@@ -631,10 +809,11 @@ export function ExcelModeModal({
                         <div className="h-4 w-px bg-slate-700" />
                         <div className="flex items-center gap-2">
                             <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300">CTRL+S</kbd> Save
+                            <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300 ml-2">Insert</kbd> New row
                             <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300 ml-2">Tab</kbd> Save + next
                             <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300 ml-2">F2</kbd> Edit
                             <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300 ml-2">CTRL+Z</kbd> Undo
-                            <kbd className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-300">
+                            <kbd className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-300 ml-2">
                                 Ctrl+D
                             </kbd>
                             <span className="text-slate-500">Dup last</span>
@@ -644,7 +823,7 @@ export function ExcelModeModal({
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                         <div className="flex items-center gap-4 text-slate-500">
                             <button onClick={handleClear} className="hover:text-red-400 transition-colors flex items-center gap-1.5"><Eraser className="w-3.5 h-3.5" /> Clear Workspace</button>
-                            <button onClick={() => { const cols = displayColumns; const csv = localData.map(r => cols.map(c => `"${String(r[c.accessorKey] ?? '').replace(/"/g, '""')}"`).join(',')).join('\n'); const b = new Blob([csv], { type: 'text/csv' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'export.csv'; a.click(); }} className="hover:text-blue-400 transition-colors flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"><Download className="w-3.5 h-3.5" /> Export CSV</button>
+                            <button type="button" onClick={exportCsv} className="hover:text-blue-400 transition-colors flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"><Download className="w-3.5 h-3.5" /> Export CSV</button>
                         </div>
                         <div className="h-4 w-px bg-slate-700" />
                         <span className="text-slate-300">INTELLIGENT MODE ACTIVE</span>

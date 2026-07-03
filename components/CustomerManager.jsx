@@ -11,7 +11,7 @@ import { DataTable } from './DataTable';
 import { ExportButton } from './ExportButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FormError, FormWarning } from '@/components/ui/form-error';
-import { getDomainKnowledge } from '@/lib/domainKnowledge';
+import { getDomainKnowledgeForBusiness } from '@/lib/utils/businessRegionalContext';
 import { formatCurrency } from '@/lib/currency';
 import { customerSchema, validateForm, formatPakistaniPhone } from '@/lib/validation';
 import { getDomainColors } from '@/lib/domainColors';
@@ -29,8 +29,8 @@ export function CustomerManager({ customers = [], onAdd, onUpdate, onDelete, cat
   const [customerToView, setCustomerToView] = useState(null);
   const [customerToDelete, setCustomerToDelete] = useState(null);
 
-  const { currency: businessCurrency } = useBusiness();
-  const knowledge = getDomainKnowledge(category);
+  const { currency: businessCurrency, business } = useBusiness();
+  const knowledge = getDomainKnowledgeForBusiness(category, business);
   const currency = businessCurrency || 'PKR';
 
   const filteredCustomers = customers.filter(customer =>

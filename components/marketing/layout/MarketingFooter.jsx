@@ -11,6 +11,7 @@ import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
 import { SupportWhatsAppLink } from '@/components/marketing/SupportWhatsAppLink';
 import MarketingCtaLink from '@/components/marketing/ui/MarketingCtaLink';
 import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
+import { INDUSTRY_PLANS_NAV, listIndustryPlanNavItems } from '@/lib/marketing/domainPackageNav';
 import { cn } from '@/lib/utils';
 
 const FOOTER_LINK = 'text-sm font-medium text-neutral-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 rounded-sm';
@@ -34,6 +35,7 @@ export default function MarketingFooter({ variant = 'default' }) {
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newsletterError, setNewsletterError] = useState('');
+  const industryPlans = listIndustryPlanNavItems();
 
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
@@ -136,7 +138,7 @@ export default function MarketingFooter({ variant = 'default' }) {
 
           {/* Link columns - aligned grid */}
           <nav
-            className="grid min-w-0 grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:col-span-5 lg:gap-x-10 lg:gap-y-8"
+            className="grid min-w-0 grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-2 lg:col-span-6 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-8"
             aria-label="Site footer"
           >
             <FooterColumn title="Platform">
@@ -153,6 +155,11 @@ export default function MarketingFooter({ variant = 'default' }) {
               <li>
                 <Link href="/pricing" className={FOOTER_LINK}>
                   Pricing
+                </Link>
+              </li>
+              <li>
+                <Link href={INDUSTRY_PLANS_NAV.hubPath} className={FOOTER_LINK}>
+                  {INDUSTRY_PLANS_NAV.label}
                 </Link>
               </li>
               <li>
@@ -180,6 +187,21 @@ export default function MarketingFooter({ variant = 'default' }) {
                   Log in
                 </Link>
               </li>
+            </FooterColumn>
+
+            <FooterColumn title={INDUSTRY_PLANS_NAV.label}>
+              <li>
+                <Link href={INDUSTRY_PLANS_NAV.hubPath} className={FOOTER_LINK}>
+                  Compare all plans
+                </Link>
+              </li>
+              {industryPlans.map((item) => (
+                <li key={item.key}>
+                  <Link href={item.href} className={FOOTER_LINK}>
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </FooterColumn>
 
             <FooterColumn title="Product">
@@ -265,7 +287,7 @@ export default function MarketingFooter({ variant = 'default' }) {
           </nav>
 
           {/* Newsletter - aligned with link columns; avoid mt-auto so the form sits under the intro copy */}
-          <div className="flex min-w-0 flex-col lg:col-span-3">
+          <div className="flex min-w-0 flex-col lg:col-span-2">
             <h4 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Stay updated</h4>
             <p className="mb-5 text-sm font-medium leading-relaxed text-neutral-400">
               Product updates, compliance notes, and launch news, no spam.

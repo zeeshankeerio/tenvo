@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown, X, SlidersHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -10,6 +10,14 @@ import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/currency';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
+import { getBrandsForMarket } from '@/lib/regionalMarket/index.js';
+import { getDomainKnowledge } from '@/lib/domainKnowledge';
+import {
+  PK_FABRIC_OPTIONS,
+  PK_SIZE_OPTIONS,
+  PK_SOURCING_OPTIONS,
+} from '@/lib/utils/inventoryFieldSuggestions';
 
 function FilterSection({ title, expanded, onToggle, children, count }) {
   return (
@@ -33,17 +41,72 @@ function FilterSection({ title, expanded, onToggle, children, count }) {
   );
 }
 
+function FilterOptionList({ options, filterKey, currentValue, accent, onSelect }) {
+  return (
+    <div className="space-y-1 max-h-52 overflow-y-auto">
+      {options.map((opt) => (
+        <label key={opt} className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 px-1 py-1.5 rounded-lg group">
+          <Checkbox
+            checked={currentValue === opt}
+            onCheckedChange={(checked) => onSelect(filterKey, checked ? opt : null)}
+            style={currentValue === opt ? { backgroundColor: accent, borderColor: accent } : {}}
+          />
+          <span className="text-sm text-gray-700 flex-1 group-hover:text-gray-900 capitalize">{opt}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
 function FiltersBody({ filters, categories, businessDomain, onClose }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currency, settings, business } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
+  const clothingStore = isFashionEditorialStore(business?.category);
+
+  const countryIso =
+    settings?.storefront?.countryIso ||
+    (business?.country === 'Pakistan' ? 'PK' : business?.country?.slice(0, 2)?.toUpperCase()) ||
+    'PK';
+
+  const clothingFilterOptions = useMemo(() => {
+    if (!clothingStore) return null;
+    const knowledge = getDomainKnowledge(business?.category, { countryIso });
+    const marketBrands = getBrandsForMarket(countryIso, business?.category) || [];
+    const popularBrands = knowledge?.pakistaniFeatures?.popularBrands || [];
+    const fabricOptions = uniqueFilterOptions([
+      ...(knowledge?.fieldConfig?.fabrictype?.options || []),
+      ...PK_FABRIC_OPTIONS,
+    ]);
+    return {
+      brands: uniqueFilterOptions([...marketBrands, ...popularBrands]),
+      fabrics: fabricOptions,
+      sourcing: uniqueFilterOptions([
+        ...(knowledge?.fieldConfig?.sourcing?.options || []),
+        ...PK_SOURCING_OPTIONS,
+      ]),
+      sizes: uniqueFilterOptions([
+        ...(knowledge?.fieldConfig?.sizecolormatrix?.options || []),
+        ...PK_SIZE_OPTIONS,
+      ]),
+    };
+  }, [clothingStore, business?.category, countryIso]);
 
   const [priceRange, setPriceRange] = useState([
     filters.minPrice || 0,
     filters.maxPrice || 50000,
   ]);
-  const [expanded, setExpanded] = useState({ categories: true, price: true, availability: true, special: true });
+  const [expanded, setExpanded] = useState({
+    categories: true,
+    brand: clothingStore,
+    fabric: clothingStore,
+    sourcing: clothingStore,
+    size: false,
+    price: true,
+    availability: true,
+    special: true,
+  });
 
   const toggle = (k) => setExpanded((p) => ({ ...p, [k]: !p[k] }));
 
@@ -72,6 +135,10 @@ function FiltersBody({ filters, categories, businessDomain, onClose }) {
 
   const activeCount = [
     filters.category,
+    filters.brand,
+    filters.fabric,
+    filters.sourcing,
+    filters.size,
     filters.minPrice !== undefined,
     filters.maxPrice !== undefined,
     filters.inStock,
@@ -119,6 +186,74 @@ function FiltersBody({ filters, categories, businessDomain, onClose }) {
         </FilterSection>
       )}
 
+      {clothingStore && clothingFilterOptions?.brands?.length > 0 && (
+        <FilterSection
+          title="Brand"
+          expanded={expanded.brand}
+          onToggle={() => toggle('brand')}
+          count={filters.brand ? 1 : 0}
+        >
+          <FilterOptionList
+            options={clothingFilterOptions.brands}
+            filterKey="brand"
+            currentValue={filters.brand}
+            accent={accent}
+            onSelect={updateFilter}
+          />
+        </FilterSection>
+      )}
+
+      {clothingStore && clothingFilterOptions?.fabrics?.length > 0 && (
+        <FilterSection
+          title="Fabric"
+          expanded={expanded.fabric}
+          onToggle={() => toggle('fabric')}
+          count={filters.fabric ? 1 : 0}
+        >
+          <FilterOptionList
+            options={clothingFilterOptions.fabrics}
+            filterKey="fabric"
+            currentValue={filters.fabric}
+            accent={accent}
+            onSelect={updateFilter}
+          />
+        </FilterSection>
+      )}
+
+      {clothingStore && clothingFilterOptions?.sourcing?.length > 0 && (
+        <FilterSection
+          title="Sourcing"
+          expanded={expanded.sourcing}
+          onToggle={() => toggle('sourcing')}
+          count={filters.sourcing ? 1 : 0}
+        >
+          <FilterOptionList
+            options={clothingFilterOptions.sourcing}
+            filterKey="sourcing"
+            currentValue={filters.sourcing}
+            accent={accent}
+            onSelect={updateFilter}
+          />
+        </FilterSection>
+      )}
+
+      {clothingStore && clothingFilterOptions?.sizes?.length > 0 && (
+        <FilterSection
+          title="Size"
+          expanded={expanded.size}
+          onToggle={() => toggle('size')}
+          count={filters.size ? 1 : 0}
+        >
+          <FilterOptionList
+            options={clothingFilterOptions.sizes}
+            filterKey="size"
+            currentValue={filters.size}
+            accent={accent}
+            onSelect={updateFilter}
+          />
+        </FilterSection>
+      )}
+
       {/* Price Range */}
       <FilterSection
         title="Price Range"
@@ -139,7 +274,7 @@ function FiltersBody({ filters, categories, businessDomain, onClose }) {
             <div className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-gray-50">
               {formatCurrency(priceRange[0], currency)}
             </div>
-            <span className="text-gray-400 text-sm">, </span>
+            <span className="text-gray-400 text-sm">to</span>
             <div className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-gray-50">
               {formatCurrency(priceRange[1], currency)}
             </div>
@@ -181,6 +316,18 @@ function FiltersBody({ filters, categories, businessDomain, onClose }) {
   );
 }
 
+function uniqueFilterOptions(values) {
+  const seen = new Set();
+  const out = [];
+  for (const raw of values) {
+    const s = String(raw || '').trim();
+    if (!s || seen.has(s.toLowerCase())) continue;
+    seen.add(s.toLowerCase());
+    out.push(s);
+  }
+  return out;
+}
+
 export function ProductFilters({ filters, categories, businessDomain }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { settings, business } = useStorefront();
@@ -188,6 +335,10 @@ export function ProductFilters({ filters, categories, businessDomain }) {
 
   const activeCount = [
     filters.category,
+    filters.brand,
+    filters.fabric,
+    filters.sourcing,
+    filters.size,
     filters.minPrice !== undefined,
     filters.maxPrice !== undefined,
     filters.inStock,

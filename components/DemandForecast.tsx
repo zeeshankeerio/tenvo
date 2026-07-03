@@ -2,7 +2,8 @@ import { useMemo, memo, useState, useEffect } from 'react';
 import { getDemandForecastAction } from '@/lib/actions/premium/ai/analytics';
 import { Package, Rocket, Info } from 'lucide-react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { getDomainKnowledge } from '@/lib/domainKnowledge';
+import { getDomainKnowledgeForBusiness } from '@/lib/utils/businessRegionalContext';
+import { useBusiness } from '@/lib/context/BusinessContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -49,7 +50,10 @@ export const DemandForecast = memo(function DemandForecast({
 }: DemandForecastProps) {
     void _products;
     void _invoices;
-    const domainKnowledge = (propDomainKnowledge ?? getDomainKnowledge(category)) as DomainKnowledgeSlice;
+    const { business } = useBusiness();
+    const domainKnowledge = (
+        propDomainKnowledge ?? getDomainKnowledgeForBusiness(category, business)
+    ) as DomainKnowledgeSlice;
     const [forecastData, setForecastData] = useState<ForecastRow[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -67,7 +71,9 @@ export const DemandForecast = memo(function DemandForecast({
             }
 
             try {
-                const dk = (propDomainKnowledge ?? getDomainKnowledge(category)) as DomainKnowledgeSlice;
+                const dk = (
+                    propDomainKnowledge ?? getDomainKnowledgeForBusiness(category, business)
+                ) as DomainKnowledgeSlice;
                 const intel = dk?.intelligence ?? {};
                 const res = await getDemandForecastAction(businessId, intel, true, buildDateFilter(dateRange));
                 if (res && res.success) {
@@ -83,7 +89,7 @@ export const DemandForecast = memo(function DemandForecast({
             }
         }
         void load();
-    }, [businessId, category, propDomainKnowledge, rangeFromKey, rangeToKey]);
+    }, [businessId, category, propDomainKnowledge, business, rangeFromKey, rangeToKey]);
 
     const chartData = useMemo(
         () =>

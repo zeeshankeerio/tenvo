@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
 import { prismaBase } from '@/lib/db';
-import { createCheckoutSession, getPriceIdForPlan, createCustomer } from '@/lib/payments/stripe';
+import { createCheckoutSession, createCustomer } from '@/lib/payments/stripe';
 import { getSessionUser } from '@/lib/auth/session';
 import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
-import { isManualBillingMode } from '@/lib/config/billingMode';
-import { getPlanTierQuotaUpdateData, resolvePlanTier } from '@/lib/config/plans';
+import { assertBillingRole } from '@/lib/tenancy/billingAccess';
+import { shouldUseDevInstantBilling } from '@/lib/config/billingMode';
+import { resolvePlanTier } from '@/lib/config/plans';
 import { businessHubUrl, stripeCheckoutSuccessUrl } from '@/lib/utils/billingReturnUrls';
+import { resolveBillableSku } from '@/lib/payments/billingSku';
+import {
+  buildCheckoutLineItemFromCatalog,
+  buildCheckoutSessionMetadata,
+} from '@/lib/payments/stripeCatalog';
+import { mergeBusinessSettingsForBilling } from '@/lib/payments/billingActivation';
 
 /**
  * POST /api/billing/create-checkout
- * Body: { business_id, planTier, currency?, returnUrl? }
+ * Body: { business_id, planTier?, domainPackageKey?, currency?, returnUrl? }
  */
 export async function POST(request) {
   try {
@@ -24,6 +31,7 @@ export async function POST(request) {
     const body = await request.json();
     const {
       planTier,
+      domainPackageKey,
       currency = 'pkr',
       returnUrl,
       business_id: businessIdSnake,
@@ -38,9 +46,9 @@ export async function POST(request) {
       );
     }
 
-    if (!planTier) {
+    if (!planTier && !domainPackageKey) {
       return NextResponse.json(
-        { error: 'Plan tier is required', code: 'MISSING_PLAN_TIER' },
+        { error: 'planTier or domainPackageKey is required', code: 'MISSING_BILLING_SKU' },
         { status: 400 }
       );
     }
@@ -54,6 +62,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
     }
 
+    // Billing mutations require owner or admin role
+    const roleCheck = await assertBillingRole({ userId: sessionWrap.user.id, businessId, sessionUser: sessionWrap.user });
+    if (!roleCheck.allowed) {
+      return NextResponse.json({ error: roleCheck.error, code: 'INSUFFICIENT_ROLE' }, { status: 403 });
+    }
+
     const business = await prismaBase.businesses.findUnique({
       where: { id: businessId },
     });
@@ -61,20 +75,35 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
     }
 
-    // Dev / UAT: apply plan locally, no Stripe (set BILLING_MODE=manual in .env)
-    if (isManualBillingMode()) {
-      const tier = resolvePlanTier(planTier);
-      const quota = getPlanTierQuotaUpdateData(tier);
-      if (!quota) {
-        return NextResponse.json(
-          { error: 'Unknown plan tier', code: 'INVALID_PLAN' },
-          { status: 400 }
-        );
-      }
+    const billable = resolveBillableSku({
+      planTier,
+      domainPackageKey,
+      currency,
+    });
+
+    if (!billable) {
+      return NextResponse.json(
+        {
+          error: 'Unknown or non-billable plan/package. Enterprise plans require sales contact.',
+          code: 'INVALID_BILLING_SKU',
+        },
+        { status: 400 }
+      );
+    }
+
+    const { catalog: catalogItem, activation } = billable;
+
+    // Dev / UAT: apply plan locally only when manual mode and Stripe is not configured
+    if (shouldUseDevInstantBilling()) {
+      const nextSettings = mergeBusinessSettingsForBilling(
+        business.settings,
+        activation.settingsPatch
+      );
       await prismaBase.businesses.update({
         where: { id: businessId },
         data: {
-          ...quota,
+          ...activation.quota,
+          settings: nextSettings,
           stripe_subscription_status: 'manual_dev',
           plan_expires_at: null,
         },
@@ -85,16 +114,9 @@ export async function POST(request) {
         code: 'MANUAL_BILLING_PLAN_APPLIED',
         message:
           'Development billing: plan saved on this business. No payment processor, treat as manual/offline payment for testing.',
-        planTier: tier,
+        planTier: resolvePlanTier(activation.planTier),
+        domainPackageKey: activation.domainPackageKey,
       });
-    }
-
-    const priceId = getPriceIdForPlan(planTier, currency);
-    if (!priceId) {
-      return NextResponse.json(
-        { error: `Price ID not configured for plan: ${planTier}`, code: 'MISSING_PRICE_ID' },
-        { status: 400 }
-      );
     }
 
     let customerId = business.stripe_customer_id;
@@ -131,16 +153,14 @@ export async function POST(request) {
       ? businessHubUrl(base, domainSlug, { tab: 'settings', billing: 'cancelled' })
       : `${base}/pricing?billing=cancelled`;
 
+    const sessionMetadata = buildCheckoutSessionMetadata(catalogItem, { businessId: business.id });
+
     const checkoutResult = await createCheckoutSession({
       customerId,
-      priceId,
+      lineItem: buildCheckoutLineItemFromCatalog(catalogItem),
       successUrl,
       cancelUrl,
-      metadata: {
-        businessId: business.id,
-        planTier,
-        currency,
-      },
+      metadata: sessionMetadata,
     });
 
     if (checkoutResult.skipped) {
@@ -154,6 +174,10 @@ export async function POST(request) {
       success: true,
       checkoutUrl: checkoutResult.url,
       sessionId: checkoutResult.id,
+      planTier: catalogItem.planTier,
+      domainPackageKey: catalogItem.domainPackageKey,
+      currency: catalogItem.currency,
+      amountMinor: catalogItem.unitAmountMinor,
     });
   } catch (error) {
     console.error('[Create Checkout] Error:', error);

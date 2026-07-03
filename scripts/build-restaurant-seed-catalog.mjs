@@ -29,6 +29,52 @@ function cuisineToCategory(label) {
   return 'Main Course';
 }
 
+/**
+ * Trusted, always-on Unsplash food/beverage photo ids (same curated set used by
+ * `lib/storefront/productImageFallback.js`). The previous Supermeal CDN is dead,
+ * so seed images are derived from dish name + category instead.
+ */
+const FOOD_IMG = {
+  grill: ['1607623814075-e51df1bdc82f', '1544025162-d76694265947'],
+  burger: ['1555939594-58d7cb561ad1'],
+  spread: ['1504674900247-0877df9cc836'],
+  table: ['1414235077428-338989a2e8c0'],
+  beverage: ['1544145945-f90425340c7e', '1437418747212-8d9709afab22', '1513553404607-988bf2703777'],
+  dessert: ['1509440159596-0249088772ff', '1549931319-a545dcf3bc73', '1558961363-fa8fdf82db35'],
+  produce: ['1542838132-92c53300491e', '1610832958506-aa56368176cf'],
+};
+
+function hash(str) {
+  let h = 5381;
+  const s = String(str || '');
+  for (let i = 0; i < s.length; i += 1) h = (h * 33) ^ s.charCodeAt(i);
+  return h >>> 0;
+}
+
+function unsplashFood(id) {
+  return `https://images.unsplash.com/photo-${id}?w=800&q=80&auto=format&fit=crop`;
+}
+
+/**
+ * @param {string} name
+ * @param {string} category
+ * @param {string} seed
+ */
+function pickFoodImage(name, category, seed) {
+  const n = String(name || '').toLowerCase();
+  const c = String(category || '').toLowerCase();
+  let pool;
+  if (/bbq|grill|karahi|karhai|tikka|meat|kebab|chicken|mutton|beef/.test(n)) pool = FOOD_IMG.grill;
+  else if (/burger|sandwich|club|wrap|shawarma/.test(n)) pool = FOOD_IMG.burger;
+  else if (/pizza|pasta|italian|margherita|feast|combo|family/.test(n)) pool = FOOD_IMG.spread;
+  else if (/salad|soup|spring roll|starter|appetizer/.test(n) || c.includes('appetizer')) pool = FOOD_IMG.produce;
+  else if (/brownie|cake|dessert|sweet|ice cream/.test(n) || c.includes('dessert')) pool = FOOD_IMG.dessert;
+  else if (/lemonade|drink|juice|shake|tea|coffee|beverage|mint/.test(n) || c.includes('beverage')) pool = FOOD_IMG.beverage;
+  else if (/biryani|rice|chow mein|noodle|wok|pad thai|chinese|thai|butter chicken|naan|pakistani|indian|arabic/.test(n)) pool = FOOD_IMG.table;
+  else pool = FOOD_IMG.spread;
+  return unsplashFood(pool[hash(seed) % pool.length]);
+}
+
 /** Signature dish names per cuisine */
 const CUISINE_DISH = {
   chinese: 'Chicken Chow Mein',
@@ -67,10 +113,11 @@ const products = [];
 for (const cuisine of extract.cuisines) {
   if (/default-cuisine-icon/i.test(cuisine.image)) continue;
   const dishName = CUISINE_DISH[cuisine.slug] || `${cuisine.label} Special`;
+  const category = cuisineToCategory(cuisine.label);
   products.push({
     name: dishName,
     brand: 'Tenvo Kitchen',
-    category: cuisineToCategory(cuisine.label),
+    category,
     unit: cuisine.slug === 'drinks' ? 'pcs' : 'portion',
     price: cuisine.slug === 'desserts' ? 450 : cuisine.slug === 'drinks' ? 350 : cuisine.slug === 'appetizers' ? 550 : 850,
     compare_price: cuisine.slug === 'main' ? null : undefined,
@@ -78,7 +125,7 @@ for (const cuisine of extract.cuisines) {
     stock: 999,
     sku: `RST-CUI-${cuisine.slug.toUpperCase().slice(0, 8)}`,
     description: `House favourite ${cuisine.label.toLowerCase()} dish, prepared fresh to order.`,
-    image_url: cuisine.image,
+    image_url: pickFoodImage(dishName, category, `cui-${cuisine.slug}`),
     is_featured: ['pakistani', 'bbq', 'italian', 'chinese'].includes(cuisine.slug),
   });
 }
@@ -97,7 +144,7 @@ for (const r of extract.restaurants) {
     stock: 999,
     sku: `RST-${slugify(r.name).slice(0, 12).toUpperCase()}`,
     description: `Signature item inspired by ${r.name}. Min order Rs ${r.minOrder}. ${r.deliveryFee}.`,
-    image_url: r.bannerImage,
+    image_url: pickFoodImage(`${name} ${dish.suffix}`, dish.category, `rst-${slugify(r.name)}`),
     is_featured: Boolean(r.superPick),
     on_sale: Boolean(r.superPick),
   });
@@ -116,7 +163,7 @@ products.push(
     stock: 999,
     sku: 'RST-CMB-PIZZA',
     description: 'Large pizza, garlic bread, and 1.5L drink. Perfect for sharing.',
-    image_url: extract.restaurants.find((x) => /pizza/i.test(x.name))?.bannerImage || extract.heroImages[0],
+    image_url: pickFoodImage('Family Pizza Combo', 'Main Course', 'cmb-pizza'),
     is_featured: true,
     on_sale: true,
   },
@@ -131,7 +178,7 @@ products.push(
     stock: 999,
     sku: 'RST-CMB-BBQ',
     description: 'Mixed grill, naan, raita, and salad for two.',
-    image_url: extract.restaurants.find((x) => /grill|bbq|meat/i.test(x.name))?.bannerImage || extract.cuisines.find((c) => c.slug === 'bbq')?.image,
+    image_url: pickFoodImage('BBQ Mixed Grill Feast', 'Main Course', 'cmb-bbq'),
     is_featured: true,
     on_sale: true,
   },
@@ -146,13 +193,14 @@ products.push(
     stock: 999,
     sku: 'RST-CMB-BRG',
     description: 'Two burgers, fries, and soft drinks. Late-night favourite.',
-    image_url: extract.restaurants.find((x) => /burger/i.test(x.name))?.bannerImage || extract.heroImages[1],
+    image_url: pickFoodImage('Midnight Burger Box', 'Main Course', 'cmb-brg'),
     on_sale: true,
   }
 );
 
 const header = `/**
- * Tenvo Kitchen demo menu — generated from archive/restraint.html (Supermeal.pk).
+ * Tenvo Kitchen demo menu — generated from archive/restraint.html.
+ * Images use curated Unsplash food photography (the original Supermeal CDN is offline).
  * Regenerate: node scripts/extract-restaurant-archive.mjs && node scripts/build-restaurant-seed-catalog.mjs
  */
 `;

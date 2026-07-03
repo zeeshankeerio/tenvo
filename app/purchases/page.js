@@ -23,7 +23,8 @@ import toast from 'react-hot-toast';
 
 export default function PurchasesPage() {
     const router = useRouter();
-    const { business } = useBusiness();
+    const { business, currency: businessCurrency } = useBusiness();
+    const currency = businessCurrency || 'PKR';
     const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -133,7 +134,7 @@ export default function PurchasesPage() {
                                     </Badge>
                                 </div>
                                 <div className="text-right font-bold font-mono">
-                                    {formatCurrency(purchase.total_amount, 'PKR')}
+                                    {formatCurrency(purchase.total_amount, currency)}
                                 </div>
                                 <div className="text-right">
                                     <DropdownMenu>

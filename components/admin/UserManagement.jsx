@@ -34,8 +34,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ROLE_DESCRIPTIONS } from '@/lib/config/platform';
-import { listAllUsers, changeUserRole, deactivateBusinessUser } from '@/lib/actions/admin/platform';
+import { listAllUsers, changeUserRole, setBusinessUserStatus, setPlatformRole } from '@/lib/actions/admin/platform';
 import { startImpersonation, listInvitations } from '@/lib/actions/admin/users';
+import { useBusiness } from '@/lib/context/BusinessContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import toast from 'react-hot-toast';
 
 /**
@@ -61,7 +63,7 @@ const FILTERS = {
 /**
  * User Table Component
  */
-function UserTable({ users, onView, onEdit, onImpersonate, onDeactivate, selectedUsers, onSelect }) {
+function UserTable({ users, onView, onEdit, onImpersonate, onDeactivate, selectedUsers, onSelect, isPlatformOwner, onSetPlatformRole }) {
   const formatDate = (date) => {
     if (!date) return 'Never';
     return new Date(date).toLocaleDateString('en-PK', {
@@ -92,7 +94,7 @@ function UserTable({ users, onView, onEdit, onImpersonate, onDeactivate, selecte
                 type="checkbox" 
                 className="rounded border-gray-300"
                 checked={selectedUsers.length === users.length}
-                onChange={() => onSelect?.(selectedUsers.length === users.length ? [] : users.map(u => u.id))}
+                onChange={() => onSelect?.(selectedUsers.length === users.length ? [] : users.map(u => u.rowKey))}
               />
             </th>
             <th className="text-left p-3 font-medium text-sm">User</th>
@@ -101,21 +103,24 @@ function UserTable({ users, onView, onEdit, onImpersonate, onDeactivate, selecte
             <th className="text-left p-3 font-medium text-sm">Status</th>
             <th className="text-left p-3 font-medium text-sm">Last Active</th>
             <th className="text-left p-3 font-medium text-sm">Activity</th>
+            {isPlatformOwner && (
+              <th className="text-left p-3 font-medium text-sm">Platform Role</th>
+            )}
             <th className="text-right p-3 font-medium text-sm">Actions</th>
           </tr>
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.id} className="border-b hover:bg-gray-50">
+            <tr key={user.rowKey} className="border-b hover:bg-gray-50">
               <td className="p-3">
                 <input 
                   type="checkbox" 
                   className="rounded border-gray-300"
-                  checked={selectedUsers.includes(user.id)}
+                  checked={selectedUsers.includes(user.rowKey)}
                   onChange={() => {
-                    const newSelection = selectedUsers.includes(user.id)
-                      ? selectedUsers.filter(id => id !== user.id)
-                      : [...selectedUsers, user.id];
+                    const newSelection = selectedUsers.includes(user.rowKey)
+                      ? selectedUsers.filter(id => id !== user.rowKey)
+                      : [...selectedUsers, user.rowKey];
                     onSelect?.(newSelection);
                   }}
                 />
@@ -124,7 +129,7 @@ function UserTable({ users, onView, onEdit, onImpersonate, onDeactivate, selecte
                 <div className="flex items-center gap-3">
                   <Avatar className="w-8 h-8">
                     <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                      {user.name.split(' ').map(n => n[0]).join('')}
+                      {user.name?.split(' ').map(n => n[0]).join('') || user.email?.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
@@ -160,16 +165,34 @@ function UserTable({ users, onView, onEdit, onImpersonate, onDeactivate, selecte
               <td className="p-3">
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Activity className="w-3 h-3" />
-                  <span>{user.loginCount} logins</span>
+                  <span>{user.loginCount ?? 0} logins</span>
                 </div>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {user.featuresUsed.slice(0, 3).map(feature => (
-                    <Badge key={feature} variant="outline" className="text-[10px] px-1">
-                      {feature}
-                    </Badge>
-                  ))}
-                </div>
+                {(user.featuresUsed?.length ?? 0) > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {user.featuresUsed.slice(0, 3).map(feature => (
+                      <Badge key={feature} variant="outline" className="text-[10px] px-1">
+                        {feature}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </td>
+              {isPlatformOwner && (
+                <td className="p-3">
+                  <Select
+                    value={user.platformRole || 'user'}
+                    onValueChange={(val) => onSetPlatformRole?.(user.userId, val)}
+                  >
+                    <SelectTrigger className="w-32 h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Platform Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </td>
+              )}
               <td className="p-3">
                 <div className="flex items-center justify-end gap-1">
                   <Button
@@ -363,9 +386,62 @@ function BulkActionsBar({ selectedCount, onActivate, onDeactivate, onDelete, onE
 }
 
 /**
+ * Flatten platform user rows (one row per business membership).
+ */
+function flattenPlatformUsers(apiUsers = []) {
+  const rows = [];
+
+  for (const u of apiUsers) {
+    const memberships = Array.isArray(u.businesses)
+      ? u.businesses.filter(Boolean)
+      : [];
+
+    if (memberships.length === 0) {
+      rows.push({
+        rowKey: u.id,
+        userId: u.id,
+        name: u.name,
+        email: u.email,
+        platformRole: u.platform_role || 'user',
+        role: u.platform_role || 'user',
+        business: 'No business',
+        businessDomain: null,
+        businessId: null,
+        status: 'active',
+        planTier: 'free',
+        createdAt: u.createdAt,
+        lastActive: u.createdAt,
+      });
+      continue;
+    }
+
+    for (const membership of memberships) {
+      rows.push({
+        rowKey: `${u.id}-${membership.business_id}`,
+        userId: u.id,
+        name: u.name,
+        email: u.email,
+        platformRole: u.platform_role || 'user',
+        role: membership.role || 'viewer',
+        business: membership.business_name || 'Unknown',
+        businessDomain: membership.domain || null,
+        businessId: membership.business_id,
+        status: membership.status || 'active',
+        planTier: membership.plan_tier || 'free',
+        createdAt: u.createdAt,
+        lastActive: u.createdAt,
+      });
+    }
+  }
+
+  return rows;
+}
+
+/**
  * Main User Management Component
  */
 export function UserManagement({ businessId }) {
+  const { isPlatformOwner } = useBusiness();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -386,23 +462,7 @@ export function UserManagement({ businessId }) {
       const result = await listAllUsers({ limit: 1000 });
       
       if (result.success) {
-        // Transform data to match component expectations
-        const transformed = result.users.map(u => ({
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          phone: u.phone || '',
-          role: u.role || 'user',
-          business: u.business_name || 'N/A',
-          businessId: u.business_id,
-          status: u.banned ? 'inactive' : 'active',
-          lastActive: u.lastLoginAt || u.updatedAt,
-          createdAt: u.createdAt,
-          loginCount: u.loginCount || 0,
-          featuresUsed: u.features_used || [],
-          planTier: u.plan_tier || 'free'
-        }));
-        setUsers(transformed);
+        setUsers(flattenPlatformUsers(result.users));
       } else {
         toast.error(result.error || 'Failed to load users');
       }
@@ -451,42 +511,66 @@ export function UserManagement({ businessId }) {
   }, [users, searchTerm, filters]);
 
   const handleImpersonate = async (user) => {
-    if (!confirm(`Impersonate ${user.name}? This will log you in as this user for support purposes.`)) {
+    if (!user.businessId) {
+      toast.error('Select a user with an active business membership to start support mode.');
+      return;
+    }
+
+    if (!confirm(`Start support session for ${user.name}? This records an audit entry (session swap is not enabled).`)) {
       return;
     }
     
     try {
       setIsImpersonating(true);
-      const result = await startImpersonation(user.id, 'Support request', {
-        ipAddress: '', // Will be set by server
+      const result = await startImpersonation(user.userId, 'Support request', {
+        ipAddress: '',
         userAgent: navigator.userAgent
       });
       
       if (result.success) {
-        toast.success(`Now impersonating ${user.name}`);
-        // Redirect to user's business dashboard
-        window.location.href = `/business/${user.businessId || 'retail-shop'}`;
+        toast.success(`Support session recorded for ${user.name}`);
+        const domain = user.businessDomain || 'retail-shop';
+        window.location.href = `/business/${domain}`;
       } else {
-        toast.error(result.error || 'Failed to start impersonation');
+        toast.error(result.error || 'Failed to start support session');
       }
     } catch (error) {
       console.error('Impersonation error:', error);
-      toast.error('Failed to impersonate user');
+      toast.error('Failed to start support session');
     } finally {
       setIsImpersonating(false);
     }
   };
 
+  const handleSetPlatformRole = async (userId, newRole) => {
+    const res = await setPlatformRole(userId, newRole);
+    if (res.success) {
+      toast.success(`Platform role updated to ${newRole}`);
+      setUsers((prev) =>
+        prev.map((row) =>
+          row.userId === userId ? { ...row, platformRole: newRole } : row
+        )
+      );
+    } else {
+      toast.error(res.error || 'Failed to update platform role');
+    }
+  };
+
   const handleDeactivate = async (user) => {
+    if (!user.businessId) {
+      toast.error('No business membership to update');
+      return;
+    }
+
     try {
-      const shouldBan = user.status === 'active';
-      const result = await deactivateBusinessUser(user.businessId, user.id, shouldBan);
+      const nextStatus = user.status === 'active' ? 'inactive' : 'active';
+      const result = await setBusinessUserStatus(user.userId, user.businessId, nextStatus);
       
       if (result.success) {
         setUsers(users.map(u => 
-          u.id === user.id ? { ...u, status: shouldBan ? 'inactive' : 'active' } : u
+          u.rowKey === user.rowKey ? { ...u, status: nextStatus } : u
         ));
-        toast.success(shouldBan ? 'User deactivated' : 'User activated');
+        toast.success(nextStatus === 'inactive' ? 'User deactivated' : 'User activated');
       } else {
         toast.error(result.error || 'Failed to update user status');
       }
@@ -498,15 +582,15 @@ export function UserManagement({ businessId }) {
 
   const handleBulkActivate = async () => {
     try {
-      for (const userId of selectedUsers) {
-        const user = users.find(u => u.id === userId);
-        if (user) {
-          await deactivateBusinessUser(user.businessId, user.id, false);
+      for (const rowKey of selectedUsers) {
+        const user = users.find(u => u.rowKey === rowKey);
+        if (user?.businessId) {
+          await setBusinessUserStatus(user.userId, user.businessId, 'active');
         }
       }
       
       setUsers(users.map(u => 
-        selectedUsers.includes(u.id) ? { ...u, status: 'active' } : u
+        selectedUsers.includes(u.rowKey) ? { ...u, status: 'active' } : u
       ));
       setSelectedUsers([]);
       toast.success('Selected users activated');
@@ -517,15 +601,15 @@ export function UserManagement({ businessId }) {
 
   const handleBulkDeactivate = async () => {
     try {
-      for (const userId of selectedUsers) {
-        const user = users.find(u => u.id === userId);
-        if (user) {
-          await deactivateBusinessUser(user.businessId, user.id, true);
+      for (const rowKey of selectedUsers) {
+        const user = users.find(u => u.rowKey === rowKey);
+        if (user?.businessId) {
+          await setBusinessUserStatus(user.userId, user.businessId, 'inactive');
         }
       }
       
       setUsers(users.map(u => 
-        selectedUsers.includes(u.id) ? { ...u, status: 'inactive' } : u
+        selectedUsers.includes(u.rowKey) ? { ...u, status: 'inactive' } : u
       ));
       setSelectedUsers([]);
       toast.success('Selected users deactivated');
@@ -536,7 +620,7 @@ export function UserManagement({ businessId }) {
 
   const handleExport = () => {
     const data = selectedUsers.length > 0 
-      ? users.filter(u => selectedUsers.includes(u.id))
+      ? users.filter(u => selectedUsers.includes(u.rowKey))
       : filteredUsers;
     
     const csv = [
@@ -650,9 +734,11 @@ export function UserManagement({ businessId }) {
             selectedUsers={selectedUsers}
             onSelect={setSelectedUsers}
             onView={setSelectedUser}
-            onEdit={(user) => console.log('Edit:', user.id)}
+            onEdit={(user) => console.log('Edit:', user.userId)}
             onImpersonate={handleImpersonate}
             onDeactivate={handleDeactivate}
+            isPlatformOwner={isPlatformOwner}
+            onSetPlatformRole={handleSetPlatformRole}
           />
         </CardContent>
       </Card>

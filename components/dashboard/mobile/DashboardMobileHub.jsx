@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -123,9 +122,7 @@ export function DashboardMobileHub({
 
       {/* Quick actions, 3-column tile grid */}
       {quickActions.length > 0 && (
-        <div>
-          <p className="mb-2 px-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Quick actions</p>
-          <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2">
             {quickActions.slice(0, 6).map((action, index) => (
               <MobileHubTile
                 key={action.id}
@@ -136,24 +133,22 @@ export function DashboardMobileHub({
                 onClick={() => runAction(action.id)}
               />
             ))}
-          </div>
         </div>
       )}
 
       {/* Hub modules */}
       <div>
-        <div className="mb-2 flex items-center justify-between px-0.5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Go to module</p>
-          {overflowItems.length > 0 && (
+        {overflowItems.length > 0 && (
+          <div className="mb-1.5 flex justify-end px-0.5">
             <button
               type="button"
               onClick={() => setModulesOpen(true)}
-              className="text-[10px] font-bold uppercase tracking-wide text-brand-primary"
+              className="text-[10px] font-semibold text-brand-primary"
             >
               All modules
             </button>
-          )}
-        </div>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {moduleItems.map((item) => (
             <MobileHubTile
@@ -175,10 +170,6 @@ export function DashboardMobileHub({
       {/* Operational pulse, compact 2×2 on mobile */}
       {healthPanels.length > 0 && (
         <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <Zap className="h-4 w-4 text-amber-500" />
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-600">Operational pulse</p>
-          </div>
           <div className="grid grid-cols-2 gap-2">
             {healthPanels.slice(0, 4).map((panel) => (
               <div key={panel.label} className="rounded-xl border border-gray-100 bg-gray-50/80 px-2.5 py-2">
@@ -193,8 +184,7 @@ export function DashboardMobileHub({
       {/* Quick setup, compact mobile banner */}
       {!hasCoreData && quickSetupSteps.length > 0 && (
         <div className="rounded-2xl border border-cyan-100 bg-cyan-50/60 p-3">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-700">Quick setup</p>
-          <p className="mt-1 text-xs font-semibold text-gray-800">Add products, customers, or an invoice to unlock full insights.</p>
+          <p className="text-xs font-medium text-gray-800">Add products, customers, or an invoice to unlock insights.</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {quickSetupSteps.map((step) => (
               <Button
