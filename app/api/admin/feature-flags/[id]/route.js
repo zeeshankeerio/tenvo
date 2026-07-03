@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { requirePlatformAccess } from '@/lib/actions/admin/platform';
 import pool from '@/lib/db';
@@ -9,7 +11,7 @@ import pool from '@/lib/db';
 export async function GET(request, { params }) {
   try {
     await requirePlatformAccess();
-    const { id } = params;
+    const { id } = await params;
     
     const client = await pool.connect();
     
@@ -64,7 +66,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     await requirePlatformAccess();
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
     const client = await pool.connect();
@@ -141,7 +143,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     await requirePlatformAccess();
-    const { id } = params;
+    const { id } = await params;
     
     const client = await pool.connect();
     
