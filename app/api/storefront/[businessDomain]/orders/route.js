@@ -23,7 +23,11 @@ import { notifyStorefrontOrder, notifyLowStock } from '@/lib/notifications/notif
 import { resolveBusinessMerchantAlertEmails } from '@/lib/notifications/businessNotificationRecipients';
 import { isStorefrontProductUuid } from '@/lib/utils/storefrontProductRef';
 import { queryStorefrontVariantRequirement } from '@/lib/storefront/storefrontProductVariants';
-import { areAllLinesDigital, digitalShippingAddress } from '@/lib/storefront/digitalProducts';
+import {
+  classifyOrderLineFulfillment,
+  digitalShippingAddress,
+  isDigitalPlaceholderAddress,
+} from '@/lib/storefront/digitalProducts';
 import {
   buildRestaurantOrderNotes,
   isRestaurantPickupOrder,
@@ -33,12 +37,13 @@ import {
   resolveRestaurantShippingCost,
   restaurantOrderModeToShipping,
 } from '@/lib/storefront/restaurantMenu';
-import { RESTAURANT_ORDER_MODES } from '@/lib/storefront/restaurantStorefront';
+import { RESTAURANT_ORDER_MODES, isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
 import {
   coerceStorefrontPaymentMethod,
   loadStorefrontPaymentContext,
   resolveEligibleStorefrontPaymentMethods,
 } from '@/lib/storefront/storefrontPaymentEligibility';
+import { resolveStorefrontOrderShippingAmount } from '@/lib/storefront/storefrontShipping';
 
 /**
  * Storefront checkout decrements stock via direct SQL (bypassing InventoryService),
@@ -181,10 +186,20 @@ export async function POST(request, { params }) {
   } = body;
 
   let effectivePaymentMethod = paymentMethod || 'cod';
+  let eligibleMethods = [];
   const paymentGateClient = await pool.connect();
   try {
     const paymentCtx = await loadStorefrontPaymentContext(paymentGateClient, business.id);
-    const eligibleMethods = resolveEligibleStorefrontPaymentMethods(paymentCtx);
+    eligibleMethods = resolveEligibleStorefrontPaymentMethods(paymentCtx);
+    if (eligibleMethods.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No payment methods are available for this store. Please contact the store owner.',
+        },
+        { status: 400 }
+      );
+    }
     effectivePaymentMethod = coerceStorefrontPaymentMethod(paymentMethod, eligibleMethods);
     if (String(paymentMethod || '').toLowerCase() !== effectivePaymentMethod) {
       console.warn(
@@ -198,10 +213,15 @@ export async function POST(request, { params }) {
     paymentGateClient.release();
   }
 
-  const normalizedRestaurantMode = restaurantOrderMode
-    ? normalizeRestaurantOrderMode(restaurantOrderMode)
-    : null;
-  const restaurantPickup = isRestaurantPickupOrder(normalizedRestaurantMode);
+  const paymentMethodCoerced =
+    String(paymentMethod || '').trim().toLowerCase() !== String(effectivePaymentMethod || '').toLowerCase();
+
+  const isRestaurant = isRestaurantElevatedStore(business.category);
+  const normalizedRestaurantMode =
+    isRestaurant && restaurantOrderMode
+      ? normalizeRestaurantOrderMode(restaurantOrderMode)
+      : null;
+  const restaurantPickup = isRestaurant && isRestaurantPickupOrder(normalizedRestaurantMode);
 
   if (!customer?.email || !customer?.firstName || !customer?.phone) {
     return NextResponse.json(
@@ -214,19 +234,40 @@ export async function POST(request, { params }) {
   let digitalOnlyOrder = false;
 
   try {
-    // Pre-check digital fulfillment from product refs (before full pricing txn)
     if (items?.length) {
       const lineRefs = items
         .filter((i) => isStorefrontProductUuid(i?.productId))
         .map((i) => ({ productId: i.productId }));
       if (lineRefs.length === items.length) {
-        digitalOnlyOrder = await areAllLinesDigital(precheckClient, business.id, lineRefs);
+        const mix = await classifyOrderLineFulfillment(precheckClient, business.id, lineRefs);
+        if (mix.mixed) {
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                'Your cart mixes digital and physical products. Please checkout digital and physical items separately.',
+            },
+            { status: 400 }
+          );
+        }
+        digitalOnlyOrder = mix.allDigital;
       }
     }
   } catch (digitalErr) {
     console.warn('[Create Order] digital pre-check skipped:', digitalErr?.message);
   } finally {
     precheckClient.release();
+  }
+
+  if (
+    !digitalOnlyOrder &&
+    !restaurantPickup &&
+    isDigitalPlaceholderAddress(shippingAddress)
+  ) {
+    return NextResponse.json(
+      { success: false, error: 'A valid shipping address is required for physical orders.' },
+      { status: 400 }
+    );
   }
 
   if (!digitalOnlyOrder && !restaurantPickup && (!shippingAddress?.address || !shippingAddress?.city)) {
@@ -238,14 +279,16 @@ export async function POST(request, { params }) {
 
   const resolvedNotes =
     notes ||
-    buildRestaurantOrderNotes({
-      orderMode: normalizedRestaurantMode,
-      tableNumber,
-      orderNotes,
-      orderModeLabel: normalizedRestaurantMode
-        ? restaurantOrderModeLabel(normalizedRestaurantMode, RESTAURANT_ORDER_MODES)
-        : undefined,
-    });
+    (isRestaurant
+      ? buildRestaurantOrderNotes({
+          orderMode: normalizedRestaurantMode,
+          tableNumber,
+          orderNotes,
+          orderModeLabel: normalizedRestaurantMode
+            ? restaurantOrderModeLabel(normalizedRestaurantMode, RESTAURANT_ORDER_MODES)
+            : undefined,
+        })
+      : '');
 
   const effectiveShippingAddress = digitalOnlyOrder
     ? digitalShippingAddress(customer)
@@ -294,15 +337,9 @@ export async function POST(request, { params }) {
   }
 
   const shippingRaw = Number(shipping);
-  let shippingAmount = digitalOnlyOrder
-    ? 0
-    : Number.isFinite(shippingRaw) && shippingRaw >= 0
-      ? roundMoney(Math.min(shippingRaw, 9_999_999))
-      : 0;
-
-  if (restaurantPickup) {
-    shippingAmount = 0;
-  }
+  const clientDeclaredShipping =
+    Number.isFinite(shippingRaw) && shippingRaw >= 0 ? roundMoney(Math.min(shippingRaw, 9_999_999)) : 0;
+  let shippingAmount = 0;
 
   const MAX_CHECKOUT_ATTEMPTS = 3;
 
@@ -495,15 +532,17 @@ export async function POST(request, { params }) {
       throw discountErr;
     }
 
-    if (!digitalOnlyOrder && normalizedRestaurantMode) {
-      const storeSettings = business.settings || {};
-      shippingAmount = resolveRestaurantShippingCost({
-        orderMode: normalizedRestaurantMode,
-        subtotal: subtotalNet,
-        freeShippingThreshold: storeSettings.freeShippingThreshold || 2000,
-        shippingMethod: shippingMethod || restaurantOrderModeToShipping(normalizedRestaurantMode),
-      });
-    }
+    shippingAmount = resolveStorefrontOrderShippingAmount({
+      digitalOnlyOrder,
+      isRestaurant,
+      restaurantPickup,
+      normalizedRestaurantMode,
+      subtotal: subtotalNet,
+      shippingMethod: shippingMethod || 'standard',
+      settings: business.settings || {},
+      resolveRestaurantShippingCost,
+      restaurantOrderModeToShipping,
+    });
 
     const grandTotal = roundMoney(subtotalNet + taxTotal + shippingAmount - discountAmount);
 
@@ -564,11 +603,13 @@ export async function POST(request, { params }) {
       source: 'storefront',
       customer_id: customerId,
       payment_method: effectivePaymentMethod,
+      payment_method_requested: paymentMethod || null,
+      payment_method_coerced: paymentMethodCoerced,
       digital_only: digitalOnlyOrder,
-      clientDeclaredShipping: shipping,
+      clientDeclaredShipping,
       serverShipping: shippingAmount,
       discounts: discountMeta,
-      ...(normalizedRestaurantMode
+      ...(isRestaurant && normalizedRestaurantMode
         ? {
             restaurant_order_mode: normalizedRestaurantMode,
             restaurant_order_mode_label: restaurantOrderModeLabel(
@@ -825,6 +866,8 @@ export async function POST(request, { params }) {
         total: parseFloat(String(order.total_amount)),
         status: order.status,
         paymentStatus: order.payment_status,
+        paymentMethod: effectivePaymentMethod,
+        paymentMethodCoerced: paymentMethodCoerced,
         subtotal: subtotalNet,
         tax: taxTotal,
         shipping: shippingAmount,

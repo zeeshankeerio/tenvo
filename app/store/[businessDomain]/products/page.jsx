@@ -160,7 +160,6 @@ export default async function ProductsPage({ params, searchParams }) {
           : filters.sort === 'popularity'
             ? 'Popular dishes'
             : 'Our menu';
-    const menuSubtitle = `Order for delivery, pickup, or dine-in from ${business.business_name}.`;
 
     return (
       <RestaurantMenuLayout
@@ -170,7 +169,6 @@ export default async function ProductsPage({ params, searchParams }) {
         businessDomain={businessDomain}
         accent={accent}
         title={menuTitle}
-        subtitle={menuSubtitle}
         toolbar={
           <RestaurantMenuToolbar
             businessDomain={businessDomain}
@@ -309,8 +307,8 @@ async function RestaurantMenuContent({
 
   if (!result.success) {
     return (
-      <div className="rounded-2xl border border-neutral-800 bg-[#141414] px-6 py-12 text-center">
-        <p className="text-sm text-neutral-400">Could not load the menu. Please try again.</p>
+      <div className="rounded-lg border border-dashed border-zinc-300 bg-white px-4 py-12 text-center">
+        <p className="text-sm text-zinc-500">Could not load the menu. Please try again.</p>
       </div>
     );
   }

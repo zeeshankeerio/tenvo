@@ -33,5 +33,5 @@ export async function POST(request, { params }) {
     );
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, digitalOnly: Boolean(result.digitalOnly) });
 }

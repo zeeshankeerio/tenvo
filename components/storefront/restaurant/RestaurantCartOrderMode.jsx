@@ -19,21 +19,29 @@ const MODE_ICONS = {
 
 /**
  * Order-type selector on cart — syncs shipping method for checkout.
+ * @param {{ variant?: 'dark' | 'light' }} props
  */
-export function RestaurantCartOrderMode({ className, onShippingChange }) {
+export function RestaurantCartOrderMode({ className, onShippingChange, variant = 'dark' }) {
   const { orderMode, setOrderMode } = useRestaurantChrome();
   const { settings, businessDomain } = useStorefront();
   const config = getRestaurantConfig(settings, businessDomain);
   const modes = resolveRestaurantOrderModes(config.orderModes || RESTAURANT_ORDER_MODES);
   const shippingMethod = restaurantOrderModeToShipping(orderMode);
+  const light = variant === 'light';
 
   useEffect(() => {
     onShippingChange?.(shippingMethod);
   }, [shippingMethod, onShippingChange]);
 
   return (
-    <div className={cn('rounded-2xl border border-neutral-800 bg-[#141414] p-4', className)}>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+    <div
+      className={cn(
+        'rounded-2xl border p-4',
+        light ? 'border-zinc-200 bg-zinc-50' : 'border-neutral-800 bg-[#141414]',
+        className
+      )}
+    >
+      <p className={cn('mb-3 text-xs font-semibold uppercase tracking-wide', light ? 'text-zinc-500' : 'text-neutral-500')}>
         How would you like your order?
       </p>
       <div className="grid grid-cols-3 gap-2">
@@ -48,8 +56,12 @@ export function RestaurantCartOrderMode({ className, onShippingChange }) {
               className={cn(
                 'flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition',
                 active
-                  ? 'border-green-600/50 bg-green-600/10 text-green-400'
-                  : 'border-neutral-700 bg-neutral-900 text-neutral-400 hover:border-neutral-600'
+                  ? light
+                    ? 'border-red-600/40 bg-red-50 text-red-700'
+                    : 'border-green-600/50 bg-green-600/10 text-green-400'
+                  : light
+                    ? 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300'
+                    : 'border-neutral-700 bg-neutral-900 text-neutral-400 hover:border-neutral-600'
               )}
               aria-pressed={active}
             >
@@ -60,11 +72,11 @@ export function RestaurantCartOrderMode({ className, onShippingChange }) {
         })}
       </div>
       {orderMode === 'dine-in' ? (
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className={cn('mt-3 text-xs', light ? 'text-zinc-500' : 'text-neutral-500')}>
           Add your table number or seating notes at checkout.
         </p>
       ) : orderMode === 'collection' ? (
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className={cn('mt-3 text-xs', light ? 'text-zinc-500' : 'text-neutral-500')}>
           We will prepare your order for pickup at the counter.
         </p>
       ) : null}

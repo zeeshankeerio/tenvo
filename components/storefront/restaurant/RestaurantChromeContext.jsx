@@ -12,6 +12,7 @@ export function RestaurantChromeProvider({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [orderMode, setOrderModeState] = useState('delivery');
   const [orderModeHydrated, setOrderModeHydrated] = useState(false);
+  const [menuPageTitle, setMenuPageTitle] = useState('Our menu');
 
   const storageKey = getRestaurantOrderModeStorageKey(businessId);
 
@@ -59,6 +60,8 @@ export function RestaurantChromeProvider({ children }) {
       orderMode,
       setOrderMode,
       orderModeHydrated,
+      menuPageTitle,
+      setMenuPageTitle,
     }),
     [
       isSearchOpen,
@@ -70,6 +73,7 @@ export function RestaurantChromeProvider({ children }) {
       orderMode,
       setOrderMode,
       orderModeHydrated,
+      menuPageTitle,
     ]
   );
 

@@ -28,17 +28,17 @@ function MenuPagination({ businessDomain, currentPage, hasMore, filters }) {
         type="button"
         disabled={currentPage <= 1}
         onClick={() => goToPage(currentPage - 1)}
-        className="inline-flex items-center gap-1 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-neutral-200 transition hover:bg-neutral-800 disabled:opacity-40"
+        className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-40"
       >
         <ChevronLeft className="h-4 w-4" aria-hidden />
         Previous
       </button>
-      <span className="text-sm text-neutral-500">Page {currentPage}</span>
+      <span className="text-sm text-zinc-500">Page {currentPage}</span>
       <button
         type="button"
         disabled={!hasMore}
         onClick={() => goToPage(currentPage + 1)}
-        className="inline-flex items-center gap-1 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-neutral-200 transition hover:bg-neutral-800 disabled:opacity-40"
+        className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-40"
       >
         Next
         <ChevronRight className="h-4 w-4" aria-hidden />
@@ -62,8 +62,8 @@ export function RestaurantMenuCatalog({
 }) {
   if (!products.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-neutral-700 bg-[#141414] px-6 py-16 text-center">
-        <p className="text-sm text-neutral-400">{emptyMessage}</p>
+      <div className="rounded-lg border border-dashed border-zinc-300 bg-white px-4 py-12 text-center">
+        <p className="text-sm text-zinc-500">{emptyMessage}</p>
       </div>
     );
   }
@@ -71,13 +71,13 @@ export function RestaurantMenuCatalog({
   return (
     <div>
       {total > 0 ? (
-        <p className="mb-4 text-xs text-neutral-500">
+        <p className="mb-2 text-[11px] text-zinc-500">
           {total} {total === 1 ? 'item' : 'items'}
         </p>
       ) : null}
 
       {view === 'list' ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {products.map((product) => (
             <RestaurantMenuListItem
               key={product.id}
@@ -88,7 +88,7 @@ export function RestaurantMenuCatalog({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 lg:gap-2.5">
           {products.map((product) => (
             <RestaurantMenuItemCard
               key={product.id}
@@ -124,7 +124,7 @@ export function RestaurantMenuViewToggle({ currentView = 'grid', businessDomain,
   return (
     <div
       className={cn(
-        'inline-flex rounded-xl border border-neutral-700 bg-neutral-900 p-1',
+        'inline-flex rounded-lg border border-zinc-200 bg-zinc-50 p-0.5',
         className
       )}
       role="group"
@@ -135,7 +135,7 @@ export function RestaurantMenuViewToggle({ currentView = 'grid', businessDomain,
         onClick={() => setView('grid')}
         className={cn(
           'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition',
-          currentView === 'grid' ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-neutral-300'
+          currentView === 'grid' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
         )}
         aria-pressed={currentView === 'grid'}
       >
@@ -147,7 +147,7 @@ export function RestaurantMenuViewToggle({ currentView = 'grid', businessDomain,
         onClick={() => setView('list')}
         className={cn(
           'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition',
-          currentView === 'list' ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-neutral-300'
+          currentView === 'list' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
         )}
         aria-pressed={currentView === 'list'}
       >

@@ -112,7 +112,7 @@ export default async function StoreLayout({ children, params }) {
       className={cn(
         'min-h-screen',
         fitnessStore && 'relative',
-        fitnessStore ? 'bg-black' : restaurantStore ? 'bg-[#0a0a0a]' : portalStore || pharmacyStore || supermarketStore ? 'bg-white' : luxuryStore ? 'bg-stone-50' : 'bg-slate-50'
+        fitnessStore ? 'bg-black' : restaurantStore ? 'bg-zinc-100' : portalStore || pharmacyStore || supermarketStore ? 'bg-white' : luxuryStore ? 'bg-stone-50' : 'bg-slate-50'
       )}
       data-store-theme
       {...(luxuryStore ? { 'data-store-luxury': '' } : {})}
@@ -168,14 +168,17 @@ export default async function StoreLayout({ children, params }) {
       <main
         id="store-main"
         className={cn(
-          'min-h-[calc(100vh-300px)] lg:pb-0',
+          restaurantStore ? 'min-h-0 p-0' : 'min-h-[calc(100vh-300px)]',
+          'lg:pb-0',
           pharmacyStore
             ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]'
-            : supermarketStore || restaurantStore
+            : supermarketStore
               ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]'
-              : fitnessStore
-              ? 'pb-[calc(4.25rem+env(safe-area-inset-bottom))]'
-              : 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]'
+              : restaurantStore
+                ? 'pb-[calc(3rem+env(safe-area-inset-bottom))]'
+                : fitnessStore
+                  ? 'pb-[calc(4.25rem+env(safe-area-inset-bottom))]'
+                  : 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]'
         )}
         tabIndex={-1}
       >

@@ -60,7 +60,7 @@ export function HeroCarousel({ slides = [], accent, className, minHeight = 'min-
                   : isFurniture
                     ? 'bg-gradient-to-r from-stone-950/95 via-amber-950/75 to-amber-900/40'
                     : isRestaurant
-                      ? 'bg-gradient-to-r from-violet-950/95 via-violet-900/80 to-violet-800/45'
+                      ? 'bg-gradient-to-r from-neutral-950/95 via-red-950/75 to-neutral-900/35'
                       : isParts
                       ? 'bg-gradient-to-t from-black/85 via-black/45 to-black/15'
                       : 'bg-gradient-to-r from-slate-950/95 via-slate-900/85 to-slate-900/55'
@@ -98,7 +98,7 @@ export function HeroCarousel({ slides = [], accent, className, minHeight = 'min-
                 'store-hero-eyebrow mb-2 text-xs font-semibold uppercase tracking-[0.22em] sm:text-sm',
                 isPharmacy && 'text-emerald-300',
                 isFurniture && 'text-amber-200',
-                isRestaurant && 'text-violet-200',
+                isRestaurant && 'text-red-200/90',
                 (isLuxury || isParts) && 'text-white/90'
               )}
               style={(isLuxury || isParts) && slideAccent ? { color: slideAccent } : undefined}

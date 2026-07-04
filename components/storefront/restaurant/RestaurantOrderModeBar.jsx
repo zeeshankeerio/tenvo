@@ -19,12 +19,21 @@ const MODE_ICONS = {
 };
 
 /**
- * Compact order-type selector — delivery, takeaway (collection), dine-in.
+ * Compact order-type selector — delivery, takeaway, dine-in.
  */
-export function RestaurantOrderModeBar({ settings = {}, businessDomain, className, variant = 'bar' }) {
+export function RestaurantOrderModeBar({
+  settings = {},
+  businessDomain,
+  className,
+  variant = 'bar',
+  accent,
+  theme = 'light',
+}) {
   const { orderMode, setOrderMode } = useRestaurantChrome();
   const config = getRestaurantConfig(settings, businessDomain);
   const modes = resolveRestaurantOrderModes(config.orderModes || RESTAURANT_ORDER_MODES);
+  const activeColor = accent || RESTAURANT_MENU_THEME.cartCta;
+  const isLight = theme === 'light';
 
   if (config.showOrderModes === false) return null;
 
@@ -32,8 +41,12 @@ export function RestaurantOrderModeBar({ settings = {}, businessDomain, classNam
     <div
       className={cn(
         variant === 'bar'
-          ? 'flex flex-wrap gap-1.5 rounded-2xl border border-neutral-800 bg-[#141414] p-1.5'
-          : 'grid grid-cols-3 gap-2',
+          ? isLight
+            ? 'flex flex-wrap gap-1 rounded-lg border border-zinc-200 bg-zinc-50 p-0.5'
+            : 'flex flex-wrap gap-1.5 rounded-2xl border border-neutral-800 bg-[#141414] p-1.5'
+          : variant === 'compact'
+            ? 'flex gap-0.5 overflow-x-auto scrollbar-hide'
+            : 'grid grid-cols-3 gap-2',
         className
       )}
       role="group"
@@ -47,22 +60,23 @@ export function RestaurantOrderModeBar({ settings = {}, businessDomain, classNam
             key={mode.id}
             type="button"
             onClick={() => setOrderMode(mode.id)}
-              className={cn(
-                'inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-semibold transition sm:gap-2 sm:px-3 sm:py-2.5 sm:text-xs',
-                active
-                  ? 'text-white shadow-sm ring-1 ring-white/10'
-                  : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
-              )}
-            style={
+            className={cn(
+              'inline-flex min-w-0 items-center justify-center gap-1 rounded-md font-semibold transition sm:gap-1.5',
+              variant === 'compact'
+                ? 'shrink-0 px-2 py-1 text-[10px] sm:px-2.5 sm:py-1.5 sm:text-[11px]'
+                : 'flex-1 px-2 py-1.5 text-[11px] sm:px-3 sm:py-2 sm:text-xs',
               active
-                ? { backgroundColor: RESTAURANT_MENU_THEME.accentFallback }
-                : variant === 'tiles'
-                  ? { backgroundColor: '#1c1c1c', border: '1px solid #262626' }
-                  : undefined
-            }
+                ? 'text-white shadow-sm'
+                : isLight
+                  ? 'border border-transparent bg-white text-zinc-600 hover:text-zinc-900'
+                  : variant === 'compact'
+                    ? 'border border-neutral-700 bg-neutral-900 text-neutral-400 hover:text-neutral-200'
+                    : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
+            )}
+            style={active ? { backgroundColor: activeColor } : undefined}
             aria-pressed={active}
           >
-            <Icon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+            <Icon className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
             <span className="truncate">{mode.label}</span>
           </button>
         );

@@ -21,13 +21,14 @@ import { isMembershipRelevant } from '@/lib/config/domains';
 import { isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
 import { RestaurantCartOrderMode } from '@/components/storefront/restaurant/RestaurantCartOrderMode';
 import {
-  RESTAURANT_UI,
+  RESTAURANT_CHECKOUT_UI,
   resolveRestaurantShippingCost,
   getRestaurantFeeLabel,
   isRestaurantPickupOrder,
   restaurantOrderModeToShipping,
   normalizeRestaurantOrderMode,
 } from '@/lib/storefront/restaurantMenu';
+import { resolveRetailShippingCost, getStorefrontShippingSettings } from '@/lib/storefront/storefrontShipping';
 import { useRestaurantChromeOptional } from '@/components/storefront/restaurant/RestaurantChromeContext';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,11 +40,12 @@ export default function CartPage({ params }) {
   const { currency, settings, business, businessId } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
   const restaurantStore = isRestaurantElevatedStore(business?.category);
+  const restaurantUi = restaurantStore ? RESTAURANT_CHECKOUT_UI : null;
   const restaurantChrome = useRestaurantChromeOptional();
   const restaurantOrderMode = normalizeRestaurantOrderMode(restaurantChrome?.orderMode || 'delivery');
   const restaurantPickup = restaurantStore && isRestaurantPickupOrder(restaurantOrderMode);
 
-  const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
+  const shipSettings = getStorefrontShippingSettings(settings);
   const taxRate = settings?.taxRate ?? 0.17;
   const returnDays = settings?.returnPolicyDays || 7;
 
@@ -63,6 +65,8 @@ export default function CartPage({ params }) {
   }, [restaurantStore, restaurantOrderMode, restaurantChrome?.orderModeHydrated]);
 
   const { subtotal, itemCount } = calculateTotals();
+  const isDigitalCart =
+    cart.items.length > 0 && cart.items.every((i) => i.fulfillmentType === 'digital');
   const membershipStoreEnabled = isMembershipRelevant(business?.category);
   const totalDiscount = Math.min(subtotal, promoDiscount + memberDiscount);
 
@@ -70,27 +74,29 @@ export default function CartPage({ params }) {
     cart.businessId && businessId && cart.businessId !== businessId
   );
 
-  const shippingCost = restaurantStore
-    ? resolveRestaurantShippingCost({
-        orderMode: restaurantOrderMode,
-        subtotal,
-        freeShippingThreshold,
-        shippingMethod,
-      })
-    : shippingMethod === 'express'
-      ? 300
-      : shippingMethod === 'pickup'
-        ? 0
-        : subtotal >= freeShippingThreshold
-          ? 0
-          : 150;
+  const shippingCost = isDigitalCart
+    ? 0
+    : restaurantStore
+      ? resolveRestaurantShippingCost({
+          orderMode: restaurantOrderMode,
+          subtotal,
+          freeShippingThreshold: shipSettings.freeShippingThreshold,
+          shippingMethod,
+        })
+      : resolveRetailShippingCost({
+          subtotal,
+          shippingMethod,
+          freeShippingThreshold: shipSettings.freeShippingThreshold,
+          standardFee: shipSettings.standardFee,
+          expressFee: shipSettings.expressFee,
+        });
   const tax = cart.items.reduce((sum, i) => {
     const rate = typeof i.taxPercent === 'number' ? i.taxPercent / 100 : taxRate;
     return sum + i.price * i.quantity * rate;
   }, 0);
   const total = subtotal + shippingCost + tax - totalDiscount;
-  const remaining = Math.max(0, freeShippingThreshold - subtotal);
-  const progressPct = Math.min(100, (subtotal / freeShippingThreshold) * 100);
+  const remaining = Math.max(0, shipSettings.freeShippingThreshold - subtotal);
+  const progressPct = Math.min(100, (subtotal / shipSettings.freeShippingThreshold) * 100);
 
   const saveCheckoutAdjustments = useCallback(
     (overrides = {}) => {
@@ -224,13 +230,13 @@ export default function CartPage({ params }) {
   // ── Empty cart ───────────────────────────────────────────────────────
   if (cart.items.length === 0) {
     return (
-      <div className={cn('min-h-screen flex items-center justify-center p-4', restaurantStore ? RESTAURANT_UI.page : 'bg-gray-50')}>
+      <div className={cn('min-h-screen flex items-center justify-center p-4', restaurantStore ? restaurantUi.page : 'bg-gray-50')}>
         <div className="text-center max-w-sm">
-          <div className={cn('w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6', restaurantStore ? 'bg-neutral-900' : 'bg-gray-100')}>
-            <ShoppingBag className={cn('w-12 h-12', restaurantStore ? 'text-neutral-600' : 'text-gray-300')} />
+          <div className={cn('w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6', restaurantStore ? 'bg-zinc-200' : 'bg-gray-100')}>
+            <ShoppingBag className={cn('w-12 h-12', restaurantStore ? 'text-zinc-400' : 'text-gray-300')} />
           </div>
-          <h1 className={cn('text-2xl font-semibold mb-2', restaurantStore ? 'text-white' : 'text-gray-900')}>Your cart is empty</h1>
-          <p className={cn('mb-8', restaurantStore ? 'text-neutral-400' : 'text-gray-500')}>
+          <h1 className={cn('text-2xl font-semibold mb-2', restaurantStore ? 'text-zinc-900' : 'text-gray-900')}>Your cart is empty</h1>
+          <p className={cn('mb-8', restaurantStore ? 'text-zinc-500' : 'text-gray-500')}>
             {restaurantStore ? 'Browse the menu and add dishes to get started.' : 'Looks like you have not added anything yet. Start shopping!'}
           </p>
           <Button
@@ -250,20 +256,20 @@ export default function CartPage({ params }) {
   }
 
   return (
-    <div className={cn('min-h-screen', restaurantStore ? 'bg-[#0a0a0a]' : 'bg-gray-50')}>
+    <div className={cn('min-h-screen', restaurantStore ? restaurantUi.page : 'bg-gray-50')}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className={cn('text-2xl font-semibold', restaurantStore ? 'text-white' : 'text-gray-900')}>
+          <h1 className={cn('text-2xl font-semibold', restaurantStore ? 'text-zinc-900' : 'text-gray-900')}>
             {restaurantStore ? 'Your order' : 'Shopping Cart'}
-            <span className={cn('text-base font-normal ml-2', restaurantStore ? 'text-neutral-500' : 'text-gray-500')}>({itemCount} items)</span>
+            <span className={cn('text-base font-normal ml-2', restaurantStore ? 'text-zinc-500' : 'text-gray-500')}>({itemCount} items)</span>
           </h1>
           <Link
             href={`/store/${businessDomain}/products`}
             className={cn(
               'flex items-center gap-1.5 text-sm transition-colors',
-              restaurantStore ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+              restaurantStore ? 'text-zinc-500 hover:text-zinc-900' : 'text-gray-500 hover:text-gray-900'
             )}
           >
             <ArrowLeft className="w-4 h-4" /> {restaurantStore ? 'Back to menu' : 'Continue Shopping'}
@@ -295,12 +301,12 @@ export default function CartPage({ params }) {
 
         {/* Free delivery progress — delivery mode only */}
         {restaurantStore && !restaurantPickup && remaining > 0 && (
-          <div className="mb-6 p-4 rounded-2xl border border-neutral-800 bg-[#141414]">
-            <div className="flex items-center gap-2 text-sm font-medium text-neutral-300 mb-2">
+          <div className="mb-6 p-4 rounded-2xl border border-zinc-200 bg-white">
+            <div className="flex items-center gap-2 text-sm font-medium text-zinc-700 mb-2">
               <Truck className="w-4 h-4" style={{ color: accent }} />
               Add <span className="font-bold" style={{ color: accent }}>{formatCurrency(remaining, currency)}</span> more for free delivery
             </div>
-            <div className="w-full bg-neutral-800 rounded-full h-2">
+            <div className="w-full bg-zinc-200 rounded-full h-2">
               <div
                 className="h-2 rounded-full transition-all duration-500"
                 style={{ width: `${progressPct}%`, backgroundColor: accent }}
@@ -309,7 +315,7 @@ export default function CartPage({ params }) {
           </div>
         )}
         {restaurantStore && !restaurantPickup && remaining === 0 && subtotal > 0 && (
-          <div className="mb-6 p-3 bg-green-950/40 border border-green-900/50 rounded-2xl flex items-center gap-2 text-sm font-medium text-green-400">
+          <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-2 text-sm font-medium text-green-700">
             <Truck className="w-4 h-4" />
             Free delivery on this order
           </div>
@@ -350,7 +356,7 @@ export default function CartPage({ params }) {
                   className={cn(
                     'rounded-2xl p-4 shadow-sm border',
                     restaurantStore
-                      ? 'bg-[#141414] border-neutral-800'
+                      ? 'bg-white border-zinc-200'
                       : 'bg-white border-gray-100'
                   )}
                 >
@@ -360,7 +366,7 @@ export default function CartPage({ params }) {
                       href={`/store/${businessDomain}/products/${item.slug || item.productId}`}
                       className="flex-shrink-0"
                     >
-                      <div className={cn('w-20 h-20 rounded-xl overflow-hidden', restaurantStore ? 'bg-neutral-800' : 'bg-gray-100')}>
+                      <div className={cn('w-20 h-20 rounded-xl overflow-hidden', restaurantStore ? 'bg-zinc-100' : 'bg-gray-100')}>
                         {item.image ? (
                           <SmartProductImage
                             src={item.image}
@@ -383,7 +389,7 @@ export default function CartPage({ params }) {
                         href={`/store/${businessDomain}/products/${item.slug || item.productId}`}
                         className={cn(
                           'font-semibold line-clamp-2 text-sm leading-snug transition-colors',
-                          restaurantStore ? 'text-white hover:text-neutral-300' : 'text-gray-900 hover:text-gray-600'
+                          restaurantStore ? 'text-zinc-900 hover:text-zinc-600' : 'text-gray-900 hover:text-gray-600'
                         )}
                       >
                         {item.name}
@@ -446,20 +452,20 @@ export default function CartPage({ params }) {
           {/* ── Order summary ────────────────────────────────────────────── */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
-              <Card className={cn('rounded-2xl shadow-sm border-0', restaurantStore && 'bg-[#141414] border border-neutral-800 text-white')}>
+              <Card className={cn('rounded-2xl shadow-sm border-0', restaurantStore && restaurantUi.summaryCard)}>
                 <CardHeader className="pb-3">
-                  <CardTitle className={cn('text-base font-bold', restaurantStore && 'text-white')}>Order Summary</CardTitle>
+                  <CardTitle className={cn('text-base font-bold', restaurantStore && 'text-zinc-900')}>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Shipping / order type */}
                   {restaurantStore ? (
-                    <RestaurantCartOrderMode onShippingChange={setShippingMethod} />
+                    <RestaurantCartOrderMode variant="light" onShippingChange={setShippingMethod} />
                   ) : (
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Shipping</p>
                     {[
-                      { id: 'standard', label: 'Standard (3-5 days)', price: subtotal >= freeShippingThreshold ? 'FREE' : formatCurrency(150, currency) },
-                      { id: 'express', label: 'Express (1-2 days)', price: formatCurrency(300, currency) },
+                      { id: 'standard', label: 'Standard (3-5 days)', price: subtotal >= shipSettings.freeShippingThreshold ? 'FREE' : formatCurrency(shipSettings.standardFee, currency) },
+                      { id: 'express', label: 'Express (1-2 days)', price: formatCurrency(shipSettings.expressFee, currency) },
                       { id: 'pickup', label: 'Store Pickup', price: 'FREE' },
                     ].map(opt => (
                       <label key={opt.id}
@@ -571,7 +577,7 @@ export default function CartPage({ params }) {
                       <span className="font-medium">{formatCurrency(subtotal, currency)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className={restaurantStore ? 'text-neutral-500' : 'text-gray-500'}>
+                      <span className={restaurantStore ? 'text-zinc-500' : 'text-gray-500'}>
                         {restaurantStore ? getRestaurantFeeLabel(restaurantOrderMode) : 'Shipping'}
                       </span>
                       <span className={cn('font-medium', shippingCost === 0 ? 'text-green-600' : '')}>

@@ -460,7 +460,9 @@ export default async function StoreHomePage({ params }) {
         : editorialHero
           ? 'bg-stone-50 text-slate-900'
           : dealershipHero || marketplaceHero || pharmacyElevatedHero || furnitureElevatedHero || restaurantElevatedHero || supermarketElevatedHero || autoPartsHero
-            ? 'bg-white text-slate-900'
+            ? restaurantElevatedHero
+              ? 'bg-[#0a0a0a] text-white'
+              : 'bg-white text-slate-900'
             : 'bg-slate-50 text-slate-900'
     )}>
 

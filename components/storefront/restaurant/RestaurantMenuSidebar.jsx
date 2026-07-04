@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { buildRestaurantMenuNavItems } from '@/lib/storefront/restaurantMenu';
+import { buildRestaurantMenuNavItems, RESTAURANT_MENU_THEME } from '@/lib/storefront/restaurantMenu';
 
 function isNavActive(item, searchParams, pathname, productsPath) {
   const category = searchParams.get('category');
@@ -19,15 +19,16 @@ function isNavActive(item, searchParams, pathname, productsPath) {
 }
 
 /**
- * Sticky category sidebar — digital menu navigation with icons.
+ * Flush category sidebar for full-width menu layout.
  */
 export function RestaurantMenuSidebar({
   storeBase,
   categories = [],
-  accent = '#22c55e',
+  accent = RESTAURANT_MENU_THEME.accentFallback,
   className,
   onNavigate,
   compact = false,
+  flush = false,
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,15 +38,28 @@ export function RestaurantMenuSidebar({
   return (
     <nav
       className={cn(
-        'rounded-2xl border border-neutral-800 bg-[#141414] shadow-xl shadow-black/30',
+        flush ? 'bg-white' : 'rounded-xl border border-zinc-200 bg-white shadow-sm',
         className
       )}
       aria-label="Menu categories"
     >
-      <div className={cn('border-b border-neutral-800 px-4 py-3', compact && 'px-3 py-2')}>
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">Menu</p>
-      </div>
-      <ul className={cn('space-y-0.5 p-2', compact ? 'max-h-[50vh]' : 'max-h-[calc(100vh-200px)]', 'overflow-y-auto scrollbar-thin')}>
+      {!flush ? (
+        <div className={cn('border-b border-zinc-200 px-3 py-2', compact && 'px-2 py-1.5')}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">Menu</p>
+        </div>
+      ) : (
+        <div className="border-b border-zinc-100 px-2 py-2 lg:px-3">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">Categories</p>
+        </div>
+      )}
+      <ul
+        className={cn(
+          'space-y-0.5',
+          flush ? 'p-1 lg:p-1.5' : 'p-1.5',
+          compact ? 'max-h-[50vh]' : flush ? '' : 'max-h-[calc(100vh-200px)]',
+          'overflow-y-auto'
+        )}
+      >
         {items.map((item) => {
           const Icon = item.icon;
           const active = isNavActive(item, searchParams, pathname, productsPath);
@@ -55,22 +69,22 @@ export function RestaurantMenuSidebar({
                 href={item.href}
                 onClick={onNavigate}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition',
+                  'flex items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold transition lg:gap-2.5 lg:px-2.5 lg:text-[13px]',
                   active
-                    ? 'text-white'
-                    : 'text-neutral-400 hover:bg-neutral-800/80 hover:text-neutral-100'
+                    ? 'bg-red-50 text-red-700'
+                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
                 )}
-                style={active ? { backgroundColor: `${accent}22`, color: accent } : undefined}
+                style={active ? { color: accent } : undefined}
                 aria-current={active ? 'page' : undefined}
               >
                 <span
                   className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-                    active ? 'bg-neutral-900' : 'bg-neutral-900/60'
+                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-md lg:h-8 lg:w-8',
+                    active ? 'bg-white shadow-sm' : 'bg-zinc-100'
                   )}
                   style={active ? { color: accent } : undefined}
                 >
-                  <Icon className="h-4 w-4" aria-hidden />
+                  <Icon className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden />
                 </span>
                 <span className="min-w-0 truncate">{item.label}</span>
               </Link>
