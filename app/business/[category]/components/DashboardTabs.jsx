@@ -224,6 +224,11 @@ export function DashboardTabs({
         handleCreateBOM,
         handleCreateProductionOrder,
         refreshAllData,
+        fetchInventory,
+        fetchPurchases,
+        fetchSales,
+        fetchFinance,
+        fetchExpenses,
         setShowInvoiceBuilder,
         setShowProductForm,
         setShowCustomerForm,
@@ -336,7 +341,7 @@ export function DashboardTabs({
                                 category={category}
                                 onProductSave={handleSaveProduct}
                                 onProductDelete={handleDeleteProduct}
-                                refreshData={refreshAllData}
+                                refreshData={() => fetchInventory({ force: true })}
                                 domainKnowledge={domainKnowledge}
                                 invoices={filteredInvoices}
                                 customers={filteredCustomers}
@@ -439,7 +444,12 @@ export function DashboardTabs({
                                 vendors={filteredVendors}
                                 invoices={filteredInvoices}
                                 purchases={purchaseOrders}
-                                refreshData={refreshAllData}
+                                refreshData={async () => {
+                                    await Promise.all([
+                                        fetchSales({ force: true }),
+                                        fetchFinance({ force: true }),
+                                    ]);
+                                }}
                             />
                         </TabGuard>
                     )}
@@ -452,7 +462,7 @@ export function DashboardTabs({
                                 category={category}
                                 purchaseOrders={filteredPurchaseOrders}
                                 onUpdateStatus={handleUpdatePOStatus}
-                                refreshData={refreshAllData}
+                                refreshData={() => fetchPurchases({ force: true })}
                                 onCreate={() => setShowPOBuilder(true)}
                             />
                         </TabGuard>
@@ -523,7 +533,7 @@ export function DashboardTabs({
                                 challans={filteredChallans}
                                 customers={filteredCustomers}
                                 products={filteredProducts}
-                                refreshData={refreshAllData}
+                                refreshData={() => fetchSales({ force: true })}
                                 category={category}
                                 onIssueInvoice={(header) => {
                                     setInvoiceInitialData(header);

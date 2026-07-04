@@ -451,7 +451,8 @@ function BusinessDashboardContent() {
     fetchManufacturing,
     fetchPayroll,
     fetchApprovals,
-    fetchExpenses
+    fetchExpenses,
+    moduleReady,
   } = useData();
 
   const dashboardTabLoading =
@@ -495,10 +496,32 @@ function BusinessDashboardContent() {
       manufacturing: fetchManufacturing,
     };
 
+    const tabModuleKeys = {
+      finance: 'finance',
+      accounting: 'finance',
+      expenses: 'expenses',
+      inventory: 'inventory',
+      batches: 'inventory',
+      warehouses: 'inventory',
+      invoices: 'sales',
+      customers: 'sales',
+      quotations: 'sales',
+      vendors: 'purchases',
+      purchases: 'purchases',
+      payroll: 'payroll',
+      approvals: 'approvals',
+      manufacturing: 'manufacturing',
+    };
+
     if (activeTab === 'dashboard') {
-      if (!dashboardMetrics && !loadingModules.analytics) {
+      if (!dashboardMetrics && !loadingModules.analytics && !moduleReady.analytics) {
         fetchAnalytics();
       }
+      return;
+    }
+
+    const moduleKey = tabModuleKeys[activeTab];
+    if (!moduleKey || moduleReady[moduleKey] || loadingModules[moduleKey]) {
       return;
     }
 
@@ -508,7 +531,8 @@ function BusinessDashboardContent() {
     business?.id,
     hubReady,
     dashboardMetrics,
-    loadingModules.analytics,
+    loadingModules,
+    moduleReady,
     fetchFinance,
     fetchSales,
     fetchInventory,
@@ -786,7 +810,7 @@ function BusinessDashboardContent() {
       }
 
       if (skipFullWorkspaceRefresh) {
-        await fetchInventory();
+        await fetchInventory({ force: true });
       } else {
         // Full workspace sync (forms, cross-module aggregates)
         await refreshAllData();
@@ -809,7 +833,7 @@ function BusinessDashboardContent() {
   const handleDeleteProduct = async (productId) => {
     try {
       await productAPI.delete(productId, business.id);
-      await fetchInventory();
+      await fetchInventory({ force: true });
       toast.success('Product deleted successfully');
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -1197,7 +1221,7 @@ function BusinessDashboardContent() {
       await fetchPurchases();
 
       if (status === PURCHASE_STATUSES.RECEIVED && business?.id) {
-        await fetchInventory();
+        await fetchInventory({ force: true });
         toast.success('Inventory updated automatically');
       } else {
         toast.success(`Order marked as ${getPurchaseStatusLabel(status)}`);
@@ -1236,7 +1260,7 @@ function BusinessDashboardContent() {
   const handleLocationAdd = async (data) => {
     try {
       await warehouseAPI.createLocation({ ...data, business_id: business.id });
-      await fetchInventory();
+      await fetchInventory({ force: true });
       toast.success('Warehouse location added');
     } catch (error) {
       console.error('Add Location Error:', error);
@@ -1254,7 +1278,7 @@ function BusinessDashboardContent() {
   const handleLocationUpdate = async (locationId, updates) => {
     try {
       await warehouseAPI.updateLocation(business.id, locationId, updates);
-      await fetchInventory();
+      await fetchInventory({ force: true });
       toast.success('Location updated successfully');
     } catch (error) {
       console.error('Update Location Error:', error);
@@ -1266,7 +1290,7 @@ function BusinessDashboardContent() {
   const handleLocationDelete = async (locationId) => {
     try {
       await warehouseAPI.deleteLocation(business.id, locationId);
-      await fetchInventory();
+      await fetchInventory({ force: true });
       toast.success('Location deleted successfully');
     } catch (error) {
       console.error('Delete Location Error:', error);
@@ -1279,7 +1303,7 @@ function BusinessDashboardContent() {
       await warehouseAPI.createTransfer({ ...data, business_id: business.id });
       toast.success('Stock transfer initiated');
       // Refresh inventory via DataProvider to reflect stock changes
-      await fetchInventory();
+      await fetchInventory({ force: true });
     } catch (error) {
       console.error('Stock Transfer Error:', error);
       toast.error('Failed to transfer stock');
@@ -1716,6 +1740,10 @@ function BusinessDashboardContent() {
               handleCreateProductionOrder,
               refreshAllData,
               fetchInventory,
+              fetchPurchases,
+              fetchSales,
+              fetchFinance,
+              fetchExpenses,
               setShowInvoiceBuilder,
               setShowProductForm,
               setShowCustomerForm,
@@ -1795,7 +1823,7 @@ function BusinessDashboardContent() {
         onSaveInvoice={handleSaveInvoice}
         onTabChange={handleTabChange}
         formatCurrency={formatCurrency}
-        loadProducts={refreshAllData}
+        loadProducts={() => fetchInventory({ force: true })}
 
         // Vendor & PO States
         showVendorForm={showVendorForm}
@@ -1808,7 +1836,7 @@ function BusinessDashboardContent() {
         setShowPOBuilder={setShowPOBuilder}
         poInitialData={poInitialData}
         setPoInitialData={setPoInitialData}
-        refreshData={refreshAllData}
+        refreshData={() => fetchInventory({ force: true })}
         business={business}
         role={role}
         planTier={business?.plan_tier || 'free'}
