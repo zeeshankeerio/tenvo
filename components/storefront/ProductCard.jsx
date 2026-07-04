@@ -18,6 +18,7 @@ import { isFitnessElevatedStore } from '@/lib/storefront/fitnessStorefront';
 import { getStorefrontStockState } from '@/lib/storefront/storefrontStockUi';
 import { isStorefrontProductUuid } from '@/lib/utils/storefrontProductRef';
 import { resolveSourcingBadge } from '@/lib/storefront/productAttributeChips';
+import { catalogProductNeedsVariantPage } from '@/lib/storefront/storefrontProductVariants';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
@@ -68,13 +69,14 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
   const productHref = isPreviewProduct
     ? `/store/${businessDomain}/products?search=${encodeURIComponent(product.name || '')}`
     : `/store/${businessDomain}/products/${product.slug || product.id}`;
+  const needsVariantPage = catalogProductNeedsVariantPage(product);
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
 
-    if (isPreviewProduct) {
+    if (isPreviewProduct || needsVariantPage) {
       window.location.href = productHref;
       return;
     }
@@ -271,7 +273,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
               style={{ backgroundColor: accent }}
             >
               <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {isAdding ? 'Adding…' : 'Add to Cart'}
+              {isAdding ? 'Adding…' : needsVariantPage ? 'Select options' : 'Add to Cart'}
             </button>
           </div>
         )}
@@ -359,7 +361,7 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
             )}
             style={{ backgroundColor: accent }}
           >
-            {isAdding ? 'Adding…' : isOutOfStock ? 'Sold out' : 'Add to Cart'}
+            {isAdding ? 'Adding…' : isOutOfStock ? 'Sold out' : needsVariantPage ? 'Select options' : 'Add to Cart'}
           </button>
         )}
       </div>

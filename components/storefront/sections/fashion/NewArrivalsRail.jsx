@@ -10,6 +10,7 @@ import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { formatCurrency } from '@/lib/currency';
 import { FashionSectionHeader } from './FashionSectionHeader';
+import { catalogProductNeedsVariantPage } from '@/lib/storefront/storefrontProductVariants';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import {
@@ -24,11 +25,16 @@ function QuickAddButton({ product, businessDomain }) {
   const { businessId } = useStorefront();
   const outOfStock = product.stock != null && product.stock <= 0;
   const productHref = `/store/${businessDomain}/products/${product.slug || product.id}`;
+  const needsVariantPage = catalogProductNeedsVariantPage(product);
 
   const handleClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (outOfStock) return;
+    if (needsVariantPage) {
+      window.location.href = productHref;
+      return;
+    }
 
     setLoading(true);
     try {

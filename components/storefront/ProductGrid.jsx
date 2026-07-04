@@ -20,6 +20,7 @@ import {
 } from '@/lib/utils/storefrontProductRail';
 import { toast } from 'react-hot-toast';
 import { useState, useMemo } from 'react';
+import { catalogProductNeedsVariantPage } from '@/lib/storefront/storefrontProductVariants';
 
 /** @type {Record<string, string>} */
 const GRID_DENSITY_CLASSES = {
@@ -38,13 +39,18 @@ function ProductListItem({ product, businessDomain }) {
   const inWishlist = isInWishlist(product.id);
   const listImage = getEffectiveProductImageUrl(product, business?.category);
   const isOutOfStock = product.stock !== null && product.stock !== undefined && product.stock <= 0;
+  const productHref = `/store/${businessDomain}/products/${product.slug || product.id}`;
+  const needsVariantPage = catalogProductNeedsVariantPage(product);
   const discount = product.compare_price && Number(product.compare_price) > Number(product.price)
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100) : 0;
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
     if (isOutOfStock) return;
-    const productHref = `/store/${businessDomain}/products/${product.slug || product.id}`;
+    if (needsVariantPage) {
+      window.location.href = productHref;
+      return;
+    }
     setIsAdding(true);
     try {
       await addItem({ productId: product.id, quantity: 1, variantId: null, businessId });
@@ -100,7 +106,7 @@ function ProductListItem({ product, businessDomain }) {
               style={{ backgroundColor: isOutOfStock ? '#9ca3af' : accent }}
             >
               <ShoppingBag className="w-4 h-4" />
-              {isOutOfStock ? 'Out of Stock' : isAdding ? 'Adding…' : 'Add to Cart'}
+              {isOutOfStock ? 'Out of Stock' : isAdding ? 'Adding…' : needsVariantPage ? 'Select options' : 'Add to Cart'}
             </button>
           </div>
         </div>
