@@ -3,6 +3,7 @@
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { MetricSparkline } from '@/components/dashboard/MetricSparkline';
+import { KPI_THEMES, type KpiTheme } from '@/lib/dashboard/kpiThemes';
 import { cn } from '@/lib/utils';
 
 export interface DomainMetricCardProps {
@@ -13,7 +14,9 @@ export interface DomainMetricCardProps {
     /** Override auto trend text (e.g. alert copy instead of %). */
     trendHint?: string;
     icon: React.ElementType;
-    colorClass: string;
+    /** @deprecated Prefer `theme` for AIC-style tinted cards. */
+    colorClass?: string;
+    theme?: KpiTheme;
     className?: string;
     sparkline?: number[];
     /** For metrics where down is good (e.g. overdue). */
@@ -28,56 +31,70 @@ export function DomainMetricCard({
     trendHint,
     icon: Icon,
     colorClass,
+    theme = 'slate',
     className,
     sparkline,
     invertTrendColor = false,
 }: DomainMetricCardProps) {
+    const palette = KPI_THEMES[theme];
     const showTrend = trendHint || (trend !== undefined && trend !== 0);
     const trendPositive = invertTrendColor ? (trend ?? 0) < 0 : (trend ?? 0) > 0;
 
     return (
         <Card
             className={cn(
-                'group border border-slate-200/80 shadow-sm hover:shadow-md transition-all overflow-hidden h-full',
-                'bg-gradient-to-br from-white via-white to-slate-50/70',
+                'group relative overflow-hidden border shadow-sm hover:shadow-lg transition-all duration-300 h-full',
+                palette.card,
                 className
             )}
         >
-            <CardContent className="p-3.5">
+            <div
+                className={cn(
+                    'pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full blur-2xl transition-opacity group-hover:opacity-100 opacity-70',
+                    palette.orb
+                )}
+                aria-hidden
+            />
+            <CardContent className="relative p-3.5">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1 truncate">
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1 truncate">
                             {label}
                         </p>
-                        <h3 className="text-lg xl:text-xl font-semibold text-slate-900 leading-tight tabular-nums">
+                        <h3 className="text-xl xl:text-2xl font-bold text-slate-900 leading-tight tabular-nums tracking-tight">
                             {value}
                         </h3>
                         {subValue ? (
                             <p className="text-[10px] font-medium text-slate-500 mt-1 line-clamp-2">{subValue}</p>
                         ) : null}
                     </div>
-                    <div className={cn('p-2 rounded-xl shadow-sm shrink-0 ring-1 ring-white/60', colorClass)}>
+                    <div
+                        className={cn(
+                            'p-2.5 rounded-xl shadow-md shrink-0 ring-2 ring-white/80',
+                            colorClass || palette.icon
+                        )}
+                    >
                         <Icon className="w-5 h-5 text-white" aria-hidden />
                     </div>
                 </div>
 
-                <div className="mt-2.5 flex items-end justify-between gap-2 min-h-[1.75rem]">
+                <div className="mt-3 flex items-end justify-between gap-2 min-h-[2rem] border-t border-white/60 pt-2.5">
                     {showTrend ? (
                         <div className="flex items-center gap-1 min-w-0">
                             {!trendHint && trend !== undefined && trend !== 0 ? (
                                 trendPositive ? (
-                                    <ArrowUpRight className="w-3 h-3 text-emerald-500 shrink-0" aria-hidden />
+                                    <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden />
                                 ) : (
-                                    <ArrowDownRight className="w-3 h-3 text-rose-500 shrink-0" aria-hidden />
+                                    <ArrowDownRight className="w-3.5 h-3.5 text-rose-500 shrink-0" aria-hidden />
                                 )
                             ) : null}
                             <span
                                 className={cn(
-                                    'text-[10px] font-semibold truncate',
+                                    'text-[10px] font-bold truncate',
                                     trendHint
                                         ? 'text-amber-700'
                                         : trendPositive
-                                          ? 'text-emerald-600'
+                                          ? 'text-emerald-700'
                                           : 'text-rose-600'
                                 )}
                             >
@@ -85,12 +102,15 @@ export function DomainMetricCard({
                             </span>
                         </div>
                     ) : (
-                        <span className="text-[10px] text-slate-400">Stable vs prior period</span>
+                        <span className="text-[10px] font-medium text-slate-400">Stable vs prior period</span>
                     )}
                     {sparkline && sparkline.length >= 2 ? (
                         <MetricSparkline
                             values={sparkline}
+                            strokeClassName={palette.sparkStroke}
+                            fillClassName={palette.sparkFill}
                             positiveDirection={invertTrendColor ? 'down' : 'up'}
+                            filled
                         />
                     ) : null}
                 </div>

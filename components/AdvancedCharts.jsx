@@ -147,6 +147,72 @@ export function SalesChart({ data = [], colors, currency = 'PKR' }) {
 }
 
 /**
+ * AIC-style revenue area chart — blue-to-purple gradient fill.
+ *
+ * @param {Object} props
+ * @param {any[]} props.data
+ * @param {any} [props.colors]
+ * @param {string} [props.currency]
+ */
+export function SalesTrendAreaChart({ data = [], colors, currency = 'PKR' }) {
+  const primary = colors?.primary || '#3b82f6';
+  const accent = colors?.primaryLight || '#8b5cf6';
+  const xKey = data[0] && Object.prototype.hasOwnProperty.call(data[0], 'date') ? 'date' : 'name';
+  const moneyTick = (v) => formatCurrency(Number(v) || 0, currency, { maximumFractionDigits: 0 });
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
+        <defs>
+          <linearGradient id="premiumAreaFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={primary} stopOpacity={0.4} />
+            <stop offset="45%" stopColor={accent} stopOpacity={0.2} />
+            <stop offset="100%" stopColor={accent} stopOpacity={0.02} />
+          </linearGradient>
+          <linearGradient id="premiumAreaStroke" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={primary} />
+            <stop offset="100%" stopColor={accent} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.6} vertical={false} />
+        <XAxis
+          dataKey={xKey}
+          tick={{ fontSize: 11, fill: '#64748b' }}
+          tickLine={false}
+          axisLine={{ stroke: '#e2e8f0' }}
+        />
+        <YAxis
+          tickFormatter={moneyTick}
+          width={68}
+          tick={{ fontSize: 11, fill: '#64748b' }}
+          tickLine={false}
+          axisLine={false}
+        />
+        <Tooltip
+          contentStyle={{
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 10px 30px rgba(15,23,42,0.12)',
+            fontSize: '12px',
+          }}
+          formatter={(value) => [formatCurrency(Number(value) || 0, currency), 'Revenue']}
+        />
+        <Area
+          type="monotone"
+          dataKey="revenue"
+          name="Revenue"
+          stroke="url(#premiumAreaStroke)"
+          strokeWidth={2.5}
+          fill="url(#premiumAreaFill)"
+          dot={{ r: 3, fill: primary, strokeWidth: 2, stroke: '#fff' }}
+          activeDot={{ r: 5, fill: accent, strokeWidth: 2, stroke: '#fff' }}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+/**
  * @param {Object} props
  * @param {any[]} props.data
  * @param {any} [props.colors]

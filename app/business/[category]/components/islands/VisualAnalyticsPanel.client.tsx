@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BarChart3, PieChart, TrendingUp, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { SalesChart, RevenueBarChart, CategoryPieChart, TopProductsChart } from '@/components/AdvancedCharts';
+import {
+    SalesTrendAreaChart,
+    RevenueBarChart,
+    CategoryPieChart,
+    TopProductsChart,
+} from '@/components/AdvancedCharts';
 import { getAnalyticsBundleAction } from '@/lib/actions/premium/ai/analytics';
 import { getDomainColors } from '@/lib/domainColors';
 import { resolveOperationsProfile } from '@/lib/dashboard/domainOperationsIntelligence';
@@ -26,35 +31,68 @@ function buildDateFilter(dateRange?: { from: Date; to: Date }) {
     return { from, to };
 }
 
+const CHART_ACCENTS = {
+    emerald: {
+        shell: 'border-emerald-200/60 bg-gradient-to-br from-emerald-50/40 via-white to-white',
+        icon: 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30',
+    },
+    violet: {
+        shell: 'border-violet-200/60 bg-gradient-to-br from-violet-50/40 via-white to-white',
+        icon: 'bg-gradient-to-br from-violet-500 to-purple-600 shadow-violet-500/30',
+    },
+    amber: {
+        shell: 'border-amber-200/60 bg-gradient-to-br from-amber-50/40 via-white to-white',
+        icon: 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-amber-500/30',
+    },
+    cyan: {
+        shell: 'border-cyan-200/60 bg-gradient-to-br from-cyan-50/40 via-white to-white',
+        icon: 'bg-gradient-to-br from-cyan-500 to-blue-600 shadow-cyan-500/30',
+    },
+} as const;
+
 function ChartShell({
     title,
     description,
     icon: Icon,
-    iconTone,
+    accent = 'emerald',
     children,
     className,
+    chartHeight = 'h-[220px]',
 }: {
     title: string;
     description: string;
     icon: React.ElementType;
-    iconTone: string;
+    accent?: keyof typeof CHART_ACCENTS;
     children: React.ReactNode;
     className?: string;
+    chartHeight?: string;
 }) {
+    const tone = CHART_ACCENTS[accent];
     return (
-        <Card className={cn('border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/60 shadow-sm overflow-hidden', className)}>
-            <CardHeader className="pb-2 pt-3 px-4 border-b border-slate-100/80 bg-white/60">
+        <Card
+            className={cn(
+                'overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 backdrop-blur-sm',
+                tone.shell,
+                className
+            )}
+        >
+            <CardHeader className="pb-2 pt-3.5 px-4 border-b border-white/80 bg-white/50">
                 <div className="flex items-start gap-2.5">
-                    <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm', iconTone)}>
+                    <div
+                        className={cn(
+                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-md ring-2 ring-white/80',
+                            tone.icon
+                        )}
+                    >
                         <Icon className="h-4 w-4 text-white" />
                     </div>
                     <div className="min-w-0">
-                        <CardTitle className="text-xs font-semibold text-slate-900">{title}</CardTitle>
-                        <CardDescription className="text-[10px] mt-0.5">{description}</CardDescription>
+                        <CardTitle className="text-sm font-bold text-slate-900 tracking-tight">{title}</CardTitle>
+                        <CardDescription className="text-[11px] mt-0.5 text-slate-500">{description}</CardDescription>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="p-3 h-[220px]">{children}</CardContent>
+            <CardContent className={cn('p-3 pt-4', chartHeight)}>{children}</CardContent>
         </Card>
     );
 }
@@ -106,8 +144,9 @@ export function VisualAnalyticsPanel({
     if (loading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-pulse">
-                {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-[280px] rounded-xl bg-slate-100" />
+                <div className="md:col-span-2 h-[300px] rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50" />
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-[280px] rounded-2xl bg-slate-100" />
                 ))}
             </div>
         );
@@ -120,35 +159,42 @@ export function VisualAnalyticsPanel({
 
     if (!hasData) {
         return (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-10 text-center">
-                <BarChart3 className="mx-auto h-9 w-9 text-slate-300 mb-3" />
-                <p className="text-sm font-semibold text-slate-700">Visual studio needs more transaction history</p>
-                <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">{copy.emptyHint}</p>
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-gradient-to-br from-slate-50 to-white px-6 py-12 text-center">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-cyan-100">
+                    <BarChart3 className="h-7 w-7 text-violet-500" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">Visual studio needs more transaction history</p>
+                <p className="text-xs text-slate-500 mt-1.5 max-w-md mx-auto leading-relaxed">{copy.emptyHint}</p>
             </div>
         );
     }
 
     return (
         <div className="space-y-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 px-0.5">
-                {copy.studioSubtitle}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-0.5 px-0.5">
+                <p className="text-xs font-bold text-slate-800">{copy.studioSubtitle}</p>
+                <p className="text-[10px] text-slate-500">Modern chart grid — revenue, mix, and top performers for this period.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
                 <ChartShell
                     title={copy.revenueTitle}
                     description={copy.revenueDesc}
                     icon={TrendingUp}
-                    iconTone="bg-emerald-500"
-                    className="md:col-span-2"
+                    accent="emerald"
+                    className="lg:col-span-8"
+                    chartHeight="h-[260px]"
                 >
-                    <SalesChart data={salesData} colors={colors} currency={currency} />
+                    <SalesTrendAreaChart data={salesData} colors={colors} currency={currency} />
                 </ChartShell>
 
                 <ChartShell
                     title={copy.categoryTitle}
                     description={copy.categoryDesc}
                     icon={PieChart}
-                    iconTone="bg-violet-500"
+                    accent="violet"
+                    className="lg:col-span-4"
+                    chartHeight="h-[260px]"
                 >
                     <CategoryPieChart data={categoryData} colors={colors} />
                 </ChartShell>
@@ -157,7 +203,8 @@ export function VisualAnalyticsPanel({
                     title={copy.topTitle}
                     description={copy.topDesc}
                     icon={Package}
-                    iconTone="bg-amber-500"
+                    accent="amber"
+                    className="lg:col-span-5"
                 >
                     <TopProductsChart data={topProducts} colors={colors} currency={currency} />
                 </ChartShell>
@@ -166,8 +213,8 @@ export function VisualAnalyticsPanel({
                     title={copy.barTitle}
                     description={copy.barDesc}
                     icon={BarChart3}
-                    iconTone="bg-cyan-600"
-                    className="md:col-span-2"
+                    accent="cyan"
+                    className="lg:col-span-7"
                 >
                     <RevenueBarChart data={salesData} colors={colors} currency={currency} />
                 </ChartShell>

@@ -29,6 +29,7 @@ import { DashboardMobileHub } from '@/components/dashboard/mobile/DashboardMobil
 import { EasyBusinessDashboard } from '@/components/dashboard/easy/EasyBusinessDashboard';
 import { DomainOperationsPanel } from '@/components/dashboard/easy/DomainOperationsPanel';
 import { resolveProductStock } from '@/lib/dashboard/easyDashboardHelpers';
+import type { KpiTheme } from '@/lib/dashboard/kpiThemes';
 
 // ===============================================================
 // TYPES & INTERFACES
@@ -133,7 +134,8 @@ interface MetricCardProps {
     trend?: number;
     trendHint?: string;
     icon: React.ElementType;
-    colorClass: string;
+    colorClass?: string;
+    theme?: KpiTheme;
     className?: string;
     sparkline?: number[];
     invertTrendColor?: boolean;
@@ -668,7 +670,7 @@ export function DomainDashboard({
                 subValue: periodLabel,
                 trend: Number(ordersTrend.toFixed(1)),
                 icon: ShoppingCart,
-                colorClass: 'bg-cyan-500',
+                theme: 'cyan' as const,
                 sparkline: orderSeries.length >= 2 ? orderSeries : undefined,
             },
             {
@@ -677,7 +679,7 @@ export function DomainDashboard({
                 subValue: periodLabel,
                 trend: Number(revenueTrendSigned.toFixed(1)),
                 icon: BadgeDollarSign,
-                colorClass: 'bg-emerald-500',
+                theme: 'emerald' as const,
                 sparkline: revenueSeries.length >= 2 ? revenueSeries : undefined,
             },
             {
@@ -686,7 +688,7 @@ export function DomainDashboard({
                 subValue: 'Stock at cost / GL',
                 trend: undefined,
                 icon: Boxes,
-                colorClass: 'bg-brand-primary-dark',
+                theme: 'violet' as const,
             },
             {
                 label: 'Overdue',
@@ -697,7 +699,7 @@ export function DomainDashboard({
                     ? `${remindersData.overdueInvoices} invoice${remindersData.overdueInvoices > 1 ? 's' : ''} past due`
                     : undefined,
                 icon: Clock,
-                colorClass: 'bg-rose-500',
+                theme: 'rose' as const,
             },
         ];
     }, [
@@ -1089,6 +1091,7 @@ export function DomainDashboard({
                             trend={item.trend}
                             trendHint={item.trendHint}
                             icon={item.icon}
+                            theme={item.theme}
                             colorClass={item.colorClass}
                             sparkline={item.sparkline}
                             invertTrendColor={item.invertTrendColor}

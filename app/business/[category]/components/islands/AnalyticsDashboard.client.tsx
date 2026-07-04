@@ -111,7 +111,7 @@ export function AnalyticsDashboard({
     );
 
     const hasTrendData = chartData && chartData.length > 0;
-    const [activeTab, setActiveTab] = useState(hasTrendData ? 'visual' : 'studio');
+    const [activeTab, setActiveTab] = useState('studio');
 
     return (
         <motion.div
@@ -120,8 +120,8 @@ export function AnalyticsDashboard({
             transition={{ duration: 0.4 }}
         >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <Card className="bg-white border-slate-200 shadow-sm overflow-hidden border">
-                    <CardHeader className="flex flex-col gap-3 py-3 px-4 sm:px-5 border-b bg-gradient-to-r from-slate-50/80 to-white space-y-0">
+                <Card className="overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50/20 to-white shadow-md">
+                    <CardHeader className="flex flex-col gap-3 py-3.5 px-4 sm:px-5 border-b border-slate-100 bg-gradient-to-r from-violet-50/30 via-white to-cyan-50/30 space-y-0">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div className="flex flex-col min-w-0">
                                 <CardTitle className="text-[10px] font-semibold text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -144,20 +144,20 @@ export function AnalyticsDashboard({
                             </div>
                         </div>
 
-                        <TabsList className="bg-slate-200/40 h-auto p-1 rounded-lg flex flex-wrap gap-1 w-full sm:w-auto">
-                            <TabsTrigger value="visual" className="text-[10px] px-3 h-7 uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-wine">
+                        <TabsList className="bg-slate-100/90 h-auto p-1 rounded-xl border border-slate-200/70 flex flex-wrap gap-1 w-full sm:w-auto">
+                            <TabsTrigger value="visual" className="text-[10px] px-3 h-7 rounded-lg uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-violet-700 data-[state=active]:shadow-sm">
                                 Trends
                             </TabsTrigger>
-                            <TabsTrigger value="predictive" className="text-[10px] px-3 h-7 uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-wine">
+                            <TabsTrigger value="predictive" className="text-[10px] px-3 h-7 rounded-lg uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-violet-700 data-[state=active]:shadow-sm">
                                 Projections
                             </TabsTrigger>
-                            <TabsTrigger value="studio" className="text-[10px] px-3 h-7 uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-wine">
+                            <TabsTrigger value="studio" className="text-[10px] px-3 h-7 rounded-lg uppercase font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-md">
                                 Visual Studio
                             </TabsTrigger>
-                            <TabsTrigger value="planning" className="text-[10px] px-3 h-7 uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-wine">
+                            <TabsTrigger value="planning" className="text-[10px] px-3 h-7 rounded-lg uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-violet-700 data-[state=active]:shadow-sm">
                                 AI Planning
                             </TabsTrigger>
-                            <TabsTrigger value="audit" className="text-[10px] px-3 h-7 uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-wine">
+                            <TabsTrigger value="audit" className="text-[10px] px-3 h-7 rounded-lg uppercase font-semibold data-[state=active]:bg-white data-[state=active]:text-violet-700 data-[state=active]:shadow-sm">
                                 Integrity
                             </TabsTrigger>
                         </TabsList>
