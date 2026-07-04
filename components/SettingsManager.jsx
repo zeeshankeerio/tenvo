@@ -48,6 +48,8 @@ import toast from 'react-hot-toast';
 import { getBookMeetingHref } from '@/lib/marketing/salesLinks';
 import ManualPaymentRequestPanel from '@/components/billing/ManualPaymentRequestPanel';
 import DomainPackageBillingCards from '@/components/billing/DomainPackageBillingCards';
+import { PosSettingsPanel } from '@/components/pos/PosSettingsPanel';
+import { isPosRelevant } from '@/lib/config/domains';
 
 function buildProfileFormData(b) {
   if (!b?.id) {
@@ -988,6 +990,9 @@ export function SettingsManager({ category }) {
               </div>
             </CardContent>
           </Card>
+          {isPosRelevant(category, getDomainKnowledgeForBusiness(business)) && (
+            <PosSettingsPanel category={category} />
+          )}
         </TabsContent>
 
         <TabsContent value="security" className="space-y-4 pt-4">

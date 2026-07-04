@@ -19,6 +19,7 @@ import {
   resolveSupermarketUpperPromoTiles,
   formatSupermarketStoreName,
 } from '@/lib/storefront/supermarketStorefront';
+import { SupermarketBrandsMarquee } from '@/components/storefront/sections/supermarket/SupermarketBrandsMarquee';
 
 const TRUST_ICONS = { fresh: Leaf, delivery: Truck, prices: ShieldCheck, cod: ShieldCheck, default: Clock };
 
@@ -190,20 +191,7 @@ export function SupermarketHomeSections({
             accent={accent}
             linkLabel="View more"
           />
-          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-            {brands.map((brand) => (
-              <Link
-                key={brand.id}
-                href={brand.href}
-                className="group flex w-[72px] shrink-0 flex-col items-center gap-1.5 sm:w-20"
-              >
-                <div className="relative h-[72px] w-[72px] overflow-hidden rounded-full border-2 border-white bg-white shadow-md ring-1 ring-slate-100 transition group-hover:ring-orange-200">
-                  <SmartProductImage src={brand.image} alt={brand.label} fill className="object-cover" />
-                </div>
-                <span className="line-clamp-1 text-center text-[10px] font-medium text-slate-600">{brand.label}</span>
-              </Link>
-            ))}
-          </div>
+          <SupermarketBrandsMarquee brands={brands} autoScroll={config.brandsAutoScroll !== false} />
         </section>
       )}
 
@@ -258,6 +246,7 @@ export function SupermarketHomeSections({
               cardVariant="dense"
               className="rounded-lg border border-slate-100 bg-white px-3 py-5 shadow-sm sm:px-4 sm:py-6"
               accentColor={accent}
+              autoScroll={config.homeRailsAutoScroll !== false}
             />
             {index === 1 && midTiles.length > 0 ? (
               <PromoBannerRow tiles={midTiles} />

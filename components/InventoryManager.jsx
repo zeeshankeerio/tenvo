@@ -51,7 +51,8 @@ import { InventoryCommandBar } from './inventory/InventoryCommandBar';
 import { InventoryMobileHub } from './inventory/mobile/InventoryMobileHub';
 import { ProductCardGrid } from './inventory/ProductCardGrid';
 import { getTemplatesForDomain } from '@/lib/data/productTemplates';
-import { BarcodeScanner } from './BarcodeScanner';
+import { PosCameraScanner } from '@/components/pos/shared/PosCameraScanner';
+import { useInventoryScan } from '@/lib/hooks/useInventoryScan';
 import { AdvancedInventoryFeatures } from './AdvancedInventoryFeatures';
 import { MultiLocationInventory } from './MultiLocationInventory';
 import { ManufacturingModule } from './ManufacturingModule';
@@ -822,6 +823,29 @@ export function InventoryManager({
   const isManufacturingEnabled = domainKnowledge?.manufacturingEnabled;
   const isVariantEnabled = isSizeColorMatrixEnabled(category) || Boolean(domainKnowledge?.sizeColorMatrixEnabled);
 
+  const { applyScanToInventory } = useInventoryScan({
+    products,
+    businessId,
+    isSerialEnabled,
+  });
+
+  const handleInventoryBarcodeScan = useCallback(async (code) => {
+    await applyScanToInventory(code, {
+      setActiveTab,
+      setSearchTerm,
+      setProductToView,
+      setSelectedProduct,
+      setShowSerialScanner,
+    });
+  }, [
+    applyScanToInventory,
+    setActiveTab,
+    setSearchTerm,
+    setProductToView,
+    setSelectedProduct,
+    setShowSerialScanner,
+  ]);
+
   const countryIso = regionalPack?.countryIso || standards.countryCode || 'PK';
 
   const getFieldSuggestions = useCallback(
@@ -1423,7 +1447,7 @@ export function InventoryManager({
 
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 touch-manipulation">
       <div className="hidden lg:block">
         <InventoryCommandBar
           activeTab={activeTab}
@@ -1595,11 +1619,13 @@ export function InventoryManager({
 
           {/* Search and Filters */}
           <AdvancedSearch
+            searchValue={searchTerm}
+            onScanClick={() => setShowBarcodeScanner(true)}
             onSearch={(term, domainFilters) => {
               setSearchTerm(term || '');
               setActiveDomainFilters(domainFilters);
             }}
-            placeholder="Search products by name or SKU..."
+            placeholder="Search by name, SKU, or barcode..."
             category={category}
             hideSearch={false}
             filters={[
@@ -1626,7 +1652,7 @@ export function InventoryManager({
           {/* Data Table or Busy Grid - Premium Container */}
           <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm lg:rounded-[32px]">
             {/* Mobile: card grid (Busy mode not suited for small screens) */}
-            <div className="p-3 lg:hidden">
+            <div className="p-3 pb-[env(safe-area-inset-bottom)] lg:hidden">
               <ProductCardGrid
                 products={productsToDisplay}
                 currencySymbol={standards.currencySymbol}
@@ -2457,16 +2483,13 @@ export function InventoryManager({
         />
       )}
 
-      {/* Barcode Scanner Modal */}
-      {showBarcodeScanner && (
-        <BarcodeScanner
-          onScan={(barcode) => {
-            toast.success(`Scanned: ${barcode}`);
-            setShowBarcodeScanner(false);
-          }}
-          onClose={() => setShowBarcodeScanner(false)}
-        />
-      )}
+      <PosCameraScanner
+        open={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onScan={handleInventoryBarcodeScan}
+        title="Scan inventory item"
+        hint="QR, EAN, UPC, Code 128 · finds product by barcode or SKU"
+      />
 
       {/* Batch Manager Dialog */}
       <Dialog open={showBatchManager} onOpenChange={setShowBatchManager}>

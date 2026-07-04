@@ -19,6 +19,7 @@ import { isFurnitureElevatedStore, formatFurnitureStoreName, getFurnitureHeroSli
 import { isRestaurantElevatedStore, formatRestaurantStoreName, getRestaurantHeroSlides, resolveRestaurantQuickSearchTerms } from '@/lib/storefront/restaurantStorefront';
 import { isFitnessElevatedStore, formatFitnessStoreName, getFitnessHeroSlides, resolveFitnessHeroQuickLinks, resolveFitnessShowcaseProducts } from '@/lib/storefront/fitnessStorefront';
 import { resolveSupermarketShowcaseProducts } from '@/lib/dataLab/supermarketSeedHelpers';
+import { resolveRestaurantShowcaseProducts } from '@/lib/dataLab/restaurantSeedHelpers';
 import {
   isSupermarketElevatedStore,
   formatSupermarketStoreName,
@@ -316,9 +317,13 @@ export default async function StoreHomePage({ params }) {
     ? furnitureCatalogResult.products
     : buildTopPicksProducts(featuredProducts, popularityBackfill, 48);
 
-  const restaurantProducts = restaurantCatalogResult.success
-    ? restaurantCatalogResult.products
-    : buildTopPicksProducts(featuredProducts, popularityBackfill, 48);
+  const restaurantProducts = resolveRestaurantShowcaseProducts(
+    restaurantCatalogResult.success
+      ? restaurantCatalogResult.products
+      : buildTopPicksProducts(featuredProducts, popularityBackfill, 48),
+    businessDomain,
+    business.category
+  );
 
   const fitnessProducts = resolveFitnessShowcaseProducts(
     fitnessCatalogResult.success
@@ -723,11 +728,13 @@ export default async function StoreHomePage({ params }) {
           businessCategory={business.category}
           categories={categories}
           products={restaurantProducts}
+          currency={storeCurrency}
           accent={accent}
           base={heroPreset.base}
           settings={settings}
           storeName={restaurantStoreName}
           businessDescription={business.description || settings?.description}
+          freeShippingThreshold={freeShippingThreshold}
         />
       )}
 
@@ -918,7 +925,7 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {/* ── Fallback primary grid when no featured flag ──────────────────── */}
-      {featuredRow.length === 0 && newArrivalsRaw.length > 0 && (
+      {featuredRow.length === 0 && newArrivalsRaw.length > 0 && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && !supermarketElevatedHero && !autoPartsHero && (
         <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 sm:py-10">
           <StoreSectionHeader
             title={copy.shopAllTitle}

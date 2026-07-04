@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   Search, MapPin, ChevronRight, ShoppingBag, LayoutGrid, Truck, X,
 } from 'lucide-react';
@@ -32,6 +32,7 @@ export function SupermarketSiteHeader({ business, settings }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const { isSearchOpen, openSearch, closeSearch, openSidebar } = useSupermarketChrome();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { businessDomain, currency, categories } = useStorefront();
   const { cart } = useCart();
   const cartItemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
@@ -49,6 +50,18 @@ export function SupermarketSiteHeader({ business, settings }) {
   const promoStripLabel = config.promoStripLabel;
   const subNavLinks = resolveSupermarketSubNav(settings, storeRoot, { categories });
   const isHome = pathname === storeRoot || pathname === `${storeRoot}/`;
+
+  const isNavLinkActive = (href) => {
+    if (!href) return false;
+    const [path, query = ''] = String(href).split('?');
+    if (pathname !== path) return false;
+    if (!query) return pathname === storeRoot ? href === storeRoot || href === `${storeRoot}/` : true;
+    const expected = new URLSearchParams(query);
+    for (const [key, value] of expected.entries()) {
+      if (searchParams.get(key) !== value) return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 6);
@@ -205,8 +218,7 @@ export function SupermarketSiteHeader({ business, settings }) {
               Home
             </Link>
             {subNavLinks.map((link) => {
-              const active = pathname.includes(link.href?.split('?')[0] || '')
-                && (link.href?.includes('?') ? pathname.includes(link.href.split('?')[1]?.slice(0, 8) || '') : true);
+              const active = isNavLinkActive(link.href);
               return (
                 <Link
                   key={link.id}

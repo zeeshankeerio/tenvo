@@ -109,10 +109,10 @@ export function InventoryMobileHub({
       {/* Mini KPI scroll */}
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 scrollbar-none">
         {[
-          { label: 'Products', value: stats.totalProducts ?? ', ' },
-          { label: 'Alerts', value: stats.lowStock ?? ', ', alert: (stats.lowStock ?? 0) > 0 },
-          { label: 'Value', value: stats.inventoryValue ?? ', ' },
-          { label: 'Class', value: stats.efficiencyClass ?? ', ' },
+          { label: 'Products', value: stats.totalProducts ?? 0 },
+          { label: 'Alerts', value: stats.lowStock ?? 0, alert: (stats.lowStock ?? 0) > 0 },
+          { label: 'Value', value: stats.inventoryValue ?? '—' },
+          { label: 'Class', value: stats.efficiencyClass ?? '—' },
         ].map((kpi) => (
           <div
             key={kpi.label}
@@ -150,7 +150,7 @@ export function InventoryMobileHub({
           <p className="mb-2 px-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Quick actions</p>
           <div className="grid grid-cols-3 gap-2">
             <MobileHubTile icon={BrainCircuit} label="AI Add" sublabel="Smart entry" tone="primary" onClick={onAiSmartAdd} />
-            <MobileHubTile icon={ScanBarcode} label="Scan" sublabel="Barcode" tone="accent" onClick={onScanBarcode} />
+            <MobileHubTile icon={ScanBarcode} label="Scan" sublabel="Camera & QR" tone="accent" onClick={onScanBarcode} />
             <MobileHubTile icon={Table2} label="Excel" sublabel="Bulk grid" onClick={onExcelMode} />
             <MobileHubTile icon={Upload} label="Import" sublabel="From file" onClick={onImport} />
             <MobileHubTile icon={Download} label="Export" sublabel="Download" onClick={onExport} />

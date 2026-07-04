@@ -10,6 +10,9 @@ import {
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
 import { getTablesAction, createRestaurantOrderAction, updateTableStatusAction, settleRestaurantOrderAction } from '@/lib/actions/standard/restaurant';
+import { usePosSettings } from '@/lib/hooks/usePosSettings';
+import { PosMobileCheckoutBar } from '@/components/pos/shared/PosMobileCheckoutBar';
+import { getPosShellHeightClass } from '@/lib/utils/posLayout';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 
@@ -155,9 +158,11 @@ function OrderItemRow({ item, onQty, onRemove, currency }) {
 // MAIN RESTAURANT POS
 // ===============================================================
 
-export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrderComplete, onOrderSent, currency = 'Rs.', taxConfig }) {
+export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrderComplete, onOrderSent, currency = 'Rs.', taxConfig, session }) {
     const { business } = useBusiness();
     const effectiveBusinessId = businessId || business?.id;
+    const posSettings = usePosSettings();
+    const [mobilePane, setMobilePane] = useState('menu');
 
     // State
     const [orderType, setOrderType] = useState('dine-in');
@@ -330,6 +335,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                 orderId: currentOrderId,
                 paymentMethod,
                 amount: total,
+                sessionId: posSettings.syncRestaurantToPos && session?.id ? session.id : null,
             });
 
             if (result.success) {
@@ -369,12 +375,13 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
         <div
             ref={containerRef}
             className={cn(
-                "flex bg-gray-50 overflow-hidden border border-gray-200 transition-all",
-                isFullscreen ? "h-screen w-screen rounded-0 border-0" : "h-[calc(100vh-120px)] rounded-2xl"
+                'flex flex-col lg:flex-row bg-gray-50 overflow-hidden border border-gray-200 transition-all min-h-0 touch-manipulation',
+                getPosShellHeightClass(isFullscreen, 'terminal'),
+                isFullscreen ? 'fixed inset-0 z-[100] rounded-none border-0' : 'rounded-xl shadow-sm'
             )}
         >
-            {/* --- Left Panel: Table & Menu ------------------------------- */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Menu / tables — hidden on mobile when viewing cart */}
+            <div className={cn('flex-1 flex flex-col overflow-hidden min-h-0', mobilePane === 'cart' && 'hidden lg:flex')}>
                 {/* Order Type + Table Selection */}
                 <div className="p-4 bg-white border-b border-gray-100 space-y-3">
                     <div className="flex items-center justify-between">
@@ -525,35 +532,60 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                 </div>
             </div>
 
-            {/* --- Right Panel: Order Cart -------------------------------- */}
-            <div className="w-[360px] bg-white border-l border-gray-200 flex flex-col">
+            {mobilePane === 'menu' && (
+                <div className="lg:hidden shrink-0">
+                    <PosMobileCheckoutBar
+                        itemCount={orderItems.reduce((s, i) => s + i.quantity, 0)}
+                        total={total}
+                        currency={currency}
+                        onOpenCheckout={() => setMobilePane('cart')}
+                        emptyHint="Add menu items to start an order"
+                    />
+                </div>
+            )}
+
+            {/* Order cart — desktop sidebar / mobile full pane */}
+            <div className={cn(
+                'bg-white border-l border-gray-200 flex flex-col min-h-0',
+                'lg:w-[360px] lg:flex',
+                mobilePane === 'cart' ? 'flex flex-1' : 'hidden lg:flex'
+            )}>
                 {/* Order Header */}
                 <div className="p-4 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-sm font-semibold text-gray-900">Current Order</h3>
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <button type="button" className="lg:hidden p-2 -ml-1 rounded-lg hover:bg-gray-100 touch-manipulation" onClick={() => setMobilePane('menu')} aria-label="Back to menu">
+                                <ArrowLeft className="w-4 h-4" />
+                            </button>
+                            <div className="min-w-0">
+                                <h3 className="text-sm font-semibold text-gray-900">Current Order</h3>
                             <p className="text-[10px] text-gray-400 mt-0.5">
-                                {orderType === 'dine-in' && selectedTable ? `Table ${selectedTable.table_number || selectedTable.name} * ${covers} covers` :
+                                {orderType === 'dine-in' && selectedTable ? `Table ${selectedTable.table_number || selectedTable.name} · ${covers} covers` :
                                     orderType === 'takeaway' ? 'Takeaway Order' : 'Delivery Order'}
                             </p>
+                            </div>
                         </div>
-                        {orderItems.length > 0 && (
-                            <button
-                                onClick={() => setOrderItems([])}
-                                className="text-[10px] text-red-400 font-bold hover:text-red-600"
+                        <div className="flex items-center gap-1 shrink-0">
+                            {orderItems.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setOrderItems([])}
+                                    className="text-[10px] text-red-400 font-bold hover:text-red-600 px-2 py-1 touch-manipulation"
+                                >
+                                    Clear
+                                </button>
+                            )}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={toggleFullscreen}
+                                className="h-9 w-9 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 touch-manipulation"
+                                aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
                             >
-                                Clear All
-                            </button>
-                        )}
+                                {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                            </Button>
+                        </div>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleFullscreen}
-                        className="absolute top-2 right-2 h-8 w-8 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 z-20"
-                    >
-                        {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-                    </Button>
                 </div>
 
                 {/* Order Items */}

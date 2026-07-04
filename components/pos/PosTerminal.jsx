@@ -6,7 +6,7 @@ import {
     Search, Barcode, ShoppingCart, Plus, Minus, Trash2, X, CreditCard,
     Banknote, Smartphone, SplitSquareHorizontal, User, Clock, Hash,
     Receipt, CheckCircle2, ChevronDown, RotateCcw, Percent,
-    Calculator, Keyboard, ScanLine, Package, ArrowLeft, Maximize, Minimize, Printer, FileDown,
+    Calculator, Keyboard, ScanLine, Package, ArrowLeft, Maximize, Minimize, Printer, FileDown, Camera,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,10 +26,21 @@ import { useBusiness } from '@/lib/context/BusinessContext';
 import {
     buildPosCheckoutPayload,
     buildPosCategoryChips,
+    computePosOrderTotals,
     findProductByScanCode,
     getPosUiConfig,
     getProductAvailableStock,
 } from '@/lib/utils/posHelpers';
+import { PosCloseShiftDialog } from '@/components/pos/shared/PosCloseShiftDialog';
+import { PosSplitPaymentDialog } from '@/components/pos/shared/PosSplitPaymentDialog';
+import { PosCameraScanner } from '@/components/pos/shared/PosCameraScanner';
+import { PosPharmacyBatchDialog } from '@/components/pos/shared/PosPharmacyBatchDialog';
+import { PosOfflineBanner } from '@/components/pos/shared/PosOfflineBanner';
+import { PosMobileCheckoutBar } from '@/components/pos/shared/PosMobileCheckoutBar';
+import { usePosSettings } from '@/lib/hooks/usePosSettings';
+import { usePosOffline } from '@/lib/hooks/usePosOffline';
+import { usePosProductAdd } from '@/lib/hooks/usePosProductAdd';
+import { getPosDomainFlags, normalizePosCategoryKey } from '@/lib/config/posDomains';
 import { usePosFullscreen } from '@/lib/hooks/usePosFullscreen';
 import { usePosReceipt } from '@/lib/hooks/usePosReceipt';
 import {
@@ -46,8 +57,8 @@ import toast from 'react-hot-toast';
 
 function PosProductGrid({
     products, categories, activeCategory, onCategoryChange, onAddToCart,
-    searchTerm, onSearchChange, onBarcodeScan, currency = '₨', taxLabel = 'Tax',
-    barcodeFirst = false, businessCategory,
+    searchTerm, onSearchChange, onBarcodeScan, onOpenCamera, currency = '₨', taxLabel = 'Tax',
+    barcodeFirst = false, businessCategory, showCameraButton = true,
 }) {
     const searchInputRef = useRef(null);
     const [isScanning, setIsScanning] = useState(false);
@@ -95,7 +106,10 @@ function PosProductGrid({
     const filtered = useMemo(() => {
         let items = products || [];
         if (activeCategory && activeCategory !== 'all') {
-            items = items.filter(p => (p.category || '').toLowerCase() === activeCategory.toLowerCase());
+            const catKey = normalizePosCategoryKey(activeCategory);
+            items = items.filter(
+                (p) => normalizePosCategoryKey(p.category || 'other') === catKey
+            );
         }
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
@@ -166,16 +180,17 @@ function PosProductGrid({
                                 className={cn(
                                     toolbarControlClass,
                                     'h-10 w-10 shrink-0 p-0 shadow-none',
-                                    isScanning && 'animate-pulse border-blue-500 text-blue-500 bg-blue-50'
+                                    onOpenCamera && 'border-emerald-200 text-emerald-700',
+                                    isScanning && 'animate-pulse border-emerald-500 text-emerald-600 bg-emerald-50'
                                 )}
-                                onClick={handleBarcodeClick}
-                                aria-label="Scan barcode"
+                                onClick={() => (onOpenCamera ? onOpenCamera() : handleBarcodeClick())}
+                                aria-label={onOpenCamera ? 'Open camera scanner' : 'Focus scan field'}
                             >
-                                <ScanLine className="w-4 h-4" />
+                                {onOpenCamera ? <Camera className="w-4 h-4" /> : <ScanLine className="w-4 h-4" />}
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="bottom">
-                            <p>Scan barcode (type code and press Enter)</p>
+                            <p>{onOpenCamera ? 'Camera scan (QR & barcodes)' : 'USB scanner / type & Enter'}</p>
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
@@ -579,6 +594,7 @@ export function PosTerminal({
     products = [],
     customers = [],
     onStartSession,
+    onCloseSession,
     onCompleteSale,
     currency = '₨',
     session,
@@ -599,6 +615,16 @@ export function PosTerminal({
     const [discount, setDiscount] = useState(0);
     const [discountType, setDiscountType] = useState('fixed'); // 'fixed' or 'percentage'
     const [paymentMethod, setPaymentMethod] = useState('cash');
+    const [splitPayments, setSplitPayments] = useState(null);
+    const [showSplitDialog, setShowSplitDialog] = useState(false);
+    const [showCloseShiftDialog, setShowCloseShiftDialog] = useState(false);
+    const [showCameraScanner, setShowCameraScanner] = useState(false);
+    const [pharmacyProduct, setPharmacyProduct] = useState(null);
+    const posSettings = usePosSettings();
+    const domainFlags = useMemo(() => getPosDomainFlags(category), [category]);
+    const { isOnline, pendingCount, isSyncing, queueSale, syncPending } = usePosOffline(businessId, {
+        enabled: posSettings.offlineModeEnabled,
+    });
     const [isProcessing, setIsProcessing] = useState(false);
     const [isStartingSession, setIsStartingSession] = useState(false);
     const [mobilePane, setMobilePane] = useState('browse');
@@ -623,41 +649,6 @@ export function PosTerminal({
         currencyCode,
     });
 
-    // Global keyboard shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            // Ctrl/Cmd + F - Focus search
-            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                e.preventDefault();
-                searchInputRef.current?.focus();
-            }
-            
-            // Enter to complete sale when cart has items
-            if (e.key === 'Enter' && cart.length > 0 && !isProcessing && !showCustomerDialog) {
-                // Check if not in an input field
-                if (e.target.tagName !== 'INPUT') {
-                    e.preventDefault();
-                    handleCompleteSale();
-                }
-            }
-            
-            // F11, fullscreen POS
-            if (e.key === 'F11') {
-                e.preventDefault();
-                toggleFullscreen();
-            }
-
-            // Escape to clear search
-            if (e.key === 'Escape' && searchTerm) {
-                setSearchTerm('');
-                searchInputRef.current?.focus();
-            }
-        };
-        
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cart.length, isProcessing, searchTerm, showCustomerDialog, toggleFullscreen]);
-
     const hasSession = Boolean(
         session?.id
         && session?.id !== 'sess-initial'
@@ -668,6 +659,18 @@ export function PosTerminal({
         ? new Date(sessionStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : null;
     const terminalLabel = session?.terminalName || session?.terminal_name || posUi.terminalLabel;
+
+    const { tryAddProduct, handleScanCode } = usePosProductAdd({
+        category,
+        posSettings,
+        effectiveTaxRate: posUi.defaultTaxRate,
+        setCart,
+        setPharmacyProduct,
+        onAdded: () => setSearchTerm(''),
+    });
+
+    const showCamera = posSettings.barcodeMode === 'camera'
+        || posSettings.barcodeMode === 'auto';
 
     const categories = useMemo(
         () => buildPosCategoryChips(products, posUi.defaultCategories, posUi.maxCategoryChips),
@@ -736,41 +739,11 @@ export function PosTerminal({
         }
     }, [onStartSession, isStartingSession]);
 
-    const addToCart = useCallback((product) => {
-        const stock = getProductAvailableStock(product);
-        if (stock <= 0) {
-            toast.error(`${product.name} is out of stock`, { id: 'pos-stock' });
-            return;
-        }
-        setCart((prev) => {
-            const existing = prev.findIndex((i) => i.productId === product.id);
-            if (existing >= 0) {
-                const nextQty = prev[existing].quantity + 1;
-                if (nextQty > stock) {
-                    toast.error(`Only ${stock} in stock for ${product.name}`, { id: 'pos-stock' });
-                    return prev;
-                }
-                const updated = [...prev];
-                updated[existing] = { ...updated[existing], quantity: nextQty };
-                return updated;
-            }
-            const defaultTax = Number(product.tax_percent);
-            const taxPercent = Number.isFinite(defaultTax) && defaultTax >= 0
-                ? defaultTax
-                : posUi.defaultTaxRate;
-            return [...prev, {
-                productId: product.id,
-                name: product.name,
-                sku: product.sku,
-                imageUrl: getEffectiveProductImageUrl(product, category),
-                unitPrice: parseFloat(product.selling_price || product.price || 0),
-                taxPercent,
-                quantity: 1,
-                maxStock: stock,
-            }];
-        });
-        setSearchTerm('');
-    }, [posUi.defaultTaxRate, category]);
+    const addToCart = tryAddProduct;
+
+    const handleBarcodeFromCamera = useCallback((code) => {
+        handleScanCode(products, code, { clearSearch: () => setSearchTerm('') });
+    }, [handleScanCode, products]);
 
     const handleQuantityChange = useCallback((idx, qty) => {
         setCart((prev) => prev.map((item, i) => {
@@ -790,6 +763,15 @@ export function PosTerminal({
         setCart(prev => prev.filter((_, i) => i !== idx));
     }, []);
 
+    const handlePaymentMethodSelect = useCallback((method) => {
+        if (method === 'split') {
+            setShowSplitDialog(true);
+            return;
+        }
+        setSplitPayments(null);
+        setPaymentMethod(method);
+    }, []);
+
     const handleCompleteSale = useCallback(async () => {
         if (cart.length === 0 || isProcessing) return;
         setIsProcessing(true);
@@ -798,11 +780,28 @@ export function PosTerminal({
                 businessId,
                 sessionId: session?.id,
                 customerId: customer?.id || null,
-                cart,
+                cart: cart.map((i) => ({
+                    ...i,
+                    batchId: i.batchId || null,
+                })),
                 discount,
                 discountType,
-                paymentMethod,
+                paymentMethod: splitPayments?.length ? 'split' : paymentMethod,
+                payments: splitPayments || undefined,
             });
+
+            if (!isOnline && posSettings.offlineModeEnabled) {
+                await queueSale(payload);
+                toast.success('Sale queued offline', { id: 'pos-offline' });
+                setCart([]);
+                setCustomer(null);
+                setDiscount(0);
+                setDiscountType('fixed');
+                setSplitPayments(null);
+                setPaymentMethod('cash');
+                setMobilePane('browse');
+                return;
+            }
 
             const result = await onCompleteSale?.(payload);
 
@@ -819,6 +818,8 @@ export function PosTerminal({
                 setCustomer(null);
                 setDiscount(0);
                 setDiscountType('fixed');
+                setSplitPayments(null);
+                setPaymentMethod('cash');
                 setMobilePane('browse');
             } else if (result?.error) {
                 toast.error(formatSaleError(result), { id: 'pos-sale-error' });
@@ -829,7 +830,32 @@ export function PosTerminal({
         } finally {
             setIsProcessing(false);
         }
-    }, [cart, businessId, session, customer, discount, discountType, paymentMethod, isProcessing, onCompleteSale, hasSession, recordSuccessfulSale, formatSaleError]);
+    }, [cart, businessId, session, customer, discount, discountType, paymentMethod, splitPayments, isProcessing, onCompleteSale, hasSession, recordSuccessfulSale, formatSaleError, isOnline, posSettings.offlineModeEnabled, queueSale]);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+            }
+            if (e.key === 'Enter' && cart.length > 0 && !isProcessing && !showCustomerDialog) {
+                if (e.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    handleCompleteSale();
+                }
+            }
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+            if (e.key === 'Escape' && searchTerm) {
+                setSearchTerm('');
+                searchInputRef.current?.focus();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [cart.length, isProcessing, searchTerm, showCustomerDialog, toggleFullscreen, handleCompleteSale]);
 
     const cartPanelProps = {
         items: cart,
@@ -842,7 +868,7 @@ export function PosTerminal({
         discountType,
         onDiscountChange: setDiscount,
         onDiscountTypeChange: setDiscountType,
-        onPaymentMethodSelect: setPaymentMethod,
+        onPaymentMethodSelect: handlePaymentMethodSelect,
         onCompleteSale: handleCompleteSale,
         isProcessing,
         currency: displayCurrency,
@@ -869,7 +895,7 @@ export function PosTerminal({
                         ? `Session · ${terminalLabel}${sessionStartedLabel ? ` · ${sessionStartedLabel}` : ''}`
                         : 'No session'}
                 </span>
-                {!hasSession && (
+                {!hasSession ? (
                     <Button
                         size="sm"
                         variant="outline"
@@ -879,7 +905,16 @@ export function PosTerminal({
                     >
                         {isStartingSession ? '…' : 'Start'}
                     </Button>
-                )}
+                ) : onCloseSession ? (
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[10px] flex-shrink-0 ml-auto sm:ml-0 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        onClick={() => setShowCloseShiftDialog(true)}
+                    >
+                        Close Shift
+                    </Button>
+                ) : null}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0 self-end sm:self-auto">
                 <span className="text-[10px] font-semibold text-gray-500 mr-1 hidden md:inline tabular-nums">
@@ -932,12 +967,19 @@ export function PosTerminal({
         <div
             ref={containerRef}
             className={cn(
-                'flex flex-col min-h-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm',
+                'flex flex-col min-h-0 overflow-hidden bg-gray-50 border border-gray-200 touch-manipulation',
                 getPosShellHeightClass(isFullscreen, 'terminal'),
-                isFullscreen && 'fixed inset-0 z-[100] rounded-none border-0 shadow-none'
+                isFullscreen ? 'fixed inset-0 z-[100] rounded-none border-0 shadow-none' : 'rounded-xl shadow-sm'
             )}
         >
             {posShellHeader}
+            <PosOfflineBanner
+                isOnline={isOnline}
+                pendingCount={pendingCount}
+                isSyncing={isSyncing}
+                onSync={syncPending}
+                className="mx-2 mt-1 lg:mx-3"
+            />
             {/* Desktop, one-page split */}
             <div className="hidden lg:flex flex-1 min-h-0 overflow-hidden">
                 <section className="flex-1 min-w-0 flex flex-col min-h-0 bg-white border-r border-gray-100">
@@ -953,6 +995,7 @@ export function PosTerminal({
                         taxLabel={posUi.taxLabel}
                         barcodeFirst={posUi.barcodeFirst}
                         businessCategory={category}
+                        onOpenCamera={showCamera ? () => setShowCameraScanner(true) : undefined}
                     />
                 </section>
                 <aside className="w-[min(100%,380px)] xl:w-[420px] shrink-0 flex flex-col min-h-0 bg-slate-900">
@@ -977,29 +1020,21 @@ export function PosTerminal({
                                 taxLabel={posUi.taxLabel}
                                 barcodeFirst={posUi.barcodeFirst}
                                 businessCategory={category}
+                                onOpenCamera={showCamera ? () => setShowCameraScanner(true) : undefined}
                             />
                         </div>
                         {cart.length > 0 ? (
-                            <footer className={cn(POS_SHELL_FOOTER, 'shrink-0 flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 text-white border-slate-700')}>
-                                <button
-                                    type="button"
-                                    onClick={() => setMobilePane('checkout')}
-                                    className="flex items-center justify-between gap-3 w-full active:opacity-90"
-                                >
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-primary text-xs font-semibold">
-                                            {cartSummary.itemCount}
-                                        </span>
-                                        <span className="text-sm font-semibold truncate">View cart & pay</span>
-                                    </div>
-                                    <span className="text-base font-semibold text-brand-primary flex-shrink-0 tabular-nums">
-                                        {displayCurrency}{cartSummary.total.toLocaleString()}
-                                    </span>
-                                </button>
+                            <footer className={cn(POS_SHELL_FOOTER, 'shrink-0 lg:hidden')}>
+                                <PosMobileCheckoutBar
+                                    itemCount={cartSummary.itemCount}
+                                    total={cartSummary.total}
+                                    currency={displayCurrency}
+                                    onOpenCheckout={() => setMobilePane('checkout')}
+                                />
                             </footer>
                         ) : (
-                            <footer className="shrink-0 px-4 py-2.5 text-center text-[11px] text-gray-400 border-t bg-white">
-                                Tap a product to add to cart
+                            <footer className="shrink-0 px-4 py-2.5 text-center text-[11px] text-gray-400 border-t bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
+                                Tap a product to add · use camera to scan
                             </footer>
                         )}
                     </>
@@ -1098,6 +1133,43 @@ export function PosTerminal({
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <PosCameraScanner
+                open={showCameraScanner}
+                onClose={() => setShowCameraScanner(false)}
+                onScan={handleBarcodeFromCamera}
+            />
+
+            <PosPharmacyBatchDialog
+                open={Boolean(pharmacyProduct)}
+                onOpenChange={(open) => !open && setPharmacyProduct(null)}
+                businessId={businessId}
+                product={pharmacyProduct}
+                onConfirm={(batchMeta) => pharmacyProduct && tryAddProduct(pharmacyProduct, batchMeta)}
+            />
+
+            <PosSplitPaymentDialog
+                open={showSplitDialog}
+                onOpenChange={setShowSplitDialog}
+                total={computePosOrderTotals(cart, { discount, discountType }).total}
+                currency={displayCurrency}
+                onConfirm={(payments) => {
+                    setSplitPayments(payments);
+                    setPaymentMethod('split');
+                }}
+            />
+
+            <PosCloseShiftDialog
+                open={showCloseShiftDialog}
+                onOpenChange={setShowCloseShiftDialog}
+                businessId={businessId}
+                session={session}
+                currency={displayCurrency}
+                onClosed={() => {
+                    onCloseSession?.();
+                    setShowCloseShiftDialog(false);
+                }}
+            />
         </div>
     );
 }

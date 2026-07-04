@@ -1535,6 +1535,9 @@ export function StoreSettingsManager({ business, category }) {
                     ['showCuisineCarousel', 'Category carousel', false],
                     ['showSuperPicks', 'Featured picks rail', false],
                     ['showOrderModes', 'Delivery / pickup / dine-in tiles', false],
+                    ['showTrustStrip', 'Trust pillars strip', false],
+                    ['showUpperPromoTiles', 'Wide promo banner row', false],
+                    ['showDeliveryBanner', 'Free delivery threshold band', false],
                     ['showRewardsCta', 'Rewards signup CTA', true],
                     ['showDeliveryInfo', 'Hours & delivery info strip', false],
                   ].map(([key, label, optIn]) => (

@@ -19,12 +19,15 @@ import { isAutoDealershipStore } from '@/lib/storefront/autoDealership';
 import { isAutoMarketplaceStore } from '@/lib/storefront/autoMarketplace';
 import { isPharmacyElevatedStore } from '@/lib/storefront/pharmacyStorefront';
 import { isSupermarketElevatedStore } from '@/lib/storefront/supermarketStorefront';
+import { isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
 import { isFitnessElevatedStore } from '@/lib/storefront/fitnessStorefront';
 import { FitnessSiteHeader } from '@/components/storefront/fitness/FitnessSiteHeader';
 import { FitnessChromeProvider } from '@/components/storefront/fitness/FitnessChromeContext';
 import { FitnessMobileBottomNav } from '@/components/storefront/fitness/FitnessMobileBottomNav';
 import { SupermarketSiteHeader } from '@/components/storefront/supermarket/SupermarketSiteHeader';
 import { SupermarketChromeProvider } from '@/components/storefront/supermarket/SupermarketChromeContext';
+import { RestaurantSiteHeader } from '@/components/storefront/restaurant/RestaurantSiteHeader';
+import { RestaurantChromeProvider } from '@/components/storefront/restaurant/RestaurantChromeContext';
 import { TENVO_VEHICLES_METADATA } from '@/lib/storefront/tenvoVehiclesAssets';
 import { cn } from '@/lib/utils';
 
@@ -96,6 +99,7 @@ export default async function StoreLayout({ children, params }) {
   const marketplaceStore = isAutoMarketplaceStore(business.category);
   const pharmacyStore = isPharmacyElevatedStore(business.category);
   const supermarketStore = isSupermarketElevatedStore(business.category);
+  const restaurantStore = isRestaurantElevatedStore(business.category);
   const fitnessStore = isFitnessElevatedStore(business.category);
   const portalStore = dealershipStore || marketplaceStore;
 
@@ -107,7 +111,7 @@ export default async function StoreLayout({ children, params }) {
       className={cn(
         'min-h-screen',
         fitnessStore && 'relative',
-        fitnessStore ? 'bg-black' : portalStore || pharmacyStore || supermarketStore ? 'bg-white' : luxuryStore ? 'bg-stone-50' : 'bg-slate-50'
+        fitnessStore ? 'bg-black' : portalStore || pharmacyStore || supermarketStore || restaurantStore ? 'bg-white' : luxuryStore ? 'bg-stone-50' : 'bg-slate-50'
       )}
       data-store-theme
       {...(luxuryStore ? { 'data-store-luxury': '' } : {})}
@@ -115,6 +119,7 @@ export default async function StoreLayout({ children, params }) {
       {...(marketplaceStore ? { 'data-store-marketplace': '' } : {})}
       {...(pharmacyStore ? { 'data-store-pharmacy': '' } : {})}
       {...(supermarketStore ? { 'data-store-supermarket': '' } : {})}
+      {...(restaurantStore ? { 'data-store-restaurant': '' } : {})}
       {...(fitnessStore ? { 'data-store-fitness': '' } : {})}
     >
       <a
@@ -143,6 +148,10 @@ export default async function StoreLayout({ children, params }) {
         <Suspense fallback={<div className="h-[120px] border-b border-orange-100 bg-white md:h-[148px]" aria-hidden />}>
           <SupermarketSiteHeader business={business} settings={settings} />
         </Suspense>
+      ) : restaurantStore ? (
+        <Suspense fallback={<div className="h-[120px] border-b border-violet-100 bg-white md:h-[148px]" aria-hidden />}>
+          <RestaurantSiteHeader business={business} settings={settings} />
+        </Suspense>
       ) : fitnessStore ? (
         <Suspense fallback={null}>
           <FitnessSiteHeader business={business} settings={settings} categories={categories} />
@@ -161,7 +170,7 @@ export default async function StoreLayout({ children, params }) {
           'min-h-[calc(100vh-300px)] lg:pb-0',
           pharmacyStore
             ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]'
-            : supermarketStore
+            : supermarketStore || restaurantStore
               ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]'
               : fitnessStore
               ? 'pb-[calc(4.25rem+env(safe-area-inset-bottom))]'
@@ -193,6 +202,8 @@ export default async function StoreLayout({ children, params }) {
         <PharmacyChromeProvider>{storeChrome}</PharmacyChromeProvider>
       ) : supermarketStore ? (
         <SupermarketChromeProvider>{storeChrome}</SupermarketChromeProvider>
+      ) : restaurantStore ? (
+        <RestaurantChromeProvider>{storeChrome}</RestaurantChromeProvider>
       ) : fitnessStore ? (
         <FitnessChromeProvider>{storeChrome}</FitnessChromeProvider>
       ) : (

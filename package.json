@@ -51,6 +51,7 @@
     "data-lab:seed-showroom": "npx tsx scripts/data-lab/seed-master-demo.mjs --refresh-catalog --only vehicle-dealership",
     "verify:showroom-seed": "bun scripts/verify-showroom-seed.mjs",
     "data-lab:verify": "npx tsx scripts/data-lab/verify-demo-wiring.mjs",
+    "data-lab:ensure-demos": "npx tsx scripts/data-lab/ensure-demo-storefronts.mjs --refresh-catalog",
     "data-lab:reset": "node scripts/data-lab/purge-business-data.mjs --confirm PURGE_ALL_BUSINESS_DATA && npx tsx scripts/data-lab/seed-master-demo.mjs && npx tsx scripts/data-lab/verify-demo-wiring.mjs"
   },
   "dependencies": {
@@ -97,6 +98,7 @@
     "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.40.0",
+    "html5-qrcode": "^2.3.8",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.3",
     "lucide-react": "^0.562.0",

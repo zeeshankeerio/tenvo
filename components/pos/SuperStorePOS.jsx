@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, Barcode, ShoppingCart, Plus, Minus, Trash2, X, CreditCard,
     Banknote, Smartphone, SplitSquareHorizontal, User, Clock, Hash,
-    Receipt, CheckCircle2, Star, Gift, ChevronDown, RotateCcw,
+    Receipt, CheckCircle2, Star, Gift, ChevronDown, RotateCcw, ArrowLeft,
     Layers, Weight, Package, ScanLine, Volume2, AlertTriangle, Filter,
-    Maximize, Minimize, Printer, FileDown,
+    Maximize, Minimize, Printer, FileDown, Camera,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,30 +17,72 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
 import { getDomainConfig } from '@/lib/config/domains';
-import { buildPosCheckoutPayload, getPosUiConfig } from '@/lib/utils/posHelpers';
+import { buildPosCheckoutPayload, computePosOrderTotals, getPosUiConfig } from '@/lib/utils/posHelpers';
+import {
+    buildPosDepartments,
+    countProductsByDepartment,
+    filterProductsByDepartment,
+    getPosDomainFlags,
+} from '@/lib/config/posDomains';
+import { PosSessionBar } from '@/components/pos/shared/PosSessionBar';
+import { PosCloseShiftDialog } from '@/components/pos/shared/PosCloseShiftDialog';
+import { PosSplitPaymentDialog } from '@/components/pos/shared/PosSplitPaymentDialog';
+import { PosProductBrowseGrid } from '@/components/pos/shared/PosProductBrowseGrid';
+import { PosCameraScanner } from '@/components/pos/shared/PosCameraScanner';
+import { PosPharmacyBatchDialog } from '@/components/pos/shared/PosPharmacyBatchDialog';
+import { PosMobileCheckoutBar } from '@/components/pos/shared/PosMobileCheckoutBar';
+import { PosOfflineBanner } from '@/components/pos/shared/PosOfflineBanner';
+import { usePosSettings } from '@/lib/hooks/usePosSettings';
+import { usePosOffline } from '@/lib/hooks/usePosOffline';
+import { usePosProductAdd } from '@/lib/hooks/usePosProductAdd';
+import {
+    getPosShellHeightClass,
+    POS_SHELL_FOOTER,
+} from '@/lib/utils/posLayout';
 import { usePosFullscreen } from '@/lib/hooks/usePosFullscreen';
 import { usePosReceipt } from '@/lib/hooks/usePosReceipt';
 import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { ProductThumbnail } from '@/components/product/ProductThumbnail';
 import toast from 'react-hot-toast';
 
-// --- Constants ----------------------------------------------------------------
+// --- Department Filter Bar ---------------------------------------------------
 
-const DEPARTMENTS = [
-    { key: 'all', label: 'All', icon: '[BAG]', color: 'bg-brand-primary' },
-    { key: 'beverages', label: 'Beverages', icon: '[DRINK]', color: 'bg-brand-primary-dark' },
-    { key: 'snacks', label: 'Snacks', icon: '[SNACK]', color: 'bg-orange-500' },
-    { key: 'dairy', label: 'Dairy', icon: '[MILK]', color: 'bg-cyan-500' },
-    { key: 'frozen', label: 'Frozen', icon: '[ICE]', color: 'bg-sky-500' },
-    { key: 'fresh', label: 'Fresh Produce', icon: '[FRESH]', color: 'bg-emerald-500' },
-    { key: 'bakery', label: 'Bakery', icon: '[BREAD]', color: 'bg-amber-500' },
-    { key: 'household', label: 'Household', icon: '[HOUSE]', color: 'bg-brand-primary-dark' },
-    { key: 'personal', label: 'Personal Care', icon: '[SOAP]', color: 'bg-pink-500' },
-    { key: 'meat', label: 'Meat & Poultry', icon: '[MEAT]', color: 'bg-red-500' },
-    { key: 'grocery', label: 'Grocery', icon: '🛒', color: 'bg-lime-600' },
-];
+function DepartmentBar({ departments, activeDepartment, onDepartmentChange, productCounts }) {
+    return (
+        <div className="flex items-center gap-1.5 px-4 py-2.5 overflow-x-auto scrollbar-thin
+                        bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+            {departments.map(dept => {
+                const count = productCounts[dept.key] || 0;
+                const isActive = activeDepartment === dept.key;
+                if (dept.key !== 'all' && count === 0) return null;
 
-const SCAN_SOUND_ENABLED = true;
+                return (
+                    <button
+                        key={dept.key}
+                        onClick={() => onDepartmentChange(dept.key)}
+                        className={cn(
+                            'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0',
+                            isActive
+                                ? `${dept.color} text-white shadow-lg`
+                                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-gray-300'
+                        )}
+                    >
+                        <span className="text-sm">{dept.icon}</span>
+                        <span>{dept.label}</span>
+                        {dept.key !== 'all' && (
+                            <span className={cn(
+                                "text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none",
+                                isActive ? "bg-white/20" : "bg-gray-100 text-gray-500"
+                            )}>
+                                {count}
+                            </span>
+                        )}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
 
 // --- Barcode Scanner Input ---------------------------------------------------
 
@@ -100,45 +142,6 @@ function BarcodeScannerInput({ onScan, onSearchChange, searchTerm, isScanning })
                     <X className="w-4 h-4 text-gray-400" />
                 </button>
             )}
-        </div>
-    );
-}
-
-// --- Department Filter Bar ---------------------------------------------------
-
-function DepartmentBar({ activeDepartment, onDepartmentChange, productCounts }) {
-    return (
-        <div className="flex items-center gap-1.5 px-4 py-2.5 overflow-x-auto scrollbar-thin
-                        bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-            {DEPARTMENTS.map(dept => {
-                const count = productCounts[dept.key] || 0;
-                const isActive = activeDepartment === dept.key;
-                if (dept.key !== 'all' && count === 0) return null;
-
-                return (
-                    <button
-                        key={dept.key}
-                        onClick={() => onDepartmentChange(dept.key)}
-                        className={cn(
-                            'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0',
-                            isActive
-                                ? `${dept.color} text-white shadow-lg`
-                                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-gray-300'
-                        )}
-                    >
-                        <span className="text-sm">{dept.icon}</span>
-                        <span>{dept.label}</span>
-                        {dept.key !== 'all' && (
-                            <span className={cn(
-                                "text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none",
-                                isActive ? "bg-white/20" : "bg-gray-100 text-gray-500"
-                            )}>
-                                {count}
-                            </span>
-                        )}
-                    </button>
-                );
-            })}
         </div>
     );
 }
@@ -268,6 +271,7 @@ function CartSummary({
     discount = 0, onDiscountChange, onPaymentMethodSelect,
     onCompleteSale, onHoldSale, onVoidSale, isProcessing,
     currency = 'Rs.', heldOrders = [], onResumeHeldSale, onPrintBill, onDownloadBillPdf,
+    onBack,
 }) {
     // Priority: taxConfig.sales_tax_rate -> taxPercent prop -> 17.0 (fallback)
     const effectiveTaxRate = taxConfig?.sales_tax_rate ?? taxPercent ?? 17;
@@ -288,8 +292,13 @@ function CartSummary({
         <div className="flex flex-col h-full bg-slate-900 text-white">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50">
-                <div className="flex items-center gap-2">
-                    <ShoppingCart className="w-4 h-4 text-emerald-400" />
+                <div className="flex items-center gap-2 min-w-0">
+                    {onBack ? (
+                        <button type="button" onClick={onBack} className="p-1.5 -ml-1 rounded-lg hover:bg-slate-800" aria-label="Back">
+                            <ArrowLeft className="w-4 h-4" />
+                        </button>
+                    ) : null}
+                    <ShoppingCart className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span className="text-sm font-semibold tracking-tight">CART</span>
                     <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
                         {items.length} items * {itemCount} qty
@@ -459,12 +468,17 @@ function CartSummary({
 // --- Main Super Store POS ----------------------------------------------------
 
 export function SuperStorePOS({ 
-    businessId, products = [], customers = [], onStartSession, 
+    businessId, products = [], customers = [], onStartSession, onCloseSession,
     onCompleteSale, currency = 'Rs.', session, taxConfig, category: categoryProp,
 }) {
     const { business, currencySymbol } = useBusiness();
     const category = categoryProp || business?.category || 'supermarket';
     const posUi = getPosUiConfig(category, business);
+    const domainFlags = getPosDomainFlags(category);
+    const departments = useMemo(
+        () => buildPosDepartments(category, products, posUi.maxCategoryChips + 2),
+        [category, products, posUi.maxCategoryChips]
+    );
     const domainConfig = getDomainConfig(category);
     const documentLabel = posUi.receiptLabel || domainConfig?.label_overrides?.invoice || 'Receipt';
     const currencyCode = posUi.currencyCode;
@@ -478,11 +492,21 @@ export function SuperStorePOS({
     const [showCustomerDialog, setShowCustomerDialog] = useState(false);
     const [discount, setDiscount] = useState(0);
     const [paymentMethod, setPaymentMethod] = useState('cash');
+    const [splitPayments, setSplitPayments] = useState(null);
+    const [showSplitDialog, setShowSplitDialog] = useState(false);
+    const [showCloseShiftDialog, setShowCloseShiftDialog] = useState(false);
+    const [mobilePane, setMobilePane] = useState('browse');
+    const [showCameraScanner, setShowCameraScanner] = useState(false);
+    const [pharmacyProduct, setPharmacyProduct] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [heldOrders, setHeldOrders] = useState([]);
     const [isStartingSession, setIsStartingSession] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
     const [lastScannedItem, setLastScannedItem] = useState(null);
+    const posSettings = usePosSettings();
+    const { isOnline, pendingCount, isSyncing, queueSale, syncPending } = usePosOffline(businessId, {
+        enabled: posSettings.offlineModeEnabled,
+    });
     const { containerRef, isFullscreen, toggleFullscreen } = usePosFullscreen();
     const {
         autoPrintEnabled,
@@ -587,20 +611,10 @@ export function SuperStorePOS({
 
     // --- Derived Data --------------------------------------------------------
 
-    const productCounts = useMemo(() => {
-        const counts = { all: products.length };
-        products.forEach(p => {
-            const cat = (p.category || 'other').toLowerCase();
-            counts[cat] = (counts[cat] || 0) + 1;
-        });
-        return counts;
-    }, [products]);
+    const productCounts = useMemo(() => countProductsByDepartment(products), [products]);
 
     const filteredProducts = useMemo(() => {
-        let items = products || [];
-        if (activeDepartment && activeDepartment !== 'all') {
-            items = items.filter(p => (p.category || '').toLowerCase() === activeDepartment);
-        }
+        let items = filterProductsByDepartment(products, activeDepartment);
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
             items = items.filter(p =>
@@ -612,56 +626,42 @@ export function SuperStorePOS({
         return items;
     }, [products, activeDepartment, searchTerm]);
 
+    const handlePaymentMethodSelect = useCallback((method) => {
+        if (method === 'split') {
+            setShowSplitDialog(true);
+            return;
+        }
+        setSplitPayments(null);
+        setPaymentMethod(method);
+    }, []);
+
+    const { tryAddProduct, handleScanCode } = usePosProductAdd({
+        category,
+        posSettings,
+        effectiveTaxRate,
+        setCart,
+        setPharmacyProduct,
+        onAdded: (product) => {
+            setLastScannedItem(product.name);
+            setTimeout(() => setLastScannedItem(null), 1500);
+        },
+    });
+
+    const addToCart = tryAddProduct;
+
+    const showCamera = posSettings.barcodeMode === 'camera' || posSettings.barcodeMode === 'auto';
+
     // --- Cart Operations -----------------------------------------------------
-
-    const addToCart = useCallback((product) => {
-        if (parseInt(product.stock) <= 0 && !product.allow_negative_stock) return;
-
-        const isWeightItem = product.unit === 'kg' || product.unit === 'g' ||
-            product.unit === 'lb' || product.is_weight_item ||
-            product.domain_data?.is_weight_item;
-
-        setCart(prev => {
-            const existing = prev.findIndex(i => i.productId === product.id);
-            if (existing >= 0 && !isWeightItem) {
-                const updated = [...prev];
-                updated[existing] = { ...updated[existing], quantity: updated[existing].quantity + 1 };
-                return updated;
-            }
-            return [...prev, {
-                productId: product.id,
-                name: product.name,
-                sku: product.sku,
-                barcode: product.barcode,
-                imageUrl: getEffectiveProductImageUrl(product, category),
-                unitPrice: parseFloat(product.selling_price || product.price || 0),
-                quantity: isWeightItem ? 1.0 : 1,
-                taxPercent: parseFloat(product.tax_percent ?? product.taxPercent ?? 17),
-                isWeightItem,
-                unit: product.unit || (isWeightItem ? 'kg' : 'pcs'),
-            }];
-        });
-
-        setLastScannedItem(product.name);
-        setTimeout(() => setLastScannedItem(null), 1500);
-    }, [category]);
 
     const handleBarcodeScan = useCallback((barcode) => {
         setIsScanning(true);
-        const product = products.find(p =>
-            p.barcode === barcode || p.sku === barcode
-        );
-
-        if (product) {
-            addToCart(product);
-            setSearchTerm('');
-        } else {
-            // Flash error state
+        const product = handleScanCode(products, barcode, { clearSearch: () => setSearchTerm('') });
+        if (!product) {
             setLastScannedItem(`[WARNING] "${barcode}" not found`);
             setTimeout(() => setLastScannedItem(null), 2000);
         }
         setTimeout(() => setIsScanning(false), 300);
-    }, [products, addToCart]);
+    }, [products, handleScanCode]);
 
     const handleQuantityChange = useCallback((idx, qty) => {
         setCart(prev => prev.map((item, i) => i === idx ? { ...item, quantity: Math.round(qty * 100) / 100 } : item));
@@ -710,11 +710,25 @@ export function SuperStorePOS({
                 cart: cart.map((i) => ({
                     ...i,
                     taxPercent: i.taxPercent ?? effectiveTaxRate,
+                    batchId: i.batchId || null,
                 })),
                 discount,
                 discountType: 'fixed',
-                paymentMethod,
+                paymentMethod: splitPayments?.length ? 'split' : paymentMethod,
+                payments: splitPayments || undefined,
             });
+
+            if (!isOnline && posSettings.offlineModeEnabled) {
+                await queueSale(payload);
+                toast.success('Sale saved offline — will sync when online', { id: 'pos-offline' });
+                setCart([]);
+                setCustomer(null);
+                setDiscount(0);
+                setSplitPayments(null);
+                setPaymentMethod('cash');
+                setMobilePane('browse');
+                return;
+            }
 
             const result = await onCompleteSale?.({
                 ...payload,
@@ -733,6 +747,9 @@ export function SuperStorePOS({
                 setCart([]);
                 setCustomer(null);
                 setDiscount(0);
+                setSplitPayments(null);
+                setPaymentMethod('cash');
+                setMobilePane('browse');
             } else if (result?.error) {
                 toast.error(formatSaleError(result), { id: 'pos-sale-error' });
             }
@@ -742,7 +759,16 @@ export function SuperStorePOS({
         } finally {
             setIsProcessing(false);
         }
-    }, [cart, businessId, session, customer, discount, paymentMethod, isProcessing, onCompleteSale, hasSession, effectiveTaxRate, category, recordSuccessfulSale, formatSaleError]);
+    }, [cart, businessId, session, customer, discount, paymentMethod, splitPayments, isProcessing, onCompleteSale, hasSession, effectiveTaxRate, category, recordSuccessfulSale, formatSaleError, isOnline, posSettings.offlineModeEnabled, queueSale]);
+
+    const cartSummary = useMemo(() => {
+        const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+        const taxAmount = Math.round(cart.reduce((s, i) => s + (i.unitPrice * i.quantity) * ((i.taxPercent || 0) / 100), 0) * 100) / 100;
+        const discountAmount = parseFloat(discount || 0);
+        const total = Math.round((subtotal + taxAmount - discountAmount) * 100) / 100;
+        const itemCount = cart.reduce((s, i) => s + (i.isWeightItem ? 1 : i.quantity), 0);
+        return { subtotal, taxAmount, discountAmount, total, itemCount };
+    }, [cart, discount]);
 
     // --- Keyboard Shortcuts --------------------------------------------------
 
@@ -763,182 +789,74 @@ export function SuperStorePOS({
         <div
             ref={containerRef}
             className={cn(
-                "flex bg-gray-50 overflow-hidden shadow-sm border border-gray-200 transition-all",
-                isFullscreen ? "h-screen w-screen rounded-0 border-0" : "h-[calc(100vh-80px)] rounded-xl"
+                'flex flex-col min-h-0 overflow-hidden bg-gray-50 border border-gray-200 touch-manipulation transition-all',
+                getPosShellHeightClass(isFullscreen, 'terminal'),
+                isFullscreen ? 'fixed inset-0 z-[100] rounded-none border-0' : 'rounded-xl shadow-sm'
             )}
         >
-            {/* Left: Scanner + Items */}
-            <div className="flex-1 min-w-0 bg-white flex flex-col">
-                <div className={cn(
-                    'mx-4 mt-3 mb-0 px-3 py-2 rounded-xl border text-xs font-semibold flex items-center justify-between gap-3',
-                    hasSession
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                        : 'bg-amber-50 border-amber-200 text-amber-700'
-                )}>
-                    <span>
-                        {hasSession
-                            ? `POS Session Active * ${terminalLabel}${sessionStartedLabel ? ` * Opened ${sessionStartedLabel}` : ''}`
-                            : 'Session not active: checkout will use invoice fallback mode'}
-                    </span>
-                    {!hasSession && (
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-[11px]"
-                            onClick={handleStartSession}
-                            disabled={isStartingSession}
-                        >
-                            {isStartingSession ? 'Starting...' : 'Start Session'}
-                        </Button>
+            {/* Desktop split */}
+            <div className="hidden lg:flex flex-1 min-h-0 overflow-hidden">
+                <div className="flex-1 min-w-0 bg-white flex flex-col min-h-0">
+                    <PosSessionBar hasSession={hasSession} terminalLabel={terminalLabel} sessionStartedLabel={sessionStartedLabel} isStartingSession={isStartingSession} onStartSession={handleStartSession} onCloseSession={hasSession ? () => setShowCloseShiftDialog(true) : undefined} />
+                    <PosOfflineBanner isOnline={isOnline} pendingCount={pendingCount} isSyncing={isSyncing} onSync={syncPending} />
+                    <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-white shrink-0">
+                        <BarcodeScannerInput onScan={handleBarcodeScan} searchTerm={searchTerm} onSearchChange={setSearchTerm} isScanning={isScanning} />
+                        <div className="flex items-center gap-1.5 shrink-0">
+                            {(showCamera) && (
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowCameraScanner(true)} aria-label="Camera scan"><Camera className="w-4 h-4" /></Button>
+                            )}
+                            <Badge variant="outline" className={cn('text-[10px] h-7 px-2 font-bold', lastScannedItem?.startsWith('[WARNING]') ? 'border-red-300 text-red-500' : lastScannedItem ? 'border-emerald-300 text-emerald-600' : 'border-gray-200 text-gray-400')}>{lastScannedItem || 'Ready to scan'}</Badge>
+                            <Button variant="ghost" size="sm" onClick={toggleAutoPrint} className={cn('h-8 px-2 text-[10px]', autoPrintEnabled ? 'text-emerald-600' : 'text-gray-400')}><Printer className="w-3.5 h-3.5 mr-1" />Auto</Button>
+                            <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="h-8 w-8">{isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}</Button>
+                        </div>
+                    </div>
+                    <DepartmentBar departments={departments} activeDepartment={activeDepartment} onDepartmentChange={setActiveDepartment} productCounts={productCounts} />
+                    {cart.length > 0 ? (
+                        <ScannedItemsList items={cart} onQuantityChange={handleQuantityChange} onRemoveItem={handleRemoveItem} onWeightChange={handleWeightChange} currency={displayCurrency} businessCategory={category} />
+                    ) : !searchTerm ? (
+                        <PosProductBrowseGrid products={filteredProducts} onAddToCart={addToCart} currency={displayCurrency} businessCategory={category} />
+                    ) : (
+                        <ScannedItemsList items={cart} onQuantityChange={handleQuantityChange} onRemoveItem={handleRemoveItem} onWeightChange={handleWeightChange} currency={displayCurrency} businessCategory={category} />
                     )}
+                    {searchTerm && (
+                        <div className="border-t overflow-y-auto max-h-64 bg-gray-50/50">{filteredProducts.slice(0, 8).map((p) => (
+                            <button key={p.id} type="button" onClick={() => { addToCart(p); setSearchTerm(''); }} className="flex w-full px-4 py-2 text-left hover:bg-emerald-50/50 text-xs font-bold">{p.name}</button>
+                        ))}</div>
+                    )}
+                    <div className="shrink-0 flex justify-between px-4 py-1.5 bg-gray-50 border-t text-[10px] font-bold text-gray-400 uppercase"><span>F9 Checkout</span><span>F8 Hold</span><span>ESC Void</span></div>
                 </div>
-                {/* Barcode Input Bar */}
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-white">
-                    <BarcodeScannerInput
-                        onScan={handleBarcodeScan}
-                        searchTerm={searchTerm}
-                        onSearchChange={setSearchTerm}
-                        isScanning={isScanning}
-                    />
-                    <div className="flex items-center gap-1.5">
-                        <Badge variant="outline" className={cn(
-                            "text-[10px] h-7 px-2 font-bold transition-all",
-                            lastScannedItem?.startsWith('[WARNING]')
-                                ? "border-red-300 text-red-500 bg-red-50"
-                                : lastScannedItem
-                                    ? "border-emerald-300 text-emerald-600 bg-emerald-50"
-                                    : "border-gray-200 text-gray-400"
-                        )}>
-                            {lastScannedItem || 'Ready to scan'}
-                        </Badge>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={toggleAutoPrint}
-                            className={cn(
-                                'h-8 px-2 text-[10px] font-bold',
-                                autoPrintEnabled ? 'text-emerald-600' : 'text-gray-400'
-                            )}
-                            aria-pressed={autoPrintEnabled}
-                        >
-                            <Printer className="w-3.5 h-3.5 mr-1" />
-                            Auto
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={toggleFullscreen}
-                            className="h-8 w-8 text-gray-400 hover:text-brand-primary hover:bg-brand-50"
-                        >
-                            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Department Filter */}
-                <DepartmentBar
-                    activeDepartment={activeDepartment}
-                    onDepartmentChange={setActiveDepartment}
-                    productCounts={productCounts}
-                />
-
-                {/* Scanned Items List OR Product Grid (when searching) */}
-                {cart.length > 0 || !searchTerm ? (
-                    <ScannedItemsList
-                        items={cart}
-                        onQuantityChange={handleQuantityChange}
-                        onRemoveItem={handleRemoveItem}
-                        onWeightChange={handleWeightChange}
-                        currency={displayCurrency}
-                        businessCategory={category}
-                    />
-                ) : null}
-
-                {/* Quick-add from search results when there's a search term */}
-                {searchTerm && (
-                    <div className="border-t border-gray-100 bg-gray-50/50 overflow-y-auto max-h-64">
-                        <div className="px-4 py-1.5">
-                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                                Search Results ({filteredProducts.length})
-                            </span>
-                        </div>
-                        <div className="divide-y divide-gray-100">
-                            {filteredProducts.slice(0, 8).map(product => (
-                                <button
-                                    key={product.id}
-                                    onClick={() => {
-                                        addToCart(product);
-                                        setSearchTerm('');
-                                    }}
-                                    disabled={parseInt(product.stock) <= 0}
-                                    className={cn(
-                                        "flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors",
-                                        parseInt(product.stock) <= 0
-                                            ? "opacity-40 cursor-not-allowed"
-                                            : "hover:bg-emerald-50/50"
-                                    )}
-                                >
-                                    <ProductThumbnail
-                                        product={product}
-                                        businessCategory={category}
-                                        size="sm"
-                                        className="shrink-0 border border-gray-100"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold text-gray-900 truncate">{product.name}</p>
-                                        <p className="text-[10px] text-gray-400 font-mono">{product.sku || product.barcode || '--'}</p>
-                                    </div>
-                                    <span className="text-xs font-semibold text-emerald-600">
-                                        {displayCurrency}{parseFloat(product.selling_price || product.price || 0).toLocaleString()}
-                                    </span>
-                                    <span className={cn(
-                                        "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
-                                        parseInt(product.stock) <= 5 ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600"
-                                    )}>
-                                        {parseInt(product.stock || 0)}
-                                    </span>
-                                    <Plus className="w-4 h-4 text-emerald-500 shrink-0" />
-                                </button>
-                            ))}
-                            {filteredProducts.length === 0 && (
-                                <div className="px-4 py-6 text-center text-gray-400">
-                                    <Search className="w-6 h-6 mx-auto mb-2 opacity-30" />
-                                    <p className="text-xs font-bold">No products match "{searchTerm}"</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Keyboard Shortcuts Bar */}
-                <div className="flex items-center justify-between px-4 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    <span>F9: Checkout</span>
-                    <span>F8: Hold</span>
-                    <span>ESC: Void</span>
-                    <span>Enter: Scan</span>
-                </div>
+                <aside className="w-[min(100%,400px)] shrink-0 flex flex-col min-h-0">
+                    <CartSummary {...{ items: cart, customer, onCustomerSelect: () => setShowCustomerDialog(true), discount, onDiscountChange: setDiscount, onPaymentMethodSelect: handlePaymentMethodSelect, onCompleteSale: handleCompleteSale, onHoldSale: handleHoldSale, onVoidSale: handleVoidSale, onResumeHeldSale: handleResumeLastHeldSale, onPrintBill: handlePrintBill, onDownloadBillPdf: handleDownloadBillPdf, isProcessing, currency: displayCurrency, heldOrders, taxConfig }} />
+                </aside>
             </div>
 
-            {/* Right: Cart Summary */}
-            <div className="w-[360px] xl:w-[400px] flex-shrink-0">
-                <CartSummary
-                    items={cart}
-                    customer={customer}
-                    onCustomerSelect={() => setShowCustomerDialog(true)}
-                    discount={discount}
-                    onDiscountChange={setDiscount}
-                    onPaymentMethodSelect={setPaymentMethod}
-                    onCompleteSale={handleCompleteSale}
-                    onHoldSale={handleHoldSale}
-                    onVoidSale={handleVoidSale}
-                    onResumeHeldSale={handleResumeLastHeldSale}
-                    onPrintBill={handlePrintBill}
-                    onDownloadBillPdf={handleDownloadBillPdf}
-                    isProcessing={isProcessing}
-                    currency={displayCurrency}
-                    heldOrders={heldOrders}
-                    taxConfig={taxConfig}
-                />
+            {/* Mobile app-style panes */}
+            <div className="lg:hidden flex flex-col flex-1 min-h-0 overflow-hidden">
+                {mobilePane === 'browse' ? (
+                    <>
+                        <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
+                            <PosSessionBar hasSession={hasSession} terminalLabel={terminalLabel} sessionStartedLabel={sessionStartedLabel} isStartingSession={isStartingSession} onStartSession={handleStartSession} onCloseSession={hasSession ? () => setShowCloseShiftDialog(true) : undefined} className="mx-2 mt-2" />
+                            <PosOfflineBanner isOnline={isOnline} pendingCount={pendingCount} isSyncing={isSyncing} onSync={syncPending} className="mx-2" />
+                            <div className="flex items-center gap-1.5 px-3 py-2 border-b shrink-0">
+                                <BarcodeScannerInput onScan={handleBarcodeScan} searchTerm={searchTerm} onSearchChange={setSearchTerm} isScanning={isScanning} />
+                                {showCamera && (
+                                    <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 touch-manipulation" onClick={() => setShowCameraScanner(true)} aria-label="Scan with camera"><Camera className="w-5 h-5" /></Button>
+                                )}
+                            </div>
+                            <DepartmentBar departments={departments} activeDepartment={activeDepartment} onDepartmentChange={setActiveDepartment} productCounts={productCounts} />
+                            {cart.length > 0 ? (
+                                <ScannedItemsList items={cart} onQuantityChange={handleQuantityChange} onRemoveItem={handleRemoveItem} onWeightChange={handleWeightChange} currency={displayCurrency} businessCategory={category} />
+                            ) : (
+                                <PosProductBrowseGrid products={filteredProducts} onAddToCart={addToCart} currency={displayCurrency} businessCategory={category} />
+                            )}
+                        </div>
+                        <PosMobileCheckoutBar itemCount={cartSummary.itemCount} total={cartSummary.total} currency={displayCurrency} onOpenCheckout={() => setMobilePane('checkout')} />
+                    </>
+                ) : (
+                    <div className="flex-1 min-h-0 flex flex-col">
+                        <CartSummary {...{ items: cart, customer, onCustomerSelect: () => setShowCustomerDialog(true), discount, onDiscountChange: setDiscount, onPaymentMethodSelect: handlePaymentMethodSelect, onCompleteSale: handleCompleteSale, onHoldSale: handleHoldSale, onVoidSale: handleVoidSale, onResumeHeldSale: handleResumeLastHeldSale, onPrintBill: handlePrintBill, onDownloadBillPdf: handleDownloadBillPdf, isProcessing, currency: displayCurrency, heldOrders, taxConfig, onBack: () => setMobilePane('browse') }} />
+                    </div>
+                )}
             </div>
 
             {/* Sale Success Toast */}
@@ -948,7 +866,7 @@ export function SuperStorePOS({
                         initial={{ opacity: 0, y: 50, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 50, scale: 0.95 }}
-                        className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30"
+                        className="fixed bottom-20 left-4 right-4 lg:bottom-6 lg:left-auto lg:right-6 lg:max-w-md z-50 flex items-center gap-3 px-6 py-4 rounded-2xl bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30"
                     >
                         <CheckCircle2 className="w-6 h-6" />
                         <div>
@@ -1025,6 +943,47 @@ export function SuperStorePOS({
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <PosCameraScanner open={showCameraScanner} onClose={() => setShowCameraScanner(false)} onScan={handleBarcodeScan} />
+
+            <PosPharmacyBatchDialog
+                open={Boolean(pharmacyProduct)}
+                onOpenChange={(open) => !open && setPharmacyProduct(null)}
+                businessId={businessId}
+                product={pharmacyProduct}
+                onConfirm={(batchMeta) => pharmacyProduct && tryAddProduct(pharmacyProduct, batchMeta)}
+            />
+
+            <PosSplitPaymentDialog
+                open={showSplitDialog}
+                onOpenChange={setShowSplitDialog}
+                total={computePosOrderTotals(
+                    cart.map((i) => ({
+                        productId: i.productId,
+                        unitPrice: i.unitPrice,
+                        quantity: i.quantity,
+                        taxPercent: i.taxPercent ?? effectiveTaxRate,
+                    })),
+                    { discount, discountType: 'fixed' }
+                ).total}
+                currency={displayCurrency}
+                onConfirm={(payments) => {
+                    setSplitPayments(payments);
+                    setPaymentMethod('split');
+                }}
+            />
+
+            <PosCloseShiftDialog
+                open={showCloseShiftDialog}
+                onOpenChange={setShowCloseShiftDialog}
+                businessId={businessId}
+                session={session}
+                currency={displayCurrency}
+                onClosed={() => {
+                    onCloseSession?.();
+                    setShowCloseShiftDialog(false);
+                }}
+            />
         </div>
     );
 }

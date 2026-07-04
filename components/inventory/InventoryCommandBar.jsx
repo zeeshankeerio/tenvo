@@ -174,7 +174,7 @@ export function InventoryCommandBar({
               </DropdownMenuLabel>
               <DropdownMenuItem onClick={onScanBarcode} className="rounded-lg py-2">
                 <ScanBarcode className="mr-2 h-4 w-4 text-brand-primary" />
-                <span className="text-xs font-semibold">Scan barcode</span>
+                <span className="text-xs font-semibold">Scan (camera & QR)</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onAdjustStock} className="rounded-lg py-2">
                 <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" />

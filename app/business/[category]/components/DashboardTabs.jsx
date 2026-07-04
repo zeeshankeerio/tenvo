@@ -42,6 +42,7 @@ const WorkflowBuilder = dynamic(() => import('@/components/workflow/WorkflowBuil
 const LoyaltyManager = dynamic(() => import('@/components/crm/LoyaltyManager').then(mod => mod.LoyaltyManager));
 const MembershipManager = dynamic(() => import('@/components/crm/MembershipManager').then(mod => mod.MembershipManager));
 const PosRefundPanel = dynamic(() => import('@/components/pos/PosRefundPanel').then(mod => mod.PosRefundPanel));
+const PosVoidPanel = dynamic(() => import('@/components/pos/PosVoidPanel').then(mod => mod.PosVoidPanel));
 const AuditTrailViewer = dynamic(() => import('@/components/audit/AuditTrailViewer').then(mod => mod.AuditTrailViewer));
 const PromotionEngine = dynamic(() => import('@/components/crm/PromotionEngine').then(mod => mod.PromotionEngine));
 const CampaignsManager = dynamic(() => import('@/components/crm/CampaignsManager').then(mod => mod.CampaignsManager));
@@ -56,6 +57,7 @@ const TabGuard = dynamic(() => import('@/components/guards/TabGuard').then(mod =
 const ResourceLimitBanner = dynamic(() => import('@/components/ui/ResourceLimitBanner').then(mod => mod.ResourceLimitBanner));
 const NotificationBell = dynamic(() => import('@/components/notifications/NotificationBell').then(mod => mod.NotificationBell));
 import { isPosRelevant, isHospitality, isCampaignRelevant, isMembershipRelevant } from '@/lib/config/domains';
+import { resolvePosVariant } from '@/lib/config/posDomains';
 
 export function DashboardTabs({
     activeTab,
@@ -236,6 +238,7 @@ export function DashboardTabs({
         // POS & Restaurant
         posSession,
         handleStartPosSession,
+        handleClosePosSession,
         restaurantTables,
         kitchenQueue,
         handlePosCheckout,
@@ -760,7 +763,7 @@ export function DashboardTabs({
                             onUpgrade={() => handleTabChange('settings')}
                         >
                             <StorefrontTabShell activeTab="pos">
-                            {category === 'restaurant-cafe' ? (
+                            {resolvePosVariant(category) === 'restaurant' ? (
                                 <RestaurantPOS
                                     businessId={business?.id}
                                     products={filteredProducts}
@@ -771,13 +774,14 @@ export function DashboardTabs({
                                     currency={currency}
                                     session={posSession}
                                 />
-                            ) : ['supermarket', 'grocery', 'wholesale-distribution', 'bakery-confectionery'].includes(category) ? (
+                            ) : resolvePosVariant(category) === 'superstore' ? (
                                 <SuperStorePOS
                                     businessId={business?.id}
                                     category={category}
                                     products={filteredProducts}
                                     customers={filteredCustomers}
                                     onStartSession={handleStartPosSession}
+                                    onCloseSession={handleClosePosSession}
                                     onCompleteSale={handlePosCheckout}
                                     currency={currency}
                                     session={posSession}
@@ -789,6 +793,7 @@ export function DashboardTabs({
                                     products={filteredProducts}
                                     customers={filteredCustomers}
                                     onStartSession={handleStartPosSession}
+                                    onCloseSession={handleClosePosSession}
                                     onCompleteSale={handlePosCheckout}
                                     currency={currency}
                                     session={posSession}
@@ -1096,6 +1101,9 @@ export function DashboardTabs({
                         <TabGuard tabKey="refunds" role={role} planTier={planTier} domainCheck={posRelevant} domainTitle="Refunds & Returns not relevant for this domain" domainMessage="Refund workflows are available only for POS-enabled domains." requiredPlan="starter" featureName="POS & Refunds" onUpgrade={() => handleTabChange('settings')}>
                             <StorefrontTabShell activeTab="refunds">
                             <PosRefundPanel businessId={business?.id} />
+                            <div className="mt-6 pt-6 border-t border-gray-100">
+                                <PosVoidPanel businessId={business?.id} currency={currency} />
+                            </div>
                             </StorefrontTabShell>
                         </TabGuard>
                     )}

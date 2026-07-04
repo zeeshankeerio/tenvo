@@ -1346,6 +1346,12 @@ function BusinessDashboardContent() {
     }
   };
 
+  const handleClosePosSession = useCallback(() => {
+    setPosSession(null);
+    refreshAllData?.();
+    return { success: true };
+  }, [refreshAllData]);
+
   const handlePosCheckout = async (checkoutData) => {
     try {
       toast.loading('Processing POS Checkout...', { id: 'pos' });
@@ -1720,6 +1726,7 @@ function BusinessDashboardContent() {
               restaurantTables,
               kitchenQueue,
               handleStartPosSession,
+              handleClosePosSession,
               handlePosCheckout,
               handleTableAction,
               handleNewRestaurantOrder,

@@ -4,6 +4,8 @@
  */
 import { createPool } from '../../lib/dataLab/pool.mjs';
 import { PRIMARY_DEMO_DOMAIN } from '../../lib/dataLab/domains.mjs';
+import { resolveDomainKey } from '../../lib/config/domainKeyAliases.js';
+import { FEATURED_DEMO_STORES } from '../../lib/marketing/demoStores.js';
 import { tableExists } from '../../lib/dataLab/seedHelpers.mjs';
 import {
   SALES_TREND_UNIFIED_SQL,
@@ -190,6 +192,31 @@ async function main() {
     const users = await client.query('SELECT COUNT(*)::int AS c FROM "user"');
     if (Number(users.rows[0].c) < 1) fail('No users in database');
     else ok(`${users.rows[0].c} user account(s) preserved`);
+
+    // --- Featured demo storefronts (marketing gallery) ---
+    for (const demo of FEATURED_DEMO_STORES) {
+      const row = bizRes.rows.find((b) => String(b.domain).toLowerCase() === demo.domain.toLowerCase());
+      if (!row) {
+        fail(`Featured demo missing: ${demo.domain} — run: bun run data-lab:ensure-demos --only ${demo.domain}`);
+        continue;
+      }
+      const sf = await client.query(
+        `SELECT COALESCE(bs.is_storefront_enabled, true) AS enabled,
+                (SELECT COUNT(*)::int FROM products p
+                 WHERE p.business_id = b.id AND (p.is_deleted = false OR p.is_deleted IS NULL)) AS products
+         FROM businesses b
+         LEFT JOIN business_settings bs ON bs.business_id = b.id
+         WHERE b.id = $1::uuid`,
+        [row.id]
+      );
+      const enabled = sf.rows[0]?.enabled !== false;
+      const products = Number(sf.rows[0]?.products ?? 0);
+      const categoryOk = resolveDomainKey(row.category) === resolveDomainKey(demo.key);
+      if (!enabled) fail(`${demo.domain}: storefront disabled`);
+      else if (products < 1) fail(`${demo.domain}: no active products — run data-lab:ensure-demos --only ${demo.domain} --refresh-catalog`);
+      else if (!categoryOk) fail(`${demo.domain}: category=${row.category}, expected ${resolveDomainKey(demo.key)}`);
+      else ok(`${demo.domain}: storefront on, ${products} products, category ok`);
+    }
 
     // --- Domain coverage ---
     const categories = new Set(bizRes.rows.map((r) => r.category));

@@ -1,19 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Filter, X, Camera } from 'lucide-react';
 
 import { getDomainColors } from '@/lib/domainColors';
 import { cn } from '@/lib/utils';
 
-export function AdvancedSearch({ onSearch, filters = [], placeholder = 'Search...', category = 'retail-shop', hideSearch = false }) {
+export function AdvancedSearch({
+  onSearch,
+  filters = [],
+  placeholder = 'Search...',
+  category = 'retail-shop',
+  hideSearch = false,
+  searchValue,
+  onScanClick,
+}) {
   const colors = getDomainColors(category);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [internalTerm, setInternalTerm] = useState('');
+  const searchTerm = searchValue !== undefined ? searchValue : internalTerm;
   const [activeFilters, setActiveFilters] = useState({});
   const [showFilters, setShowFilters] = useState(false);
 
   const handleSearch = (value) => {
-    setSearchTerm(value);
+    if (searchValue === undefined) setInternalTerm(value);
     onSearch?.(value, activeFilters);
   };
 
@@ -31,7 +40,7 @@ export function AdvancedSearch({ onSearch, filters = [], placeholder = 'Search..
   };
 
   const clearAll = () => {
-    setSearchTerm('');
+    if (searchValue === undefined) setInternalTerm('');
     setActiveFilters({});
     onSearch?.('', {});
   };
@@ -42,16 +51,31 @@ export function AdvancedSearch({ onSearch, filters = [], placeholder = 'Search..
     <div className="w-full space-y-4">
       <div className="flex items-center gap-3">
         {!hideSearch && (
-          <div className="relative flex-1 group">
+          <div className="relative flex-1 group min-w-0">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder={placeholder}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400 font-medium"
+              inputMode="search"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400 font-medium touch-manipulation lg:py-3 max-lg:h-12 max-lg:text-base max-lg:rounded-xl"
             />
           </div>
+        )}
+        {onScanClick && (
+          <button
+            type="button"
+            onClick={onScanClick}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm active:scale-95 touch-manipulation lg:h-11 lg:w-11"
+            aria-label="Scan with camera"
+            title="Scan barcode or QR"
+          >
+            <Camera className="w-5 h-5" />
+          </button>
         )}
         {filters.length > 0 && (
           <button

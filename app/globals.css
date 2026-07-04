@@ -702,3 +702,19 @@
 .dark .tenvo-toast-container > div > div {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
+
+/* html5-qrcode — full-bleed camera preview inside POS scanner */
+[id^="pos-scanner-"] video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+[id^="pos-scanner-"] img {
+  display: none;
+}
+
+[id^="pos-scanner-"] > div {
+  width: 100% !important;
+  height: 100% !important;
+}

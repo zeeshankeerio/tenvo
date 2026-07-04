@@ -82,10 +82,13 @@ export function RestaurantHero({ preset, businessDomain, accent, accentDark, con
                       type="button"
                       onClick={() => setOrderMode(mode.id)}
                       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${
-                        active
-                          ? 'border-violet-300 bg-violet-600 text-white'
-                          : 'border-violet-100 bg-violet-50 text-violet-900 hover:border-violet-200'
+                        active ? 'text-white' : 'text-stone-800 hover:bg-stone-50'
                       }`}
+                      style={
+                        active
+                          ? { backgroundColor: accent, borderColor: accent }
+                          : { borderColor: `${accent}33`, backgroundColor: `${accent}0d` }
+                      }
                     >
                       <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
                       {mode.label}
@@ -142,7 +145,7 @@ export function RestaurantHero({ preset, businessDomain, accent, accentDark, con
             </div>
 
             {quickSearchTerms.length > 0 && (
-              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              <div className="mt-2.5 hidden flex-wrap items-center gap-1.5 lg:flex">
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">Popular</span>
                 {quickSearchTerms.map((term) => (
                   <button

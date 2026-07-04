@@ -12,6 +12,7 @@ import {
   ensureRailProducts,
   resolveRailProductId,
 } from '@/lib/utils/storefrontProductRail';
+import { useRailAutoScroll } from '@/lib/hooks/storefront/useRailAutoScroll';
 
 /**
  * Shared storefront product rail — 6 equal columns on lg, backfilled from catalog pool.
@@ -30,10 +31,13 @@ export function StoreProductRail({
   minItems = 6,
   maxItems = 12,
   accentColor,
+  autoScroll = false,
 }) {
   const trackRef = useRef(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
+
+  useRailAutoScroll(trackRef, { enabled: autoScroll, interval: 4000, cooldown: 6000 });
 
   const railProducts = useMemo(
     () => ensureRailProducts(products, catalogPool ?? products, minItems, maxItems),
