@@ -41,6 +41,7 @@ import { isEntitlementError, getEntitlementErrorMessage, markEntitlementErrorHan
 import { ActionModals } from './components/ActionModals';
 import { DashboardTabs } from './components/DashboardTabs';
 import { BusinessLoadingBoundary } from '@/components/guards/BusinessLoadingBoundary';
+import { useHubReady } from '@/lib/hooks/useHubReady';
 import { useResourceLimits } from '@/lib/hooks/useResourceLimits';
 import { getDomainConfig } from '@/lib/config/domains';
 import { QUICK_ACTION_IDS } from '@/lib/config/quickActions';
@@ -417,6 +418,7 @@ function BusinessDashboardContent() {
 
   // Auth context
   const { user, loading: authLoading } = useAuth();
+  const { hubReady, contentReady, loadingModules } = useHubReady();
 
   const {
     invoices,
@@ -439,8 +441,9 @@ function BusinessDashboardContent() {
     dashboardMetrics,
     expenseBreakdown,
     expenses,
-    isDataLoaded,
     refreshAllData,
+    fetchFinance,
+    fetchAnalytics,
     fetchInventory,
     fetchSales,
     fetchPurchases,
@@ -449,6 +452,11 @@ function BusinessDashboardContent() {
     fetchApprovals,
     fetchExpenses
   } = useData();
+
+  const dashboardTabLoading =
+    activeTab === 'dashboard' &&
+    !dashboardMetrics &&
+    Boolean(loadingModules.analytics);
 
   useEffect(() => {
     const onRefreshDashboardData = async () => {
@@ -464,6 +472,44 @@ function BusinessDashboardContent() {
     window.addEventListener('refresh-dashboard-data', onRefreshDashboardData);
     return () => window.removeEventListener('refresh-dashboard-data', onRefreshDashboardData);
   }, [refreshAllData]);
+
+  // Ensure active tab data is loaded even if background bootstrap is still running.
+  useEffect(() => {
+    if (!business?.id || !hubReady) return;
+
+    const tabFetchers = {
+      dashboard: fetchAnalytics,
+      finance: fetchFinance,
+      accounting: fetchFinance,
+      expenses: fetchExpenses,
+      inventory: fetchInventory,
+      batches: fetchInventory,
+      warehouses: fetchInventory,
+      invoices: fetchSales,
+      customers: fetchSales,
+      quotations: fetchSales,
+      vendors: fetchPurchases,
+      purchases: fetchPurchases,
+      payroll: fetchPayroll,
+      approvals: fetchApprovals,
+      manufacturing: fetchManufacturing,
+    };
+
+    tabFetchers[activeTab]?.();
+  }, [
+    activeTab,
+    business?.id,
+    hubReady,
+    fetchFinance,
+    fetchSales,
+    fetchInventory,
+    fetchPurchases,
+    fetchManufacturing,
+    fetchPayroll,
+    fetchApprovals,
+    fetchExpenses,
+    fetchAnalytics,
+  ]);
 
   useEffect(() => {
     const suppressKey = 'fh_setup_wizard_suppressed';
@@ -1590,7 +1636,7 @@ function BusinessDashboardContent() {
         </div>
       )}
 
-      <BusinessLoadingBoundary isLoading={!isDataLoaded}>
+      <BusinessLoadingBoundary isLoading={!hubReady}>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-2">
           <DashboardTabs
             activeTab={activeTab}
@@ -1621,7 +1667,7 @@ function BusinessDashboardContent() {
             planTier={contextPlanTier || business?.plan_tier || 'free'}
             resourceLimits={resourceLimits}
             domainKnowledge={domainKnowledge}
-            isLoading={!isDataLoaded}
+            isLoading={dashboardTabLoading}
             financeInitialTab={financeInitialTab}
             onFinanceInitialTabConsumed={() => setFinanceInitialTab(null)}
             handlers={{

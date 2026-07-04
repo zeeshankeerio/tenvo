@@ -4,19 +4,16 @@ export const dynamic = 'force-dynamic';
 
 const DashboardClient = nextDynamic(() => import('./DashboardClient'), {
   loading: () => (
-    <div className="flex items-center justify-center min-h-[80vh] w-full bg-background">
-      <div className="flex flex-col items-center space-y-6">
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
-          <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <div className="flex flex-col items-center">
-          <h3 className="text-lg font-semibold text-foreground">Loading Workspace</h3>
-          <p className="text-sm text-muted-foreground animate-pulse">Preparing your enterprise environment...</p>
-        </div>
+    <div className="space-y-6 py-4 animate-pulse">
+      <div className="h-7 w-48 bg-gray-200 rounded-lg" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[...Array(4)].map((i) => (
+          <div key={i} className="h-28 bg-gray-100 rounded-xl" />
+        ))}
       </div>
     </div>
-  )
+  ),
+  ssr: false,
 });
 
 export async function generateMetadata({ params }) {

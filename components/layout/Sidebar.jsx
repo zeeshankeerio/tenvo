@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Package, FileText, Users, Truck, ShoppingCart,
   UtensilsCrossed, Heart, ClipboardList, Landmark, CreditCard, Receipt,
@@ -30,6 +30,7 @@ import {
 import { normalizeDashboardTab } from '@/lib/config/tabs';
 import toast from 'react-hot-toast';
 import { useAppMode } from '@/lib/context/BusyModeContext';
+import { useHubReady } from '@/lib/hooks/useHubReady';
 import { UserManager } from '../auth/UserManager';
 import { LanguageToggle } from '../LanguageToggle';
 import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
@@ -211,6 +212,8 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
   const t = translations[language];
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { hubReady } = useHubReady();
   const currentTab = normalizeDashboardTab(searchParams.get('tab') || 'dashboard');
 
   const pathParts = pathname?.split('/') || [];
@@ -233,12 +236,12 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
   // Keep access gating deterministic between SSR and first client render.
   const safeIsPlatformOwner = hasHydrated ? isPlatformOwner : false;
   const safeIsPlatformAdmin = hasHydrated ? isPlatformAdmin : false;
-  const effectiveRole = (!hasHydrated || businessLoading || !role) ? 'viewer' : role;
+  const effectiveRole = (!hasHydrated || !hubReady) ? 'viewer' : role;
   const planTier = hasHydrated
     ? (safeIsPlatformOwner ? 'enterprise' : resolvePlanTier(contextPlanTier || business?.plan_tier || 'free'))
     : 'free';
   const planName = safeIsPlatformOwner ? 'Platform Owner' : (PLAN_TIERS[planTier]?.name || 'Free');
-  const navAccessReady = hasHydrated && !businessLoading && (safeIsPlatformOwner || role !== null);
+  const navAccessReady = hasHydrated && hubReady;
 
   const [collapsedSections, setCollapsedSections] = useState({});
 
@@ -457,6 +460,17 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
                                 e.preventDefault();
                                 toast('Set a store domain in Store Settings first', { icon: '🏪' });
                                 return;
+                              }
+                              if (
+                                !isExternal &&
+                                item.key !== 'platform-admin' &&
+                                !e.metaKey &&
+                                !e.ctrlKey &&
+                                !e.shiftKey &&
+                                e.button === 0
+                              ) {
+                                e.preventDefault();
+                                router.push(itemHref, { scroll: false });
                               }
                               if (window.innerWidth < 1024) onClose?.();
                             }}

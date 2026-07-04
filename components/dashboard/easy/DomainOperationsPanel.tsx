@@ -97,6 +97,8 @@ export interface DomainOperationsPanelProps {
   isActive?: boolean;
   variant?: 'tab' | 'compact';
   onBadgeCount?: (count: number | null) => void;
+  /** Hide order timeline when a unified activity feed is shown elsewhere. */
+  hideOrderTimeline?: boolean;
 }
 
 export function DomainOperationsPanel({
@@ -111,6 +113,7 @@ export function DomainOperationsPanel({
   isActive = true,
   variant = 'tab',
   onBadgeCount,
+  hideOrderTimeline = false,
 }: DomainOperationsPanelProps) {
   const [loading, setLoading] = useState(false);
   const [snapshot, setSnapshot] = useState<OperationsSnapshot | null>(null);
@@ -493,8 +496,8 @@ export function DomainOperationsPanel({
                 </div>
               ))
             )}
-            <Button variant="outline" size="sm" className="mt-2 h-7 w-full text-[11px]" onClick={() => onQuickAction?.('orders')}>
-              Open orders hub
+            <Button variant="outline" size="sm" className="mt-2 h-7 w-full text-[11px]" onClick={() => onQuickAction?.('inquiries')}>
+              Open customer inquiries
             </Button>
           </CardContent>
         </Card>
@@ -524,13 +527,14 @@ export function DomainOperationsPanel({
           </CardContent>
         </Card>
 
+        {!hideOrderTimeline ? (
         <Card className="border-neutral-200 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4" />
-              Recent activity
+              Order timeline
             </CardTitle>
-            <CardDescription className="text-xs">Requests & online orders timeline</CardDescription>
+            <CardDescription className="text-xs">Requests & online orders in period</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {schedule.length === 0 ? (
@@ -552,6 +556,7 @@ export function DomainOperationsPanel({
             )}
           </CardContent>
         </Card>
+        ) : null}
       </div>
     </div>
   );

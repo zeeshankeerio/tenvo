@@ -232,6 +232,25 @@ export function StoreThemeStyles({ business, settings }) {
           [data-store-theme] .store-accent-text {
             color: var(--store-accent);
           }
+          @keyframes store-marquee-scroll {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
+          }
+          [data-store-theme] .store-marquee-track {
+            animation: store-marquee-scroll var(--store-marquee-duration, 38s) linear infinite;
+            will-change: transform;
+          }
+          [data-store-theme] .store-marquee-track--reverse {
+            animation-direction: reverse;
+          }
+          [data-store-theme] .store-marquee-track:hover {
+            animation-play-state: paused;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            [data-store-theme] .store-marquee-track {
+              animation: none;
+            }
+          }
         `,
       }}
     />

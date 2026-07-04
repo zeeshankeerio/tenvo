@@ -26,6 +26,7 @@ interface PredictivePlanningPortletProps {
     /** Business / domain context; `intelligence` is passed to the forecast action when set. */
     domainKnowledge?: unknown;
     dateRange?: { from: Date; to: Date };
+    layout?: 'cards' | 'compact';
 }
 
 function normalizeForecastRow(raw: Record<string, unknown>): DemandForecastItem {
@@ -53,10 +54,50 @@ function buildDateFilter(dr?: { from: Date; to: Date }) {
     return { from, to };
 }
 
+type ForecastQuality = {
+    label: string;
+    badgeClass: string;
+    forecastDisplay: string;
+    forecastTone: string;
+    showBuildingHint: boolean;
+};
+
+function resolveForecastQuality(item: DemandForecastItem): ForecastQuality {
+    const pct = Math.round((item.confidence || 0) * 100);
+    const hasHistory = item.forecast > 0 || item.isAi;
+
+    if (pct >= 70 && hasHistory) {
+        return {
+            label: `${pct}%`,
+            badgeClass: 'text-emerald-700 bg-emerald-50 border-emerald-100',
+            forecastDisplay: String(item.forecast),
+            forecastTone: 'text-wine',
+            showBuildingHint: false,
+        };
+    }
+    if (pct >= 45) {
+        return {
+            label: `${pct}%`,
+            badgeClass: 'text-amber-700 bg-amber-50 border-amber-100',
+            forecastDisplay: item.forecast > 0 ? String(item.forecast) : '—',
+            forecastTone: item.forecast > 0 ? 'text-wine' : 'text-slate-400',
+            showBuildingHint: item.forecast <= 0,
+        };
+    }
+    return {
+        label: 'Building',
+        badgeClass: 'text-slate-600 bg-slate-50 border-slate-200',
+        forecastDisplay: '—',
+        forecastTone: 'text-slate-400',
+        showBuildingHint: true,
+    };
+}
+
 export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet({
     businessId,
     domainKnowledge,
     dateRange,
+    layout = 'cards',
 }: PredictivePlanningPortletProps) {
     const [data, setData] = useState<DemandForecastItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -84,6 +125,8 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
         void load();
     }, [businessId, domainKnowledge, dateRange]);
 
+    const lowConfidenceCount = data.filter((row) => (row.confidence || 0) < 0.45).length;
+
     return (
         <Portlet
             title="Predictive Planning"
@@ -96,8 +139,61 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                 </div>
             }
         >
+            {!loading && data.length > 0 && lowConfidenceCount === data.length ? (
+                <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
+                    Forecasts need more dated sales history. Record invoices for these SKUs to improve accuracy.
+                </div>
+            ) : null}
+            {layout === 'compact' ? (
+                <div className="overflow-x-auto -mx-1">
+                    <table className="w-full min-w-[520px] text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-gray-100">
+                                <th className="pb-2 pr-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Product</th>
+                                <th className="pb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Stock</th>
+                                <th className="pb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">30d Forecast</th>
+                                <th className="pb-2 pl-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Conf.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.slice(0, 6).map((item) => {
+                                const quality = resolveForecastQuality(item);
+                                return (
+                                <tr key={item.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
+                                    <td className="py-2.5 pr-3">
+                                        <p className="text-xs font-semibold text-gray-900 truncate max-w-[12rem]">{item.name}</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase">{item.sku || 'N/A'}</p>
+                                    </td>
+                                    <td className="py-2.5 px-2 text-sm font-semibold tabular-nums text-gray-900">{item.current}</td>
+                                    <td className="py-2.5 px-2">
+                                        <span className={cn('text-sm font-semibold tabular-nums', quality.forecastTone)}>
+                                            {quality.forecastDisplay}
+                                        </span>
+                                        {quality.showBuildingHint ? (
+                                            <p className="text-[9px] text-slate-400 mt-0.5">Needs sales data</p>
+                                        ) : null}
+                                    </td>
+                                    <td className="py-2.5 pl-2">
+                                        <span className={cn(
+                                            'inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border',
+                                            quality.badgeClass
+                                        )}>
+                                            {quality.label}
+                                        </span>
+                                    </td>
+                                </tr>
+                            );})}
+                        </tbody>
+                    </table>
+                    {data.length === 0 && !loading ? (
+                        <p className="py-6 text-center text-xs text-gray-400">No forecasting data available.</p>
+                    ) : null}
+                </div>
+            ) : (
             <div className="space-y-3">
-                {data.slice(0, 4).map((item) => (
+                {data.slice(0, 4).map((item) => {
+                    const quality = resolveForecastQuality(item);
+                    return (
                     <div key={item.id} className="p-3 rounded-xl border border-gray-100 hover:border-wine/20 transition-all bg-white shadow-sm">
                         <div className="flex items-start justify-between mb-2">
                             <div>
@@ -105,11 +201,11 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                                 <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">SKU: {item.sku || 'N/A'}</p>
                             </div>
                             <div className={cn(
-                                "flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                                item.trend === 'up' ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-red-600 bg-red-50 border-red-100"
+                                'flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                                quality.badgeClass
                             )}>
-                                {item.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                {(item.confidence * 100).toFixed(0)}% Conf.
+                                {quality.label === 'Building' ? null : item.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                {quality.label}{quality.label === 'Building' ? '' : ' Conf.'}
                             </div>
                         </div>
 
@@ -124,8 +220,12 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                             <div>
                                 <p className="text-[10px] text-gray-400 font-semibold uppercase mb-1">AI Forecast (30d)</p>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-lg font-semibold text-wine">{item.forecast}</span>
-                                    <span className="text-[10px] font-bold text-wine/50">Units</span>
+                                    <span className={cn('text-lg font-semibold', quality.forecastTone)}>{quality.forecastDisplay}</span>
+                                    {quality.forecastDisplay !== '—' ? (
+                                        <span className="text-[10px] font-bold text-wine/50">Units</span>
+                                    ) : (
+                                        <span className="text-[10px] font-medium text-slate-400">More sales needed</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -164,7 +264,7 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                             </button>
                         )}
                     </div>
-                ))}
+                );})}
 
                 {data.length === 0 && !loading && (
                     <div className="text-center py-6">
@@ -172,6 +272,7 @@ export const PredictivePlanningPortlet = memo(function PredictivePlanningPortlet
                     </div>
                 )}
             </div>
+            )}
         </Portlet>
     );
 });

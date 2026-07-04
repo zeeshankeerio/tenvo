@@ -4,7 +4,7 @@ import React, { useMemo, useCallback } from 'react';
 import {
     TrendingUp, Users, ShoppingCart,
     CreditCard, Clock,
-    Zap, ArrowUpRight, ArrowDownRight,
+    Zap,
     Boxes, Warehouse, RotateCcw, BadgeDollarSign,
     Package, FileText, BarChart3, Plus
 } from 'lucide-react';
@@ -17,17 +17,17 @@ import { getDomainColors } from '@/lib/domainColors';
 import { isCampaignRelevant } from '@/lib/config/domains';
 import { getDomainKnowledge } from '@/lib/domainKnowledge';
 import { KPIMeter } from '../islands/portlets/KPIMeter.client';
+import { DomainMetricCard } from '../islands/DomainMetricCard.client';
+import { PeriodSnapshotCard } from '../islands/PeriodSnapshotCard.client';
 import { QuickActionTiles } from '../islands/portlets/QuickActionTiles.client';
 import { RemindersPortlet } from '../islands/portlets/RemindersPortlet.client';
 import { RecentActivityFeed } from '../islands/portlets/RecentActivityFeed.client';
 import { AnalyticsDashboard } from '../islands/AnalyticsDashboard.client';
-import { PredictivePlanningPortlet } from '../islands/portlets/PredictivePlanningPortlet.client';
-import { AgenticAuditPortlet } from '../islands/portlets/AgenticAuditPortlet.client';
+import { MergedActionInsights } from '../islands/MergedActionInsights.client';
 import NetsuiteDashboard from '../islands/NetsuiteDashboard.client';
 import { DashboardMobileHub } from '@/components/dashboard/mobile/DashboardMobileHub';
 import { EasyBusinessDashboard } from '@/components/dashboard/easy/EasyBusinessDashboard';
 import { DomainOperationsPanel } from '@/components/dashboard/easy/DomainOperationsPanel';
-import { IndustryInsights } from '../islands/IndustryInsights.client';
 import { resolveProductStock } from '@/lib/dashboard/easyDashboardHelpers';
 
 // ===============================================================
@@ -131,44 +131,12 @@ interface MetricCardProps {
     value: string | number;
     subValue?: string;
     trend?: number;
+    trendHint?: string;
     icon: React.ElementType;
     colorClass: string;
     className?: string;
-}
-
-// ===============================================================
-// SPECIALIZED KPI CARDS
-// ===============================================================
-
-function DomainMetricCard({ label, value, subValue, trend, icon: Icon, colorClass, className }: MetricCardProps) {
-    return (
-        <Card className={cn("border-none shadow-sm hover:shadow-md transition-all overflow-hidden bg-white h-full", className)}>
-            <CardContent className="p-3.5">
-                <div className="flex items-start justify-between">
-                    <div>
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-                        <h3 className="text-lg xl:text-xl font-semibold text-gray-900 leading-tight">{value}</h3>
-                        <p className="text-[10px] font-bold text-gray-500 mt-1">{subValue}</p>
-                    </div>
-                    <div className={cn("p-2 rounded-xl shadow-sm", colorClass)}>
-                        <Icon className="w-5 h-5 text-white" />
-                    </div>
-                </div>
-                {trend !== undefined && trend !== 0 && (
-                    <div className="mt-3 flex items-center gap-1">
-                        {trend > 0 ? (
-                            <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-                        ) : (
-                            <ArrowDownRight className="w-3 h-3 text-rose-500" />
-                        )}
-                        <span className={cn("text-[10px] font-bold", trend > 0 ? "text-emerald-600" : "text-rose-600")}>
-                            {Math.abs(trend)}% from last period
-                        </span>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
+    sparkline?: number[];
+    invertTrendColor?: boolean;
 }
 
 // ===============================================================
@@ -314,55 +282,6 @@ export function DomainDashboard({
     const ordersTrend = calcGrowth(periodMetrics.currentOrders, periodMetrics.previousOrders);
     const expenseTrend = calcGrowth(periodMetrics.currentExpenses, periodMetrics.previousExpenses);
     const customerTrend = dashboardMetrics?.customers?.growth ?? calcGrowth(periodMetrics.currentCustomers, periodMetrics.previousCustomers);
-
-    // --- Robust KPI Logic -----------------------------------------
-    const domainKpis = useMemo(() => {
-        const expenseValue = periodMetrics.currentExpenses > 0 ? periodMetrics.currentExpenses : totalExpenses;
-        const activeCustomers = dashboardMetrics?.customers?.active ?? periodMetrics.currentCustomers;
-        const avgOrderValueKpi = periodMetrics.currentRevenue / Math.max(periodMetrics.currentOrders, 1);
-        const returnRateKpi = (periodMetrics.returnInvoices / Math.max(periodMetrics.currentOrders, 1)) * 100;
-        /** Return-doc volume vs prior window (negated so growth in returns reads as risk/down). */
-        const returnVolumeTrend = calcGrowth(periodMetrics.returnInvoices, periodMetrics.previousReturnInvoices);
-
-        return [
-            {
-                id: 'expenses',
-                label: 'Period Expenses',
-                value: formatCurrencyCompact(expenseValue),
-                subValue: 'Operating costs',
-                trend: Number((-expenseTrend).toFixed(1)),
-                icon: CreditCard,
-                color: 'bg-rose-600'
-            },
-            {
-                id: 'customers',
-                label: 'Active Customers',
-                value: activeCustomers || 0,
-                subValue: 'Retention focus',
-                trend: Number(customerTrend.toFixed(1)),
-                icon: Users,
-                color: 'bg-brand-primary'
-            },
-            {
-                id: 'avg_order',
-                label: 'Avg Order Value',
-                value: formatCurrencyCompact(avgOrderValueKpi),
-                subValue: 'Revenue per order',
-                trend: Number(revenueTrendSigned.toFixed(1)),
-                icon: TrendingUp,
-                color: 'bg-brand-primary-dark'
-            },
-            {
-                id: 'return_rate',
-                label: 'Return Rate',
-                value: `${returnRateKpi.toFixed(1)}%`,
-                subValue: `${periodMetrics.returnInvoices} return docs`,
-                trend: Number((-returnVolumeTrend).toFixed(1)),
-                icon: RotateCcw,
-                color: 'bg-rose-700'
-            }
-        ].filter((item, index, arr) => arr.findIndex((candidate) => candidate.label === item.label) === index);
-    }, [dashboardMetrics, periodMetrics, totalExpenses, revenueTrendSigned, expenseTrend, customerTrend, formatCurrencyCompact]);
 
     const lowStockFallback = useMemo(() => {
         return products.filter((product: ProductLike) => {
@@ -529,8 +448,8 @@ export function DomainDashboard({
     const stockCheckRecencyDisplay = `${stockCheckRecencyValue}d`;
     const stockCheckRecencyDetail = stockCheckRecency === null ? 'No stock touch timestamps yet' : 'Since last stock touch';
 
-    /** Compact header strip: cash + throughput (low stock stays in reminders + KPI row to avoid duplication). */
-    const dashboardHeaderHighlights = useMemo(
+    /** Period snapshot: operational + financial metrics (excludes hero KPI duplicates). */
+    const periodSnapshotMetrics = useMemo(
         () => [
             {
                 label: 'Open Invoices',
@@ -545,19 +464,125 @@ export function DomainDashboard({
                 icon: ShoppingCart,
             },
             {
-                label: 'Overdue Invoices',
-                value: remindersData.overdueInvoices || 0,
-                tone: remindersData.overdueInvoices > 0 ? 'text-rose-600' : 'text-slate-800',
-                icon: Clock,
-            },
-            {
                 label: 'Units Sold',
                 value: periodMetrics.soldUnits.toLocaleString(),
                 tone: periodMetrics.soldUnits > 0 ? 'text-slate-900' : 'text-slate-400',
                 icon: BarChart3,
             },
+            {
+                label: 'Paid Order Ratio',
+                value: paidOrderRateDisplay,
+                tone: paidOrderRate !== null && paidOrderRate < 60 ? 'text-rose-600' : 'text-slate-800',
+                icon: CreditCard,
+            },
+            {
+                label: 'Coverage Days',
+                value: coverageDays > 365 ? '365+' : coverageDays,
+                tone: 'text-slate-900',
+                icon: Warehouse,
+            },
+            {
+                label: 'In-Stock Units',
+                value: inStockUnits.toLocaleString(),
+                tone: 'text-slate-900',
+                icon: Boxes,
+            },
+            {
+                label: 'Period Expenses',
+                value: formatCurrencyCompact(
+                    periodMetrics.currentExpenses > 0 ? periodMetrics.currentExpenses : totalExpenses
+                ),
+                tone: 'text-slate-900',
+                icon: CreditCard,
+            },
+            {
+                label: 'Active Customers',
+                value: (dashboardMetrics?.customers?.active ?? periodMetrics.currentCustomers).toLocaleString(),
+                tone: 'text-slate-900',
+                icon: Users,
+            },
+            {
+                label: 'Avg Order Value',
+                value: formatCurrencyCompact(avgOrderValue),
+                tone: 'text-slate-900',
+                icon: TrendingUp,
+            },
+            {
+                label: 'Return Rate',
+                value: `${returnRate.toFixed(1)}%`,
+                tone: returnRate > 5 ? 'text-rose-600' : 'text-slate-800',
+                icon: RotateCcw,
+            },
+            {
+                label: 'Outstanding A/R',
+                value: formatCurrencyCompact(outstandingAmount),
+                tone: outstandingAmount > 0 ? 'text-amber-700' : 'text-slate-800',
+                icon: BadgeDollarSign,
+            },
+            {
+                label: 'Stock Check',
+                value: stockCheckRecencyDisplay,
+                tone: stockCheckRecencyValue > 30 ? 'text-amber-600' : 'text-slate-800',
+                icon: Clock,
+            },
         ],
-        [remindersData, periodMetrics.soldUnits, openInvoicesCount]
+        [
+            openInvoicesCount,
+            remindersData.pendingOrders,
+            periodMetrics.soldUnits,
+            periodMetrics.currentExpenses,
+            periodMetrics.currentCustomers,
+            paidOrderRateDisplay,
+            paidOrderRate,
+            coverageDays,
+            inStockUnits,
+            totalExpenses,
+            dashboardMetrics?.customers?.active,
+            formatCurrencyCompact,
+            avgOrderValue,
+            returnRate,
+            outstandingAmount,
+            stockCheckRecencyDisplay,
+            stockCheckRecencyValue,
+        ]
+    );
+
+    /** Compact header strip: cash + throughput (low stock stays in reminders only). */
+    const dashboardHeaderHighlights = useMemo(
+        () => [
+            {
+                label: 'Pending Returns',
+                value: periodMetrics.pendingReturns,
+                tone: periodMetrics.pendingReturns > 0 ? 'text-amber-600' : 'text-slate-800',
+                icon: RotateCcw,
+            },
+            {
+                label: 'Warehouse Util.',
+                value: warehouseUtilizationDisplay,
+                tone: warehouseUtilizationValue >= 90 ? 'text-amber-600' : 'text-slate-800',
+                icon: Warehouse,
+            },
+            {
+                label: 'Cash Flow',
+                value: formatCurrencyCompact(dashboardMetrics?.cashFlow?.current || 0),
+                tone: 'text-emerald-700',
+                icon: BadgeDollarSign,
+            },
+            {
+                label: 'Efficiency',
+                value: `${domainEfficiency}%`,
+                tone: domainEfficiency >= 85 ? 'text-emerald-600' : 'text-amber-600',
+                icon: TrendingUp,
+            },
+        ],
+        [
+            periodMetrics.pendingReturns,
+            warehouseUtilizationDisplay,
+            warehouseUtilizationValue,
+            formatCurrencyCompact,
+            dashboardMetrics?.cashFlow?.current,
+            domainEfficiency,
+        ]
     );
 
     const hasCoreData = (products.length + invoices.length + customers.length) > 0;
@@ -628,36 +653,64 @@ export function DomainDashboard({
         return labels[activePreset];
     }, [activePreset]);
 
-    const topStripKpis = useMemo(() => ([
-        {
-            label: 'Orders In Period',
-            value: periodMetrics.currentOrders,
-            trend: Number(ordersTrend.toFixed(1)),
-            icon: ShoppingCart,
-            colorClass: 'bg-cyan-500'
-        },
-        {
-            label: 'Revenue In Period',
-            value: formatCurrencyCompact(periodMetrics.currentRevenue),
-            trend: Number(revenueTrendSigned.toFixed(1)),
-            icon: BadgeDollarSign,
-            colorClass: 'bg-emerald-500'
-        },
-        {
-            label: 'Inventory Value',
-            value: formatCurrencyCompact(inventoryValue),
-            trend: undefined,
-            icon: Boxes,
-            colorClass: 'bg-brand-primary-dark'
-        },
-        {
-            label: 'Overdue',
-            value: remindersData.overdueInvoices,
-            trend: remindersData.overdueInvoices > 0 ? -Math.min(remindersData.overdueInvoices * 3, 25) : 0,
-            icon: Clock,
-            colorClass: 'bg-rose-500'
-        }
-    ].filter((item, index, arr) => arr.findIndex((candidate) => candidate.label === item.label) === index)), [periodMetrics.currentOrders, periodMetrics.currentRevenue, ordersTrend, revenueTrendSigned, inventoryValue, remindersData.overdueInvoices, formatCurrencyCompact]);
+    const topStripKpis = useMemo((): MetricCardProps[] => {
+        const revenueSeries = chartData
+            .map((point) => Number(point.revenue) || 0)
+            .filter((_, index, arr) => arr.length > 0);
+        const orderSeries = chartData
+            .map((point) => Number(point.orderCount) || Number(point.sales) || 0)
+            .filter((_, index, arr) => arr.length > 0);
+
+        return [
+            {
+                label: 'Orders In Period',
+                value: periodMetrics.currentOrders,
+                subValue: periodLabel,
+                trend: Number(ordersTrend.toFixed(1)),
+                icon: ShoppingCart,
+                colorClass: 'bg-cyan-500',
+                sparkline: orderSeries.length >= 2 ? orderSeries : undefined,
+            },
+            {
+                label: 'Revenue In Period',
+                value: formatCurrencyCompact(periodMetrics.currentRevenue),
+                subValue: periodLabel,
+                trend: Number(revenueTrendSigned.toFixed(1)),
+                icon: BadgeDollarSign,
+                colorClass: 'bg-emerald-500',
+                sparkline: revenueSeries.length >= 2 ? revenueSeries : undefined,
+            },
+            {
+                label: 'Inventory Value',
+                value: formatCurrencyCompact(inventoryValue),
+                subValue: 'Stock at cost / GL',
+                trend: undefined,
+                icon: Boxes,
+                colorClass: 'bg-brand-primary-dark',
+            },
+            {
+                label: 'Overdue',
+                value: remindersData.overdueInvoices,
+                subValue: remindersData.overdueInvoices > 0 ? 'Needs collections follow-up' : 'All clear',
+                trend: undefined,
+                trendHint: remindersData.overdueInvoices > 0
+                    ? `${remindersData.overdueInvoices} invoice${remindersData.overdueInvoices > 1 ? 's' : ''} past due`
+                    : undefined,
+                icon: Clock,
+                colorClass: 'bg-rose-500',
+            },
+        ];
+    }, [
+        chartData,
+        periodMetrics.currentOrders,
+        periodMetrics.currentRevenue,
+        ordersTrend,
+        revenueTrendSigned,
+        inventoryValue,
+        remindersData.overdueInvoices,
+        formatCurrencyCompact,
+        periodLabel,
+    ]);
 
     const intelligentInsights = useMemo(() => {
         const insights = [] as Array<{ title: string; text: string; tone: string; actionTab: string }>;
@@ -1032,180 +1085,41 @@ export function DomainDashboard({
                             key={item.label}
                             label={item.label}
                             value={item.value}
-                            subValue={periodLabel}
+                            subValue={item.subValue}
                             trend={item.trend}
+                            trendHint={item.trendHint}
                             icon={item.icon}
                             colorClass={item.colorClass}
+                            sparkline={item.sparkline}
+                            invertTrendColor={item.invertTrendColor}
                             className="h-full"
                         />
                     ))}
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-2.5 xl:items-stretch">
-                    <Card className="xl:col-span-8 border border-slate-200 shadow-sm bg-white">
-                        <CardContent className="p-3 md:p-3.5">
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
-                                            Dashboard overview
-                                        </p>
-                                        <span
-                                            className="inline-flex items-center gap-1 rounded border border-emerald-200/70 bg-emerald-50/80 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800"
-                                            title="Figures refresh when workspace data or the date filter changes"
-                                        >
-                                            <TrendingUp className="h-3 w-3 shrink-0" aria-hidden />
-                                            Live
-                                        </span>
-                                    </div>
-                                    <h2 className="text-lg font-semibold tracking-tight text-slate-900 md:text-xl">Business overview</h2>
-                                    <p className="mt-1 text-[11px] leading-snug text-slate-600">
-                                        <span className="font-semibold tabular-nums text-slate-800">
-                                            {new Date(dateRange.from).toLocaleDateString()} -{' '}
-                                            {new Date(dateRange.to).toLocaleDateString()}
-                                        </span>
-                                        <span className="text-slate-300"> · </span>
-                                        <span className="font-semibold text-slate-700">{activePresetDisplayLabel}</span>
-                                    </p>
-                                    <p className="mt-1 max-w-2xl text-[10px] leading-snug text-slate-500">
-                                        All metrics in this column use the workspace date range above.
-                                    </p>
-                                </div>
-                            </div>
+                <PeriodSnapshotCard
+                    dateFrom={new Date(dateRange.from)}
+                    dateTo={new Date(dateRange.to)}
+                    presetLabel={activePresetDisplayLabel}
+                    healthChips={dashboardHeaderHighlights}
+                    metrics={periodSnapshotMetrics}
+                    collapsedCount={6}
+                />
 
-                            <div
-                                className="mt-2.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4 md:gap-2"
-                                role="group"
-                                aria-label="Period snapshot"
-                            >
-                                {dashboardHeaderHighlights.map((item) => {
-                                    const Hi = item.icon;
-                                    return (
-                                        <div
-                                            key={item.label}
-                                            className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/60 px-2 py-1.5"
-                                        >
-                                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-100 bg-white text-slate-500">
-                                                <Hi className="h-3 w-3" aria-hidden />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-[10px] font-semibold uppercase leading-tight tracking-wider text-slate-400">
-                                                    {item.label}
-                                                </p>
-                                                <p className={cn('text-sm font-semibold tabular-nums leading-tight', item.tone)}>
-                                                    {item.value}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <div className="xl:col-span-4 grid grid-cols-2 gap-2 auto-rows-fr">
-                        <Card className="border border-slate-200 shadow-sm bg-white">
-                            <CardContent className="p-3.5">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Coverage Days</p>
-                                <p className="text-lg font-semibold text-slate-900 mt-1">{coverageDays > 365 ? '365+' : coverageDays}</p>
-                                <p className="text-[10px] text-slate-500 mt-1">Estimated stock coverage</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="border border-slate-200 shadow-sm bg-white">
-                            <CardContent className="p-3.5">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">In-Stock Units</p>
-                                <p className="text-lg font-semibold text-slate-900 mt-1">{inStockUnits.toLocaleString()}</p>
-                                <p className="text-[10px] text-slate-500 mt-1">Total available quantity</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="border border-slate-200 shadow-sm bg-white">
-                            <CardContent className="p-3.5">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Warehouse Utilization</p>
-                                <p className="text-lg font-semibold text-slate-900 mt-1">{warehouseUtilizationDisplay}</p>
-                                <p className="text-[10px] text-slate-500 mt-1">{warehouseUtilizationDetail}</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="border border-slate-200 shadow-sm bg-white">
-                            <CardContent className="p-3.5">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Paid Order Ratio</p>
-                                <p className="text-lg font-semibold text-slate-900 mt-1">{paidOrderRateDisplay}</p>
-                                <p className="text-[10px] text-slate-500 mt-1">{paidOrderRateDetail}</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-
-                {/* Domain Specialized KPI Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                    {domainKpis.map(kpi => (
-                        <DomainMetricCard
-                            key={kpi.id}
-                            label={kpi.label}
-                            value={kpi.value}
-                            subValue={kpi.subValue}
-                            trend={kpi.trend}
-                            icon={kpi.icon}
-                            colorClass={kpi.color}
-                            className="h-full"
-                        />
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 lg:auto-rows-fr">
-                    <DomainMetricCard
-                        label="Pending Returns"
-                        value={periodMetrics.pendingReturns}
-                        subValue="Awaiting processing"
-                        trend={periodMetrics.pendingReturns > 0 ? -Math.min(periodMetrics.pendingReturns * 2, 20) : 0}
-                        icon={Clock}
-                        colorClass="bg-amber-500"
-                        className="h-full"
-                    />
-                    <DomainMetricCard
-                        label="Outstanding A/R"
-                        value={formatCurrencyCompact(outstandingAmount)}
-                        subValue="Unpaid / partial invoice balance"
-                        trend={remindersData.overdueInvoices > 0 ? -Math.min(remindersData.overdueInvoices * 4, 30) : 0}
-                        icon={CreditCard}
-                        colorClass="bg-slate-700"
-                        className="h-full"
-                    />
-                    <DomainMetricCard
-                        label="Stock Check Recency"
-                        value={stockCheckRecencyDisplay}
-                        subValue={stockCheckRecencyDetail}
-                        trend={stockCheckRecencyValue > 30 ? -Math.min(stockCheckRecencyValue / 2, 25) : 4}
-                        icon={Warehouse}
-                        colorClass="bg-slate-600"
-                        className="h-full"
-                    />
-                </div>
-
-                {/* Analytics, full main width; Domain Efficiency lives in sidebar under Recent Activity */}
                 <div className="min-h-0">
                     <AnalyticsDashboard
                         businessId={activeBusinessId}
                         category={category}
+                        currency={currency}
+                        business={business}
                         chartData={chartData}
                         invoices={invoices}
                         products={products}
                         colors={colors}
+                        domainKnowledge={domainKnowledge}
                         dateRange={dateRange}
                         onQuickAction={onQuickAction}
                     />
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 lg:items-stretch">
-                    <div className="lg:col-span-8 min-h-0">
-                        <PredictivePlanningPortlet
-                            businessId={activeBusinessId}
-                            domainKnowledge={domainKnowledge}
-                            dateRange={dateRange}
-                        />
-                    </div>
-                    <div className="lg:col-span-4">
-                        <AgenticAuditPortlet businessId={activeBusinessId} />
-                    </div>
                 </div>
                 </div>
 
@@ -1213,24 +1127,13 @@ export function DomainDashboard({
                 <div className="space-y-3 lg:hidden">
                     <RemindersPortlet data={remindersData} onItemClick={onQuickAction} />
 
-                    <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
-                        <div className="mb-2 flex items-center gap-2">
-                            <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
-                            <h3 className="text-sm font-semibold text-gray-900">Intelligent Insights</h3>
-                        </div>
-                        <div className="space-y-2">
-                            {intelligentInsights.slice(0, 3).map((insight, idx) => (
-                                <button
-                                    key={`mobile-${insight.title}-${idx}`}
-                                    onClick={() => onQuickAction?.(insight.actionTab)}
-                                    className="w-full rounded-xl border border-gray-100 bg-gray-50/80 p-2.5 text-left active:bg-gray-100"
-                                >
-                                    <p className="text-[10px] font-bold text-slate-700">{insight.title}</p>
-                                    <p className="mt-0.5 text-[10px] text-slate-600 leading-snug line-clamp-2">{insight.text}</p>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                    <MergedActionInsights
+                        category={category}
+                        domainKnowledge={domainKnowledge as Record<string, unknown> | undefined}
+                        operationalInsights={intelligentInsights}
+                        reminders={remindersData}
+                        onQuickAction={onQuickAction}
+                    />
 
                     <RecentActivityFeed
                         businessId={activeBusinessId}
@@ -1244,7 +1147,13 @@ export function DomainDashboard({
             <div className="hidden lg:flex flex-col gap-2.5 order-2 lg:order-2 lg:col-span-3 min-h-0">
                 <RemindersPortlet data={remindersData} onItemClick={onQuickAction} />
 
-                <IndustryInsights category={category} domainKnowledge={domainKnowledge as Record<string, unknown> | undefined} />
+                <MergedActionInsights
+                    category={category}
+                    domainKnowledge={domainKnowledge as Record<string, unknown> | undefined}
+                    operationalInsights={intelligentInsights}
+                    reminders={remindersData}
+                    onQuickAction={onQuickAction}
+                />
 
                 <DomainOperationsPanel
                     businessId={activeBusinessId}
@@ -1257,34 +1166,8 @@ export function DomainDashboard({
                     onQuickAction={onQuickAction}
                     isActive
                     variant="compact"
+                    hideOrderTimeline
                 />
-
-                <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm shrink-0">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
-                        <h3 className="text-sm font-semibold text-gray-900">Intelligent Insights</h3>
-                    </div>
-                    <div className="space-y-2.5 max-h-72 overflow-y-auto overscroll-y-contain pr-0.5">
-                        {intelligentInsights.map((insight, idx) => (
-                            <button
-                                key={`${insight.title}-${idx}`}
-                                onClick={() => onQuickAction?.(insight.actionTab)}
-                                aria-label={`${insight.title}. ${insight.text}`}
-                                className={cn(
-                                    'w-full text-left p-2.5 rounded-xl border transition-all hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30',
-                                    insight.tone === 'indigo' && 'bg-brand-50 border-brand-100 hover:bg-brand-100/50',
-                                    insight.tone === 'emerald' && 'bg-emerald-50 border-emerald-100 hover:bg-emerald-100/50',
-                                    insight.tone === 'amber' && 'bg-amber-50 border-amber-100 hover:bg-amber-100/50',
-                                    insight.tone === 'rose' && 'bg-rose-50 border-rose-100 hover:bg-rose-100/50',
-                                    insight.tone === 'slate' && 'bg-slate-50 border-slate-100 hover:bg-slate-100/60'
-                                )}
-                            >
-                                <p className="text-[11px] font-bold text-slate-700">{insight.title}</p>
-                                <p className="text-[10px] text-slate-600 mt-1">{insight.text}</p>
-                            </button>
-                        ))}
-                    </div>
-                </div>
 
                 <div className="flex min-h-0 flex-col gap-2.5">
                     <RecentActivityFeed
@@ -1302,38 +1185,6 @@ export function DomainDashboard({
                             trendLabel="vs previous period"
                         />
                     </div>
-                    <Card className="border border-slate-200 shadow-sm bg-white shrink-0">
-                        <CardContent className="p-3 flex flex-col justify-center">
-                            <div className="flex flex-col gap-2">
-                                <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-2.5 py-2 flex items-center justify-between gap-3">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <div className="rounded-md bg-white p-1 border border-slate-100 text-slate-500 shrink-0">
-                                            <Users className="w-3.5 h-3.5" aria-hidden />
-                                        </div>
-                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 truncate">
-                                            Active Customers
-                                        </p>
-                                    </div>
-                                    <p className="text-base font-semibold text-slate-900 tabular-nums shrink-0 whitespace-nowrap">
-                                        {(dashboardMetrics?.customers?.active ?? periodMetrics.currentCustomers).toLocaleString()}
-                                    </p>
-                                </div>
-                                <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-2.5 py-2 flex items-center justify-between gap-3">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <div className="rounded-md bg-white p-1 border border-slate-100 text-slate-500 shrink-0">
-                                            <BadgeDollarSign className="w-3.5 h-3.5" aria-hidden />
-                                        </div>
-                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 truncate">
-                                            Cash Flow
-                                        </p>
-                                    </div>
-                                    <p className="text-sm font-semibold text-slate-900 tabular-nums shrink-0 whitespace-nowrap">
-                                        {formatCurrencyCompact(dashboardMetrics?.cashFlow?.current || 0)}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
                 </div>
             </div>
         </NetsuiteDashboard>

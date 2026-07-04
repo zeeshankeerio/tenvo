@@ -20,7 +20,13 @@ interface AuditResult {
     timestamp: string;
 }
 
-export const AgenticAuditPortlet = memo(function AgenticAuditPortlet({ businessId }: { businessId?: string }) {
+export const AgenticAuditPortlet = memo(function AgenticAuditPortlet({
+    businessId,
+    compact = false,
+}: {
+    businessId?: string;
+    compact?: boolean;
+}) {
     const [result, setResult] = useState<AuditResult | null>(null);
     const [scanning, setScanning] = useState(false);
 
@@ -54,16 +60,19 @@ export const AgenticAuditPortlet = memo(function AgenticAuditPortlet({ businessI
             }
         >
             {!result && !scanning && (
-                <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                    <ShieldCheck className="w-10 h-10 text-gray-100 mb-3" />
-                    <p className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-tighter">
+                <div className={cn(
+                    'flex flex-col items-center justify-center text-center',
+                    compact ? 'py-4 px-2' : 'py-8 px-4'
+                )}>
+                    <ShieldCheck className={cn('text-gray-100 mb-3', compact ? 'w-8 h-8' : 'w-10 h-10')} />
+                    <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-tighter">
                         {businessId ? 'System Integrity Scan Ready' : 'Select a workspace to run audit'}
                     </p>
                     <Button 
                         size="sm" 
                         onClick={runAudit}
                         disabled={!businessId}
-                        className="bg-gray-900 text-white hover:bg-black font-semibold text-[10px] uppercase tracking-widest h-8 px-6 rounded-full disabled:opacity-50"
+                        className="bg-gray-900 text-white hover:bg-black font-semibold text-[10px] uppercase tracking-widest h-8 px-5 rounded-full disabled:opacity-50"
                     >
                         Run Deep Audit
                     </Button>

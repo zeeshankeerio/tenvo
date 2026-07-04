@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Tabs as BaseTabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -262,8 +262,7 @@ export function DashboardTabs({
     );
 
     return (
-        <AnimatePresence mode="wait">
-            <div key={activeTab}>
+        <>
                 <TabsContent value="dashboard" className="space-y-6 outline-none">
                     {wrapTab(
                         <DomainDashboard
@@ -821,9 +820,17 @@ export function DashboardTabs({
                 {/* --- Customer Inquiries Tab - Storefront contact messages --- */}
                 <TabsContent value="inquiries" className="space-y-6 outline-none">
                     {wrapTab(
-                        <StorefrontTabShell activeTab="inquiries">
-                            <CustomerInquiriesManager business={business} />
-                        </StorefrontTabShell>
+                        <TabGuard
+                            tabKey="inquiries"
+                            role={role}
+                            planTier={planTier}
+                            featureName="Customer Inquiries"
+                            onUpgrade={() => handleTabChange('settings')}
+                        >
+                            <StorefrontTabShell activeTab="inquiries">
+                                <CustomerInquiriesManager business={business} />
+                            </StorefrontTabShell>
+                        </TabGuard>
                     )}
                 </TabsContent>
 
@@ -1144,7 +1151,6 @@ export function DashboardTabs({
                     )}
                 </TabsContent>
 
-            </div>
-        </AnimatePresence>
+        </>
     );
 }

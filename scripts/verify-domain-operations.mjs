@@ -75,6 +75,7 @@ const contactRoute = read('app/api/storefront/[businessDomain]/contact/route.js'
 const schema = read('prisma/schema.prisma');
 const migration = read('prisma/migrations/20260618_storefront_operations_hub/migration.sql');
 const contactAction = read('lib/actions/dashboard/storefrontContactMessages.js');
+const inquiriesManager = read('components/crm/CustomerInquiriesManager.jsx');
 const panel = read('components/dashboard/easy/DomainOperationsPanel.tsx');
 const pkg = read('package.json');
 
@@ -95,6 +96,27 @@ if (!migration.includes('visitors')) {
 }
 if (!contactAction.includes('updateStorefrontContactStatusAction')) {
   mark('storefrontContactMessages action must update contact status');
+}
+if (!contactAction.includes('requireStorefrontHubAccess')) {
+  mark('storefrontContactMessages fetch must use requireStorefrontHubAccess like storefront orders');
+}
+if (!contactAction.includes("normalizedStatus === 'handled'")) {
+  mark('storefrontContactMessages must map handled filter to closed status group');
+}
+if (!inquiriesManager.includes('readContactActionPayload')) {
+  mark('CustomerInquiriesManager must read flat actionSuccess payload (not res.data only)');
+}
+if (!inquiriesManager.includes('useHubReady')) {
+  mark('CustomerInquiriesManager must wait for hubReady before fetching');
+}
+if (!read('lib/rbac/permissions.js').includes("inquiries: { permission: 'orders.view'")) {
+  mark('NAV_PERMISSION_MAP must gate inquiries tab like orders');
+}
+if (!read('lib/dashboard/domainOperationsIntelligence.js').includes("actionTab: 'inquiries'")) {
+  mark('domainOperationsIntelligence contact KPIs must route to inquiries tab');
+}
+if (!panel.includes("onQuickAction?.('inquiries')")) {
+  mark('DomainOperationsPanel request queue must link to customer inquiries tab');
 }
 if (!panel.includes('updateStorefrontContactStatusAction')) {
   mark('DomainOperationsPanel must wire mark-handled for contact queue');

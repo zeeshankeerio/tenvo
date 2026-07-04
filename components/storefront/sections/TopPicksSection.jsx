@@ -4,8 +4,8 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { StoreMarqueeRow } from '@/components/storefront/sections/shared/StoreMarqueeRow';
 import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
-import { useRailAutoScroll } from '@/lib/hooks/storefront/useRailAutoScroll';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getEffectiveProductImageUrl, getFallbackProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { formatCurrency } from '@/lib/currency';
@@ -141,8 +141,7 @@ export function TopPicksSection({
 
   const featuredThree = products.slice(0, 3);
   const carouselProducts = products.slice(0, 12);
-
-  useRailAutoScroll(trackRef, { enabled: autoScroll && carouselProducts.length > 3, interval: 4000 });
+  const useMarquee = autoScroll && carouselProducts.length >= 4;
 
   const updateScrollState = useCallback(() => {
     const el = trackRef.current;
@@ -152,6 +151,7 @@ export function TopPicksSection({
   }, []);
 
   useEffect(() => {
+    if (useMarquee) return undefined;
     updateScrollState();
     const el = trackRef.current;
     if (!el) return undefined;
@@ -161,7 +161,7 @@ export function TopPicksSection({
       el.removeEventListener('scroll', updateScrollState);
       window.removeEventListener('resize', updateScrollState);
     };
-  }, [products, updateScrollState]);
+  }, [products, updateScrollState, useMarquee]);
 
   const scrollByDir = (dir) => {
     const el = trackRef.current;
@@ -214,7 +214,7 @@ export function TopPicksSection({
         )}
 
         <div className="relative">
-          {canScrollLeft && (
+          {!useMarquee && canScrollLeft ? (
             <button
               type="button"
               onClick={() => scrollByDir(-1)}
@@ -223,8 +223,8 @@ export function TopPicksSection({
             >
               <ChevronLeft className="h-6 w-6" strokeWidth={1.25} />
             </button>
-          )}
-          {canScrollRight && (
+          ) : null}
+          {!useMarquee && canScrollRight ? (
             <button
               type="button"
               onClick={() => scrollByDir(1)}
@@ -233,8 +233,26 @@ export function TopPicksSection({
             >
               <ChevronRight className="h-6 w-6" strokeWidth={1.25} />
             </button>
-          )}
+          ) : null}
 
+          {useMarquee ? (
+            <StoreMarqueeRow
+              items={carouselProducts}
+              enabled={autoScroll}
+              fadeFrom="white"
+              durationSec={42}
+              gapClassName="gap-4 pr-4"
+              renderItem={(product) => (
+                <div data-top-pick-card>
+                  <TopPickProductCard
+                    product={product}
+                    businessDomain={businessDomain}
+                    businessCategory={businessCategory}
+                  />
+                </div>
+              )}
+            />
+          ) : (
           <div
             ref={trackRef}
             className="flex gap-4 overflow-x-auto scroll-smooth pb-2 pt-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -250,6 +268,7 @@ export function TopPicksSection({
               </div>
             ))}
           </div>
+          )}
         </div>
       </div>
     </section>

@@ -4,8 +4,8 @@ import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { StoreMarqueeRow } from '@/components/storefront/sections/shared/StoreMarqueeRow';
 import { useCart } from '@/lib/hooks/storefront/useCart';
-import { useRailAutoScroll } from '@/lib/hooks/storefront/useRailAutoScroll';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getEffectiveProductImageUrl } from '@/lib/storefront/productImageFallback';
 import { formatCurrency } from '@/lib/currency';
@@ -13,7 +13,6 @@ import { FashionSectionHeader } from './FashionSectionHeader';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import {
-  STORE_PRODUCT_RAIL_TRACK_CLASS,
   STORE_PRODUCT_RAIL_ITEM_CLASS,
   ensureRailProducts,
   resolveRailProductId,
@@ -59,9 +58,6 @@ function QuickAddButton({ product }) {
   );
 }
 
-/**
- * @param {{ price?: number; compare_price?: number }} product
- */
 function getDiscountPercent(product) {
   const price = Number(product.price) || 0;
   const compare = Number(product.compare_price) || 0;
@@ -71,11 +67,59 @@ function getDiscountPercent(product) {
   return 0;
 }
 
+function NewArrivalCard({ product, businessDomain, businessCategory, currency, variant }) {
+  const image = getEffectiveProductImageUrl(product, businessCategory);
+  const href = `/store/${businessDomain}/products/${product.slug || product.id}`;
+  const discount = getDiscountPercent(product);
+  const onSale = discount > 0;
+
+  return (
+    <article data-new-arrival-card className={STORE_PRODUCT_RAIL_ITEM_CLASS}>
+      <Link href={href} className="group relative block">
+        <div className="relative aspect-[3/4] overflow-hidden bg-stone-100">
+          {image ? (
+            <SmartProductImage
+              src={image}
+              alt={product.name}
+              fill
+              className="object-cover transition duration-500 group-hover:scale-[1.02]"
+              sizes="180px"
+            />
+          ) : null}
+          {onSale ? (
+            <span className="absolute left-2 top-2 z-10 rounded-sm bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              -{discount}%
+            </span>
+          ) : variant === 'offers' ? (
+            <span className="absolute left-2 top-2 z-10 rounded-sm bg-stone-900 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              Sale
+            </span>
+          ) : null}
+          <QuickAddButton product={product} />
+        </div>
+      </Link>
+      <Link href={href} className="mt-2 block">
+        <p className="line-clamp-2 text-xs text-stone-800 underline-offset-2 hover:underline sm:text-sm">
+          {product.name}
+        </p>
+      </Link>
+      <div className="mt-1 flex items-baseline gap-2">
+        <p className={cn('text-sm font-bold', onSale ? 'text-rose-600' : 'text-stone-900')}>
+          {formatCurrency(product.price, currency)}
+        </p>
+        {onSale ? (
+          <p className="text-xs text-stone-400 line-through">
+            {formatCurrency(product.compare_price, currency)}
+          </p>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 /**
- * Zellbury-style horizontal product rail with quick add. Used for New Arrivals
- * and the Offers / Sale rail; shows a discount badge and strikethrough compare
- * price whenever a product is marked down.
- * @param {{ variant?: 'default' | 'offers' }} props
+ * Zellbury-style horizontal product rail with quick add. Seamless marquee loop
+ * when animated; manual scroll with arrows when motion is reduced or disabled.
  */
 export function NewArrivalsRail({
   title = 'NEW ARRIVALS',
@@ -97,7 +141,7 @@ export function NewArrivalsRail({
     [products, catalogPool]
   );
 
-  useRailAutoScroll(trackRef, { enabled: animate && railProducts.length > 3, interval: 4200 });
+  const useMarquee = animate && railProducts.length >= 4;
 
   const updateScroll = useCallback(() => {
     const el = trackRef.current;
@@ -107,6 +151,7 @@ export function NewArrivalsRail({
   }, []);
 
   useEffect(() => {
+    if (useMarquee) return undefined;
     updateScroll();
     const el = trackRef.current;
     if (!el) return undefined;
@@ -116,7 +161,7 @@ export function NewArrivalsRail({
       el.removeEventListener('scroll', updateScroll);
       window.removeEventListener('resize', updateScroll);
     };
-  }, [railProducts, updateScroll]);
+  }, [railProducts, updateScroll, useMarquee]);
 
   const scrollByDir = (dir) => {
     const el = trackRef.current;
@@ -128,13 +173,23 @@ export function NewArrivalsRail({
 
   if (railProducts.length < 2) return null;
 
+  const renderCard = (product) => (
+    <NewArrivalCard
+      product={product}
+      businessDomain={businessDomain}
+      businessCategory={business?.category}
+      currency={currency}
+      variant={variant}
+    />
+  );
+
   return (
     <section className="border-t border-stone-200 bg-white py-12 sm:py-16">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
         <FashionSectionHeader title={title} viewAllHref={viewAllHref} accent={accent} dense />
 
         <div className="relative min-w-0">
-          {canScrollLeft ? (
+          {!useMarquee && canScrollLeft ? (
             <button
               type="button"
               onClick={() => scrollByDir(-1)}
@@ -144,7 +199,7 @@ export function NewArrivalsRail({
               <ChevronLeft className="h-4 w-4" />
             </button>
           ) : null}
-          {canScrollRight ? (
+          {!useMarquee && canScrollRight ? (
             <button
               type="button"
               onClick={() => scrollByDir(1)}
@@ -155,63 +210,29 @@ export function NewArrivalsRail({
             </button>
           ) : null}
 
-          <div
-            ref={trackRef}
-            className={cn(STORE_PRODUCT_RAIL_TRACK_CLASS, animate && 'sf-stagger')}
-          >
-              {railProducts.map((product) => {
-                const image = getEffectiveProductImageUrl(product, business?.category);
-                const href = `/store/${businessDomain}/products/${product.slug || product.id}`;
-                const discount = getDiscountPercent(product);
-                const onSale = discount > 0;
-                return (
-                  <article
-                    key={resolveRailProductId(product)}
-                    data-new-arrival-card
-                    className={STORE_PRODUCT_RAIL_ITEM_CLASS}
-                  >
-                    <Link href={href} className="group relative block">
-                      <div className="relative aspect-[3/4] overflow-hidden bg-stone-100">
-                        {image ? (
-                          <SmartProductImage
-                            src={image}
-                            alt={product.name}
-                            fill
-                            className="object-cover transition duration-500 group-hover:scale-[1.02]"
-                            sizes="180px"
-                          />
-                        ) : null}
-                        {onSale ? (
-                          <span className="absolute left-2 top-2 z-10 rounded-sm bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-                            -{discount}%
-                          </span>
-                        ) : variant === 'offers' ? (
-                          <span className="absolute left-2 top-2 z-10 rounded-sm bg-stone-900 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-                            Sale
-                          </span>
-                        ) : null}
-                        <QuickAddButton product={product} />
-                      </div>
-                    </Link>
-                    <Link href={href} className="mt-2 block">
-                      <p className="line-clamp-2 text-xs text-stone-800 underline-offset-2 hover:underline sm:text-sm">
-                        {product.name}
-                      </p>
-                    </Link>
-                    <div className="mt-1 flex items-baseline gap-2">
-                      <p className={cn('text-sm font-bold', onSale ? 'text-rose-600' : 'text-stone-900')}>
-                        {formatCurrency(product.price, currency)}
-                      </p>
-                      {onSale ? (
-                        <p className="text-xs text-stone-400 line-through">
-                          {formatCurrency(product.compare_price, currency)}
-                        </p>
-                      ) : null}
-                    </div>
-                  </article>
-                );
-              })}
-          </div>
+          {useMarquee ? (
+            <StoreMarqueeRow
+              items={railProducts}
+              enabled={animate}
+              fadeFrom="white"
+              durationSec={44}
+              gapClassName="gap-3 pr-3 sm:gap-4 sm:pr-4"
+              renderItem={(product) => renderCard(product)}
+            />
+          ) : (
+            <div
+              ref={trackRef}
+              className={cn(
+                'flex gap-3 overflow-x-auto pb-1 sm:gap-4',
+                '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+                animate && 'sf-stagger'
+              )}
+            >
+              {railProducts.map((product) => (
+                <div key={resolveRailProductId(product)}>{renderCard(product)}</div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

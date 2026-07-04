@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/context/BusinessContext';
+import { useHubReady } from '@/lib/hooks/useHubReady';
 import {
   getStorefrontContactMessagesAction,
   updateStorefrontContactStatusAction,
@@ -113,8 +114,20 @@ function initialsFor(name) {
     .join('') || '?';
 }
 
+function nowPendingText(status) {
+  return isPending(status) ? 'Inquiry reopened' : 'Inquiry marked handled';
+}
+
+/** actionSuccess spreads payload at the top level — not under `.data`. */
+function readContactActionPayload(res) {
+  if (!res || typeof res !== 'object') return null;
+  if (res.data && typeof res.data === 'object') return res.data;
+  return res;
+}
+
 export function CustomerInquiriesManager({ business: businessProp }) {
   const { business: businessCtx } = useBusiness();
+  const { hubReady } = useHubReady();
   const business = businessProp || businessCtx;
   const businessId = business?.id;
   const searchParams = useSearchParams();
@@ -123,33 +136,49 @@ export function CustomerInquiriesManager({ business: businessProp }) {
   const [messages, setMessages] = useState([]);
   const [counts, setCounts] = useState({ total: 0, pending: 0 });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [filter, setFilter] = useState('pending');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const autoSelectedRef = useRef(false);
+  const deepLinkFetchRef = useRef(false);
 
-  const load = useCallback(async () => {
-    if (!businessId) return;
+  const load = useCallback(async (options = {}) => {
+    if (!businessId) {
+      setLoading(false);
+      return;
+    }
+    const status = options.status ?? filter;
     setLoading(true);
+    setLoadError(null);
     try {
-      const res = await getStorefrontContactMessagesAction(businessId, { status: filter });
+      const res = await getStorefrontContactMessagesAction(businessId, { status });
       if (res?.success) {
-        setMessages(res.data.messages || []);
-        setCounts({ total: res.data.total || 0, pending: res.data.pending || 0 });
+        const payload = readContactActionPayload(res);
+        setMessages(payload?.messages || []);
+        setCounts({
+          total: payload?.total || 0,
+          pending: payload?.pending || 0,
+        });
       } else {
-        toast.error(res?.error || 'Could not load inquiries');
+        const message = res?.error || 'Could not load inquiries';
+        setLoadError(message);
+        toast.error(message);
       }
     } catch (err) {
-      toast.error('Could not load inquiries');
+      const message = err?.message || 'Could not load inquiries';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   }, [businessId, filter]);
 
   useEffect(() => {
+    if (!hubReady || !businessId) return;
     load();
-  }, [load]);
+  }, [hubReady, businessId, load]);
 
   // Deep-link: auto-open the inquiry referenced by ?contact=<id> once.
   useEffect(() => {
@@ -160,6 +189,24 @@ export function CustomerInquiriesManager({ business: businessProp }) {
       autoSelectedRef.current = true;
     }
   }, [requestedContactId, messages]);
+
+  // If the deep-linked inquiry is not in the current filter, fetch all once.
+  useEffect(() => {
+    if (
+      autoSelectedRef.current ||
+      deepLinkFetchRef.current ||
+      !requestedContactId ||
+      loading ||
+      !businessId
+    ) {
+      return;
+    }
+    const target = messages.find((m) => String(m.id) === String(requestedContactId));
+    if (!target && filter !== 'all') {
+      deepLinkFetchRef.current = true;
+      setFilter('all');
+    }
+  }, [requestedContactId, messages, loading, businessId, filter]);
 
   const filteredMessages = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -183,21 +230,22 @@ export function CustomerInquiriesManager({ business: businessProp }) {
       try {
         const res = await updateStorefrontContactStatusAction(businessId, message.id, nextStatus);
         if (res?.success) {
+          const payload = readContactActionPayload(res);
           setMessages((prev) =>
             prev.map((m) =>
               m.id === message.id
-                ? { ...m, status: res.data.status, handledAt: res.data.handledAt }
+                ? { ...m, status: payload?.status, handledAt: payload?.handledAt }
                 : m
             )
           );
           setCounts((prev) => {
             const wasPending = isPending(message.status);
-            const nowPending = isPending(res.data.status);
+            const nowPending = isPending(payload?.status);
             if (wasPending && !nowPending) return { ...prev, pending: Math.max(0, prev.pending - 1) };
             if (!wasPending && nowPending) return { ...prev, pending: prev.pending + 1 };
             return prev;
           });
-          toast.success(nowPendingText(res.data.status));
+          toast.success(nowPendingText(payload?.status));
         } else {
           toast.error(res?.error || 'Could not update inquiry');
         }
@@ -235,6 +283,25 @@ export function CustomerInquiriesManager({ business: businessProp }) {
           </div>
         </div>
       </div>
+
+      {loadError ? (
+        <div
+          role="alert"
+          className="flex flex-col gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="text-sm text-rose-800">{loadError}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-rose-200 bg-white text-rose-800 hover:bg-rose-100"
+            onClick={() => load()}
+            disabled={loading}
+          >
+            <RefreshCw className={cn('mr-1.5 h-3.5 w-3.5', loading && 'animate-spin')} />
+            Retry
+          </Button>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         {/* List pane */}
@@ -298,11 +365,17 @@ export function CustomerInquiriesManager({ business: businessProp }) {
             ) : filteredMessages.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-6 py-16 text-center text-neutral-500">
                 <Inbox className="mb-2 h-8 w-8 opacity-20" />
-                <p className="text-sm font-medium">No inquiries here</p>
+                <p className="text-sm font-medium">
+                  {loadError ? 'Could not load inquiries' : 'No inquiries here'}
+                </p>
                 <p className="mt-1 text-xs text-neutral-400">
-                  {filter === 'pending'
-                    ? 'You are all caught up. New messages will show here.'
-                    : 'Customer messages from your store will appear here.'}
+                  {loadError
+                    ? 'Use retry above or refresh the page.'
+                    : filter === 'pending'
+                      ? 'You are all caught up. New messages will show here.'
+                      : filter === 'handled'
+                        ? 'Handled messages from your store will appear here.'
+                        : 'Customer messages from your store will appear here.'}
                 </p>
               </div>
             ) : (
@@ -500,10 +573,6 @@ export function CustomerInquiriesManager({ business: businessProp }) {
       </div>
     </div>
   );
-}
-
-function nowPendingText(status) {
-  return isPending(status) ? 'Inquiry reopened' : 'Inquiry marked handled';
 }
 
 export default CustomerInquiriesManager;
