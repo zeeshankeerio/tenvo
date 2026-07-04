@@ -25,7 +25,7 @@ const TESTIMONIALS = [
   {
     id: 2,
     quote:
-      'FBR compliance was our biggest headache. TENVO's GST configuration and audit trail gave us peace of mind. When the audit came, we had every document ready in minutes instead of days.',
+      'FBR compliance was our biggest headache. TENVO\'s GST configuration and audit trail gave us peace of mind. When the audit came, we had every document ready in minutes instead of days.',
     author: 'Dr. Rizwan Ahmed',
     role: 'Managing Partner',
     company: 'Sehat Pharmacy Chain, Lahore',
@@ -35,7 +35,7 @@ const TESTIMONIALS = [
   {
     id: 3,
     quote:
-      'Switching from paper tickets to TENVO's restaurant POS changed our operation. Kitchen sees orders instantly, front desk manages tables digitally, and we finally have accurate daily sales reports.',
+      'Switching from paper tickets to TENVO\'s restaurant POS changed our operation. Kitchen sees orders instantly, front desk manages tables digitally, and we finally have accurate daily sales reports.',
     author: 'Hamza Malik',
     role: 'General Manager',
     company: 'Flavors Restaurant, Islamabad',
@@ -65,7 +65,7 @@ const TESTIMONIALS = [
   {
     id: 6,
     quote:
-      'TENVO's margin-first pricing saved our bottom line when vendor costs spiked. The system automatically recalculated selling prices to protect our margins. That alone paid for the subscription.',
+      'TENVO\'s margin-first pricing saved our bottom line when vendor costs spiked. The system automatically recalculated selling prices to protect our margins. That alone paid for the subscription.',
     author: 'Bilal Hussain',
     role: 'Finance Manager',
     company: 'Elite Electronics, Rawalpindi',

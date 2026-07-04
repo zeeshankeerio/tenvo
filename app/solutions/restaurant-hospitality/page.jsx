@@ -32,9 +32,9 @@ export default function RestaurantHospitalityPage() {
         'Paper tickets get lost between front desk and kitchen',
         'No real-time visibility of table occupancy and order status',
         'Separate systems for dine-in, takeaway, and delivery',
-        'Kitchen staff can't prioritize orders or manage prep time',
+        'Kitchen staff cannot prioritize orders or manage prep time',
         'Daily sales reconciliation takes hours of manual work',
-        'Can't track ingredient costs and menu profitability',
+        'Cannot track ingredient costs and menu profitability',
       ]}
 
       solutionTitle="Complete restaurant operations platform"

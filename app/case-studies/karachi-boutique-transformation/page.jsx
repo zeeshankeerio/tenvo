@@ -12,7 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import CTASection from '@/components/marketing/sections/CTASection';
 
-export default function KarachiBoutiqueCase Study() {
+export default function KarachiBoutiqueCaseStudy() {
   return (
     <MarketingLayout>
       {/* Header */}
@@ -234,9 +234,9 @@ export default function KarachiBoutiqueCase Study() {
               </ul>
             </div>
 
-            <h2 className="mb-4 text-2xl font-semibold text-neutral-900">What's Next</h2>
+            <h2 className="mb-4 text-2xl font-semibold text-neutral-900">What&apos;s Next</h2>
             <p className="font-medium leading-relaxed text-neutral-700">
-              Khan Fashion Boutique is now exploring TENVO's branded storefront module to launch online ordering for customers. With their inventory already unified, adding e-commerce will be a straightforward next step.
+              Khan Fashion Boutique is now exploring TENVO&apos;s branded storefront module to launch online ordering for customers. With their inventory already unified, adding e-commerce will be a straightforward next step.
             </p>
           </div>
         </div>

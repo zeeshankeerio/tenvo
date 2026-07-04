@@ -220,9 +220,9 @@ export default function IslamabadRestaurantCase() {
               </footer>
             </blockquote>
 
-            <h2 className="mb-4 text-2xl font-semibold text-neutral-900">What's Next</h2>
+            <h2 className="mb-4 text-2xl font-semibold text-neutral-900">What&apos;s Next</h2>
             <p className="font-medium leading-relaxed text-neutral-700">
-              Flavors Restaurant is now launching online ordering for takeaway and delivery using TENVO's branded storefront module. Orders from the website will flow directly into the same kitchen display system, creating a unified order management experience.
+              Flavors Restaurant is now launching online ordering for takeaway and delivery using TENVO&apos;s branded storefront module. Orders from the website will flow directly into the same kitchen display system, creating a unified order management experience.
             </p>
           </div>
         </div>

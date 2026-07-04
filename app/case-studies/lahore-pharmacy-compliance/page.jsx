@@ -185,7 +185,7 @@ export default function LahorePharmacyCase() {
 
             <blockquote className="my-8 border-l-4 border-emerald-500 bg-emerald-50/30 p-6 italic">
               <p className="text-lg font-medium text-neutral-800">
-                "The FBR audit that I was dreading became a non-event. We pulled every report they asked for in minutes. The auditor even commented on how organized our records were. TENVO's audit trail gave us complete peace of mind."
+                "The FBR audit that I was dreading became a non-event. We pulled every report they asked for in minutes. The auditor even commented on how organized our records were. TENVO&apos;s audit trail gave us complete peace of mind."
               </p>
               <footer className="mt-4 text-sm font-bold text-neutral-900">
                 — Dr. Rizwan Ahmed, after successful audit
