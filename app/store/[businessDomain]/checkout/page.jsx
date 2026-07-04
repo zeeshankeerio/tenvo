@@ -41,6 +41,10 @@ import {
 import { RESTAURANT_ORDER_MODES } from '@/lib/storefront/restaurantStorefront';
 import { RestaurantCartOrderMode } from '@/components/storefront/restaurant/RestaurantCartOrderMode';
 import { restaurantInputClass } from '@/components/storefront/restaurant/RestaurantStoreCard';
+import {
+  placeStorefrontOrder,
+  validateStorefrontCheckoutCart,
+} from '@/lib/storefront/placeStorefrontOrder';
 
 const PAYMENT_ICONS = {
   stripe: CreditCard, cod: Banknote, easypaisa: Smartphone,
@@ -235,10 +239,17 @@ export default function CheckoutPage({ params }) {
     }
     setProcessing(true);
     try {
-      const response = await fetch(`/api/storefront/${businessDomain}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      await validateStorefrontCheckoutCart(
+        businessDomain,
+        cart.items.map((i) => ({
+          productId: i.productId,
+          variantId: i.variantId || null,
+          quantity: i.quantity,
+          name: i.name,
+        }))
+      );
+
+      const orderPayload = {
           customer: {
             email: form.email,
             firstName: form.firstName,
@@ -287,13 +298,9 @@ export default function CheckoutPage({ params }) {
                 }) || undefined,
               }
             : {}),
-        }),
-      });
+      };
 
-      const result = await response.json();
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to create order');
-      }
+      const { result } = await placeStorefrontOrder(businessDomain, orderPayload);
 
       // Snapshot the placed order for the confirmation receipt before clearing the
       // cart. Prefer the server-authoritative breakdown so the receipt always
@@ -339,6 +346,11 @@ export default function CheckoutPage({ params }) {
       clearCart();
       toast.success(`Order ${result.order.orderNumber} placed!`);
     } catch (err) {
+      if (err.status === 409 && !err.retryable) {
+        toast.error(err.message || 'Some items in your cart are no longer available');
+        router.push(`/store/${businessDomain}/cart`);
+        return;
+      }
       toast.error(err.message || 'Failed to place order. Please try again.');
     } finally {
       setProcessing(false);

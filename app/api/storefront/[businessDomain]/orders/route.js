@@ -110,6 +110,27 @@ function roundMoney(n) {
   return Math.round(Number(n) * 100) / 100;
 }
 
+/** Map known checkout validation failures to client-friendly HTTP statuses. */
+function mapCheckoutClientError(error) {
+  const msg = String(error?.message || '');
+  if (!msg) return null;
+  if (
+    msg.includes('Insufficient stock') ||
+    msg.includes('not found') ||
+    msg.includes('Variant not found')
+  ) {
+    return { status: 409, error: msg, retryable: false };
+  }
+  if (
+    msg.includes('select size') ||
+    msg.includes('Invalid quantity') ||
+    msg.includes('productId')
+  ) {
+    return { status: 400, error: msg };
+  }
+  return null;
+}
+
 function formatAddressBlock(addr) {
   if (!addr || typeof addr !== 'object') return '';
   const parts = [
@@ -260,10 +281,13 @@ export async function POST(request, { params }) {
     shippingAmount = 0;
   }
 
-  const client = await pool.connect();
+  const MAX_CHECKOUT_ATTEMPTS = 3;
 
-  try {
-    await client.query('BEGIN');
+  for (let attempt = 1; attempt <= MAX_CHECKOUT_ATTEMPTS; attempt++) {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
 
     const resolvedLines = [];
 
@@ -786,8 +810,19 @@ export async function POST(request, { params }) {
       },
     });
   } catch (error) {
-    await client.query('ROLLBACK');
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      /* ignore rollback errors */
+    }
     console.error('[Create Order] Error:', error);
+
+    if (isStorefrontOrderNumberConflict(error) && attempt < MAX_CHECKOUT_ATTEMPTS) {
+      console.warn(
+        `[Create Order] order number conflict (attempt ${attempt}/${MAX_CHECKOUT_ATTEMPTS}), retrying…`
+      );
+      continue;
+    }
 
     if (isStorefrontOrderNumberConflict(error)) {
       return NextResponse.json(
@@ -801,6 +836,14 @@ export async function POST(request, { params }) {
       );
     }
 
+    const clientError = mapCheckoutClientError(error);
+    if (clientError) {
+      return NextResponse.json(
+        { success: false, error: clientError.error, retryable: clientError.retryable ?? false },
+        { status: clientError.status }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -811,6 +854,17 @@ export async function POST(request, { params }) {
   } finally {
     client.release();
   }
+  }
+
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        'Checkout is busy right now. Please wait a moment and try again — your cart is still saved.',
+      retryable: true,
+    },
+    { status: 409 }
+  );
 }
 
 /**
