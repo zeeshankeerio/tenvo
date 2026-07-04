@@ -8,54 +8,58 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Package, ShoppingCart, DollarSign as DollarIcon, TrendingUp, TrendingDown, Package as PackageIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
-const DomainDashboard = dynamic(() => import('./tabs/DomainDashboard').then(mod => mod.DomainDashboard));
-const InventoryTab = dynamic(() => import('./tabs/InventoryTab').then(mod => mod.InventoryTab));
-const InvoiceList = dynamic(() => import('./islands/InvoiceList.client').then(mod => mod.InvoiceList));
-const CustomersTab = dynamic(() => import('./tabs/CustomersTab').then(mod => mod.CustomersTab));
-const MultiLocationInventory = dynamic(() => import('@/components/MultiLocationInventory').then(mod => mod.MultiLocationInventory));
-const ManufacturingModule = dynamic(() => import('@/components/ManufacturingModule').then(mod => mod.ManufacturingModule));
-const PurchaseOrderManager = dynamic(() => import('@/components/PurchaseOrderManager').then(mod => mod.PurchaseOrderManager));
-const SalesManager = dynamic(() => import('@/components/SalesManager').then(mod => mod.SalesManager));
-const VendorManager = dynamic(() => import('@/components/VendorManager').then(mod => mod.VendorManager));
-const PaymentManager = dynamic(() => import('@/components/payment/PaymentManager'));
-const QuotationOrderChallanManager = dynamic(() => import('@/components/QuotationOrderChallanManager').then(mod => mod.QuotationOrderChallanManager));
-const AdvancedAnalytics = dynamic(() => import('@/components/AdvancedAnalytics').then(mod => mod.AdvancedAnalytics));
-const DemandForecast = dynamic(() => import('@/components/DemandForecast').then(mod => mod.DemandForecast));
-const FinancialOverview = dynamic(() => import('@/components/dashboard/FinancialOverview').then(mod => mod.FinancialOverview));
-const TaxComplianceManager = dynamic(() => import('@/components/TaxComplianceManager').then(mod => mod.TaxComplianceManager));
-const SettingsManager = dynamic(() => import('@/components/SettingsManager').then(mod => mod.SettingsManager));
-const SerialScanner = dynamic(() => import('@/components/inventory/SerialScanner').then(mod => mod.SerialScanner));
-const PosTerminal = dynamic(() => import('@/components/pos/PosTerminal').then(mod => mod.PosTerminal));
-const SuperStorePOS = dynamic(() => import('@/components/pos/SuperStorePOS').then(mod => mod.SuperStorePOS));
-const RestaurantManager = dynamic(() => import('@/components/restaurant/RestaurantManager').then(mod => mod.RestaurantManager));
-const RestaurantPOS = dynamic(() => import('@/components/restaurant/RestaurantPOS').then(mod => mod.RestaurantPOS));
-const FloorPlanEditor = dynamic(() => import('@/components/restaurant/FloorPlanEditor').then(mod => mod.FloorPlanEditor));
-const KitchenDisplaySystem = dynamic(() => import('@/components/restaurant/KitchenDisplaySystem').then(mod => mod.KitchenDisplaySystem));
-const ReservationManager = dynamic(() => import('@/components/restaurant/ReservationManager').then(mod => mod.ReservationManager));
-const ExpenseManager = dynamic(() => import('@/components/finance/ExpenseManager').then(mod => mod.ExpenseManager));
-const FinanceHub = dynamic(() => import('@/components/finance/FinanceHub'));
-const PayrollDashboard = dynamic(() => import('@/components/hr/PayrollDashboard').then(mod => mod.PayrollDashboard));
-const AttendanceTracker = dynamic(() => import('@/components/hr/AttendanceTracker').then(mod => mod.AttendanceTracker));
-const ShiftScheduler = dynamic(() => import('@/components/hr/ShiftScheduler').then(mod => mod.ShiftScheduler));
-const ApprovalInbox = dynamic(() => import('@/components/workflow/ApprovalInbox').then(mod => mod.ApprovalInbox));
-const WorkflowBuilder = dynamic(() => import('@/components/workflow/WorkflowBuilder').then(mod => mod.WorkflowBuilder));
-const LoyaltyManager = dynamic(() => import('@/components/crm/LoyaltyManager').then(mod => mod.LoyaltyManager));
-const MembershipManager = dynamic(() => import('@/components/crm/MembershipManager').then(mod => mod.MembershipManager));
-const PosRefundPanel = dynamic(() => import('@/components/pos/PosRefundPanel').then(mod => mod.PosRefundPanel));
-const PosVoidPanel = dynamic(() => import('@/components/pos/PosVoidPanel').then(mod => mod.PosVoidPanel));
-const AuditTrailViewer = dynamic(() => import('@/components/audit/AuditTrailViewer').then(mod => mod.AuditTrailViewer));
-const PromotionEngine = dynamic(() => import('@/components/crm/PromotionEngine').then(mod => mod.PromotionEngine));
-const CampaignsManager = dynamic(() => import('@/components/crm/CampaignsManager').then(mod => mod.CampaignsManager));
-const CustomerLoyaltyPortal = dynamic(() => import('@/components/crm/CustomerLoyaltyPortal').then(mod => mod.CustomerLoyaltyPortal));
-const AIInsightsPanel = dynamic(() => import('@/components/intelligence/AIInsightsPanel').then(mod => mod.AIInsightsPanel));
-const ReportBuilder = dynamic(() => import('@/components/reports/ReportBuilder').then(mod => mod.ReportBuilder));
-const StoreSettingsManager = dynamic(() => import('@/components/StoreSettingsManager').then(mod => mod.StoreSettingsManager));
-const OrdersManager = dynamic(() => import('@/components/orders/OrdersManager').then(mod => mod.OrdersManager));
-const CustomerInquiriesManager = dynamic(() => import('@/components/crm/CustomerInquiriesManager').then(mod => mod.CustomerInquiriesManager));
-const StorefrontTabShell = dynamic(() => import('@/components/storefront/mobile/StorefrontTabShell').then(mod => mod.StorefrontTabShell));
-const TabGuard = dynamic(() => import('@/components/guards/TabGuard').then(mod => mod.TabGuard));
-const ResourceLimitBanner = dynamic(() => import('@/components/ui/ResourceLimitBanner').then(mod => mod.ResourceLimitBanner));
-const NotificationBell = dynamic(() => import('@/components/notifications/NotificationBell').then(mod => mod.NotificationBell));
+import { HubTabLoadingSkeleton } from '@/components/guards/HubTabLoadingSkeleton';
+
+const hubTabLoad = { loading: () => <HubTabLoadingSkeleton /> };
+
+const DomainDashboard = dynamic(() => import('./tabs/DomainDashboard').then(mod => mod.DomainDashboard), hubTabLoad);
+const InventoryTab = dynamic(() => import('./tabs/InventoryTab').then(mod => mod.InventoryTab), hubTabLoad);
+const InvoiceList = dynamic(() => import('./islands/InvoiceList.client').then(mod => mod.InvoiceList), hubTabLoad);
+const CustomersTab = dynamic(() => import('./tabs/CustomersTab').then(mod => mod.CustomersTab), hubTabLoad);
+const MultiLocationInventory = dynamic(() => import('@/components/MultiLocationInventory').then(mod => mod.MultiLocationInventory), hubTabLoad);
+const ManufacturingModule = dynamic(() => import('@/components/ManufacturingModule').then(mod => mod.ManufacturingModule), hubTabLoad);
+const PurchaseOrderManager = dynamic(() => import('@/components/PurchaseOrderManager').then(mod => mod.PurchaseOrderManager), hubTabLoad);
+const SalesManager = dynamic(() => import('@/components/SalesManager').then(mod => mod.SalesManager), hubTabLoad);
+const VendorManager = dynamic(() => import('@/components/VendorManager').then(mod => mod.VendorManager), hubTabLoad);
+const PaymentManager = dynamic(() => import('@/components/payment/PaymentManager'), hubTabLoad);
+const QuotationOrderChallanManager = dynamic(() => import('@/components/QuotationOrderChallanManager').then(mod => mod.QuotationOrderChallanManager), hubTabLoad);
+const AdvancedAnalytics = dynamic(() => import('@/components/AdvancedAnalytics').then(mod => mod.AdvancedAnalytics), hubTabLoad);
+const DemandForecast = dynamic(() => import('@/components/DemandForecast').then(mod => mod.DemandForecast), hubTabLoad);
+const FinancialOverview = dynamic(() => import('@/components/dashboard/FinancialOverview').then(mod => mod.FinancialOverview), hubTabLoad);
+const TaxComplianceManager = dynamic(() => import('@/components/TaxComplianceManager').then(mod => mod.TaxComplianceManager), hubTabLoad);
+const SettingsManager = dynamic(() => import('@/components/SettingsManager').then(mod => mod.SettingsManager), hubTabLoad);
+const SerialScanner = dynamic(() => import('@/components/inventory/SerialScanner').then(mod => mod.SerialScanner), hubTabLoad);
+const PosTerminal = dynamic(() => import('@/components/pos/PosTerminal').then(mod => mod.PosTerminal), hubTabLoad);
+const SuperStorePOS = dynamic(() => import('@/components/pos/SuperStorePOS').then(mod => mod.SuperStorePOS), hubTabLoad);
+const RestaurantManager = dynamic(() => import('@/components/restaurant/RestaurantManager').then(mod => mod.RestaurantManager), hubTabLoad);
+const RestaurantPOS = dynamic(() => import('@/components/restaurant/RestaurantPOS').then(mod => mod.RestaurantPOS), hubTabLoad);
+const FloorPlanEditor = dynamic(() => import('@/components/restaurant/FloorPlanEditor').then(mod => mod.FloorPlanEditor), hubTabLoad);
+const KitchenDisplaySystem = dynamic(() => import('@/components/restaurant/KitchenDisplaySystem').then(mod => mod.KitchenDisplaySystem), hubTabLoad);
+const ReservationManager = dynamic(() => import('@/components/restaurant/ReservationManager').then(mod => mod.ReservationManager), hubTabLoad);
+const ExpenseManager = dynamic(() => import('@/components/finance/ExpenseManager').then(mod => mod.ExpenseManager), hubTabLoad);
+const FinanceHub = dynamic(() => import('@/components/finance/FinanceHub'), hubTabLoad);
+const PayrollDashboard = dynamic(() => import('@/components/hr/PayrollDashboard').then(mod => mod.PayrollDashboard), hubTabLoad);
+const AttendanceTracker = dynamic(() => import('@/components/hr/AttendanceTracker').then(mod => mod.AttendanceTracker), hubTabLoad);
+const ShiftScheduler = dynamic(() => import('@/components/hr/ShiftScheduler').then(mod => mod.ShiftScheduler), hubTabLoad);
+const ApprovalInbox = dynamic(() => import('@/components/workflow/ApprovalInbox').then(mod => mod.ApprovalInbox), hubTabLoad);
+const WorkflowBuilder = dynamic(() => import('@/components/workflow/WorkflowBuilder').then(mod => mod.WorkflowBuilder), hubTabLoad);
+const LoyaltyManager = dynamic(() => import('@/components/crm/LoyaltyManager').then(mod => mod.LoyaltyManager), hubTabLoad);
+const MembershipManager = dynamic(() => import('@/components/crm/MembershipManager').then(mod => mod.MembershipManager), hubTabLoad);
+const PosRefundPanel = dynamic(() => import('@/components/pos/PosRefundPanel').then(mod => mod.PosRefundPanel), hubTabLoad);
+const PosVoidPanel = dynamic(() => import('@/components/pos/PosVoidPanel').then(mod => mod.PosVoidPanel), hubTabLoad);
+const AuditTrailViewer = dynamic(() => import('@/components/audit/AuditTrailViewer').then(mod => mod.AuditTrailViewer), hubTabLoad);
+const PromotionEngine = dynamic(() => import('@/components/crm/PromotionEngine').then(mod => mod.PromotionEngine), hubTabLoad);
+const CampaignsManager = dynamic(() => import('@/components/crm/CampaignsManager').then(mod => mod.CampaignsManager), hubTabLoad);
+const CustomerLoyaltyPortal = dynamic(() => import('@/components/crm/CustomerLoyaltyPortal').then(mod => mod.CustomerLoyaltyPortal), hubTabLoad);
+const AIInsightsPanel = dynamic(() => import('@/components/intelligence/AIInsightsPanel').then(mod => mod.AIInsightsPanel), hubTabLoad);
+const ReportBuilder = dynamic(() => import('@/components/reports/ReportBuilder').then(mod => mod.ReportBuilder), hubTabLoad);
+const StoreSettingsManager = dynamic(() => import('@/components/StoreSettingsManager').then(mod => mod.StoreSettingsManager), hubTabLoad);
+const OrdersManager = dynamic(() => import('@/components/orders/OrdersManager').then(mod => mod.OrdersManager), hubTabLoad);
+const CustomerInquiriesManager = dynamic(() => import('@/components/crm/CustomerInquiriesManager').then(mod => mod.CustomerInquiriesManager), hubTabLoad);
+const StorefrontTabShell = dynamic(() => import('@/components/storefront/mobile/StorefrontTabShell').then(mod => mod.StorefrontTabShell), hubTabLoad);
+const TabGuard = dynamic(() => import('@/components/guards/TabGuard').then(mod => mod.TabGuard), hubTabLoad);
+const ResourceLimitBanner = dynamic(() => import('@/components/ui/ResourceLimitBanner').then(mod => mod.ResourceLimitBanner), hubTabLoad);
+const NotificationBell = dynamic(() => import('@/components/notifications/NotificationBell').then(mod => mod.NotificationBell), hubTabLoad);
 import { isPosRelevant, isHospitality, isCampaignRelevant, isMembershipRelevant } from '@/lib/config/domains';
 import { resolvePosVariant } from '@/lib/config/posDomains';
 
@@ -248,9 +252,9 @@ export function DashboardTabs({
     } = handlers;
 
     const tabVariants = {
-        initial: { opacity: 0, x: 20 },
-        animate: { opacity: 1, x: 0 },
-        exit: { opacity: 0, x: -20 }
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 }
     };
 
     const wrapTab = (content) => (
@@ -259,7 +263,7 @@ export function DashboardTabs({
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
         >
             {content}
         </motion.div>

@@ -2,14 +2,26 @@
 
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /**
  * Lightweight loading shell for the main hub content area.
  * Uses a simple opacity transition instead of AnimatePresence mode="wait"
  * to avoid blank frames during tab or data transitions.
+ *
+ * @param {'full' | 'minimal'} variant - minimal when tenant context exists (no full-page swap)
  */
-export function BusinessLoadingBoundary({ isLoading, children }) {
+export function BusinessLoadingBoundary({ isLoading, children, variant = 'full' }) {
     if (isLoading) {
+        if (variant === 'minimal') {
+            return (
+                <div className="flex items-center justify-center py-16 animate-in fade-in duration-200">
+                    <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
+                    <span className="ml-2 text-xs font-medium text-gray-400">Loading workspace...</span>
+                </div>
+            );
+        }
+
         return (
             <div className="space-y-6 py-4 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between">
@@ -59,8 +71,9 @@ export function BusinessLoadingBoundary({ isLoading, children }) {
     }
 
     return (
-        <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">
+        <div className={cn('animate-in fade-in slide-in-from-bottom-1 duration-300')}>
             {children}
         </div>
     );
 }
+

@@ -25,8 +25,7 @@ import {
   resolveOperationsProfile,
 } from '@/lib/dashboard/domainOperationsIntelligence';
 import { CONTACT_PENDING_STATUSES } from '@/lib/dashboard/domainOperationsSubjects';
-
-type OperationsSnapshot = Record<string, unknown>;
+import type { DomainOperationsSnapshot } from '@/lib/hooks/useDomainOperationsSnapshot';
 
 function statusTone(status: string) {
   const s = String(status || '').toLowerCase();
@@ -99,7 +98,23 @@ export interface DomainOperationsPanelProps {
   onBadgeCount?: (count: number | null) => void;
   /** Hide order timeline when a unified activity feed is shown elsewhere. */
   hideOrderTimeline?: boolean;
+  /** Limit which queue cards render (default: all). */
+  sections?: Array<'inquiries' | 'collections' | 'timeline'>;
+  /** Hide KPI stat strip (used when dashboard already shows KPIs). */
+  hideKpiStrip?: boolean;
+  /** Hide middle analytics cards (service mix, channels, etc.). */
+  hideMiddleCharts?: boolean;
+  /** Shared snapshot from {@link useDomainOperationsSnapshot} to avoid duplicate fetches. */
+  snapshot?: DomainOperationsSnapshot | null;
+  snapshotLoading?: boolean;
+  snapshotError?: string | null;
+  onSnapshotRetry?: () => void;
+  /** When false, render nothing while shared snapshot is loading (avoids duplicate loaders). */
+  showLoadingShell?: boolean;
 }
+
+export type { DomainOperationsSnapshot } from '@/lib/hooks/useDomainOperationsSnapshot';
+export { useDomainOperationsSnapshot } from '@/lib/hooks/useDomainOperationsSnapshot';
 
 export function DomainOperationsPanel({
   businessId,
@@ -114,20 +129,29 @@ export function DomainOperationsPanel({
   variant = 'tab',
   onBadgeCount,
   hideOrderTimeline = false,
+  sections,
+  hideKpiStrip = false,
+  hideMiddleCharts = false,
+  snapshot: externalSnapshot,
+  snapshotLoading,
+  snapshotError,
+  onSnapshotRetry,
+  showLoadingShell = true,
 }: DomainOperationsPanelProps) {
-  const [loading, setLoading] = useState(false);
-  const [snapshot, setSnapshot] = useState<OperationsSnapshot | null>(null);
+  const [internalLoading, setInternalLoading] = useState(false);
+  const [internalSnapshot, setInternalSnapshot] = useState<DomainOperationsSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [updatingContactId, setUpdatingContactId] = useState<number | null>(null);
 
-  const profile = useMemo(
-    () => resolveOperationsProfile(category, domainKnowledge || undefined, business),
-    [category, domainKnowledge, business]
-  );
+  const usesExternalSnapshot = externalSnapshot !== undefined || snapshotLoading !== undefined;
 
   const loadSnapshot = useCallback(async () => {
     if (!businessId) return;
-    setLoading(true);
+    if (usesExternalSnapshot) {
+      onSnapshotRetry?.();
+      return;
+    }
+    setInternalLoading(true);
     setError(null);
     try {
       const res = await getDomainOperationsSnapshotAction(businessId, {
@@ -136,18 +160,27 @@ export function DomainOperationsPanel({
         category,
       });
       if (res.success && res.data) {
-        setSnapshot(res.data as OperationsSnapshot);
+        setInternalSnapshot(res.data as DomainOperationsSnapshot);
       } else {
         setError(res.error || 'Could not load operations data');
-        setSnapshot(null);
+        setInternalSnapshot(null);
       }
     } catch {
       setError('Could not load operations data');
-      setSnapshot(null);
+      setInternalSnapshot(null);
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
-  }, [businessId, category, dateRange.from, dateRange.to]);
+  }, [businessId, category, dateRange.from, dateRange.to, usesExternalSnapshot, onSnapshotRetry]);
+
+  const snapshot = usesExternalSnapshot ? (externalSnapshot ?? null) : internalSnapshot;
+  const loading = usesExternalSnapshot ? Boolean(snapshotLoading) : internalLoading;
+  const panelError = usesExternalSnapshot ? (snapshotError ?? null) : error;
+
+  const profile = useMemo(
+    () => resolveOperationsProfile(category, domainKnowledge || undefined, business),
+    [category, domainKnowledge, business]
+  );
 
   const handleMarkContactHandled = useCallback(
     async (messageId: number) => {
@@ -156,7 +189,11 @@ export function DomainOperationsPanel({
       try {
         const res = await updateStorefrontContactStatusAction(businessId, messageId, 'handled');
         if (res.success) {
-          await loadSnapshot();
+          if (usesExternalSnapshot) {
+            onSnapshotRetry?.();
+          } else {
+            await loadSnapshot();
+          }
         }
       } finally {
         setUpdatingContactId(null);
@@ -170,8 +207,9 @@ export function DomainOperationsPanel({
   }, []);
 
   useEffect(() => {
-    if (businessId) loadSnapshot();
-  }, [businessId, loadSnapshot]);
+    if (usesExternalSnapshot || !businessId) return;
+    loadSnapshot();
+  }, [businessId, loadSnapshot, usesExternalSnapshot]);
 
   useEffect(() => {
     if (!snapshot || !onBadgeCount) return;
@@ -204,6 +242,12 @@ export function DomainOperationsPanel({
 
   const guidance = getOperationsTabGuidance(profile);
   const compact = variant === 'compact';
+  const showSection = (key: 'inquiries' | 'collections' | 'timeline') =>
+    !sections || sections.length === 0 || sections.includes(key);
+  const showInquiries = showSection('inquiries');
+  const showCollections = showSection('collections');
+  const showTimeline = showSection('timeline') && !hideOrderTimeline;
+  const hasQueueCards = showInquiries || showCollections || showTimeline;
 
   if (!businessId) {
     return (
@@ -214,18 +258,19 @@ export function DomainOperationsPanel({
   }
 
   if (loading && !snapshot) {
+    if (!showLoadingShell) return null;
     return (
-      <Card className="border-neutral-200 shadow-sm">
+      <Card className="border-neutral-200 shadow-sm h-full">
         <CardContent className="py-10 text-center text-xs text-neutral-500">Loading {profile.tabLabel.toLowerCase()}…</CardContent>
       </Card>
     );
   }
 
-  if (error && !snapshot) {
+  if (panelError && !snapshot) {
     return (
-      <Card className="border-rose-100 bg-rose-50/40 shadow-sm">
+      <Card className="border-rose-100 bg-rose-50/40 shadow-sm h-full">
         <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
-          <p className="text-xs text-rose-800">{error}</p>
+          <p className="text-xs text-rose-800">{panelError}</p>
           <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={loadSnapshot}>
             Retry
           </Button>
@@ -298,6 +343,7 @@ export function DomainOperationsPanel({
         </p>
       ) : null}
 
+      {!hideKpiStrip ? (
       <div className={cn('grid gap-2', compact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6')}>
         {kpiTiles.map((tile) => (
           <OpsStatTile
@@ -310,7 +356,9 @@ export function DomainOperationsPanel({
           />
         ))}
       </div>
+      ) : null}
 
+      {!hideMiddleCharts ? (
       <div className={cn('grid gap-4', compact ? 'grid-cols-1' : 'lg:grid-cols-12')}>
         {profile.showServiceMix && serviceTotal > 0 ? (
           <Card className={cn('border-neutral-200 shadow-sm', !compact && 'lg:col-span-5')}>
@@ -457,9 +505,12 @@ export function DomainOperationsPanel({
           </Card>
         ) : null}
       </div>
+      ) : null}
 
+      {hasQueueCards ? (
       <div className={cn('grid gap-4', compact ? 'grid-cols-1' : 'lg:grid-cols-3')}>
-        <Card className="border-neutral-200 shadow-sm">
+        {showInquiries ? (
+        <Card className="border-neutral-200 shadow-sm h-full">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Inbox className="h-4 w-4" />
@@ -501,8 +552,10 @@ export function DomainOperationsPanel({
             </Button>
           </CardContent>
         </Card>
+        ) : null}
 
-        <Card className="border-neutral-200 shadow-sm">
+        {showCollections ? (
+        <Card className="border-neutral-200 shadow-sm h-full">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Wallet className="h-4 w-4" />
@@ -526,9 +579,10 @@ export function DomainOperationsPanel({
             )}
           </CardContent>
         </Card>
+        ) : null}
 
-        {!hideOrderTimeline ? (
-        <Card className="border-neutral-200 shadow-sm">
+        {showTimeline ? (
+        <Card className="border-neutral-200 shadow-sm h-full">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4" />
@@ -558,6 +612,7 @@ export function DomainOperationsPanel({
         </Card>
         ) : null}
       </div>
+      ) : null}
     </div>
   );
 }

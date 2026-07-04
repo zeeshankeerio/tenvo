@@ -1,4 +1,4 @@
-import DashboardClientDynamic from './DashboardClientDynamic';
+import DashboardClient from './DashboardClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,5 +14,5 @@ export async function generateMetadata({ params }) {
 }
 
 export default function BusinessDashboardPage() {
-  return <DashboardClientDynamic />;
+  return <DashboardClient />;
 }

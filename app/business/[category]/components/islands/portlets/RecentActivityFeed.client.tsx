@@ -15,6 +15,7 @@ interface RecentActivityFeedProps {
     onViewAll?: () => void;
     /** How many events to load; list scrolls when taller than the viewport window */
     feedLimit?: number;
+    className?: string;
 }
 
 type ActivityType = 'invoice' | 'payment' | 'customer' | 'alert' | 'system';
@@ -39,6 +40,7 @@ export const RecentActivityFeed = memo(function RecentActivityFeed({
     businessId,
     onViewAll,
     feedLimit = 40,
+    className,
 }: RecentActivityFeedProps) {
     const [activities, setActivities] = useState<ActivityItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ export const RecentActivityFeed = memo(function RecentActivityFeed({
 
     if (loading) {
         return (
-            <Card className="flex h-full min-h-0 flex-col border border-slate-200 bg-white shadow-sm">
+            <Card className={cn('flex h-full min-h-[16rem] flex-col border border-slate-200 bg-white shadow-sm', className)}>
                 <CardHeader className="shrink-0 border-b border-slate-100 px-3.5 py-2.5">
                     <CardTitle className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
                         <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -145,7 +147,7 @@ export const RecentActivityFeed = memo(function RecentActivityFeed({
     };
 
     return (
-        <Card className="flex min-h-0 flex-col border border-slate-200 bg-white shadow-sm">
+        <Card className={cn('flex h-full min-h-[16rem] flex-col border border-slate-200 bg-white shadow-sm', className)}>
             <CardHeader className="shrink-0 border-b border-slate-100 px-3.5 py-2.5">
                 <CardTitle className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
                     <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />

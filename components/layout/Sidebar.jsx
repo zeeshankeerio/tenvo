@@ -35,7 +35,7 @@ import { UserManager } from '../auth/UserManager';
 import { LanguageToggle } from '../LanguageToggle';
 import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
 import { HUB_NAV_SECTION } from '@/lib/utils/typography';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { BusinessSwitcherEnhanced } from './BusinessSwitcherEnhanced';
 
 function isPosRelevantDomain(category, domainKnowledge) {
@@ -213,7 +213,7 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { hubReady } = useHubReady();
+  const { hubReady, navReady, hasOptimisticShell, optimisticShell } = useHubReady();
   const currentTab = normalizeDashboardTab(searchParams.get('tab') || 'dashboard');
 
   const pathParts = pathname?.split('/') || [];
@@ -236,14 +236,20 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
   // Keep access gating deterministic between SSR and first client render.
   const safeIsPlatformOwner = hasHydrated ? isPlatformOwner : false;
   const safeIsPlatformAdmin = hasHydrated ? isPlatformAdmin : false;
-  const effectiveRole = (!hasHydrated || !hubReady) ? 'viewer' : role;
-  const planTier = hasHydrated
-    ? (safeIsPlatformOwner ? 'enterprise' : resolvePlanTier(contextPlanTier || business?.plan_tier || 'free'))
+  const cachedRole = hasOptimisticShell ? optimisticShell.role : null;
+  const cachedPlanTier = hasOptimisticShell ? optimisticShell.business?.plan_tier : null;
+  const effectiveRole = hubReady
+    ? role
+    : (cachedRole || ((!hasHydrated || !navReady) ? 'viewer' : role));
+  const planTier = hasHydrated || navReady
+    ? (safeIsPlatformOwner
+        ? 'enterprise'
+        : resolvePlanTier(contextPlanTier || business?.plan_tier || cachedPlanTier || 'free'))
     : 'free';
   const planName = safeIsPlatformOwner ? 'Platform Owner' : (PLAN_TIERS[planTier]?.name || 'Free');
-  const navAccessReady = hasHydrated && hubReady;
+  const navAccessReady = navReady;
   const accountRoleLabel =
-    !hasHydrated || !hubReady
+    !navReady
       ? 'Loading…'
       : (effectiveRole || 'User').charAt(0).toUpperCase() + (effectiveRole || 'User').slice(1);
 
@@ -419,16 +425,9 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
                   )}
                 </button>
 
-                {/* Nav Items */}
-                <AnimatePresence initial={false}>
-                  {!isCollapsed && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="overflow-hidden"
-                    >
+                {/* Nav Items — opacity-only expand (avoid height:auto layout thrash) */}
+                {!isCollapsed && (
+                  <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:duration-150">
                       {visibleItems.map((item) => {
                         const isActive = item.key === 'platform-admin'
                           ? pathname === '/admin'
@@ -538,9 +537,8 @@ export function Sidebar({ isOpen, onClose, isSidebarCollapsed, setIsSidebarColla
                           </NavLink>
                         );
                       })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  </div>
+                )}
               </div>
             );
           })}

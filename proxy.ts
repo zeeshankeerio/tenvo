@@ -9,7 +9,7 @@ import { resolveCanonicalHostRedirect } from '@/lib/auth/authOrigins';
 export function proxy(request: NextRequest) {
   const host = request.headers.get('host');
 
-  const canonicalHost = resolveCanonicalHostRedirect(host);
+  const canonicalHost = resolveCanonicalHostRedirect(host ?? '');
   if (canonicalHost) {
     const url = request.nextUrl.clone();
     url.protocol = 'https:';

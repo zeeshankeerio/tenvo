@@ -418,7 +418,7 @@ function BusinessDashboardContent() {
 
   // Auth context
   const { user, loading: authLoading } = useAuth();
-  const { hubReady, contentReady, loadingModules } = useHubReady();
+  const { hubReady, workspaceBlocking, hasOptimisticShell, loadingModules } = useHubReady();
 
   const {
     invoices,
@@ -479,7 +479,6 @@ function BusinessDashboardContent() {
     if (!business?.id || !hubReady) return;
 
     const tabFetchers = {
-      dashboard: fetchAnalytics,
       finance: fetchFinance,
       accounting: fetchFinance,
       expenses: fetchExpenses,
@@ -496,11 +495,20 @@ function BusinessDashboardContent() {
       manufacturing: fetchManufacturing,
     };
 
+    if (activeTab === 'dashboard') {
+      if (!dashboardMetrics && !loadingModules.analytics) {
+        fetchAnalytics();
+      }
+      return;
+    }
+
     tabFetchers[activeTab]?.();
   }, [
     activeTab,
     business?.id,
     hubReady,
+    dashboardMetrics,
+    loadingModules.analytics,
     fetchFinance,
     fetchSales,
     fetchInventory,
@@ -1643,7 +1651,10 @@ function BusinessDashboardContent() {
         </div>
       )}
 
-      <BusinessLoadingBoundary isLoading={!hubReady}>
+      <BusinessLoadingBoundary
+        isLoading={workspaceBlocking}
+        variant={business?.id || hasOptimisticShell ? 'minimal' : 'full'}
+      >
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-2">
           <DashboardTabs
             activeTab={activeTab}
