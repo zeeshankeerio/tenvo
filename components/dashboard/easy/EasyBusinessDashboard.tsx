@@ -604,7 +604,6 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
     customers,
     expenseBreakdown = [],
     chartData = [],
-    dashboardMetrics,
     formatCurrencyCompact,
     greeting,
     userName,

@@ -29,7 +29,7 @@ import {
   MOBILE_BOTTOM_SHEET_HANDLE,
   MOBILE_BOTTOM_SHEET_HEADER,
 } from '@/lib/utils/mobileLayout';
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrency, type CurrencyCode } from '@/lib/currency';
 import type { Invoice } from '@/types';
 
 const PAGE_SIZE = 20;
@@ -42,7 +42,7 @@ export type InvoiceMobileRow = Invoice & {
 
 export interface InvoiceMobileListProps {
   invoices?: InvoiceMobileRow[];
-  currency?: string;
+  currency?: CurrencyCode;
   onView?: (invoice: InvoiceMobileRow) => void;
   onEdit?: (invoice: InvoiceMobileRow) => void;
   onRecordPayment?: (invoice: InvoiceMobileRow) => void;
@@ -165,7 +165,7 @@ export function InvoiceMobileList({
               {visible.map((inv) => {
                 const total =
                   inv.grand_total_formatted ||
-                  formatCurrency(Number(inv.grand_total || inv.amount || 0), currency as 'PKR');
+                  formatCurrency(Number(inv.grand_total || inv.amount || 0), currency);
                 const customer = inv.customer_name || inv.customer?.name || 'Walk-in Customer';
 
                 return (

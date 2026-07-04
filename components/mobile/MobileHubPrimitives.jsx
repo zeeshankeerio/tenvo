@@ -54,7 +54,15 @@ export function MobileHubTile({
   );
 }
 
-export function MobileActionRow({ icon: Icon, label, sublabel, onClick, destructive, disabled, active }) {
+export function MobileActionRow({
+  icon: Icon,
+  label,
+  sublabel,
+  onClick,
+  destructive = false,
+  disabled = false,
+  active = false,
+}) {
   return (
     <button
       type="button"
