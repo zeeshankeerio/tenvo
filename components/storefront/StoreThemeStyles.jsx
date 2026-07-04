@@ -186,6 +186,25 @@ export function StoreThemeStyles({ business, settings }) {
           [data-store-fitness] .fitness-mobile-scroll::-webkit-scrollbar {
             display: none;
           }
+
+          /* Pharmacy elevated store — auto-scrolling category marquee */
+          @keyframes pharmacy-category-marquee {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
+          }
+          [data-store-pharmacy] .pharmacy-category-marquee-track {
+            animation: pharmacy-category-marquee 35s linear infinite;
+            will-change: transform;
+          }
+          [data-store-pharmacy] .pharmacy-category-marquee-track:hover {
+            animation-play-state: paused;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            [data-store-pharmacy] .pharmacy-category-marquee-track {
+              animation: none;
+            }
+          }
+
           [data-store-fitness] .fitness-product-card {
             background-color: var(--store-card);
             border-color: rgba(255, 255, 255, 0.1);

@@ -6,6 +6,10 @@ import { ArrowRight, Bell } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { resolveSpotlightBannerImage } from '@/lib/storefront/storefrontImagePlaceholders';
 import { StoreProductRail } from '@/components/storefront/StoreProductRail';
+import { PharmacyCategoryIcons } from '@/components/storefront/sections/pharmacy/PharmacyCategoryIcons';
+import { PharmacyPrescriptionBanner } from '@/components/storefront/sections/pharmacy/PharmacyPrescriptionBanner';
+import { PharmacyTrustBadges } from '@/components/storefront/sections/pharmacy/PharmacyTrustBadges';
+import { PharmacyHealthConcerns } from '@/components/storefront/sections/pharmacy/PharmacyHealthConcerns';
 import { cn } from '@/lib/utils';
 import { STORE_SECTION_HEADING } from '@/lib/utils/typography';
 import {
@@ -17,6 +21,7 @@ import {
   resolvePharmacyBrands,
   resolvePharmacySeoBlocks,
   formatPharmacyStoreName,
+  resolvePharmacyTrustPillars,
 } from '@/lib/storefront/pharmacyStorefront';
 
 function PharmacySeoBlock({ storeName, businessDescription, country, settings, businessDomain }) {
@@ -79,43 +84,36 @@ export function PharmacyHomeSections({
   const promoBanners = resolvePharmacyPromoBanners(settings, products, businessDomain, businessCategory);
   const careItems = resolvePharmacyCareByCondition(settings, storeBase, ctx);
   const brands = resolvePharmacyBrands(settings, products, businessDomain);
+  const trustPillars = resolvePharmacyTrustPillars(settings, businessDomain);
   const featuredTitle = config.featuredRailTitle || 'Top selling';
   const featuredSubtitle =
     config.featuredRailSubtitle || `Popular products from ${displayName}`;
 
   return (
     <>
-      {categoryIcons.length > 0 && (
-        <section className="border-b border-emerald-50 bg-white pb-6 pt-3 sm:pb-10 sm:pt-6 lg:pt-6">
-          <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
-            <h2 className={cn(STORE_SECTION_HEADING, 'mb-3 text-slate-900 lg:mb-5')}>Shop by category</h2>
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-10 lg:gap-4">
-              {categoryIcons.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={cat.href}
-                  className="group flex flex-col items-center gap-1.5 rounded-2xl border border-transparent p-1.5 text-center active:scale-[0.97] sm:gap-2 sm:p-0 lg:rounded-none lg:border-0 lg:p-0"
-                >
-                  <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50 shadow-sm transition group-active:border-emerald-300 sm:h-16 sm:w-16 sm:rounded-full lg:group-hover:border-emerald-300 lg:group-hover:shadow-md">
-                    {cat.image ? (
-                      <SmartProductImage src={cat.image} alt="" fill className="object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-emerald-800">
-                        {cat.label?.slice(0, 2)?.toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700 sm:text-xs">
-                    {cat.label}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Shop by category — premium auto-scrolling icons */}
+      <PharmacyCategoryIcons categoryIcons={categoryIcons} accent={accent} />
+
+      {/* Trust badges — build credibility early */}
+      <PharmacyTrustBadges badges={trustPillars} accent={accent} />
 
       {topSelling.length > 0 && (
+        <StoreProductRail
+          title={featuredTitle}
+          subtitle={featuredSubtitle}
+          href={`${productsUrl}?sort=popularity`}
+          linkLabel="Shop all"
+          products={topSelling}
+          catalogPool={products}
+          businessDomain={businessDomain}
+          className="bg-white"
+        />
+      )}
+
+      {/* Prescription upload CTA — prominent placement */}
+      <PharmacyPrescriptionBanner storeBase={storeBase} accent={accent} />
+
+      {deals.length > 0 && (
         <StoreProductRail
           title={featuredTitle}
           subtitle={featuredSubtitle}
@@ -196,6 +194,9 @@ export function PharmacyHomeSections({
         </section>
       )}
 
+      {/* Health concerns — shop by condition */}
+      <PharmacyHealthConcerns concerns={careItems} productsUrl={productsUrl} accent={accent} />
+
       {featured.length > 0 && (
         <StoreProductRail
           title="Featured products"
@@ -208,57 +209,29 @@ export function PharmacyHomeSections({
         />
       )}
 
-      {careItems.length > 0 && (
-        <section className="border-y border-emerald-50 bg-emerald-50/30 py-8 sm:py-12">
-          <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-            <div className="mb-6 flex items-end justify-between">
-              <div>
-                <h2 className={cn(STORE_SECTION_HEADING, 'text-slate-900')}>Shop by category</h2>
-                <p className="mt-1 text-sm text-slate-500">Find products for common health needs</p>
-              </div>
-              <Link href={productsUrl} className="text-sm font-semibold text-emerald-700 hover:text-emerald-900">
-                View all
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-              {careItems.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href || `${productsUrl}?category=${encodeURIComponent(item.slug)}`}
-                  className="group overflow-hidden rounded-xl border border-white bg-white shadow-sm transition hover:shadow-md"
-                >
-                  <div className="relative aspect-square">
-                    {item.image ? (
-                      <SmartProductImage src={item.image} alt="" fill className="object-cover transition group-hover:scale-105" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-emerald-50 text-sm font-semibold text-emerald-800">
-                        {item.label}
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <p className="absolute bottom-2 left-2 right-2 text-center text-xs font-semibold text-white sm:text-sm">
-                      {item.label}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {config.showBrandsRow && brands.length > 0 && (
-        <section className="bg-white py-8 sm:py-10">
+        <section className="border-y border-emerald-50 bg-white py-10 sm:py-12">
           <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-            <h2 className={cn(STORE_SECTION_HEADING, 'mb-5 text-slate-900')}>Trusted brands</h2>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
+            <div className="mb-6 text-center sm:mb-8 lg:text-left">
+              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+                Trusted partners
+              </p>
+              <h2 className={cn(STORE_SECTION_HEADING, 'mt-2 text-slate-900')}>
+                Shop by brand
+              </h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Genuine medicines from authorized pharmaceutical manufacturers
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
               {brands.map((brand) => (
                 <Link
                   key={brand.id}
                   href={`${productsUrl}?search=${encodeURIComponent(brand.name)}`}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 sm:text-sm"
+                  className="group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-emerald-300 hover:shadow-md active:scale-95 sm:px-6 sm:py-3.5"
                 >
-                  {brand.name}
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-50 to-teal-50 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                  <span className="relative">{brand.name}</span>
                 </Link>
               ))}
             </div>
@@ -267,23 +240,60 @@ export function PharmacyHomeSections({
       )}
 
       {config.showRefillPromo && (
-        <section className="bg-emerald-700 py-10 sm:py-12">
-          <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-              <div className="max-w-xl text-white">
-                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-200">Monthly essentials</p>
-                <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Never run out of chronic care medicines</h2>
-                <p className="mt-3 text-sm leading-relaxed text-emerald-100 sm:text-base">
-                  Set refill reminders with our team. We notify you before your supply ends and help you reorder
-                  with a valid prescription when required.
+        <section className="relative overflow-hidden bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-600 py-12 sm:py-16">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+              backgroundSize: '32px 32px',
+            }} />
+          </div>
+
+          <div className="relative mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center lg:gap-12">
+              <div className="max-w-2xl text-white">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-100 backdrop-blur-sm">
+                  <Bell className="h-3.5 w-3.5" />
+                  Medication reminders
+                </div>
+                <h2 className="mt-4 text-2xl font-semibold text-white sm:text-3xl lg:text-4xl">
+                  Never miss your monthly refill
+                </h2>
+                <p className="mt-4 text-sm leading-relaxed text-emerald-50 sm:text-base lg:text-lg">
+                  Set automated refill reminders for your chronic care medicines. We'll notify you before
+                  your supply runs out and help you reorder with a valid prescription when required.
+                  Perfect for diabetes care, blood pressure medications, and daily supplements.
                 </p>
+
+                <div className="mt-6 flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2 text-sm text-emerald-50">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+                      ✓
+                    </div>
+                    <span>Free reminder service</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-emerald-50">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+                      ✓
+                    </div>
+                    <span>WhatsApp & SMS alerts</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-emerald-50">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+                      ✓
+                    </div>
+                    <span>Pharmacist support</span>
+                  </div>
+                </div>
               </div>
+
               <Link
                 href={`${storeBase}/contact?refill=1`}
-                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                className="group inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-emerald-800 shadow-xl transition-all duration-200 hover:bg-emerald-50 hover:shadow-2xl active:scale-95"
               >
-                <Bell className="h-4 w-4" aria-hidden />
-                Set refill reminder
+                <Bell className="h-5 w-5" aria-hidden />
+                Set up refill reminder
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
             </div>
           </div>
