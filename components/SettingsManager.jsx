@@ -82,6 +82,7 @@ function buildProfileFormData(b) {
 export function SettingsManager({ category }) {
   const { business, updateBusiness, role, isPlatformOwner, planTier, regionalStandards } = useBusiness();
   const { initiateCheckout, isRedirecting, stripeCheckoutAvailable, devInstantBilling, fetchSubscription } = useSubscription();
+  const [billingInterval, setBillingInterval] = useState('monthly');
 
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState(() => buildProfileFormData(business));
@@ -416,7 +417,7 @@ export function SettingsManager({ category }) {
     setPlanBusy(true);
     try {
       if (useStripeCheckout) {
-        await initiateCheckout({ planTier: targetTier });
+        await initiateCheckout({ planTier: targetTier, interval: billingInterval });
         return;
       }
       const updated = await businessAPI.updatePlan(business.id, targetTier);
@@ -434,7 +435,7 @@ export function SettingsManager({ category }) {
     if (!business?.id || !packageKey) return;
     setPackageBusy(true);
     try {
-      await initiateCheckout({ domainPackageKey: packageKey });
+      await initiateCheckout({ domainPackageKey: packageKey, interval: billingInterval });
       const refreshed = await businessAPI.getById(business.id);
       updateBusiness(refreshed);
       await fetchSubscription();
@@ -1460,6 +1461,37 @@ export function SettingsManager({ category }) {
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-4 pt-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Billing cycle</p>
+              <p className="text-xs text-slate-500">Applies to card checkout for plans and industry packages.</p>
+            </div>
+            <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+              <button
+                type="button"
+                onClick={() => setBillingInterval('monthly')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  billingInterval === 'monthly'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingInterval('yearly')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  billingInterval === 'yearly'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Yearly (−15%)
+              </button>
+            </div>
+          </div>
+
           <Card className="border-none shadow-xl">
             <CardHeader className="bg-indigo-50/50 border-b border-indigo-100">
               <CardTitle className="text-indigo-900 flex items-center gap-2">

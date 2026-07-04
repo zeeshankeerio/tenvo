@@ -289,9 +289,9 @@ function CartSummary({
     const total = Math.round((subtotal + taxAmount - discountAmount) * 100) / 100;
 
     return (
-        <div className="flex flex-col h-full bg-slate-900 text-white">
+        <div className="flex flex-col h-full bg-slate-900 text-white touch-manipulation min-h-0 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50">
+            <div className="flex items-center justify-between px-4 max-lg:px-3 py-3 max-lg:py-2 border-b border-slate-700/50 shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
                     {onBack ? (
                         <button type="button" onClick={onBack} className="p-1.5 -ml-1 rounded-lg hover:bg-slate-800" aria-label="Back">
@@ -347,14 +347,14 @@ function CartSummary({
                                     min={0}
                                 />
                             </div>
-                            <div className="flex justify-between text-2xl font-semibold text-white pt-3 border-t border-slate-700">
+                            <div className="flex justify-between text-2xl max-lg:text-xl font-semibold text-white pt-3 max-lg:pt-2 border-t border-slate-700">
                                 <span>TOTAL</span>
                                 <span className="text-emerald-400">{currency}{total.toLocaleString()}</span>
                             </div>
                         </div>
 
                         {/* Payment Methods */}
-                        <div className="grid grid-cols-4 gap-1.5 pt-2">
+                        <div className="grid grid-cols-4 gap-1.5 max-lg:gap-1 pt-2 max-lg:pt-1.5">
                             {[
                                 { key: 'cash', icon: Banknote, label: 'Cash', color: 'hover:bg-emerald-500/20 hover:border-emerald-500/40' },
                                 { key: 'card', icon: CreditCard, label: 'Card', color: 'hover:bg-brand-primary/20 hover:border-brand-primary/40' },
@@ -365,7 +365,7 @@ function CartSummary({
                                     key={key}
                                     onClick={() => onPaymentMethodSelect?.(key)}
                                     className={cn(
-                                        'flex flex-col items-center gap-1 py-2 rounded-lg border border-slate-700 bg-slate-800 transition-all text-gray-400',
+                                        'flex flex-col items-center gap-1 py-2 max-lg:py-1.5 rounded-lg border border-slate-700 bg-slate-800 transition-all text-gray-400 touch-manipulation',
                                         color
                                     )}
                                 >
@@ -835,9 +835,9 @@ export function SuperStorePOS({
                 {mobilePane === 'browse' ? (
                     <>
                         <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
-                            <PosSessionBar hasSession={hasSession} terminalLabel={terminalLabel} sessionStartedLabel={sessionStartedLabel} isStartingSession={isStartingSession} onStartSession={handleStartSession} onCloseSession={hasSession ? () => setShowCloseShiftDialog(true) : undefined} className="mx-2 mt-2" />
-                            <PosOfflineBanner isOnline={isOnline} pendingCount={pendingCount} isSyncing={isSyncing} onSync={syncPending} className="mx-2" />
-                            <div className="flex items-center gap-1.5 px-3 py-2 border-b shrink-0">
+                            <PosSessionBar hasSession={hasSession} terminalLabel={terminalLabel} sessionStartedLabel={sessionStartedLabel} isStartingSession={isStartingSession} onStartSession={handleStartSession} onCloseSession={hasSession ? () => setShowCloseShiftDialog(true) : undefined} className="mx-2 mt-2 max-lg:mx-1.5 max-lg:mt-1 max-lg:pt-[env(safe-area-inset-top)]" />
+                            <PosOfflineBanner isOnline={isOnline} pendingCount={pendingCount} isSyncing={isSyncing} onSync={syncPending} className="mx-2 max-lg:mx-1.5" />
+                            <div className="flex items-center gap-1.5 px-3 max-lg:px-2 py-2 max-lg:py-1.5 border-b shrink-0">
                                 <BarcodeScannerInput onScan={handleBarcodeScan} searchTerm={searchTerm} onSearchChange={setSearchTerm} isScanning={isScanning} />
                                 {showCamera && (
                                     <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 touch-manipulation" onClick={() => setShowCameraScanner(true)} aria-label="Scan with camera"><Camera className="w-5 h-5" /></Button>
@@ -850,7 +850,18 @@ export function SuperStorePOS({
                                 <PosProductBrowseGrid products={filteredProducts} onAddToCart={addToCart} currency={displayCurrency} businessCategory={category} />
                             )}
                         </div>
-                        <PosMobileCheckoutBar itemCount={cartSummary.itemCount} total={cartSummary.total} currency={displayCurrency} onOpenCheckout={() => setMobilePane('checkout')} />
+                        {cartSummary.itemCount > 0 ? (
+                            <PosMobileCheckoutBar
+                                itemCount={cartSummary.itemCount}
+                                total={cartSummary.total}
+                                currency={displayCurrency}
+                                onOpenCheckout={() => setMobilePane('checkout')}
+                            />
+                        ) : (
+                            <footer className="shrink-0 px-4 py-2.5 text-center text-[11px] text-gray-400 border-t bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
+                                Tap a product or scan barcode to add
+                            </footer>
+                        )}
                     </>
                 ) : (
                     <div className="flex-1 min-h-0 flex flex-col">

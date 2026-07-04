@@ -5,6 +5,7 @@ import { StorefrontContactNotification } from '@/lib/email/templates/StorefrontC
 import { resolveStoreContact } from '@/lib/storefront/businessContact';
 import { STOREFRONT_CONTACT_SUBJECTS } from '@/lib/dashboard/domainOperationsSubjects';
 import { notifyStorefrontContact } from '@/lib/notifications/notificationHelpers';
+import { resolveBusinessMerchantAlertEmails } from '@/lib/notifications/businessNotificationRecipients';
 import pool from '@/lib/db';
 
 const SUBJECTS = new Set(STOREFRONT_CONTACT_SUBJECTS);
@@ -65,7 +66,9 @@ export async function POST(request, { params }) {
 
   const { business, settings } = bizResult;
   const contact = resolveStoreContact({ business, settings });
-  const ownerEmail = contact.email;
+  const merchantAlertEmails = await resolveBusinessMerchantAlertEmails(business.id, {
+    fallbackBusinessEmail: contact.email || business.email,
+  });
 
   const client = await pool.connect();
   let contactId = null;
@@ -118,24 +121,29 @@ export async function POST(request, { params }) {
     client.release();
   }
 
-  if (ownerEmail) {
+  if (merchantAlertEmails.length > 0) {
     const subjectLabel = subjectKey.charAt(0).toUpperCase() + subjectKey.slice(1);
-    const mail = await sendTransactionalEmail({
-      to: ownerEmail,
-      replyTo: email,
-      subject: `[${contact.storeName}] ${subjectLabel}, ${name}`,
-      react: StorefrontContactNotification({
-        storeName: contact.storeName,
-        name,
-        email,
-        phone,
-        orderNumber,
-        subjectLabel,
-        message: storedMessage,
-      }),
-    });
+    const mailResults = await Promise.all(
+      merchantAlertEmails.map((to) =>
+        sendTransactionalEmail({
+          to,
+          replyTo: email,
+          subject: `[${contact.storeName}] ${subjectLabel}, ${name}`,
+          react: StorefrontContactNotification({
+            storeName: contact.storeName,
+            name,
+            email,
+            phone,
+            orderNumber,
+            subjectLabel,
+            message: storedMessage,
+          }),
+        })
+      )
+    );
 
-    if (!mail.success && !mail.skipped) {
+    const anyFailed = mailResults.some((mail) => !mail.success && !mail.skipped);
+    if (anyFailed) {
       return NextResponse.json(
         { error: 'Could not deliver your message right now. Please call or email the store directly.' },
         { status: 503 }
@@ -145,7 +153,7 @@ export async function POST(request, { params }) {
 
   return NextResponse.json({
     success: true,
-    message: ownerEmail
+    message: merchantAlertEmails.length > 0
       ? 'Your message was sent. The store will reply soon.'
       : 'Your message was received.',
   });

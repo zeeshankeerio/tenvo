@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prismaBase } from '@/lib/db';
-import { createCheckoutSession, createCustomer } from '@/lib/payments/stripe';
+import { createCheckoutSession, createCustomer, getStripe } from '@/lib/payments/stripe';
 import { getSessionUser } from '@/lib/auth/session';
 import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
 import { assertBillingRole } from '@/lib/tenancy/billingAccess';
@@ -35,6 +35,7 @@ export async function POST(request) {
       planTier,
       domainPackageKey,
       currency = 'pkr',
+      interval = 'monthly',
       returnUrl,
       business_id: businessIdSnake,
       businessId: businessIdCamel,
@@ -81,6 +82,7 @@ export async function POST(request) {
       planTier,
       domainPackageKey,
       currency,
+      interval,
     });
 
     if (!billable) {
@@ -145,6 +147,14 @@ export async function POST(request) {
       await prismaBase.businesses.update({
         where: { id: business.id },
         data: { stripe_customer_id: customerId },
+      });
+    }
+
+    const stripe = getStripe();
+    if (stripe && customerId) {
+      await stripe.customers.update(customerId, {
+        name: business.business_name || undefined,
+        email: business.email || undefined,
       });
     }
 

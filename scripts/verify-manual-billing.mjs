@@ -30,6 +30,7 @@ const envExample = read('.env.example');
 const billingMode = read('lib/config/billingMode.js');
 const subscriptionRoute = read('app/api/billing/subscription/route.js');
 const createCheckout = read('app/api/billing/create-checkout/route.js');
+const stripeJs = read('lib/payments/stripe.js');
 
 if (!billingMode.includes('shouldUseDevInstantBilling')) {
   mark('billingMode exports shouldUseDevInstantBilling');
@@ -39,6 +40,12 @@ if (!billingMode.includes('isStripeCheckoutEnabled')) {
 }
 if (!createCheckout.includes('shouldUseDevInstantBilling')) {
   mark('create-checkout uses shouldUseDevInstantBilling (card + offline coexist)');
+}
+if (!stripeJs.includes("customer_update: { name: 'auto', address: 'auto' }")) {
+  mark('stripe createCheckoutSession must set customer_update when tax_id_collection is enabled');
+}
+if (!createCheckout.includes('stripe.customers.update')) {
+  mark('create-checkout should sync Stripe customer name/email before checkout');
 }
 if (!subscriptionRoute.includes('stripeCheckoutAvailable')) {
   mark('subscription API exposes stripeCheckoutAvailable');

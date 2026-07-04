@@ -34,6 +34,7 @@ export async function POST(request) {
       newPlanTier,
       domainPackageKey,
       currency: bodyCurrency,
+      interval = 'monthly',
       prorationBehavior = 'create_prorations',
       business_id: businessIdSnake,
       businessId: businessIdCamel,
@@ -95,6 +96,7 @@ export async function POST(request) {
       planTier: newPlanTier,
       domainPackageKey,
       currency,
+      interval: interval || 'monthly',
     });
     if (!billable) {
       return NextResponse.json(

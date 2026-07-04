@@ -27,8 +27,8 @@ export function PosProductBrowseGrid({
     }
 
     return (
-        <div className={cn('overflow-y-auto flex-1 min-h-0 p-3', className)}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+        <div className={cn('overflow-y-auto flex-1 min-h-0 p-3 max-lg:p-2 overscroll-contain', className)}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 max-lg:gap-1.5">
                 {products.map((product) => {
                     const stock = getProductAvailableStock(product);
                     const outOfStock = stock <= 0;
@@ -41,7 +41,7 @@ export function PosProductBrowseGrid({
                             disabled={outOfStock}
                             onClick={() => onAddToCart?.(product)}
                             className={cn(
-                                'group relative flex flex-col rounded-xl border bg-white text-left transition-all',
+                                'group relative flex flex-col rounded-xl border bg-white text-left transition-all touch-manipulation',
                                 'hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/10 active:scale-[0.98]',
                                 outOfStock
                                     ? 'opacity-45 cursor-not-allowed border-gray-100'

@@ -26,24 +26,26 @@ const ORDER_TYPES = [
     { key: 'delivery', label: 'Delivery', icon: Bike, color: 'bg-emerald-500' },
 ];
 
-function OrderTypeSelector({ selected, onSelect }) {
+function OrderTypeSelector({ selected, onSelect, compact = false }) {
     return (
-        <div className="flex gap-2">
+        <div className={cn('flex gap-1.5 max-lg:gap-1 overflow-x-auto scrollbar-hide', compact && 'max-lg:flex-nowrap')}>
             {ORDER_TYPES.map(type => {
                 const Icon = type.icon;
                 const isActive = selected === type.key;
                 return (
                     <button
                         key={type.key}
+                        type="button"
                         onClick={() => onSelect(type.key)}
                         className={cn(
-                            'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all',
+                            'flex items-center gap-1.5 rounded-xl text-xs font-bold transition-all shrink-0 touch-manipulation',
+                            compact ? 'max-lg:px-2.5 max-lg:py-1.5 lg:px-3 lg:py-2' : 'px-3 py-2',
                             isActive
                                 ? `${type.color} text-white shadow-lg`
                                 : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                         )}
                     >
-                        <Icon className="w-3.5 h-3.5" />
+                        <Icon className={cn('w-3.5 h-3.5', compact && 'max-lg:w-3 max-lg:h-3')} />
                         {type.label}
                     </button>
                 );
@@ -99,21 +101,21 @@ function MenuItemCard({ product, onAdd, currency }) {
             animate={{ opacity: 1, scale: 1 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onAdd(product)}
-            className="bg-white rounded-xl border border-gray-100 p-3 text-left hover:shadow-md hover:border-indigo-200 transition-all group relative"
+            className="bg-white rounded-xl border border-gray-100 p-3 max-lg:p-2.5 text-left hover:shadow-md hover:border-indigo-200 transition-all group relative touch-manipulation active:scale-[0.98]"
         >
             {isLow && (
                 <span className="absolute -top-1 -right-1 text-[10px] px-1.5 py-0.5 bg-red-500 text-white font-semibold rounded-full">LOW</span>
             )}
             <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">{product.name}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5 truncate capitalize">{product.category || 'Uncategorized'}</p>
+                    <p className="text-sm max-lg:text-xs font-bold text-gray-900 truncate">{product.name}</p>
+                    <p className="text-[10px] max-lg:text-[9px] text-gray-400 mt-0.5 truncate capitalize">{product.category || 'Uncategorized'}</p>
                 </div>
                 <div className="shrink-0 w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Plus className="w-4 h-4 text-indigo-600" />
                 </div>
             </div>
-            <p className="text-base font-semibold text-indigo-600 mt-2">{currency} {Number(product.price || product.selling_price || 0).toLocaleString()}</p>
+            <p className="text-base max-lg:text-sm font-semibold text-indigo-600 mt-2">{currency} {Number(product.price || product.selling_price || 0).toLocaleString()}</p>
         </motion.button>
     );
 }
@@ -129,7 +131,7 @@ function OrderItemRow({ item, onQty, onRemove, currency }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex items-center gap-2 py-2 border-b border-gray-50 last:border-0"
+            className="flex items-center gap-2 py-2 max-lg:py-1.5 border-b border-gray-50 last:border-0"
         >
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
@@ -306,6 +308,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                     price: Number(i.price || i.selling_price || 0),
                     notes: '',
                 })),
+                taxPercent: Math.round(effectiveTaxRate * 10000) / 100,
                 notes: waiterNote,
             });
 
@@ -362,7 +365,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                 toast.error(result.error || 'Payment failed');
             }
         } catch (err) {
-            toast.error('Payment processing failed');
+            toast.error(err?.message || 'Payment processing failed');
         } finally {
             setIsProcessing(false);
         }
@@ -383,8 +386,8 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
             {/* Menu / tables — hidden on mobile when viewing cart */}
             <div className={cn('flex-1 flex flex-col overflow-hidden min-h-0', mobilePane === 'cart' && 'hidden lg:flex')}>
                 {/* Order Type + Table Selection */}
-                <div className="p-4 bg-white border-b border-gray-100 space-y-3">
-                    <div className="flex items-center justify-between">
+                <div className="p-4 max-lg:p-3 max-lg:pt-[max(0.75rem,env(safe-area-inset-top))] bg-white border-b border-gray-100 space-y-3 max-lg:space-y-2">
+                    <div className="flex items-center justify-between gap-2 max-lg:flex-wrap">
                         <OrderTypeSelector selected={orderType} onSelect={(type) => {
                             setOrderType(type);
                             // Clear table when leaving dine-in
@@ -394,7 +397,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                             setCustomerPhone('');
                             setDeliveryAddress('');
                             setDeliveryFee(0);
-                        }} />
+                        }} compact />
                         {orderType === 'dine-in' && (
                             <div className="flex items-center gap-2">
                                 <Users className="w-3.5 h-3.5 text-gray-400" />
@@ -502,7 +505,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                 </div>
 
                 {/* Search + Category */}
-                <div className="p-3 bg-white border-b border-gray-50 space-y-2">
+                <div className="p-3 max-lg:px-3 max-lg:py-2 bg-white border-b border-gray-50 space-y-2 max-lg:space-y-1.5">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                         <input
@@ -510,15 +513,15 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                             placeholder="Search menu items..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
+                            className="w-full pl-9 pr-3 py-2 max-lg:h-10 max-lg:text-sm text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none touch-manipulation"
                         />
                     </div>
                     <CategoryBar categories={categories} active={activeCategory} onSelect={setActiveCategory} />
                 </div>
 
                 {/* Menu Grid */}
-                <div className="flex-1 overflow-y-auto p-3">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <div className="flex-1 overflow-y-auto p-3 max-lg:p-2 overscroll-contain">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-lg:gap-1.5">
                         {filteredProducts.map(p => (
                             <MenuItemCard key={p.id} product={p} onAdd={addItem} currency={currency} />
                         ))}
@@ -535,6 +538,8 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
             {mobilePane === 'menu' && (
                 <div className="lg:hidden shrink-0">
                     <PosMobileCheckoutBar
+                        variant="restaurant"
+                        checkoutLabel="View order & pay"
                         itemCount={orderItems.reduce((s, i) => s + i.quantity, 0)}
                         total={total}
                         currency={currency}
@@ -551,7 +556,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                 mobilePane === 'cart' ? 'flex flex-1' : 'hidden lg:flex'
             )}>
                 {/* Order Header */}
-                <div className="p-4 border-b border-gray-100">
+                <div className="p-4 max-lg:p-3 border-b border-gray-100 shrink-0">
                     <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                             <button type="button" className="lg:hidden p-2 -ml-1 rounded-lg hover:bg-gray-100 touch-manipulation" onClick={() => setMobilePane('menu')} aria-label="Back to menu">
@@ -589,7 +594,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                 </div>
 
                 {/* Order Items */}
-                <div className="flex-1 overflow-y-auto px-4 py-2">
+                <div className="flex-1 overflow-y-auto px-4 max-lg:px-3 py-2 overscroll-contain min-h-0">
                     <AnimatePresence>
                         {orderItems.map(item => (
                             <OrderItemRow
@@ -623,7 +628,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                 )}
 
                 {/* Totals */}
-                <div className="p-4 border-t border-gray-100 space-y-1.5">
+                <div className="p-4 max-lg:p-3 border-t border-gray-100 space-y-1.5 shrink-0 bg-white pb-[env(safe-area-inset-bottom)] lg:pb-4">
                     <div className="flex justify-between text-xs text-gray-500">
                         <span>Subtotal</span>
                         <span className="font-bold">{currency} {subtotal.toLocaleString()}</span>
@@ -646,7 +651,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
 
                 {/* Payment Area */}
                 {showPayment ? (
-                    <div className="p-4 border-t border-gray-100 space-y-3">
+                    <div className="p-4 max-lg:p-3 border-t border-gray-100 space-y-3 shrink-0 bg-white pb-[max(1rem,env(safe-area-inset-bottom))]">
                         <div className="flex items-center gap-2">
                             <button onClick={() => setShowPayment(false)} className="text-xs text-gray-400 hover:text-gray-600">
                                 <ArrowLeft className="w-4 h-4" />
@@ -678,7 +683,7 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                         <button
                             onClick={handlePayment}
                             disabled={!paymentMethod || isProcessing}
-                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-3 max-lg:py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm max-lg:text-xs font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 touch-manipulation"
                         >
                             {isProcessing ? (
                                 <span className="animate-spin">⏳</span>
@@ -691,11 +696,11 @@ export function RestaurantPOS({ businessId, products = [], onCompleteSale, onOrd
                         </button>
                     </div>
                 ) : (
-                    <div className="p-4 border-t border-gray-100 space-y-2">
+                    <div className="p-4 max-lg:p-3 border-t border-gray-100 space-y-2 shrink-0 bg-white pb-[max(1rem,env(safe-area-inset-bottom))] lg:pb-4">
                         <button
                             onClick={handleSendToKitchen}
                             disabled={orderItems.length === 0 || isProcessing}
-                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-3 max-lg:py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm max-lg:text-xs font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 touch-manipulation"
                         >
                             {isProcessing ? <span className="animate-spin">⏳</span> : <Send className="w-4 h-4" />}
                             {orderType === 'delivery' ? 'Place Delivery Order' : orderType === 'takeaway' ? 'Place Takeaway Order' : 'Send to Kitchen'}

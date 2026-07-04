@@ -398,6 +398,10 @@ export default function RegisterWizard() {
             toast.success('Email verified - finish your workspace setup.');
         }
 
+        if (params.get('error') === 'google') {
+            toast.error('Google sign-in was cancelled or blocked. Try again or use email registration.');
+        }
+
         setResumeChecked(true);
     }, [resumeChecked, setPersistedStep]);
 
@@ -608,13 +612,12 @@ export default function RegisterWizard() {
     };
 
     const handleGoogleRegister = async () => {
-        const callbackURL =
-            typeof window !== 'undefined' ? `${window.location.origin}/register?step=1` : '/register';
         setIsLoading(true);
         try {
             await authClient.signIn.social({
                 provider: 'google',
-                callbackURL,
+                callbackURL: '/register',
+                errorCallbackURL: '/register?error=google',
             });
         } catch (e) {
             console.error(e);

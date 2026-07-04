@@ -15,7 +15,11 @@ export function PosMobileCheckoutBar({
     onOpenCheckout,
     emptyHint = 'Tap products to add to cart',
     className,
+    variant = 'retail',
+    checkoutLabel = 'View cart & pay',
 }) {
+    const isRestaurant = variant === 'restaurant';
+
     if (itemCount <= 0) {
         return (
             <footer className={cn('shrink-0 px-4 py-2.5 text-center text-[11px] text-gray-400 border-t bg-white pb-[env(safe-area-inset-bottom)]', className)}>
@@ -28,32 +32,56 @@ export function PosMobileCheckoutBar({
         <footer
             className={cn(
                 POS_SHELL_FOOTER,
-                'shrink-0 border-t border-slate-800 bg-slate-900 pb-[env(safe-area-inset-bottom)]',
+                'shrink-0 border-t pb-[env(safe-area-inset-bottom)]',
+                isRestaurant
+                    ? 'border-indigo-100 bg-white'
+                    : 'border-slate-800 bg-slate-900',
                 className
             )}
         >
             <button
                 type="button"
                 onClick={onOpenCheckout}
-                className="flex items-center justify-between gap-3 w-full px-4 py-3.5 active:opacity-90 touch-manipulation"
+                className="flex items-center justify-between gap-3 w-full px-4 py-3 max-lg:py-2.5 active:opacity-90 touch-manipulation"
             >
                 <div className="flex items-center gap-3 min-w-0">
-                    <span className="relative flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
-                        <ShoppingCart className="w-5 h-5" />
-                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-emerald-700 text-[10px] font-bold flex items-center justify-center">
+                    <span className={cn(
+                        'relative flex items-center justify-center w-10 h-10 max-lg:w-9 max-lg:h-9 rounded-full text-white shadow-lg',
+                        isRestaurant
+                            ? 'bg-indigo-600 shadow-indigo-500/30'
+                            : 'bg-emerald-500 shadow-emerald-500/30'
+                    )}>
+                        <ShoppingCart className="w-5 h-5 max-lg:w-4 max-lg:h-4" />
+                        <span className={cn(
+                            'absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-[10px] font-bold flex items-center justify-center',
+                            isRestaurant ? 'text-indigo-700' : 'text-emerald-700'
+                        )}>
                             {itemCount > 99 ? '99+' : itemCount}
                         </span>
                     </span>
                     <div className="text-left min-w-0">
-                        <p className="text-sm font-bold text-white truncate">View cart & pay</p>
-                        <p className="text-[10px] text-slate-400">{itemCount} items</p>
+                        <p className={cn(
+                            'text-sm max-lg:text-xs font-bold truncate',
+                            isRestaurant ? 'text-gray-900' : 'text-white'
+                        )}>
+                            {checkoutLabel}
+                        </p>
+                        <p className={cn(
+                            'text-[10px]',
+                            isRestaurant ? 'text-gray-400' : 'text-slate-400'
+                        )}>
+                            {itemCount} items
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-lg font-bold text-emerald-400 tabular-nums">
+                    <span className={cn(
+                        'text-lg max-lg:text-base font-bold tabular-nums',
+                        isRestaurant ? 'text-indigo-600' : 'text-emerald-400'
+                    )}>
                         {currency}{Number(total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </span>
-                    <ChevronRight className="w-5 h-5 text-slate-500" />
+                    <ChevronRight className={cn('w-5 h-5', isRestaurant ? 'text-indigo-300' : 'text-slate-500')} />
                 </div>
             </button>
         </footer>

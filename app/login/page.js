@@ -64,6 +64,14 @@ export default function LoginPage() {
     if (user?.id) void handlePostLogin(user);
   }, [sessionData?.user, sessionPending, handlePostLogin]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'google') {
+      toast.error('Google sign-in was cancelled or blocked. Try email login or use www.tenvo.store.');
+    }
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -169,7 +177,8 @@ export default function LoginPage() {
     try {
       await authClient.signIn.social({
         provider: 'google',
-        callbackURL: typeof window !== 'undefined' ? `${window.location.origin}/login` : '/login',
+        callbackURL: '/login',
+        errorCallbackURL: '/login?error=google',
       });
     } catch (e) {
       toast.error(e?.message || 'Google sign-in failed.');

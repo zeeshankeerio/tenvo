@@ -20,6 +20,7 @@ import {
 import { MembershipService } from '@/lib/services/MembershipService';
 import { MEMBERSHIP_SOURCE } from '@/lib/memberships/membershipConstants';
 import { notifyStorefrontOrder, notifyLowStock } from '@/lib/notifications/notificationHelpers';
+import { resolveBusinessMerchantAlertEmails } from '@/lib/notifications/businessNotificationRecipients';
 import { isStorefrontProductUuid } from '@/lib/utils/storefrontProductRef';
 import { queryStorefrontVariantRequirement } from '@/lib/storefront/storefrontProductVariants';
 import { areAllLinesDigital, digitalShippingAddress } from '@/lib/storefront/digitalProducts';
@@ -680,24 +681,36 @@ export async function POST(request, { params }) {
       },
     }).catch(console.error);
 
-    // Notify the merchant by email (in addition to the in-app bell notification)
-    if (business.email) {
-      void sendNewOrderMerchantEmail({
-        to: business.email,
-        order: {
+    // Notify tenant owners/admins by email (scoped to this business_id only)
+    void (async () => {
+      try {
+        const merchantEmails = await resolveBusinessMerchantAlertEmails(business.id, {
+          fallbackBusinessEmail: business.email,
+        });
+        if (merchantEmails.length === 0) return;
+
+        const merchantBusiness = {
+          name: business.business_name,
+          email: merchantEmails[0],
+        };
+        const orderPayload = {
           orderNumber,
           items: emailItems,
           total: grandTotal,
           currency: business.currency || undefined,
           customerName,
           customerEmail: customer.email,
-        },
-        business: {
-          name: business.business_name,
-          email: business.email,
-        },
-      }).catch(console.error);
-    }
+        };
+
+        await Promise.all(
+          merchantEmails.map((to) =>
+            sendNewOrderMerchantEmail({ to, order: orderPayload, business: merchantBusiness })
+          )
+        );
+      } catch (merchantEmailErr) {
+        console.error('[Create Order] merchant email failed:', merchantEmailErr);
+      }
+    })();
 
     return NextResponse.json({
       success: true,

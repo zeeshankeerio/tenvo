@@ -123,7 +123,7 @@ function PosProductGrid({
     }, [products, activeCategory, searchTerm]);
 
     const toolbarControlClass =
-        'h-10 rounded-xl border-gray-200 bg-gray-50 text-sm focus:bg-white';
+        'h-10 max-lg:h-9 rounded-xl border-gray-200 bg-gray-50 text-sm max-lg:text-xs focus:bg-white touch-manipulation';
 
     return (
         <div className="flex flex-col h-full min-h-0 overflow-hidden" role="region" aria-label="Product selection area">
@@ -131,7 +131,7 @@ function PosProductGrid({
             <div
                 className={cn(
                     POS_SHELL_HEADER,
-                    'flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-gray-100 bg-white'
+                    'flex items-center gap-2 px-3 sm:px-4 max-lg:px-2.5 max-lg:py-1.5 py-2 border-b border-gray-100 bg-white max-lg:pt-[max(0.5rem,env(safe-area-inset-top))]'
                 )}
             >
                 <Select value={activeCategory} onValueChange={onCategoryChange}>
@@ -198,11 +198,11 @@ function PosProductGrid({
 
             {/* Product grid, scrollable middle */}
             <div
-                className={cn(POS_SCROLL_MIDDLE, 'p-3 sm:p-4 bg-white')}
+                className={cn(POS_SCROLL_MIDDLE, 'p-3 sm:p-4 max-lg:p-2 bg-white overscroll-contain')}
                 role="region"
                 aria-label="Product grid"
             >
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-3 max-lg:gap-2">
                     {filtered.map((product) => {
                         const stock = getProductAvailableStock(product);
                         const minStock = Number(product.min_stock ?? product.min_stock_level ?? 5);
@@ -216,7 +216,7 @@ function PosProductGrid({
                                 whileTap={isOutOfStock ? {} : { scale: 0.97 }}
                                 onClick={() => !isOutOfStock && onAddToCart(product)}
                                 className={cn(
-                                    'flex flex-col items-center p-3 rounded-xl border transition-all text-left focus:ring-2 focus:ring-brand-primary focus:outline-none',
+                                    'flex flex-col items-center p-3 max-lg:p-2 rounded-xl border transition-all text-left focus:ring-2 focus:ring-brand-primary focus:outline-none touch-manipulation active:scale-[0.98]',
                                     'bg-white hover:shadow-md hover:border-brand-100',
                                     isOutOfStock
                                         ? 'opacity-50 cursor-not-allowed border-red-200 bg-red-50/30'
@@ -312,12 +312,12 @@ function PosCart({
 
     return (
         <div
-            className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-900 text-white"
+            className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-900 text-white touch-manipulation"
             role="complementary"
             aria-label="Shopping cart and checkout"
         >
             {/* Header, pinned */}
-            <header className={cn(POS_SHELL_HEADER, 'flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 border-b border-slate-700/80 bg-slate-900')}>
+            <header className={cn(POS_SHELL_HEADER, 'flex items-center justify-between gap-2 px-3 sm:px-4 max-lg:px-2.5 py-2.5 max-lg:py-2 border-b border-slate-700/80 bg-slate-900')}>
                 <div className="flex items-center gap-2 min-w-0">
                     {onBack ? (
                         <button
@@ -438,7 +438,7 @@ function PosCart({
             </div>
 
             {/* Checkout footer, pinned */}
-            <footer className={cn(POS_SHELL_FOOTER, 'border-slate-700/80 bg-slate-900 px-3 sm:px-4 py-3 space-y-2.5')}>
+            <footer className={cn(POS_SHELL_FOOTER, 'border-slate-700/80 bg-slate-900 px-3 sm:px-4 max-lg:px-2.5 py-3 max-lg:py-2.5 space-y-2.5 max-lg:space-y-2')}>
                 {items.length > 0 ? (
                     <>
                         <button
@@ -881,7 +881,7 @@ export function PosTerminal({
     };
 
     const posShellHeader = (
-        <header className={cn(POS_SHELL_HEADER, 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 lg:px-4 py-2 border-b border-gray-200 bg-white')}>
+        <header className={cn(POS_SHELL_HEADER, 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 lg:px-4 py-2 max-lg:py-1.5 border-b border-gray-200 bg-white max-lg:pt-[max(0.5rem,env(safe-area-inset-top))]')}>
             <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="text-xs lg:text-sm font-bold text-gray-900 truncate">
                     {posUi.terminalLabel}
