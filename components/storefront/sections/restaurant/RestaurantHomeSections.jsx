@@ -33,6 +33,7 @@ import {
   formatRestaurantStoreName,
 } from '@/lib/storefront/restaurantStorefront';
 import { isDemoStoreDomain } from '@/lib/storefront/elevatedStorefrontTenant';
+import { useRestaurantChromeOptional } from '@/components/storefront/restaurant/RestaurantChromeContext';
 
 const TRUST_ICONS = {
   delivery: Bike,
@@ -110,6 +111,7 @@ export function RestaurantHomeSections({
   const displayName = formatRestaurantStoreName(storeName);
   const isDemo = isDemoStoreDomain(businessDomain);
   const orderModes = config.orderModes || RESTAURANT_ORDER_MODES;
+  const restaurantChrome = useRestaurantChromeOptional();
   const featuredTitle = config.featuredRailTitle || 'Featured picks';
   const featuredSubtitle =
     config.featuredRailSubtitle || `Popular dishes from ${displayName}`;
@@ -132,7 +134,8 @@ export function RestaurantHomeSections({
               {orderModes.map((mode) => (
                 <Link
                   key={mode.id}
-                  href={productsUrl}
+                  href={`${productsUrl}?mode=${mode.id}`}
+                  onClick={() => restaurantChrome?.setOrderMode?.(mode.id)}
                   className="flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center active:scale-[0.98]"
                   style={{ borderColor: `${accent}22`, backgroundColor: `${accent}0d` }}
                 >

@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- SEO -->
+  <title>Roll Inn</title>
+  <meta name="description" content="Experience the essence of Desi flavors at Roll Inn in Karachi. Hearty meals made with tradition and taste—visit us or place an order today!" />
+  <meta name="keywords" content="Roll Inn, Desi Cuisine, Karachi, Food Delivery, Biryanis, Fries, Online Food Order, Fast Delivery" />
+
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="Roll Inn" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+   <!-- SW KILLER — runs before anything else -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        // Unregister ALL service workers
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          registrations.forEach(function(registration) {
+            registration.unregister().then(function(success) {
+              console.log('SW unregistered:', success, registration.scope);
+            });
+          });
+        });
+
+        // Delete ALL caches
+        caches.keys().then(function(cacheNames) {
+          cacheNames.forEach(function(cacheName) {
+            caches.delete(cacheName).then(function() {
+              console.log('Cache deleted:', cacheName);
+            });
+          });
+        });
+      }
+    </script>
+
+  <script type="module" crossorigin src="/assets/index-4KyastHM.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-suAhLVxT.css">
+<script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+
+<body>
+  <div id="root"></div>
+
+</body>
+
+</html>

@@ -9,6 +9,7 @@ import {
   getRestaurantConfig,
   RESTAURANT_ORDER_MODES,
 } from '@/lib/storefront/restaurantStorefront';
+import { useRestaurantChromeOptional } from '@/components/storefront/restaurant/RestaurantChromeContext';
 
 /**
  * Elevated restaurant hero — tenant-aware carousel, location + search dock.
@@ -18,7 +19,9 @@ export function RestaurantHero({ preset, businessDomain, accent, accentDark, con
   const base = preset.base || `/store/${businessDomain}`;
   const productsUrl = `${base}/products`;
   const [query, setQuery] = useState('');
-  const [orderMode, setOrderMode] = useState('delivery');
+  const restaurantChrome = useRestaurantChromeOptional();
+  const orderMode = restaurantChrome?.orderMode || 'delivery';
+  const setOrderMode = restaurantChrome?.setOrderMode;
   const config = getRestaurantConfig(preset.settings, businessDomain);
   const location = contactCity || config.defaultLocation || 'Your area';
   const quickSearchTerms = preset.quickSearchTerms || [];
@@ -80,7 +83,7 @@ export function RestaurantHero({ preset, businessDomain, accent, accentDark, con
                     <button
                       key={mode.id}
                       type="button"
-                      onClick={() => setOrderMode(mode.id)}
+                      onClick={() => setOrderMode?.(mode.id)}
                       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${
                         active ? 'text-white' : 'text-stone-800 hover:bg-stone-50'
                       }`}

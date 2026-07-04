@@ -18,6 +18,17 @@ import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { isMembershipRelevant } from '@/lib/config/domains';
+import { isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
+import { RestaurantCartOrderMode } from '@/components/storefront/restaurant/RestaurantCartOrderMode';
+import {
+  RESTAURANT_UI,
+  resolveRestaurantShippingCost,
+  getRestaurantFeeLabel,
+  isRestaurantPickupOrder,
+  restaurantOrderModeToShipping,
+  normalizeRestaurantOrderMode,
+} from '@/lib/storefront/restaurantMenu';
+import { useRestaurantChromeOptional } from '@/components/storefront/restaurant/RestaurantChromeContext';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -27,6 +38,10 @@ export default function CartPage({ params }) {
   const { cart, updateQuantity, removeItem, isLoading, calculateTotals, hydrated, clearCart, setCheckoutAdjustments } = useCart();
   const { currency, settings, business, businessId } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
+  const restaurantStore = isRestaurantElevatedStore(business?.category);
+  const restaurantChrome = useRestaurantChromeOptional();
+  const restaurantOrderMode = normalizeRestaurantOrderMode(restaurantChrome?.orderMode || 'delivery');
+  const restaurantPickup = restaurantStore && isRestaurantPickupOrder(restaurantOrderMode);
 
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
   const taxRate = settings?.taxRate ?? 0.17;
@@ -42,6 +57,11 @@ export default function CartPage({ params }) {
   const [applyingMemberDiscount, setApplyingMemberDiscount] = useState(false);
   const [shippingMethod, setShippingMethod] = useState('standard');
 
+  useEffect(() => {
+    if (!restaurantStore || !restaurantChrome?.orderModeHydrated) return;
+    setShippingMethod(restaurantOrderModeToShipping(restaurantOrderMode));
+  }, [restaurantStore, restaurantOrderMode, restaurantChrome?.orderModeHydrated]);
+
   const { subtotal, itemCount } = calculateTotals();
   const membershipStoreEnabled = isMembershipRelevant(business?.category);
   const totalDiscount = Math.min(subtotal, promoDiscount + memberDiscount);
@@ -50,9 +70,20 @@ export default function CartPage({ params }) {
     cart.businessId && businessId && cart.businessId !== businessId
   );
 
-  const shippingCost = shippingMethod === 'express' ? 300
-    : shippingMethod === 'pickup' ? 0
-    : subtotal >= freeShippingThreshold ? 0 : 150;
+  const shippingCost = restaurantStore
+    ? resolveRestaurantShippingCost({
+        orderMode: restaurantOrderMode,
+        subtotal,
+        freeShippingThreshold,
+        shippingMethod,
+      })
+    : shippingMethod === 'express'
+      ? 300
+      : shippingMethod === 'pickup'
+        ? 0
+        : subtotal >= freeShippingThreshold
+          ? 0
+          : 150;
   const tax = subtotal * taxRate;
   const total = subtotal + shippingCost + tax - totalDiscount;
   const remaining = Math.max(0, freeShippingThreshold - subtotal);
@@ -190,14 +221,14 @@ export default function CartPage({ params }) {
   // ── Empty cart ───────────────────────────────────────────────────────
   if (cart.items.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className={cn('min-h-screen flex items-center justify-center p-4', restaurantStore ? RESTAURANT_UI.page : 'bg-gray-50')}>
         <div className="text-center max-w-sm">
-          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShoppingBag className="w-12 h-12 text-gray-300" />
+          <div className={cn('w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6', restaurantStore ? 'bg-neutral-900' : 'bg-gray-100')}>
+            <ShoppingBag className={cn('w-12 h-12', restaurantStore ? 'text-neutral-600' : 'text-gray-300')} />
           </div>
-          <h1 className="text-2xl font-black text-gray-900 mb-2">Your cart is empty</h1>
-          <p className="text-gray-500 mb-8">
-            Looks like you have not added anything yet. Start shopping!
+          <h1 className={cn('text-2xl font-semibold mb-2', restaurantStore ? 'text-white' : 'text-gray-900')}>Your cart is empty</h1>
+          <p className={cn('mb-8', restaurantStore ? 'text-neutral-400' : 'text-gray-500')}>
+            {restaurantStore ? 'Browse the menu and add dishes to get started.' : 'Looks like you have not added anything yet. Start shopping!'}
           </p>
           <Button
             size="lg"
@@ -207,7 +238,7 @@ export default function CartPage({ params }) {
           >
             <Link href={`/store/${businessDomain}/products`}>
               <ShoppingBag className="w-5 h-5" />
-              Browse Products
+              {restaurantStore ? 'Browse menu' : 'Browse Products'}
             </Link>
           </Button>
         </div>
@@ -216,20 +247,23 @@ export default function CartPage({ params }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={cn('min-h-screen', restaurantStore ? 'bg-[#0a0a0a]' : 'bg-gray-50')}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-black text-gray-900">
-            Shopping Cart
-            <span className="text-base font-normal text-gray-500 ml-2">({itemCount} items)</span>
+          <h1 className={cn('text-2xl font-semibold', restaurantStore ? 'text-white' : 'text-gray-900')}>
+            {restaurantStore ? 'Your order' : 'Shopping Cart'}
+            <span className={cn('text-base font-normal ml-2', restaurantStore ? 'text-neutral-500' : 'text-gray-500')}>({itemCount} items)</span>
           </h1>
           <Link
             href={`/store/${businessDomain}/products`}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            className={cn(
+              'flex items-center gap-1.5 text-sm transition-colors',
+              restaurantStore ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+            )}
           >
-            <ArrowLeft className="w-4 h-4" /> Continue Shopping
+            <ArrowLeft className="w-4 h-4" /> {restaurantStore ? 'Back to menu' : 'Continue Shopping'}
           </Link>
         </div>
 
@@ -256,8 +290,28 @@ export default function CartPage({ params }) {
           </div>
         )}
 
-        {/* Free shipping progress */}
-        {remaining > 0 && (
+        {/* Free delivery progress — delivery mode only */}
+        {restaurantStore && !restaurantPickup && remaining > 0 && (
+          <div className="mb-6 p-4 rounded-2xl border border-neutral-800 bg-[#141414]">
+            <div className="flex items-center gap-2 text-sm font-medium text-neutral-300 mb-2">
+              <Truck className="w-4 h-4" style={{ color: accent }} />
+              Add <span className="font-bold" style={{ color: accent }}>{formatCurrency(remaining, currency)}</span> more for free delivery
+            </div>
+            <div className="w-full bg-neutral-800 rounded-full h-2">
+              <div
+                className="h-2 rounded-full transition-all duration-500"
+                style={{ width: `${progressPct}%`, backgroundColor: accent }}
+              />
+            </div>
+          </div>
+        )}
+        {restaurantStore && !restaurantPickup && remaining === 0 && subtotal > 0 && (
+          <div className="mb-6 p-3 bg-green-950/40 border border-green-900/50 rounded-2xl flex items-center gap-2 text-sm font-medium text-green-400">
+            <Truck className="w-4 h-4" />
+            Free delivery on this order
+          </div>
+        )}
+        {!restaurantStore && remaining > 0 && (
           <div className="mb-6 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <Truck className="w-4 h-4" style={{ color: accent }} />
@@ -271,7 +325,7 @@ export default function CartPage({ params }) {
             </div>
           </div>
         )}
-        {remaining === 0 && (
+        {!restaurantStore && remaining === 0 && (
           <div className="mb-6 p-3 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-2 text-sm font-medium text-green-700">
             <Truck className="w-4 h-4" />
             You qualify for free shipping!
@@ -290,7 +344,12 @@ export default function CartPage({ params }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.2 }}
-                  className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+                  className={cn(
+                    'rounded-2xl p-4 shadow-sm border',
+                    restaurantStore
+                      ? 'bg-[#141414] border-neutral-800'
+                      : 'bg-white border-gray-100'
+                  )}
                 >
                   <div className="flex gap-4">
                     {/* Image */}
@@ -298,7 +357,7 @@ export default function CartPage({ params }) {
                       href={`/store/${businessDomain}/products/${item.slug || item.productId}`}
                       className="flex-shrink-0"
                     >
-                      <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden">
+                      <div className={cn('w-20 h-20 rounded-xl overflow-hidden', restaurantStore ? 'bg-neutral-800' : 'bg-gray-100')}>
                         {item.image ? (
                           <SmartProductImage
                             src={item.image}
@@ -319,7 +378,10 @@ export default function CartPage({ params }) {
                     <div className="flex-1 min-w-0">
                       <Link
                         href={`/store/${businessDomain}/products/${item.slug || item.productId}`}
-                        className="font-semibold text-gray-900 hover:text-gray-600 line-clamp-2 text-sm leading-snug transition-colors"
+                        className={cn(
+                          'font-semibold line-clamp-2 text-sm leading-snug transition-colors',
+                          restaurantStore ? 'text-white hover:text-neutral-300' : 'text-gray-900 hover:text-gray-600'
+                        )}
                       >
                         {item.name}
                       </Link>
@@ -381,12 +443,15 @@ export default function CartPage({ params }) {
           {/* ── Order summary ────────────────────────────────────────────── */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
-              <Card className="rounded-2xl shadow-sm border-0">
+              <Card className={cn('rounded-2xl shadow-sm border-0', restaurantStore && 'bg-[#141414] border border-neutral-800 text-white')}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-bold">Order Summary</CardTitle>
+                  <CardTitle className={cn('text-base font-bold', restaurantStore && 'text-white')}>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Shipping method */}
+                  {/* Shipping / order type */}
+                  {restaurantStore ? (
+                    <RestaurantCartOrderMode onShippingChange={setShippingMethod} />
+                  ) : (
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Shipping</p>
                     {[
@@ -416,6 +481,7 @@ export default function CartPage({ params }) {
                       </label>
                     ))}
                   </div>
+                  )}
 
                   <Separator />
 
@@ -502,7 +568,9 @@ export default function CartPage({ params }) {
                       <span className="font-medium">{formatCurrency(subtotal, currency)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Shipping</span>
+                      <span className={restaurantStore ? 'text-neutral-500' : 'text-gray-500'}>
+                        {restaurantStore ? getRestaurantFeeLabel(restaurantOrderMode) : 'Shipping'}
+                      </span>
                       <span className={cn('font-medium', shippingCost === 0 ? 'text-green-600' : '')}>
                         {shippingCost === 0 ? 'FREE' : formatCurrency(shippingCost, currency)}
                       </span>
@@ -541,7 +609,9 @@ export default function CartPage({ params }) {
                     disabled={cartMismatch}
                     onClick={() => {
                       saveCheckoutAdjustments();
-                      router.push(`/store/${businessDomain}/checkout?shipping=${shippingMethod}`);
+                      router.push(
+                        `/store/${businessDomain}/checkout?shipping=${shippingMethod}${restaurantStore ? `&mode=${restaurantOrderMode}` : ''}`
+                      );
                     }}
                   >
                     Proceed to Checkout

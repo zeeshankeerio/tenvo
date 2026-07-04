@@ -11,8 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/currency';
+import { cn } from '@/lib/utils';
 import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useStorefront } from '@/lib/context/StorefrontContext';
+import { isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
+import { RESTAURANT_MENU_THEME } from '@/lib/storefront/restaurantMenu';
+import { useRestaurantChromeOptional } from '@/components/storefront/restaurant/RestaurantChromeContext';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,7 +24,9 @@ export function CartDrawer() {
   const router = useRouter();
 
   const { cart, updateQuantity, removeItem, calculateTotals, isLoading, isOpen, setIsOpen, clearCart } = useCart();
-  const { currency, businessDomain, settings, businessId } = useStorefront();
+  const { currency, businessDomain, settings, businessId, business } = useStorefront();
+  const restaurantStore = isRestaurantElevatedStore(business?.category);
+  const restaurantChrome = useRestaurantChromeOptional();
   const { subtotal, itemCount } = calculateTotals();
   const cartMismatch = Boolean(
     cart.businessId && businessId && cart.businessId !== businessId
@@ -47,15 +53,23 @@ export function CartDrawer() {
       return;
     }
     setIsOpen(false);
-    router.push(`/store/${businessDomain}/checkout`);
+    const params = new URLSearchParams();
+    if (restaurantStore && restaurantChrome?.orderMode) {
+      params.set('mode', restaurantChrome.orderMode);
+      params.set('shipping', restaurantChrome.orderMode === 'delivery' ? 'standard' : 'pickup');
+    }
+    const qs = params.toString();
+    router.push(`/store/${businessDomain}/checkout${qs ? `?${qs}` : ''}`);
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col p-0">
-        {/* Header */}
-        <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle className="flex items-center gap-2 text-lg font-bold">
+      <SheetContent className={cn(
+        'w-full sm:max-w-lg flex flex-col p-0',
+        restaurantStore && 'bg-[#0a0a0a] border-neutral-800 text-white'
+      )}>
+        <SheetHeader className={cn('px-6 py-4 border-b', restaurantStore && 'border-neutral-800')}>
+          <SheetTitle className={cn('flex items-center gap-2 text-lg font-bold', restaurantStore && 'text-white')}>
             <ShoppingBag className="w-5 h-5" />
             Cart
             {itemCount > 0 && (
@@ -82,7 +96,7 @@ export function CartDrawer() {
               className="rounded-xl"
             >
               <Link href={`/store/${businessDomain}/products`}>
-                Browse Products
+                {restaurantStore ? 'Browse menu' : 'Browse Products'}
               </Link>
             </Button>
           </div>
@@ -117,7 +131,12 @@ export function CartDrawer() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -80 }}
                     transition={{ duration: 0.18, delay: index * 0.04 }}
-                    className="flex gap-4 px-6 py-4 border-b border-gray-50 hover:bg-gray-50/60 transition-colors"
+                    className={cn(
+                      'flex gap-4 px-6 py-4 border-b transition-colors',
+                      restaurantStore
+                        ? 'border-neutral-800 hover:bg-neutral-900/50'
+                        : 'border-gray-50 hover:bg-gray-50/60'
+                    )}
                   >
                     {/* Image */}
                     <Link

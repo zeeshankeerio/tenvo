@@ -27,7 +27,6 @@ export function proxy(request: NextRequest) {
     'camera=(), microphone=(), geolocation=(), interest-cohort=()'
   );
 
-  const host = request.headers.get('host');
   if (host) {
     res.headers.set('x-tenvo-forwarded-host', host);
   }

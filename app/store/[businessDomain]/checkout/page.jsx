@@ -25,6 +25,22 @@ import { toast } from 'react-hot-toast';
 import { getAvailablePaymentMethods } from '@/lib/actions/storefront/payments';
 import { downloadStorefrontOrderReceipt } from '@/lib/storefront/storefrontReceiptDownload';
 import { CryptoCheckoutPanel } from '@/components/storefront/CryptoCheckoutPanel';
+import { isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
+import { useRestaurantChromeOptional } from '@/components/storefront/restaurant/RestaurantChromeContext';
+import {
+  restaurantOrderModeToShipping,
+  isRestaurantPickupOrder,
+  buildRestaurantOrderNotes,
+  RESTAURANT_UI,
+  restaurantOrderModeLabel,
+  normalizeRestaurantOrderMode,
+  getRestaurantCheckoutSteps,
+  resolveRestaurantShippingCost,
+  getRestaurantFeeLabel,
+} from '@/lib/storefront/restaurantMenu';
+import { RESTAURANT_ORDER_MODES } from '@/lib/storefront/restaurantStorefront';
+import { RestaurantCartOrderMode } from '@/components/storefront/restaurant/RestaurantCartOrderMode';
+import { restaurantInputClass } from '@/components/storefront/restaurant/RestaurantStoreCard';
 
 const PAYMENT_ICONS = {
   stripe: CreditCard, cod: Banknote, easypaisa: Smartphone,
@@ -46,15 +62,23 @@ export default function CheckoutPage({ params }) {
   const { cart, calculateTotals, clearCart, hydrated, checkoutAdjustments } = useCart();
   const { currency, businessId, settings, business } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
+  const restaurantStore = isRestaurantElevatedStore(business?.category);
+  const restaurantChrome = useRestaurantChromeOptional();
+  const restaurantOrderMode = normalizeRestaurantOrderMode(restaurantChrome?.orderMode || 'delivery');
+  const restaurantPickup = restaurantStore && isRestaurantPickupOrder(restaurantOrderMode);
 
   const freeShippingThreshold = settings?.freeShippingThreshold || 2000;
   const taxRate = settings?.taxRate ?? 0.17;
 
   // Pre-fill shipping method from cart page selection (?shipping=express etc.)
   const shippingParam = searchParams.get('shipping');
+  const restaurantDefaultShipping =
+    restaurantStore && restaurantChrome?.orderMode
+      ? restaurantOrderModeToShipping(restaurantChrome.orderMode)
+      : null;
   const defaultShipping = ['standard', 'express', 'pickup'].includes(shippingParam)
     ? shippingParam
-    : 'standard';
+    : restaurantDefaultShipping || 'standard';
 
   const [step, setStep] = useState(0);
   const [processing, setProcessing] = useState(false);
@@ -69,14 +93,20 @@ export default function CheckoutPage({ params }) {
   const isDigitalCart =
     cart.items.length > 0 && cart.items.every((i) => i.fulfillmentType === 'digital');
 
-  const activeSteps = isDigitalCart
-    ? STEPS.filter((s) => s.id !== 'shipping')
-    : STEPS;
+  const activeSteps = restaurantStore
+    ? getRestaurantCheckoutSteps(restaurantOrderMode).map((s, i) => ({
+        ...STEPS.find((x) => x.id === s.id) || STEPS[i] || STEPS[0],
+        label: s.label,
+      }))
+    : isDigitalCart
+      ? STEPS.filter((s) => s.id !== 'shipping')
+      : STEPS;
 
   const [form, setForm] = useState({
     email: '', firstName: '', lastName: '', phone: '',
     address: '', city: '', postalCode: '', country: 'PK',
     shippingMethod: defaultShipping, paymentMethod: '',
+    tableNumber: '', orderNotes: '',
   });
 
   const { subtotal, itemCount } = calculateTotals();
@@ -89,13 +119,20 @@ export default function CheckoutPage({ params }) {
     : 0;
   const shippingCost = isDigitalCart
     ? 0
-    : form.shippingMethod === 'express'
-      ? 300
-      : form.shippingMethod === 'pickup'
-        ? 0
-        : subtotal >= freeShippingThreshold
+    : restaurantStore
+      ? resolveRestaurantShippingCost({
+          orderMode: restaurantOrderMode,
+          subtotal,
+          freeShippingThreshold,
+          shippingMethod: form.shippingMethod,
+        })
+      : form.shippingMethod === 'express'
+        ? 300
+        : form.shippingMethod === 'pickup'
           ? 0
-          : 150;
+          : subtotal >= freeShippingThreshold
+            ? 0
+            : 150;
   // Match the server's per-product tax: use each item's tax_percent (captured at
   // add-to-cart), falling back to the store default only for legacy cart items.
   const tax = cart.items.reduce((sum, i) => {
@@ -137,6 +174,25 @@ export default function CheckoutPage({ params }) {
   }, [businessId]);
 
   useEffect(() => {
+    const modeParam = searchParams.get('mode');
+    if (restaurantStore && modeParam && restaurantChrome?.setOrderMode) {
+      restaurantChrome.setOrderMode(normalizeRestaurantOrderMode(modeParam));
+    }
+  }, [searchParams, restaurantStore, restaurantChrome]);
+
+  useEffect(() => {
+    if (!restaurantStore || !restaurantChrome?.orderModeHydrated) return;
+    const nextShipping = restaurantOrderModeToShipping(restaurantOrderMode);
+    setForm((f) => (f.shippingMethod === nextShipping ? f : { ...f, shippingMethod: nextShipping }));
+  }, [restaurantStore, restaurantOrderMode, restaurantChrome?.orderModeHydrated]);
+
+  useEffect(() => {
+    if (step >= activeSteps.length) {
+      setStep(Math.max(0, activeSteps.length - 1));
+    }
+  }, [activeSteps.length, step]);
+
+  useEffect(() => {
     if (!hydrated || !adjustments?.memberEmail) return;
     setForm((f) => (f.email ? f : { ...f, email: adjustments.memberEmail }));
   }, [hydrated, adjustments?.memberEmail]);
@@ -154,8 +210,10 @@ export default function CheckoutPage({ params }) {
       }
     }
     if (stepId === 'shipping') {
+      if (restaurantPickup) return true;
       if (!form.address || !form.city || !form.postalCode) {
-        toast.error('Please enter your shipping address'); return false;
+        toast.error(restaurantStore ? 'Please enter your delivery address' : 'Please enter your shipping address');
+        return false;
       }
     }
     if (stepId === 'payment' && !form.paymentMethod) {
@@ -216,6 +274,19 @@ export default function CheckoutPage({ params }) {
           paymentMethod: form.paymentMethod,
           promoCode: adjustments?.promoCode || undefined,
           memberPricingRequested: Boolean(adjustments?.memberPricingRequested),
+          ...(restaurantStore
+            ? {
+                restaurantOrderMode,
+                tableNumber: form.tableNumber?.trim() || undefined,
+                orderNotes: form.orderNotes?.trim() || undefined,
+                notes: buildRestaurantOrderNotes({
+                  orderMode: restaurantOrderMode,
+                  tableNumber: form.tableNumber,
+                  orderNotes: form.orderNotes,
+                  orderModeLabel: restaurantOrderModeLabel(restaurantOrderMode, RESTAURANT_ORDER_MODES),
+                }) || undefined,
+              }
+            : {}),
         }),
       });
 
@@ -238,6 +309,7 @@ export default function CheckoutPage({ params }) {
           form.paymentMethod,
         isCod: form.paymentMethod === 'cod',
         shippingMethod: form.shippingMethod,
+        restaurantOrderMode: restaurantStore ? restaurantOrderMode : undefined,
         subtotal: Number(result.order.subtotal ?? subtotal),
         shippingCost: Number(result.order.shipping ?? shippingCost),
         tax: Number(result.order.tax ?? tax),
@@ -307,8 +379,8 @@ export default function CheckoutPage({ params }) {
   // ── Pre-hydration loading state, prevents premature empty-cart redirect
   if (!hydrated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      <div className={cn('min-h-screen flex items-center justify-center', restaurantStore ? RESTAURANT_UI.page : 'bg-gray-50')}>
+        <Loader2 className={cn('w-8 h-8 animate-spin', restaurantStore ? 'text-neutral-500' : 'text-gray-400')} />
       </div>
     );
   }
@@ -414,7 +486,11 @@ export default function CheckoutPage({ params }) {
                     <span className="font-medium tabular-nums">{formatCurrency(receipt.subtotal, currency)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Shipping</span>
+                    <span className="text-gray-500">
+                      {restaurantStore && receipt?.restaurantOrderMode
+                        ? getRestaurantFeeLabel(receipt.restaurantOrderMode)
+                        : 'Shipping'}
+                    </span>
                     <span className={cn('font-medium tabular-nums', receipt.shippingCost === 0 && 'text-green-600')}>
                       {receipt.shippingCost === 0 ? 'FREE' : formatCurrency(receipt.shippingCost, currency)}
                     </span>
@@ -502,18 +578,22 @@ export default function CheckoutPage({ params }) {
 
   // ── Checkout Form ────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={cn('min-h-screen', restaurantStore ? RESTAURANT_UI.page : 'bg-gray-50')}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Back link */}
         <Link
           href={`/store/${businessDomain}/cart`}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors"
+          className={cn(
+            'inline-flex items-center gap-1.5 text-sm mb-6 transition-colors',
+            restaurantStore ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+          )}
         >
           <ArrowLeft className="w-4 h-4" /> Back to Cart
         </Link>
 
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Checkout</h1>
+        <h1 className={cn('text-2xl font-semibold mb-6', restaurantStore ? 'text-white' : 'text-gray-900')}>
+          {restaurantStore ? 'Complete your order' : 'Checkout'}
+        </h1>
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1">
@@ -528,7 +608,7 @@ export default function CheckoutPage({ params }) {
               >
                 {i < step ? <Check className="w-4 h-4" /> : i + 1}
               </div>
-              <span className={cn('text-sm font-medium hidden sm:block', i <= step ? 'text-gray-900' : 'text-gray-400')}>
+              <span className={cn('text-sm font-medium hidden sm:block', i <= step ? (restaurantStore ? 'text-white' : 'text-gray-900') : 'text-gray-400')}>
                 {s.label}
               </span>
               {i < activeSteps.length - 1 && (
@@ -541,73 +621,112 @@ export default function CheckoutPage({ params }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* ── Main form ─────────────────────────────────────────────── */}
           <div className="lg:col-span-2">
-            <Card className="rounded-2xl shadow-sm border-0">
-              <CardContent className="p-6 sm:p-8">
-
-                {/* Step — dynamic by activeSteps[step].id */}
+            <div
+              className={cn(
+                'p-6 sm:p-8',
+                restaurantStore
+                  ? RESTAURANT_UI.card
+                  : 'rounded-2xl border-0 bg-white shadow-sm'
+              )}
+            >
                 {activeSteps[step]?.id === 'information' && (
                   <div className="space-y-5">
-                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <h2 className={cn('text-lg font-bold flex items-center gap-2', restaurantStore ? 'text-white' : 'text-gray-900')}>
                       <MapPin className="w-5 h-5" style={{ color: accent }} />
-                      Contact Information
+                      {restaurantStore ? 'Your details' : 'Contact Information'}
                     </h2>
+
+                    {restaurantStore ? (
+                      <RestaurantCartOrderMode
+                        onShippingChange={(m) => set('shippingMethod', m)}
+                        className="mb-1"
+                      />
+                    ) : null}
+
                     <div>
-                      <Label htmlFor="email">Email address *</Label>
+                      <Label htmlFor="email" className={restaurantStore ? 'text-neutral-400' : ''}>Email address *</Label>
                       <Input id="email" type="email" placeholder="you@example.com"
                         value={form.email} onChange={e => set('email', e.target.value)}
-                        className="mt-1 rounded-xl" />
+                        className={cn('mt-1 rounded-xl', restaurantStore && restaurantInputClass('mt-1'))} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="firstName">First name *</Label>
+                        <Label htmlFor="firstName" className={restaurantStore ? 'text-neutral-400' : ''}>First name *</Label>
                         <Input id="firstName" placeholder="Ali"
                           value={form.firstName} onChange={e => set('firstName', e.target.value)}
-                          className="mt-1 rounded-xl" />
+                          className={cn('mt-1 rounded-xl', restaurantStore && restaurantInputClass('mt-1'))} />
                       </div>
                       <div>
-                        <Label htmlFor="lastName">Last name *</Label>
+                        <Label htmlFor="lastName" className={restaurantStore ? 'text-neutral-400' : ''}>Last name *</Label>
                         <Input id="lastName" placeholder="Khan"
                           value={form.lastName} onChange={e => set('lastName', e.target.value)}
-                          className="mt-1 rounded-xl" />
+                          className={cn('mt-1 rounded-xl', restaurantStore && restaurantInputClass('mt-1'))} />
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="phone">Phone number *</Label>
+                      <Label htmlFor="phone" className={restaurantStore ? 'text-neutral-400' : ''}>Phone number *</Label>
                       <Input id="phone" type="tel" placeholder="+92 300 1234567"
                         value={form.phone} onChange={e => set('phone', e.target.value)}
-                        className="mt-1 rounded-xl" />
+                        className={cn('mt-1 rounded-xl', restaurantStore && restaurantInputClass('mt-1'))} />
                     </div>
+
+                    {restaurantStore && restaurantOrderMode === 'dine-in' ? (
+                      <div>
+                        <Label htmlFor="tableNumber" className="text-neutral-400">Table number</Label>
+                        <Input
+                          id="tableNumber"
+                          placeholder="e.g. 12, Patio A"
+                          value={form.tableNumber}
+                          onChange={(e) => set('tableNumber', e.target.value)}
+                          className={restaurantInputClass('mt-1')}
+                        />
+                      </div>
+                    ) : null}
+
+                    {restaurantStore ? (
+                      <div>
+                        <Label htmlFor="orderNotes" className="text-neutral-400">Special instructions</Label>
+                        <textarea
+                          id="orderNotes"
+                          rows={3}
+                          placeholder="Allergies, spice level, pickup time…"
+                          value={form.orderNotes}
+                          onChange={(e) => set('orderNotes', e.target.value)}
+                          className={restaurantInputClass('mt-1 resize-none')}
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 )}
 
                 {activeSteps[step]?.id === 'shipping' && (
                   <div className="space-y-5">
-                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <h2 className={cn('text-lg font-bold flex items-center gap-2', restaurantStore ? 'text-white' : 'text-gray-900')}>
                       <Truck className="w-5 h-5" style={{ color: accent }} />
-                      Shipping Address
+                      {restaurantStore ? 'Delivery address' : 'Shipping Address'}
                     </h2>
                     <div>
-                      <Label htmlFor="address">Street address *</Label>
+                      <Label htmlFor="address" className={restaurantStore ? 'text-neutral-400' : ''}>Street address *</Label>
                       <Input id="address" placeholder="House #, Street, Area"
                         value={form.address} onChange={e => set('address', e.target.value)}
-                        className="mt-1 rounded-xl" />
+                        className={cn('mt-1 rounded-xl', restaurantStore && restaurantInputClass('mt-1'))} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="city">City *</Label>
+                        <Label htmlFor="city" className={restaurantStore ? 'text-neutral-400' : ''}>City *</Label>
                         <Input id="city" placeholder="Karachi"
                           value={form.city} onChange={e => set('city', e.target.value)}
-                          className="mt-1 rounded-xl" />
+                          className={cn('mt-1 rounded-xl', restaurantStore && restaurantInputClass('mt-1'))} />
                       </div>
                       <div>
-                        <Label htmlFor="postalCode">Postal code *</Label>
+                        <Label htmlFor="postalCode" className={restaurantStore ? 'text-neutral-400' : ''}>Postal code *</Label>
                         <Input id="postalCode" placeholder="75500"
                           value={form.postalCode} onChange={e => set('postalCode', e.target.value)}
-                          className="mt-1 rounded-xl" />
+                          className={cn('mt-1 rounded-xl', restaurantStore && restaurantInputClass('mt-1'))} />
                       </div>
                     </div>
 
-                    {/* Shipping method */}
+                    {!restaurantStore && (
                     <div>
                       <Label className="mb-2 block">Shipping method</Label>
                       <RadioGroup value={form.shippingMethod}
@@ -637,25 +756,25 @@ export default function CheckoutPage({ params }) {
                         ))}
                       </RadioGroup>
                     </div>
+                    )}
                   </div>
                 )}
 
                 {activeSteps[step]?.id === 'payment' && (
                   <div className="space-y-5">
-                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <h2 className={cn('text-lg font-bold flex items-center gap-2', restaurantStore ? 'text-white' : 'text-gray-900')}>
                       <CreditCard className="w-5 h-5" style={{ color: accent }} />
                       Payment Method
                     </h2>
 
                     {loadingPM ? (
                       <div className="flex items-center justify-center py-10">
-                        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                        <Loader2 className={cn('w-6 h-6 animate-spin', restaurantStore ? 'text-neutral-500' : 'text-gray-400')} />
                       </div>
                     ) : paymentMethods.length === 0 ? (
-                      <div className="text-center py-10 text-gray-500">
-                        <AlertCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      <div className={cn('text-center py-10', restaurantStore ? 'text-neutral-400' : 'text-gray-500')}>
+                        <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-40" />
                         <p className="text-sm">No payment methods configured yet.</p>
-                        <p className="text-xs text-gray-400 mt-1">Contact the store owner.</p>
                       </div>
                     ) : (
                       <RadioGroup value={form.paymentMethod}
@@ -668,109 +787,99 @@ export default function CheckoutPage({ params }) {
                             <label key={method.id}
                               className={cn(
                                 'flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all',
-                                isSelected ? 'border-current' : 'border-gray-200 hover:border-gray-300'
+                                isSelected
+                                  ? 'border-current'
+                                  : restaurantStore
+                                    ? 'border-neutral-700 hover:border-neutral-600'
+                                    : 'border-gray-200 hover:border-gray-300'
                               )}
-                              style={isSelected ? { borderColor: accent, backgroundColor: accent + '08' } : {}}
+                              style={isSelected ? { borderColor: accent, backgroundColor: accent + (restaurantStore ? '18' : '08') } : {}}
                             >
                               <RadioGroupItem value={method.provider} id={method.provider} />
-                              <Icon className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                              <Icon className={cn('w-5 h-5 flex-shrink-0', restaurantStore ? 'text-neutral-400' : 'text-gray-600')} />
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-sm text-gray-900">{method.display_name}</p>
+                                <p className={cn('font-semibold text-sm', restaurantStore ? 'text-white' : 'text-gray-900')}>{method.display_name}</p>
                                 {method.description && (
-                                  <p className="text-xs text-gray-500 truncate">{method.description}</p>
+                                  <p className={cn('text-xs truncate', restaurantStore ? 'text-neutral-500' : 'text-gray-500')}>{method.description}</p>
                                 )}
                               </div>
-                              {(method.fee_percentage > 0 || method.fee_fixed > 0) && (
-                                <Badge variant="secondary" className="text-xs flex-shrink-0">
-                                  +{method.fee_percentage > 0 ? `${method.fee_percentage}%` : formatCurrency(method.fee_fixed, currency)}
-                                </Badge>
-                              )}
                             </label>
                           );
                         })}
                       </RadioGroup>
-                    )}
-
-                    {/* Payment info */}
-                    {form.paymentMethod && (
-                      <div className="p-4 bg-gray-50 rounded-xl text-sm text-gray-600 flex items-start gap-2">
-                        <Lock className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                        <span>
-                          {form.paymentMethod === 'cod'
-                            ? 'Pay in cash when your order is delivered. Please keep exact change ready.'
-                            : form.paymentMethod === 'stripe'
-                            ? 'Your card details are encrypted and processed securely by Stripe.'
-                            : form.paymentMethod === 'crypto'
-                            ? 'You will receive a wallet address after placing the order. Digital products deliver after confirmation.'
-                            : 'Your payment will be processed securely.'}
-                        </span>
-                      </div>
                     )}
                   </div>
                 )}
 
                 {activeSteps[step]?.id === 'review' && (
                   <div className="space-y-5">
-                    <h2 className="text-lg font-bold text-gray-900">Review Your Order</h2>
+                    <h2 className={cn('text-lg font-bold', restaurantStore ? 'text-white' : 'text-gray-900')}>Review your order</h2>
 
-                    {/* Items */}
                     <div className="space-y-3">
                       {cart.items.map(item => (
                         <div key={`${item.productId}-${item.variantId}`}
-                          className="flex gap-3 p-3 bg-gray-50 rounded-xl">
-                          <div className="relative w-14 h-14 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                          className={cn(
+                            'flex gap-3 p-3 rounded-xl',
+                            restaurantStore ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-gray-50'
+                          )}>
+                          <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-800">
                             {item.image
                               ? <SmartProductImage src={item.image} alt={item.name} fill className="object-cover" sizes="56px" />
                               : <div className="w-full h-full flex items-center justify-center"><Package className="w-5 h-5 text-gray-400" /></div>
                             }
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-gray-900 truncate">{item.name}</p>
-                            {item.variantName && <p className="text-xs text-gray-500">{item.variantName}</p>}
-                            <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity}</p>
+                            <p className={cn('font-semibold text-sm truncate', restaurantStore ? 'text-white' : 'text-gray-900')}>{item.name}</p>
+                            <p className="text-xs text-neutral-500 mt-0.5">Qty: {item.quantity}</p>
                           </div>
-                          <p className="font-bold text-sm text-gray-900 flex-shrink-0">
+                          <p className={cn('font-bold text-sm flex-shrink-0', restaurantStore ? 'text-white' : 'text-gray-900')}>
                             {formatCurrency(item.price * item.quantity, currency)}
                           </p>
                         </div>
                       ))}
                     </div>
 
-                    <Separator />
+                    <Separator className={restaurantStore ? 'bg-neutral-800' : ''} />
 
-                    {/* Delivery & payment summary */}
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase mb-1">
-                          {isDigitalCart ? 'Delivery' : 'Ship to'}
+                        <p className="text-xs font-semibold text-neutral-500 uppercase mb-1">
+                          {restaurantPickup ? 'Service' : isDigitalCart ? 'Delivery' : 'Ship to'}
                         </p>
-                        {isDigitalCart ? (
+                        {restaurantPickup ? (
+                          <>
+                            <p className={restaurantStore ? 'text-neutral-200' : 'text-gray-700'}>
+                              {restaurantOrderModeLabel(restaurantOrderMode, RESTAURANT_ORDER_MODES)}
+                            </p>
+                            {form.tableNumber ? (
+                              <p className="text-neutral-500">Table {form.tableNumber}</p>
+                            ) : null}
+                          </>
+                        ) : isDigitalCart ? (
                           <>
                             <p className="text-gray-700">Digital delivery</p>
                             <p className="text-gray-500">{form.email}</p>
                           </>
                         ) : (
                           <>
-                            <p className="text-gray-700">{form.firstName} {form.lastName}</p>
-                            <p className="text-gray-500">{form.address}</p>
-                            <p className="text-gray-500">{form.city}, {form.postalCode}</p>
+                            <p className={restaurantStore ? 'text-neutral-200' : 'text-gray-700'}>{form.firstName} {form.lastName}</p>
+                            <p className="text-neutral-500">{form.address}</p>
+                            <p className="text-neutral-500">{form.city}, {form.postalCode}</p>
                           </>
                         )}
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Payment</p>
-                        <p className="text-gray-700 capitalize">
+                        <p className="text-xs font-semibold text-neutral-500 uppercase mb-1">Payment</p>
+                        <p className={restaurantStore ? 'text-neutral-200' : 'text-gray-700'}>
                           {paymentMethods.find(m => m.provider === form.paymentMethod)?.display_name || form.paymentMethod}
                         </p>
-                        <p className="text-gray-500">{form.email}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Navigation */}
-                <div className="flex justify-between mt-8 pt-6 border-t">
-                  <Button variant="outline" onClick={back} disabled={step === 0} className="rounded-xl gap-2">
+                <div className={cn('flex justify-between mt-8 pt-6 border-t', restaurantStore && 'border-neutral-800')}>
+                  <Button variant="outline" onClick={back} disabled={step === 0} className={cn('rounded-xl gap-2', restaurantStore && 'border-neutral-700 bg-transparent text-neutral-200 hover:bg-neutral-800')}>
                     <ArrowLeft className="w-4 h-4" /> Back
                   </Button>
                   {step < activeSteps.length - 1 ? (
@@ -789,18 +898,17 @@ export default function CheckoutPage({ params }) {
                     </Button>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           </div>
 
           {/* ── Order summary sidebar ──────────────────────────────────── */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
-              <Card className="rounded-2xl shadow-sm border-0">
+              <Card className={cn('rounded-2xl shadow-sm border-0', restaurantStore && 'bg-[#141414] border border-neutral-800')}>
                 <CardContent className="p-6 space-y-4">
-                  <h3 className="font-bold text-gray-900">
+                  <h3 className={cn('font-bold', restaurantStore ? 'text-white' : 'text-gray-900')}>
                     Order Summary
-                    <span className="text-sm font-normal text-gray-500 ml-2">({itemCount} items)</span>
+                    <span className={cn('text-sm font-normal ml-2', restaurantStore ? 'text-neutral-500' : 'text-gray-500')}>({itemCount} items)</span>
                   </h3>
 
                   {/* Items preview */}
@@ -808,7 +916,7 @@ export default function CheckoutPage({ params }) {
                     {cart.items.map(item => (
                       <div key={`${item.productId}-${item.variantId}`}
                         className="flex justify-between text-sm">
-                        <span className="text-gray-600 truncate mr-2">
+                        <span className={cn('truncate mr-2', restaurantStore ? 'text-neutral-400' : 'text-gray-600')}>
                           {item.name} × {item.quantity}
                         </span>
                         <span className="font-medium flex-shrink-0">
@@ -826,7 +934,9 @@ export default function CheckoutPage({ params }) {
                       <span className="font-medium">{formatCurrency(subtotal, currency)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Shipping</span>
+                      <span className={restaurantStore ? 'text-neutral-500' : 'text-gray-500'}>
+                        {restaurantStore ? getRestaurantFeeLabel(restaurantOrderMode) : 'Shipping'}
+                      </span>
                       <span className={cn('font-medium', shippingCost === 0 ? 'text-green-600' : '')}>
                         {shippingCost === 0 ? 'FREE' : formatCurrency(shippingCost, currency)}
                       </span>

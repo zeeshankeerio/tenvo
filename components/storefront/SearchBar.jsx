@@ -25,7 +25,7 @@ function saveRecentSearch(q) {
   localStorage.setItem(RECENT_KEY, JSON.stringify([q, ...prev].slice(0, MAX_RECENT)));
 }
 
-export function SearchBar({ businessDomain, initialQuery = '', onClose }) {
+export function SearchBar({ businessDomain, initialQuery = '', onClose, dark = false }) {
   const { currency, settings, business } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
   const [query, setQuery] = useState(initialQuery);
@@ -146,12 +146,17 @@ export function SearchBar({ businessDomain, initialQuery = '', onClose }) {
     <div ref={containerRef} className="relative w-full">
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search
+            className={cn(
+              'absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5',
+              dark ? 'text-neutral-500' : 'text-gray-400'
+            )}
+          />
           
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search products..."
+            placeholder={dark ? 'Search item…' : 'Search products...'}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -160,10 +165,11 @@ export function SearchBar({ businessDomain, initialQuery = '', onClose }) {
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             className={cn(
-              "w-full pl-12 pr-12 py-3 rounded-xl border bg-white",
-              "focus:outline-none focus:ring-2 focus:border-transparent",
-              "transition-all duration-200",
-              showSuggestions && suggestions.length > 0 && "rounded-b-none"
+              'w-full pl-12 pr-12 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200',
+              dark
+                ? 'border-neutral-700 bg-[#1c1c1c] text-white placeholder:text-neutral-500 focus:ring-neutral-600'
+                : 'bg-white',
+              showSuggestions && suggestions.length > 0 && 'rounded-b-none'
             )}
           />
           

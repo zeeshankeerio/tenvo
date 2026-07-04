@@ -1,0 +1,72 @@
+'use client';
+
+import { Bike, ShoppingBag, UtensilsCrossed } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useRestaurantChrome } from '@/components/storefront/restaurant/RestaurantChromeContext';
+import {
+  resolveRestaurantOrderModes,
+  RESTAURANT_MENU_THEME,
+} from '@/lib/storefront/restaurantMenu';
+import { getRestaurantConfig, RESTAURANT_ORDER_MODES } from '@/lib/storefront/restaurantStorefront';
+
+const MODE_ICONS = {
+  delivery: Bike,
+  collection: ShoppingBag,
+  'dine-in': UtensilsCrossed,
+  bike: Bike,
+  bag: ShoppingBag,
+  utensils: UtensilsCrossed,
+};
+
+/**
+ * Compact order-type selector — delivery, takeaway (collection), dine-in.
+ */
+export function RestaurantOrderModeBar({ settings = {}, businessDomain, className, variant = 'bar' }) {
+  const { orderMode, setOrderMode } = useRestaurantChrome();
+  const config = getRestaurantConfig(settings, businessDomain);
+  const modes = resolveRestaurantOrderModes(config.orderModes || RESTAURANT_ORDER_MODES);
+
+  if (config.showOrderModes === false) return null;
+
+  return (
+    <div
+      className={cn(
+        variant === 'bar'
+          ? 'flex flex-wrap gap-1.5 rounded-2xl border border-neutral-800 bg-[#141414] p-1.5'
+          : 'grid grid-cols-3 gap-2',
+        className
+      )}
+      role="group"
+      aria-label="Order type"
+    >
+      {modes.map((mode) => {
+        const active = orderMode === mode.id;
+        const Icon = MODE_ICONS[mode.id] || MODE_ICONS[mode.icon] || UtensilsCrossed;
+        return (
+          <button
+            key={mode.id}
+            type="button"
+            onClick={() => setOrderMode(mode.id)}
+              className={cn(
+                'inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-semibold transition sm:gap-2 sm:px-3 sm:py-2.5 sm:text-xs',
+                active
+                  ? 'text-white shadow-sm ring-1 ring-white/10'
+                  : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
+              )}
+            style={
+              active
+                ? { backgroundColor: RESTAURANT_MENU_THEME.accentFallback }
+                : variant === 'tiles'
+                  ? { backgroundColor: '#1c1c1c', border: '1px solid #262626' }
+                  : undefined
+            }
+            aria-pressed={active}
+          >
+            <Icon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+            <span className="truncate">{mode.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}

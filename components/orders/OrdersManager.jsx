@@ -33,7 +33,8 @@ import {
   Package, Search, Filter, Eye, CheckCircle, XCircle,
   Truck, Clock, DollarSign, User, Calendar, ArrowLeft,
   ChevronLeft, ChevronRight, RefreshCw, PlusCircle, Banknote,
-  CreditCard, Smartphone, FileText, Hash, StickyNote, X, BadgeCheck
+  CreditCard, Smartphone, FileText, Hash, StickyNote, X, BadgeCheck,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { formatDate } from '@/lib/utils';
@@ -45,6 +46,7 @@ import toast from 'react-hot-toast';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
 import { useStorefrontEmbedded } from '@/lib/context/StorefrontMobileContext';
 import { MOBILE_INPUT_CLASS } from '@/lib/utils/formMobileStyles';
+import { parseStorefrontShippingAddress } from '@/lib/storefront/storefrontOrderAddress';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock },
@@ -791,6 +793,30 @@ export function OrdersManager({ business, category }) {
                 </Card>
               )}
 
+              {(orderDetails.order.notes ||
+                orderDetails.order.metadata?.restaurant_order_mode ||
+                orderDetails.order.metadata?.restaurant_order_mode_label) && (
+                <Card className="border-amber-100 bg-amber-50/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <UtensilsCrossed className="w-4 h-4 text-amber-700" />
+                      Fulfillment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1 text-sm text-gray-700">
+                    {orderDetails.order.metadata?.restaurant_order_mode_label ? (
+                      <p>
+                        <span className="font-semibold text-gray-900">Service: </span>
+                        {orderDetails.order.metadata.restaurant_order_mode_label}
+                      </p>
+                    ) : null}
+                    {orderDetails.order.notes ? (
+                      <p className="text-gray-600">{orderDetails.order.notes}</p>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Customer Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
@@ -810,32 +836,27 @@ export function OrdersManager({ business, category }) {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
                       <Truck className="w-4 h-4" />
-                      Shipping Address
+                      {orderDetails.order.metadata?.restaurant_order_mode
+                        ? 'Fulfillment address'
+                        : 'Shipping Address'}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {orderDetails.order.shipping_address ? (
-                      <div className="text-sm text-gray-600">
-                        {(() => {
-                          try {
-                            const addr = typeof orderDetails.order.shipping_address === 'string' 
-                              ? JSON.parse(orderDetails.order.shipping_address)
-                              : orderDetails.order.shipping_address;
-                            return (
-                              <>
-                                <p>{addr.address}</p>
-                                <p>{addr.city}, {addr.postalCode}</p>
-                                <p>{addr.country}</p>
-                              </>
-                            );
-                          } catch {
-                            return <p className="text-gray-400">Address not available</p>;
-                          }
-                        })()}
-                      </div>
-                    ) : (
-                      <p className="text-gray-400">No shipping address</p>
-                    )}
+                    {(() => {
+                      const addr = parseStorefrontShippingAddress(
+                        orderDetails.order.shipping_address
+                      );
+                      if (!addr) {
+                        return <p className="text-gray-400">No shipping address</p>;
+                      }
+                      return (
+                        <div className="text-sm text-gray-600 space-y-0.5">
+                          {addr.lines.map((line, i) => (
+                            <p key={i}>{line}</p>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>

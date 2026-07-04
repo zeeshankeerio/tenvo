@@ -1,5 +1,6 @@
 /**
  * Build Tenvo Restaurant seed catalog from Supermeal archive extract.
+ * @deprecated Use Roll Inn pipeline: node scripts/fetch-rollinn-menu.mjs && node scripts/build-rollinn-restaurant-catalog.mjs
  * Run: node scripts/build-restaurant-seed-catalog.mjs
  */
 import fs from 'fs';

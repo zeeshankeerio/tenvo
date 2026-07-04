@@ -1,0 +1,134 @@
+[
+  {
+    "name": "Combos",
+    "slug": "combos",
+    "image_url": "https://services.eatx.pk/CategoryImages/501c5e03-6759-468b-acf5-6165188069bd.jpeg",
+    "sort_order": 1
+  },
+  {
+    "name": "Deals",
+    "slug": "deals",
+    "image_url": "https://services.eatx.pk/CategoryImages/f0cad0aa-4102-41ad-8bca-b0a08cbe6efa.jpeg",
+    "sort_order": 2
+  },
+  {
+    "name": "Special Roll",
+    "slug": "special-roll",
+    "image_url": "https://services.eatx.pk/CategoryImages/38cd4ff0-e423-449e-a0f0-8149f587f28b.jpeg",
+    "sort_order": 3
+  },
+  {
+    "name": "Rolls",
+    "slug": "rolls",
+    "image_url": "https://services.eatx.pk/CategoryImages/fd8f69a1-7949-4325-825d-78d1ee1964a5.jpeg",
+    "sort_order": 5
+  },
+  {
+    "name": "BBQ",
+    "slug": "bbq",
+    "image_url": "https://services.eatx.pk/CategoryImages/d27eaddf-be36-4430-ba9c-e0337d487193.jpeg",
+    "sort_order": 7
+  },
+  {
+    "name": "Chicken Burger",
+    "slug": "chicken-burger",
+    "image_url": "https://services.eatx.pk/CategoryImages/b1166e15-eed7-4c49-a880-4823d696e9f5.jpeg",
+    "sort_order": 8
+  },
+  {
+    "name": "Beef Burgers",
+    "slug": "beef-burgers",
+    "image_url": "https://services.eatx.pk/CategoryImages/0a988b60-99d2-439d-a31c-126f06e18605.jpeg",
+    "sort_order": 9
+  },
+  {
+    "name": "Sandwiches",
+    "slug": "sandwiches",
+    "image_url": "https://services.eatx.pk/CategoryImages/442a4cfa-96e0-4d0b-9d7a-e3b2af1f7666.jpeg",
+    "sort_order": 10
+  },
+  {
+    "name": "Broast",
+    "slug": "broast",
+    "image_url": "https://services.eatx.pk/CategoryImages/70706b19-b10d-4d63-9051-3ffc5b6b9f59.jpeg",
+    "sort_order": 11
+  },
+  {
+    "name": "French Fries",
+    "slug": "french-fries",
+    "image_url": "https://services.eatx.pk/CategoryImages/db0147c7-1c16-4f17-aecb-4254471f7f20.jpeg",
+    "sort_order": 12
+  },
+  {
+    "name": "Chicken Chinese",
+    "slug": "chicken-chinese",
+    "image_url": "https://services.eatx.pk/CategoryImages/67c9701d-5812-42bb-ac76-f35d6af679e6.png",
+    "sort_order": 13
+  },
+  {
+    "name": "Noodles",
+    "slug": "noodles",
+    "image_url": "https://services.eatx.pk/CategoryImages/3fdef80e-4f28-43eb-930f-87ffea0971d9.jpeg",
+    "sort_order": 15
+  },
+  {
+    "name": "Beef Chinese with Rice",
+    "slug": "beef-chinese-with-rice",
+    "image_url": "",
+    "sort_order": 20
+  },
+  {
+    "name": "Soup",
+    "slug": "soup",
+    "image_url": "https://services.eatx.pk/CategoryImages/8ba5a384-14b2-46b7-8869-b573bdf06391.jpeg",
+    "sort_order": 21
+  },
+  {
+    "name": "Biryani",
+    "slug": "biryani",
+    "image_url": "https://services.eatx.pk/CategoryImages/5a01034f-a9e5-4a92-bd19-da04ccc9c14e.jpeg",
+    "sort_order": 22
+  },
+  {
+    "name": "Rice",
+    "slug": "rice",
+    "image_url": "https://services.eatx.pk/CategoryImages/d07e61c9-3aab-4450-8d95-aee692f60ade.jpeg",
+    "sort_order": 23
+  },
+  {
+    "name": "Pizza",
+    "slug": "pizza",
+    "image_url": "https://services.eatx.pk/CategoryImages/659d7eda-e5b0-4f77-bec8-d074a5ea1bec.jpeg",
+    "sort_order": 34
+  },
+  {
+    "name": "Lemonade",
+    "slug": "lemonade",
+    "image_url": "https://services.eatx.pk/CategoryImages/228eef3a-e36b-4c11-9dfb-9edf65542059.jpeg",
+    "sort_order": 164545
+  },
+  {
+    "name": "Exclusive Soda",
+    "slug": "exclusive-soda",
+    "image_url": "https://services.eatx.pk/CategoryImages/1f3ca102-1b6f-45ca-a67e-56deeeddad02.jpeg",
+    "sort_order": 174545
+  },
+  {
+    "name": "Premium Soda Flavors",
+    "slug": "premium-soda-flavors",
+    "image_url": "https://services.eatx.pk/CategoryImages/c0a94c39-86e1-4a8e-927e-159ea4376a86.jpeg",
+    "sort_order": 894448
+  },
+  {
+    "name": "Beverages",
+    "slug": "beverages",
+    "image_url": "https://services.eatx.pk/CategoryImages/e71bb57d-21f5-4489-87c4-353911bae1c5.jpeg",
+    "sort_order": 894449
+  },
+  {
+    "name": "Extras",
+    "slug": "extras",
+    "image_url": "https://services.eatx.pk/CategoryImages/0617a57f-34c0-451d-856f-697f2ffeaba4.jpeg",
+    "sort_order": 7899666
+  }
+]

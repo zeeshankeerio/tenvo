@@ -24,6 +24,16 @@ import { resolveBusinessMerchantAlertEmails } from '@/lib/notifications/business
 import { isStorefrontProductUuid } from '@/lib/utils/storefrontProductRef';
 import { queryStorefrontVariantRequirement } from '@/lib/storefront/storefrontProductVariants';
 import { areAllLinesDigital, digitalShippingAddress } from '@/lib/storefront/digitalProducts';
+import {
+  buildRestaurantOrderNotes,
+  isRestaurantPickupOrder,
+  buildRestaurantPickupAddress,
+  restaurantOrderModeLabel,
+  normalizeRestaurantOrderMode,
+  resolveRestaurantShippingCost,
+  restaurantOrderModeToShipping,
+} from '@/lib/storefront/restaurantMenu';
+import { RESTAURANT_ORDER_MODES } from '@/lib/storefront/restaurantStorefront';
 
 /**
  * Storefront checkout decrements stock via direct SQL (bypassing InventoryService),
@@ -138,7 +148,16 @@ export async function POST(request, { params }) {
     notes,
     promoCode,
     memberPricingRequested,
+    restaurantOrderMode,
+    tableNumber,
+    orderNotes,
+    shippingMethod,
   } = body;
+
+  const normalizedRestaurantMode = restaurantOrderMode
+    ? normalizeRestaurantOrderMode(restaurantOrderMode)
+    : null;
+  const restaurantPickup = isRestaurantPickupOrder(normalizedRestaurantMode);
 
   if (!customer?.email || !customer?.firstName || !customer?.phone) {
     return NextResponse.json(
@@ -166,16 +185,29 @@ export async function POST(request, { params }) {
     precheckClient.release();
   }
 
-  if (!digitalOnlyOrder && (!shippingAddress?.address || !shippingAddress?.city)) {
+  if (!digitalOnlyOrder && !restaurantPickup && (!shippingAddress?.address || !shippingAddress?.city)) {
     return NextResponse.json(
       { success: false, error: 'Shipping address is required' },
       { status: 400 }
     );
   }
 
+  const resolvedNotes =
+    notes ||
+    buildRestaurantOrderNotes({
+      orderMode: normalizedRestaurantMode,
+      tableNumber,
+      orderNotes,
+      orderModeLabel: normalizedRestaurantMode
+        ? restaurantOrderModeLabel(normalizedRestaurantMode, RESTAURANT_ORDER_MODES)
+        : undefined,
+    });
+
   const effectiveShippingAddress = digitalOnlyOrder
     ? digitalShippingAddress(customer)
-    : shippingAddress;
+    : restaurantPickup
+      ? buildRestaurantPickupAddress(business, normalizedRestaurantMode, tableNumber)
+      : shippingAddress;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json(
@@ -218,11 +250,15 @@ export async function POST(request, { params }) {
   }
 
   const shippingRaw = Number(shipping);
-  const shippingAmount = digitalOnlyOrder
+  let shippingAmount = digitalOnlyOrder
     ? 0
     : Number.isFinite(shippingRaw) && shippingRaw >= 0
       ? roundMoney(Math.min(shippingRaw, 9_999_999))
       : 0;
+
+  if (restaurantPickup) {
+    shippingAmount = 0;
+  }
 
   const client = await pool.connect();
 
@@ -412,6 +448,16 @@ export async function POST(request, { params }) {
       throw discountErr;
     }
 
+    if (!digitalOnlyOrder && normalizedRestaurantMode) {
+      const storeSettings = business.settings || {};
+      shippingAmount = resolveRestaurantShippingCost({
+        orderMode: normalizedRestaurantMode,
+        subtotal: subtotalNet,
+        freeShippingThreshold: storeSettings.freeShippingThreshold || 2000,
+        shippingMethod: shippingMethod || restaurantOrderModeToShipping(normalizedRestaurantMode),
+      });
+    }
+
     const grandTotal = roundMoney(subtotalNet + taxTotal + shippingAmount - discountAmount);
 
     const orderNumber = await generateOrderNumber(client, business.id);
@@ -445,10 +491,10 @@ export async function POST(request, { params }) {
           customerName,
           customer.email,
           customer.phone,
-          shippingAddress.address,
-          shippingAddress.city,
-          shippingAddress.country || 'PK',
-          shippingAddress.postalCode || shippingAddress.postal_code || null,
+          effectiveShippingAddress.address,
+          effectiveShippingAddress.city,
+          effectiveShippingAddress.country || 'PK',
+          effectiveShippingAddress.postalCode || effectiveShippingAddress.postal_code || null,
         ]
       );
       customerId = newCustomer.rows[0].id;
@@ -475,6 +521,18 @@ export async function POST(request, { params }) {
       clientDeclaredShipping: shipping,
       serverShipping: shippingAmount,
       discounts: discountMeta,
+      ...(normalizedRestaurantMode
+        ? {
+            restaurant_order_mode: normalizedRestaurantMode,
+            restaurant_order_mode_label: restaurantOrderModeLabel(
+              normalizedRestaurantMode,
+              RESTAURANT_ORDER_MODES
+            ),
+            table_number: tableNumber?.trim() || null,
+            customer_order_notes: orderNotes?.trim() || null,
+            shipping_method: shippingMethod || null,
+          }
+        : {}),
     };
 
     const orderResult = await client.query(
@@ -508,7 +566,7 @@ export async function POST(request, { params }) {
         'pending',
         paymentStatus,
         digitalOnlyOrder ? 'digital_pending' : 'unfulfilled',
-        notes || null,
+        resolvedNotes || null,
         JSON.stringify(orderMeta),
       ]
     );

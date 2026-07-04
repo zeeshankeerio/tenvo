@@ -18,6 +18,10 @@ import {
   paginateFitnessShopCatalog,
   isFitnessBookableCategory,
 } from '@/lib/storefront/fitnessStorefront';
+import { isRestaurantElevatedStore, resolveRestaurantTheme } from '@/lib/storefront/restaurantStorefront';
+import { RestaurantMenuLayout } from '@/components/storefront/restaurant/RestaurantMenuLayout';
+import { RestaurantMenuCatalog } from '@/components/storefront/restaurant/RestaurantMenuCatalog';
+import { RestaurantMenuToolbar } from '@/components/storefront/restaurant/RestaurantMenuToolbar';
 
 export async function generateMetadata({ params, searchParams }) {
   const { businessDomain } = await params;
@@ -29,6 +33,7 @@ export async function generateMetadata({ params, searchParams }) {
   }
 
   const { business } = result;
+  const restaurantStore = isRestaurantElevatedStore(business.category);
   const catSlug = typeof sp?.category === 'string' ? sp.category : undefined;
   let categoryTitle = catSlug;
   if (catSlug) {
@@ -47,7 +52,9 @@ export async function generateMetadata({ params, searchParams }) {
       ? `On sale, ${business.business_name}`
       : catSlug
         ? `${categoryTitle}, ${business.business_name}`
-        : `Shop all products, ${business.business_name}`;
+        : restaurantStore
+          ? `Menu, ${business.business_name}`
+          : `Shop all products, ${business.business_name}`;
 
   return {
     title,
@@ -68,8 +75,9 @@ export default async function ProductsPage({ params, searchParams }) {
     notFound();
   }
 
-  const { business } = businessResult;
+  const { business, settings: storeSettings = {} } = businessResult;
   const fitnessStore = isFitnessElevatedStore(business.category);
+  const restaurantStore = isRestaurantElevatedStore(business.category);
 
   // Parse filters from search params
   const filters = {
@@ -134,7 +142,57 @@ export default async function ProductsPage({ params, searchParams }) {
             ? 'New arrivals'
             : categoryMeta
               ? categoryMeta.name
-              : 'All products';
+              : restaurantStore
+                ? 'Full menu'
+                : 'All products';
+
+  if (restaurantStore) {
+    const settings = storeSettings;
+    const theme = resolveRestaurantTheme(settings);
+    const accent = theme.accent;
+    const storeBase = `/store/${businessDomain}`;
+    const menuTitle = filters.search
+      ? `Results for “${filters.search}”`
+      : filters.onSale
+        ? 'Deals & offers'
+        : categoryMeta
+          ? categoryMeta.name
+          : filters.sort === 'popularity'
+            ? 'Popular dishes'
+            : 'Our menu';
+    const menuSubtitle = `Order for delivery, pickup, or dine-in from ${business.business_name}.`;
+
+    return (
+      <RestaurantMenuLayout
+        storeBase={storeBase}
+        categories={categories}
+        settings={settings}
+        businessDomain={businessDomain}
+        accent={accent}
+        title={menuTitle}
+        subtitle={menuSubtitle}
+        toolbar={
+          <RestaurantMenuToolbar
+            businessDomain={businessDomain}
+            initialQuery={filters.search}
+            currentSort={filters.sort}
+            currentView={view}
+          />
+        }
+      >
+        <Suspense fallback={<ProductsSkeleton count={9} density="default" />}>
+          <RestaurantMenuContent
+            businessId={business.id}
+            businessDomain={businessDomain}
+            filters={filters}
+            view={view}
+            accent={accent}
+          />
+        </Suspense>
+      </RestaurantMenuLayout>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -232,6 +290,43 @@ export default async function ProductsPage({ params, searchParams }) {
         </div>
       </div>
     </div>
+  );
+}
+
+async function RestaurantMenuContent({
+  businessId,
+  businessDomain,
+  filters,
+  view = 'grid',
+  accent,
+}) {
+  const menuFilters = {
+    ...filters,
+    sort: filters.sort === 'featured' && !filters.category && !filters.search ? 'popularity' : filters.sort,
+  };
+
+  const result = await getProducts(businessId, menuFilters);
+
+  if (!result.success) {
+    return (
+      <div className="rounded-2xl border border-neutral-800 bg-[#141414] px-6 py-12 text-center">
+        <p className="text-sm text-neutral-400">Could not load the menu. Please try again.</p>
+      </div>
+    );
+  }
+
+  const { products, total, hasMore } = result;
+
+  return (
+    <RestaurantMenuCatalog
+      products={products}
+      total={total}
+      hasMore={hasMore}
+      businessDomain={businessDomain}
+      currentPage={filters.page}
+      view={view}
+      accent={accent}
+    />
   );
 }
 

@@ -28,6 +28,7 @@ import { SupermarketSiteHeader } from '@/components/storefront/supermarket/Super
 import { SupermarketChromeProvider } from '@/components/storefront/supermarket/SupermarketChromeContext';
 import { RestaurantSiteHeader } from '@/components/storefront/restaurant/RestaurantSiteHeader';
 import { RestaurantChromeProvider } from '@/components/storefront/restaurant/RestaurantChromeContext';
+import { RestaurantMobileBottomNav } from '@/components/storefront/restaurant/RestaurantMobileBottomNav';
 import { TENVO_VEHICLES_METADATA } from '@/lib/storefront/tenvoVehiclesAssets';
 import { cn } from '@/lib/utils';
 
@@ -111,7 +112,7 @@ export default async function StoreLayout({ children, params }) {
       className={cn(
         'min-h-screen',
         fitnessStore && 'relative',
-        fitnessStore ? 'bg-black' : portalStore || pharmacyStore || supermarketStore || restaurantStore ? 'bg-white' : luxuryStore ? 'bg-stone-50' : 'bg-slate-50'
+        fitnessStore ? 'bg-black' : restaurantStore ? 'bg-[#0a0a0a]' : portalStore || pharmacyStore || supermarketStore ? 'bg-white' : luxuryStore ? 'bg-stone-50' : 'bg-slate-50'
       )}
       data-store-theme
       {...(luxuryStore ? { 'data-store-luxury': '' } : {})}
@@ -149,7 +150,7 @@ export default async function StoreLayout({ children, params }) {
           <SupermarketSiteHeader business={business} settings={settings} />
         </Suspense>
       ) : restaurantStore ? (
-        <Suspense fallback={<div className="h-[120px] border-b border-violet-100 bg-white md:h-[148px]" aria-hidden />}>
+        <Suspense fallback={<div className="h-[120px] border-b border-neutral-800 bg-[#0a0a0a] md:h-[132px]" aria-hidden />}>
           <RestaurantSiteHeader business={business} settings={settings} />
         </Suspense>
       ) : fitnessStore ? (
@@ -186,7 +187,7 @@ export default async function StoreLayout({ children, params }) {
         settings={settings}
       />
 
-      {pharmacyStore ? <PharmacyMobileBottomNav /> : fitnessStore ? <FitnessMobileBottomNav /> : <StoreMobileBottomNav />}
+      {pharmacyStore ? <PharmacyMobileBottomNav /> : restaurantStore ? <RestaurantMobileBottomNav /> : fitnessStore ? <FitnessMobileBottomNav /> : <StoreMobileBottomNav />}
 
       <CartDrawer />
       <LiveChat />
