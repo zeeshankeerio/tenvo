@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Bike, Clock, Sparkles, Wallet, UtensilsCrossed, Star } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { resolveSpotlightBannerImage } from '@/lib/storefront/storefrontImagePlaceholders';
 import { StoreProductRail } from '@/components/storefront/StoreProductRail';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { cn } from '@/lib/utils';
@@ -130,30 +131,34 @@ export function RestaurantHomeSections({
         <section className="bg-[#f2f2f2] py-8 sm:py-10">
           <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 sm:grid-cols-2">
-              {promoBanners.map((banner) => {
+              {promoBanners.map((banner, bannerIndex) => {
                 const isPurple = banner.tone === 'purple';
                 const isRed = banner.tone === 'red';
+                const imageSrc = resolveSpotlightBannerImage(banner, businessCategory, bannerIndex);
                 return (
                   <Link
                     key={banner.id}
                     href={`${productsUrl}${banner.href}`}
                     className={cn(
                       'group relative flex min-h-[148px] items-end overflow-hidden rounded-2xl border p-5 shadow-sm transition hover:shadow-md sm:min-h-[188px] sm:p-6',
-                      isPurple ? 'border-violet-900/20 bg-violet-950' : isRed ? 'border-red-200 bg-red-50' : 'border-violet-100 bg-white'
+                      isPurple ? 'border-violet-900/20 bg-violet-950' : isRed ? 'border-red-200 bg-neutral-900' : 'border-violet-100 bg-neutral-900'
                     )}
                   >
-                    {banner.image ? (
-                      <SmartProductImage
-                        src={banner.image}
-                        alt=""
-                        fill
-                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
-                      />
-                    ) : null}
+                    <SmartProductImage
+                      src={imageSrc}
+                      alt=""
+                      fill
+                      className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                      fallbackSrc={resolveSpotlightBannerImage(banner, businessCategory, bannerIndex + 1)}
+                    />
                     <div
                       className={cn(
                         'absolute inset-0',
-                        isPurple ? 'bg-gradient-to-r from-violet-950/90 via-violet-900/70 to-violet-900/30' : 'bg-gradient-to-r from-white/95 via-white/80 to-white/40'
+                        isPurple
+                          ? 'bg-gradient-to-r from-violet-950/88 via-violet-900/52 to-violet-900/18'
+                          : isRed
+                            ? 'bg-gradient-to-r from-red-950/80 via-red-900/45 to-red-900/15'
+                            : 'bg-gradient-to-r from-white/95 via-white/78 to-white/35'
                       )}
                       aria-hidden
                     />

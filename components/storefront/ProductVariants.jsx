@@ -10,6 +10,7 @@ import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { getStorefrontStockState } from '@/lib/storefront/storefrontStockUi';
 import { ColorSwatch, isColorAttribute } from '@/components/storefront/ColorSwatch';
+import { resolveStorefrontVariantRequirement } from '@/lib/storefront/storefrontProductVariants';
 
 export function ProductVariants({ product, businessDomain, onVariantSelect }) {
   const { currency, settings, business } = useStorefront();
@@ -94,6 +95,28 @@ export function ProductVariants({ product, businessDomain, onVariantSelect }) {
   useEffect(() => {
     onVariantSelect?.(selectedVariant);
   }, [selectedVariant, onVariantSelect]);
+
+  // Auto-select when only one purchasable variant exists (e.g. single size/color combo).
+  useEffect(() => {
+    const { required, defaultVariant } = resolveStorefrontVariantRequirement(product);
+    if (!required && defaultVariant && !selectedVariant) {
+      const attrs = {};
+      if (defaultVariant.attribute_1_name && defaultVariant.attribute_1_value) {
+        attrs[defaultVariant.attribute_1_name] = defaultVariant.attribute_1_value;
+      }
+      if (defaultVariant.attribute_2_name && defaultVariant.attribute_2_value) {
+        attrs[defaultVariant.attribute_2_name] = defaultVariant.attribute_2_value;
+      }
+      if (defaultVariant.attribute_3_name && defaultVariant.attribute_3_value) {
+        attrs[defaultVariant.attribute_3_name] = defaultVariant.attribute_3_value;
+      }
+      if (Object.keys(attrs).length > 0) {
+        setSelectedAttributes(attrs);
+      } else {
+        onVariantSelect?.(defaultVariant);
+      }
+    }
+  }, [product, selectedVariant, onVariantSelect]);
   
   const handleAttributeSelect = (attributeName, value) => {
     setSelectedAttributes(prev => ({

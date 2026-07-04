@@ -5,6 +5,7 @@ import {
   ArrowRight, ArrowUpRight, Target, Headphones, Smartphone, Tag,
 } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { resolveSpotlightBannerImage } from '@/lib/storefront/storefrontImagePlaceholders';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { FitnessBookingStrip } from '@/components/storefront/sections/fitness/FitnessBookingStrip';
 import { FitnessMembershipPackages } from '@/components/storefront/sections/fitness/FitnessMembershipPackages';
@@ -250,8 +251,9 @@ export function FitnessHomeSections({
         <section className="border-b border-white/5 bg-black py-8 sm:py-10">
           <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {promoBanners.map((banner) => {
+              {promoBanners.map((banner, bannerIndex) => {
                 const isCrimson = banner.tone === 'crimson' || banner.tone === 'dark';
+                const imageSrc = resolveSpotlightBannerImage(banner, businessCategory, bannerIndex);
                 const href =
                   banner.href?.startsWith('/') || banner.href?.startsWith('http')
                     ? banner.href
@@ -262,19 +264,18 @@ export function FitnessHomeSections({
                     href={href}
                     className={cn(
                       'group relative flex min-h-[148px] items-end overflow-hidden rounded-2xl border p-5 transition hover:border-rose-500/40 sm:min-h-[168px]',
-                      isCrimson ? 'border-rose-900/40 bg-zinc-950' : 'border-white/10 bg-white/[0.03]'
+                      isCrimson ? 'border-rose-900/40 bg-zinc-950' : 'border-white/10 bg-neutral-900'
                     )}
                   >
-                    {banner.image ? (
-                      <SmartProductImage
-                        src={banner.image}
-                        alt=""
-                        fill
-                        className="object-cover opacity-60 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-75"
-                      />
-                    ) : null}
+                    <SmartProductImage
+                      src={imageSrc}
+                      alt=""
+                      fill
+                      className="object-cover opacity-80 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-90"
+                      fallbackSrc={resolveSpotlightBannerImage(banner, businessCategory, bannerIndex + 1)}
+                    />
                     <div
-                      className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-black/30"
+                      className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/52 to-black/18"
                       aria-hidden
                     />
                     <div className="relative z-10 max-w-[90%]">

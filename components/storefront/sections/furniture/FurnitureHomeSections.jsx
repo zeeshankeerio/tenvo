@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Palette, Home, MapPin, Mail } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { resolveSpotlightBannerImage } from '@/lib/storefront/storefrontImagePlaceholders';
 import { StoreProductRail } from '@/components/storefront/StoreProductRail';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { cn } from '@/lib/utils';
@@ -104,29 +105,31 @@ export function FurnitureHomeSections({
       <section className="bg-[#faf7f2] py-8 sm:py-10">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
           <div className="grid gap-4 sm:grid-cols-2">
-            {promoBanners.map((banner) => {
+            {promoBanners.map((banner, bannerIndex) => {
               const isWalnut = banner.tone === 'walnut';
+              const imageSrc = resolveSpotlightBannerImage(banner, businessCategory, bannerIndex);
               return (
                 <Link
                   key={banner.id}
                   href={`${productsUrl}${banner.href}`}
                   className={cn(
                     'group relative flex min-h-[148px] items-end overflow-hidden rounded-2xl border p-5 shadow-sm transition hover:shadow-md sm:min-h-[188px] sm:p-6',
-                    isWalnut ? 'border-amber-900/20 bg-stone-900' : 'border-amber-100 bg-white'
+                    isWalnut ? 'border-amber-900/20 bg-stone-950' : 'border-amber-100 bg-neutral-900'
                   )}
                 >
                   <SmartProductImage
-                    src={banner.image}
+                    src={imageSrc}
                     alt=""
                     fill
                     className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                    fallbackSrc={resolveSpotlightBannerImage(banner, businessCategory, bannerIndex + 1)}
                   />
                   <div
                     className={cn(
                       'absolute inset-0',
                       isWalnut
-                        ? 'bg-gradient-to-t from-stone-950/95 via-stone-900/75 to-stone-800/35'
-                        : 'bg-gradient-to-t from-white via-white/90 to-white/55'
+                        ? 'bg-gradient-to-t from-stone-950/92 via-stone-900/55 to-stone-800/18'
+                        : 'bg-gradient-to-t from-white/95 via-white/82 to-white/35'
                     )}
                     aria-hidden
                   />

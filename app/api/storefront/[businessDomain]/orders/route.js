@@ -21,6 +21,7 @@ import { MembershipService } from '@/lib/services/MembershipService';
 import { MEMBERSHIP_SOURCE } from '@/lib/memberships/membershipConstants';
 import { notifyStorefrontOrder, notifyLowStock } from '@/lib/notifications/notificationHelpers';
 import { isStorefrontProductUuid } from '@/lib/utils/storefrontProductRef';
+import { queryStorefrontVariantRequirement } from '@/lib/storefront/storefrontProductVariants';
 
 /**
  * Storefront checkout decrements stock via direct SQL (bypassing InventoryService),
@@ -213,12 +214,30 @@ export async function POST(request, { params }) {
         throw new Error('Invalid quantity');
       }
 
-      if (item.variantId) {
+      let effectiveVariantId = item.variantId || null;
+
+      if (!effectiveVariantId) {
+        const requirement = await queryStorefrontVariantRequirement(
+          client,
+          item.productId,
+          business.id
+        );
+        if (requirement.required) {
+          throw new Error(
+            'Please select size, color, or other options for one or more items'
+          );
+        }
+        if (requirement.soleVariantId) {
+          effectiveVariantId = requirement.soleVariantId;
+        }
+      }
+
+      if (effectiveVariantId) {
         await client.query(
           `SELECT 1 FROM product_variants pv
            WHERE pv.id = $1::uuid AND pv.business_id = $2::uuid AND pv.product_id = $3::uuid
            FOR UPDATE`,
-          [item.variantId, business.id, item.productId]
+          [effectiveVariantId, business.id, item.productId]
         );
 
         const vr = await client.query(
@@ -228,7 +247,7 @@ export async function POST(request, { params }) {
            JOIN products p ON p.id = pv.product_id
            WHERE pv.id = $1::uuid AND pv.business_id = $2::uuid AND p.business_id = $2::uuid
              AND (p.is_deleted = false)`,
-          [item.variantId, business.id]
+          [effectiveVariantId, business.id]
         );
 
         if (vr.rows.length === 0) {

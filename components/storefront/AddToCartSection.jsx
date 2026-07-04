@@ -12,6 +12,7 @@ import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStorefrontStockState } from '@/lib/storefront/storefrontStockUi';
+import { resolveStorefrontVariantRequirement } from '@/lib/storefront/storefrontProductVariants';
 import { toast } from 'react-hot-toast';
 
 export function AddToCartSection({ product, businessDomain, selectedVariant = null }) {
@@ -21,8 +22,8 @@ export function AddToCartSection({ product, businessDomain, selectedVariant = nu
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { currency, businessId } = useStorefront();
   const isWishlisted = isInWishlist(product.id);
-  const requiresVariant =
-    product.has_variants && Array.isArray(product.variants) && product.variants.length > 0;
+  const variantRequirement = resolveStorefrontVariantRequirement(product);
+  const requiresVariant = variantRequirement.required;
   const variantMissing = requiresVariant && !selectedVariant;
   const price = selectedVariant?.price || product.price;
   const { stock, isOutOfStock, isLowStock } = getStorefrontStockState(product, selectedVariant);

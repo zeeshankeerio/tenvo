@@ -3,12 +3,15 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
-import { resolveEditorialSpotlightFallback } from '@/lib/storefront/storefrontImagePlaceholders';
+import {
+  resolveEditorialSpotlightFallback,
+  resolveSpotlightBannerImage,
+} from '@/lib/storefront/storefrontImagePlaceholders';
 import { cn } from '@/lib/utils';
 
 /**
  * Glovida-style editorial category spotlight between product rows.
- * Uses a full-bleed background image with gradient overlay for a premium banner look.
+ * Always uses a full-bleed background image with gradient overlay for a premium banner look.
  */
 export function DomainEditorialSpotlight({
   spotlight,
@@ -22,14 +25,12 @@ export function DomainEditorialSpotlight({
 
   const href = spotlight.href || `/store/${businessDomain}/products`;
   const isEditorial = variant === 'editorial';
-  const isDark = spotlight.tone === 'dark' || isEditorial || (!spotlight.tone && !spotlight.image);
-  const isAccent = spotlight.tone === 'accent' && !isEditorial;
   const isLight = spotlight.tone === 'light';
-  const imageSrc =
-    spotlight.image || resolveEditorialSpotlightFallback(spotlight.id, canonical, 0);
-  const hasImage = Boolean(imageSrc);
+  const isAccent = spotlight.tone === 'accent' && !isEditorial;
 
-  const useLightText = isDark || isAccent || (hasImage && !isLight);
+  const imageSrc = resolveSpotlightBannerImage(spotlight, canonical, 0);
+  const fallbackSrc = resolveEditorialSpotlightFallback(spotlight.id, canonical, 1);
+  const useLightText = isLight ? false : true;
 
   return (
     <section
@@ -40,53 +41,46 @@ export function DomainEditorialSpotlight({
     >
       <div
         className={cn(
-          'group relative isolate overflow-hidden rounded-3xl',
-          'min-h-[220px] sm:min-h-[280px] lg:min-h-[320px]',
-          hasImage ? 'bg-neutral-900' : isDark ? 'bg-stone-900' : isAccent ? '' : 'bg-white border border-slate-100'
+          'group relative isolate overflow-hidden rounded-3xl bg-neutral-900',
+          'min-h-[220px] sm:min-h-[280px] lg:min-h-[320px]'
         )}
-        style={
-          !hasImage && isAccent
-            ? { background: `linear-gradient(135deg, ${accent} 0%, ${accentDark} 100%)` }
-            : undefined
-        }
       >
-        {hasImage ? (
-          <>
-            <SmartProductImage
-              src={imageSrc}
-              alt=""
-              fill
-              className="object-cover transition duration-[8000ms] ease-out motion-safe:group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 1400px"
-              fallbackSrc={resolveEditorialSpotlightFallback(spotlight.id, canonical, 1)}
-            />
+        <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden>
+          <SmartProductImage
+            src={imageSrc}
+            alt=""
+            fill
+            priority={isEditorial}
+            className="object-cover transition duration-[8000ms] ease-out motion-safe:group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 1400px"
+            fallbackSrc={fallbackSrc}
+          />
+          <div
+            className={cn(
+              'absolute inset-0',
+              isLight
+                ? 'bg-gradient-to-r from-white/95 via-white/82 to-white/45'
+                : isAccent
+                  ? 'bg-gradient-to-r from-black/82 via-black/48 to-black/15'
+                  : isEditorial
+                    ? 'bg-gradient-to-r from-stone-950/88 via-stone-950/42 to-stone-900/10'
+                    : 'bg-gradient-to-r from-black/82 via-black/48 to-black/12'
+            )}
+          />
+          {!isLight ? (
             <div
-              className={cn(
-                'absolute inset-0',
-                isLight
-                  ? 'bg-gradient-to-r from-white/95 via-white/82 to-white/45'
-                  : isAccent
-                    ? 'bg-gradient-to-r from-black/88 via-black/55 to-black/25'
-                    : 'bg-gradient-to-r from-black/88 via-black/58 to-black/20'
-              )}
-              aria-hidden
+              className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full opacity-30 blur-3xl transition group-hover:opacity-45"
+              style={{ backgroundColor: isAccent ? accent : accentDark || accent }}
             />
-            {!isLight ? (
-              <div
-                className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full opacity-35 blur-3xl transition group-hover:opacity-50"
-                style={{ backgroundColor: isAccent ? accent : accentDark || accent }}
-                aria-hidden
-              />
-            ) : null}
-          </>
-        ) : null}
+          ) : null}
+        </div>
 
-        <div className="relative z-10 flex min-h-[inherit] flex-col justify-center p-6 sm:p-10 lg:p-12">
+        <div className="relative z-10 flex min-h-[220px] flex-col justify-center p-6 sm:min-h-[280px] sm:p-10 lg:min-h-[320px] lg:p-12">
           <div className="max-w-xl">
             {spotlight.eyebrow ? (
               <p
                 className={cn(
-                  'text-xs font-bold uppercase tracking-widest mb-2',
+                  'mb-2 text-xs font-bold uppercase tracking-widest',
                   useLightText ? 'text-white/75' : 'text-slate-500'
                 )}
               >
@@ -95,7 +89,7 @@ export function DomainEditorialSpotlight({
             ) : null}
             <h2
               className={cn(
-                'store-heading text-2xl sm:text-3xl lg:text-4xl mb-3',
+                'store-heading mb-3 text-2xl sm:text-3xl lg:text-4xl',
                 useLightText ? 'store-heading--inverse text-white' : ''
               )}
             >
@@ -103,7 +97,7 @@ export function DomainEditorialSpotlight({
             </h2>
             <p
               className={cn(
-                'text-sm sm:text-base mb-6 leading-relaxed max-w-lg',
+                'mb-6 max-w-lg text-sm leading-relaxed sm:text-base',
                 useLightText ? 'text-white/85' : 'text-slate-600'
               )}
             >
@@ -112,10 +106,14 @@ export function DomainEditorialSpotlight({
             <Link
               href={href}
               className={cn(
-                'inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.02]',
-                useLightText ? 'bg-white text-slate-900 shadow-lg' : 'text-white shadow-md'
+                'inline-flex items-center gap-2 px-6 py-3 text-sm font-bold transition-transform hover:scale-[1.02]',
+                isEditorial
+                  ? 'rounded-full bg-white text-stone-900 shadow-lg hover:bg-white/95'
+                  : useLightText
+                    ? 'rounded-xl bg-white text-slate-900 shadow-lg'
+                    : 'rounded-xl text-white shadow-md'
               )}
-              style={!useLightText ? { backgroundColor: accent } : undefined}
+              style={!useLightText && !isEditorial ? { backgroundColor: accent } : undefined}
             >
               {spotlight.cta}
               <ArrowRight className="h-4 w-4" />

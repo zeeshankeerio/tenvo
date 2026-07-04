@@ -24,9 +24,10 @@ export async function POST(request, { params }) {
     const stockResult = await checkProductStock(productId, variantId, quantity, businessId);
 
     if (!stockResult.success) {
+      const status = stockResult.error?.code === 'VARIANT_REQUIRED' ? 400 : 404;
       return NextResponse.json(
-        { message: stockResult.error?.message || 'Product not found' },
-        { status: 404 }
+        { message: stockResult.error?.message || 'Product not found', code: stockResult.error?.code },
+        { status }
       );
     }
 

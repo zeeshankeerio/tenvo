@@ -18,28 +18,35 @@ import {
   resolveRailProductId,
 } from '@/lib/utils/storefrontProductRail';
 
-function QuickAddButton({ product }) {
+function QuickAddButton({ product, businessDomain }) {
   const [loading, setLoading] = useState(false);
   const { addItem } = useCart();
   const { businessId } = useStorefront();
   const outOfStock = product.stock != null && product.stock <= 0;
+  const productHref = `/store/${businessDomain}/products/${product.slug || product.id}`;
 
   const handleClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (outOfStock) return;
+
     setLoading(true);
     try {
       await addItem({
         productId: product.id,
         quantity: 1,
-        variantId: product.default_variant_id || null,
+        variantId: null,
         businessId,
       });
       toast.success('Added to cart', { icon: '🛒' });
       window.dispatchEvent(new Event('toggle-cart'));
     } catch (err) {
-      toast.error(err.message || 'Could not add to cart');
+      const message = err.message || 'Could not add to cart';
+      if (/select size|select.*options|variant/i.test(message)) {
+        window.location.href = productHref;
+        return;
+      }
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -95,7 +102,7 @@ function NewArrivalCard({ product, businessDomain, businessCategory, currency, v
               Sale
             </span>
           ) : null}
-          <QuickAddButton product={product} />
+          <QuickAddButton product={product} businessDomain={businessDomain} />
         </div>
       </Link>
       <Link href={href} className="mt-2 block">

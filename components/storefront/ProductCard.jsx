@@ -84,13 +84,18 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
       await addItem({
         productId: product.id,
         quantity: 1,
-        variantId: product.default_variant_id || null,
+        variantId: null,
         businessId,
       });
       toast.success('Added to cart', { icon: '🛒' });
       window.dispatchEvent(new Event('toggle-cart'));
     } catch (error) {
-      toast.error(error.message || 'Failed to add to cart');
+      const message = error.message || 'Failed to add to cart';
+      if (/select size|select.*options|variant/i.test(message)) {
+        window.location.href = productHref;
+        return;
+      }
+      toast.error(message);
     } finally {
       setIsAdding(false);
     }

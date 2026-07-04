@@ -61,7 +61,7 @@ export function StoreMarketingSections({ sections, businessDomain, accent = '#25
           <section key={section.id} className="border-b border-slate-200/60">
             <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
               <div
-                className="relative overflow-hidden rounded-2xl sm:rounded-3xl px-6 py-10 sm:px-10 sm:py-14 shadow-sm"
+                className="relative min-h-[220px] overflow-hidden rounded-2xl sm:min-h-[260px] sm:rounded-3xl px-6 py-10 sm:px-10 sm:py-14 shadow-sm"
                 style={style}
               >
                 <div className="relative z-[1] max-w-2xl">

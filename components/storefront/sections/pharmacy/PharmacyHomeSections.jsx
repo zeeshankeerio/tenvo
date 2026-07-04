@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Bell } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { resolveSpotlightBannerImage } from '@/lib/storefront/storefrontImagePlaceholders';
 import { StoreProductRail } from '@/components/storefront/StoreProductRail';
 import { cn } from '@/lib/utils';
 import { STORE_SECTION_HEADING } from '@/lib/utils/typography';
@@ -143,31 +144,31 @@ export function PharmacyHomeSections({
         <section className="bg-white py-8 sm:py-10">
           <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 sm:grid-cols-2">
-              {promoBanners.map((banner) => {
+              {promoBanners.map((banner, bannerIndex) => {
                 const isGreen = banner.tone === 'green';
+                const imageSrc = resolveSpotlightBannerImage(banner, businessCategory, bannerIndex);
                 return (
                   <Link
                     key={banner.id}
                     href={`${productsUrl}${banner.href}`}
                     className={cn(
                       'group relative flex min-h-[148px] items-end overflow-hidden rounded-2xl border p-5 shadow-sm transition hover:shadow-md sm:min-h-[188px] sm:p-6',
-                      isGreen ? 'border-emerald-800/30 bg-emerald-900' : 'border-emerald-100 bg-slate-50'
+                      isGreen ? 'border-emerald-800/30 bg-emerald-950' : 'border-emerald-100 bg-neutral-900'
                     )}
                   >
-                    {banner.image ? (
-                      <SmartProductImage
-                        src={banner.image}
-                        alt=""
-                        fill
-                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
-                      />
-                    ) : null}
+                    <SmartProductImage
+                      src={imageSrc}
+                      alt=""
+                      fill
+                      className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                      fallbackSrc={resolveSpotlightBannerImage(banner, businessCategory, bannerIndex + 1)}
+                    />
                     <div
                       className={cn(
                         'absolute inset-0',
                         isGreen
-                          ? 'bg-gradient-to-t from-emerald-950/95 via-emerald-900/70 to-emerald-800/35'
-                          : 'bg-gradient-to-t from-white via-white/88 to-white/55'
+                          ? 'bg-gradient-to-t from-emerald-950/92 via-emerald-900/55 to-emerald-900/20'
+                          : 'bg-gradient-to-t from-white/95 via-white/78 to-white/35'
                       )}
                       aria-hidden
                     />

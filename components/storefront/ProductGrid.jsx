@@ -44,13 +44,19 @@ function ProductListItem({ product, businessDomain }) {
   const handleAddToCart = async (e) => {
     e.preventDefault();
     if (isOutOfStock) return;
+    const productHref = `/store/${businessDomain}/products/${product.slug || product.id}`;
     setIsAdding(true);
     try {
       await addItem({ productId: product.id, quantity: 1, variantId: null, businessId });
       toast.success('Added to cart', { icon: '🛒' });
       window.dispatchEvent(new Event('toggle-cart'));
     } catch (err) {
-      toast.error(err.message || 'Failed to add to cart');
+      const message = err.message || 'Failed to add to cart';
+      if (/select size|select.*options|variant/i.test(message)) {
+        window.location.href = productHref;
+        return;
+      }
+      toast.error(message);
     } finally { setIsAdding(false); }
   };
 
