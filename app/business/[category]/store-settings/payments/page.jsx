@@ -9,6 +9,7 @@ import {
   Truck, 
   Building2, 
   Smartphone,
+  Bitcoin,
   CheckCircle,
   AlertCircle,
   ExternalLink,
@@ -22,6 +23,8 @@ import {
   createStripeConnectAccount,
   getStripeOnboardingUrl,
   addCODPaymentMethod,
+  addCryptoPaymentMethod,
+  getPlatformPaymentCapabilitiesForHub,
   togglePaymentMethod,
   updatePaymentSettings
 } from '@/lib/actions/storefront/payments';
@@ -44,6 +47,7 @@ export default function PaymentSettingsPage() {
   const [settings, setSettings] = useState(null);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [stripeConnect, setStripeConnect] = useState(null);
+  const [platformCaps, setPlatformCaps] = useState({ stripePlatform: false, cryptoPlatform: false });
   const [activeTab, setActiveTab] = useState('methods');
 
   const [codSettings, setCodSettings] = useState({
@@ -73,7 +77,11 @@ export default function PaymentSettingsPage() {
     if (!business?.id) return;
     try {
       setLoading(true);
-      const result = await getStorePaymentSettings(business.id);
+      const [result, caps] = await Promise.all([
+        getStorePaymentSettings(business.id),
+        getPlatformPaymentCapabilitiesForHub(),
+      ]);
+      setPlatformCaps(caps || { stripePlatform: false, cryptoPlatform: false });
       if (result.success) {
         setSettings(result.data.settings);
         setPaymentMethods(result.data.paymentMethods || []);
@@ -177,6 +185,24 @@ export default function PaymentSettingsPage() {
     }
   }
 
+  async function handleEnableCrypto() {
+    if (!business?.id) return;
+    try {
+      setSaving(true);
+      const result = await addCryptoPaymentMethod(business.id);
+      if (result.success) {
+        toast.success('Cryptocurrency checkout enabled!');
+        await loadSettings();
+      } else {
+        toast.error(result.error?.message || 'Failed to enable crypto payments');
+      }
+    } catch {
+      toast.error('An error occurred');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleSaveSettings() {
     if (!business?.id) return;
     try {
@@ -211,7 +237,8 @@ export default function PaymentSettingsPage() {
 
   const hasStripe = paymentMethods.some(m => m.provider === 'stripe');
   const hasCOD = paymentMethods.some(m => m.provider === 'cod');
-  const isStripeOnboarded = stripeConnect?.onboarding_complete;
+  const hasCrypto = paymentMethods.some(m => m.provider === 'crypto');
+  const isStripeReady = Boolean(stripeConnect?.is_charges_enabled);
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
@@ -263,7 +290,7 @@ export default function PaymentSettingsPage() {
                       <CheckCircle className="h-5 w-5 text-green-600" />
                       <div>
                         <p className="font-medium text-green-800">
-                          Stripe {isStripeOnboarded ? 'Connected & Active' : 'Connected (Setup Pending)'}
+                          Stripe {isStripeReady ? 'Connected & Active' : 'Connected (Setup Pending)'}
                         </p>
                         <p className="text-sm text-green-600">
                           {stripeConnect?.stripe_account_id}
@@ -271,7 +298,7 @@ export default function PaymentSettingsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!isStripeOnboarded && (
+                      {!isStripeReady && (
                         <Button
                           onClick={handleStripeOnboarding}
                           disabled={saving}
@@ -295,16 +322,24 @@ export default function PaymentSettingsPage() {
               ) : (
                 <div className="text-center py-6">
                   <CreditCard className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-600 mb-4">
-                    Connect Stripe to accept credit/debit card payments
-                  </p>
-                  <Button onClick={handleConnectStripe} disabled={saving}>
-                    {saving ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Connecting...</>
-                    ) : (
-                      <><Plus className="h-4 w-4 mr-2" /> Connect Stripe</>
-                    )}
-                  </Button>
+                  {!platformCaps.stripePlatform ? (
+                    <p className="text-gray-600 mb-4">
+                      Card payments are not configured on this platform. Customers checkout with Cash on Delivery.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-gray-600 mb-4">
+                        Connect Stripe to accept credit/debit card payments
+                      </p>
+                      <Button onClick={handleConnectStripe} disabled={saving}>
+                        {saving ? (
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Connecting...</>
+                        ) : (
+                          <><Plus className="h-4 w-4 mr-2" /> Connect Stripe</>
+                        )}
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -369,6 +404,57 @@ export default function PaymentSettingsPage() {
                       <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enabling...</>
                     ) : (
                       <><Plus className="h-4 w-4 mr-2" /> Enable COD</>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Cryptocurrency (NOWPayments) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bitcoin className="h-5 w-5" />
+                Cryptocurrency (NOWPayments)
+              </CardTitle>
+              <CardDescription>
+                Accept BTC, ETH, USDT and other coins when your platform admin has configured NOWPayments
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!platformCaps.cryptoPlatform ? (
+                <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+                  Cryptocurrency is not available on this platform yet. Customers will use Cash on Delivery at checkout.
+                </div>
+              ) : hasCrypto ? (
+                <div className="flex items-center justify-between p-4 bg-amber-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-amber-600" />
+                    <div>
+                      <p className="font-medium text-amber-900">Crypto checkout enabled</p>
+                      <p className="text-sm text-amber-700">Customers can pay after placing an order</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={paymentMethods.find(m => m.provider === 'crypto')?.is_active ?? false}
+                    onCheckedChange={() => handleToggleMethod(
+                      paymentMethods.find(m => m.provider === 'crypto')?.id,
+                      paymentMethods.find(m => m.provider === 'crypto')?.is_active
+                    )}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Bitcoin className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                  <p className="text-gray-600 mb-4">
+                    Enable crypto so customers can pay with USDT, BTC, or ETH after checkout
+                  </p>
+                  <Button onClick={handleEnableCrypto} disabled={saving}>
+                    {saving ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enabling...</>
+                    ) : (
+                      <><Plus className="h-4 w-4 mr-2" /> Enable Cryptocurrency</>
                     )}
                   </Button>
                 </div>

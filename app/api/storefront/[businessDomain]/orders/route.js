@@ -34,6 +34,11 @@ import {
   restaurantOrderModeToShipping,
 } from '@/lib/storefront/restaurantMenu';
 import { RESTAURANT_ORDER_MODES } from '@/lib/storefront/restaurantStorefront';
+import {
+  coerceStorefrontPaymentMethod,
+  loadStorefrontPaymentContext,
+  resolveEligibleStorefrontPaymentMethods,
+} from '@/lib/storefront/storefrontPaymentEligibility';
 
 /**
  * Storefront checkout decrements stock via direct SQL (bypassing InventoryService),
@@ -174,6 +179,24 @@ export async function POST(request, { params }) {
     orderNotes,
     shippingMethod,
   } = body;
+
+  let effectivePaymentMethod = paymentMethod || 'cod';
+  const paymentGateClient = await pool.connect();
+  try {
+    const paymentCtx = await loadStorefrontPaymentContext(paymentGateClient, business.id);
+    const eligibleMethods = resolveEligibleStorefrontPaymentMethods(paymentCtx);
+    effectivePaymentMethod = coerceStorefrontPaymentMethod(paymentMethod, eligibleMethods);
+    if (String(paymentMethod || '').toLowerCase() !== effectivePaymentMethod) {
+      console.warn(
+        `[Create Order] Payment method "${paymentMethod}" unavailable for ${business.domain}, using "${effectivePaymentMethod}"`
+      );
+    }
+  } catch (paymentGateErr) {
+    console.warn('[Create Order] payment method gate skipped:', paymentGateErr?.message);
+    effectivePaymentMethod = 'cod';
+  } finally {
+    paymentGateClient.release();
+  }
 
   const normalizedRestaurantMode = restaurantOrderMode
     ? normalizeRestaurantOrderMode(restaurantOrderMode)
@@ -531,16 +554,16 @@ export async function POST(request, { params }) {
 
     const currency = business.currency || 'PKR';
     const paymentStatus =
-      paymentMethod === 'cod'
+      effectivePaymentMethod === 'cod'
         ? 'pending'
-        : paymentMethod === 'crypto'
+        : effectivePaymentMethod === 'crypto' || effectivePaymentMethod === 'stripe'
           ? 'awaiting_payment'
           : 'awaiting_payment';
 
     const orderMeta = {
       source: 'storefront',
       customer_id: customerId,
-      payment_method: paymentMethod || 'cod',
+      payment_method: effectivePaymentMethod,
       digital_only: digitalOnlyOrder,
       clientDeclaredShipping: shipping,
       serverShipping: shippingAmount,
@@ -755,7 +778,7 @@ export async function POST(request, { params }) {
         tax: taxTotal,
         total: grandTotal,
         shippingMethod: body.shippingMethod,
-        paymentMethod,
+        paymentMethod: effectivePaymentMethod,
       },
       business: {
         name: business.business_name,

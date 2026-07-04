@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { resolveStorefrontBusiness } from '@/lib/tenancy/resolveStorefrontBusiness';
 import pool from '@/lib/db';
 import { createPayment, isNowPaymentsConfigured } from '@/lib/payments/nowpayments';
+import { isStorefrontPaymentProviderReady } from '@/lib/storefront/storefrontPaymentEligibility';
 import {
   buildStorefrontCryptoOrderId,
   registerStorefrontCryptoPayment,
@@ -33,6 +34,24 @@ export async function POST(request, { params }) {
     const business = await resolveStorefrontBusiness(businessDomain);
     if (!business) {
       return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
+    }
+
+    const gateClient = await pool.connect();
+    let cryptoEnabled = false;
+    try {
+      cryptoEnabled = await isStorefrontPaymentProviderReady(gateClient, business.id, 'crypto');
+    } finally {
+      gateClient.release();
+    }
+    if (!cryptoEnabled) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Cryptocurrency payments are not enabled for this store. Please use Cash on Delivery.',
+          code: 'CRYPTO_NOT_ENABLED',
+        },
+        { status: 400 }
+      );
     }
 
     const body = await request.json().catch(() => ({}));

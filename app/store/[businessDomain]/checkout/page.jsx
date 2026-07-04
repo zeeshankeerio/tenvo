@@ -25,6 +25,7 @@ import { toast } from 'react-hot-toast';
 import { getAvailablePaymentMethods } from '@/lib/actions/storefront/payments';
 import { downloadStorefrontOrderReceipt } from '@/lib/storefront/storefrontReceiptDownload';
 import { CryptoCheckoutPanel } from '@/components/storefront/CryptoCheckoutPanel';
+import { StripeCheckoutPanel } from '@/components/storefront/StripeCheckoutPanel';
 import { isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
 import { useRestaurantChromeOptional } from '@/components/storefront/restaurant/RestaurantChromeContext';
 import {
@@ -93,6 +94,7 @@ export default function CheckoutPage({ params }) {
   const [loadingPM, setLoadingPM] = useState(true);
   const [downloadingReceipt, setDownloadingReceipt] = useState(false);
   const [cryptoCheckout, setCryptoCheckout] = useState(null);
+  const [stripeCheckout, setStripeCheckout] = useState(null);
 
   const isDigitalCart =
     cart.items.length > 0 && cart.items.every((i) => i.fulfillmentType === 'digital');
@@ -170,7 +172,15 @@ export default function CheckoutPage({ params }) {
         const res = await getAvailablePaymentMethods(businessId);
         if (res.success && res.methods?.length) {
           setPaymentMethods(res.methods);
-          setForm(f => ({ ...f, paymentMethod: res.methods[0].provider }));
+          const cod = res.methods.find((m) => m.provider === 'cod');
+          const defaultProvider = cod?.provider || res.methods[0].provider;
+          setForm((f) => ({
+            ...f,
+            paymentMethod:
+              f.paymentMethod && res.methods.some((m) => m.provider === f.paymentMethod)
+                ? f.paymentMethod
+                : defaultProvider,
+          }));
         }
       } catch { /* non-critical */ }
       finally { setLoadingPM(false); }
@@ -342,6 +352,16 @@ export default function CheckoutPage({ params }) {
         return;
       }
 
+      if (form.paymentMethod === 'stripe') {
+        setStripeCheckout({
+          orderNumber: result.order.orderNumber,
+          email: form.email,
+        });
+        clearCart();
+        toast.success('Order created — complete card payment below');
+        return;
+      }
+
       setOrderDone(true);
       clearCart();
       toast.success(`Order ${result.order.orderNumber} placed!`);
@@ -393,6 +413,28 @@ export default function CheckoutPage({ params }) {
     return (
       <div className={cn('min-h-screen flex items-center justify-center', restaurantStore ? RESTAURANT_UI.page : 'bg-gray-50')}>
         <Loader2 className={cn('w-8 h-8 animate-spin', restaurantStore ? 'text-neutral-500' : 'text-gray-400')} />
+      </div>
+    );
+  }
+
+  // ── Stripe payment screen (after order created)
+  if (stripeCheckout && !orderDone) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-10 px-4">
+        <div className="max-w-lg mx-auto bg-white rounded-3xl shadow-xl p-6 sm:p-8">
+          <StripeCheckoutPanel
+            businessDomain={businessDomain}
+            orderNumber={stripeCheckout.orderNumber}
+            customerEmail={stripeCheckout.email}
+            accent={accent}
+            onPaid={() => {
+              setOrderDone(true);
+              setStripeCheckout(null);
+              toast.success(`Order ${stripeCheckout.orderNumber} paid!`);
+            }}
+            onCancel={() => router.push(`/store/${businessDomain}/cart`)}
+          />
+        </div>
       </div>
     );
   }
