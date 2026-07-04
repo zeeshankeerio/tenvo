@@ -28,7 +28,11 @@ import NetsuiteDashboard from '../islands/NetsuiteDashboard.client';
 import { DashboardMobileHub } from '@/components/dashboard/mobile/DashboardMobileHub';
 import { EasyBusinessDashboard } from '@/components/dashboard/easy/EasyBusinessDashboard';
 import { DomainOperationsPanel } from '@/components/dashboard/easy/DomainOperationsPanel';
+import { FinanceHeroStrip } from '@/components/dashboard/advanced/FinanceHeroStrip.client';
 import { resolveProductStock } from '@/lib/dashboard/easyDashboardHelpers';
+import { buildFinanceHeroMetrics } from '@/lib/dashboard/buildFinanceHeroMetrics';
+import { metricActionId } from '@/lib/dashboard/metricNavigation';
+import { resolveSparklineSeries } from '@/lib/dashboard/sparklineSeries';
 import type { KpiTheme } from '@/lib/dashboard/kpiThemes';
 
 // ===============================================================
@@ -50,6 +54,7 @@ interface DomainDashboardProps {
     accountingSummary?: AccountingSummaryLike | null;
     expenseBreakdown?: ExpenseBreakdownItem[];
     expenses?: ExpenseLike[];
+    advancedDashboardSnapshot?: AdvancedDashboardSnapshotLike | null;
     domainKnowledge?: DomainKnowledgeLike;
     isLoading?: boolean;
     user?: { email?: string; user_metadata?: { full_name?: string } } | null;
@@ -116,6 +121,23 @@ interface DashboardMetrics {
 
 interface AccountingSummaryLike {
     inventoryValue?: number;
+    accountsReceivable?: number;
+    accountsPayable?: number;
+    grossProfit?: number;
+    margin?: number;
+}
+
+interface AdvancedDashboardSnapshotLike {
+    finance?: {
+        netProfit?: number;
+        grossProfit?: number;
+        netMargin?: number;
+        receivables?: number;
+        receivableCount?: number;
+        payables?: number;
+        netCashFlow?: number;
+        periodRevenue?: number;
+    };
 }
 
 interface DomainKnowledgeLike {
@@ -139,6 +161,7 @@ interface MetricCardProps {
     className?: string;
     sparkline?: number[];
     invertTrendColor?: boolean;
+    actionId?: string;
 }
 
 // ===============================================================
@@ -160,6 +183,7 @@ export function DomainDashboard({
     accountingSummary,
     expenseBreakdown = [],
     expenses = [],
+    advancedDashboardSnapshot = null,
     domainKnowledge,
     isLoading = false,
     user
@@ -176,6 +200,12 @@ export function DomainDashboard({
     const formatCurrencyCompact = useCallback(
         (amount: number) => `${currency} ${Math.round(amount || 0).toLocaleString()}`,
         [currency]
+    );
+    const handleMetricNavigate = useCallback(
+        (actionId: string) => {
+            onQuickAction?.(actionId);
+        },
+        [onQuickAction]
     );
     const clamp = (value: number, min = 0, max = 100) => Math.max(min, Math.min(max, value));
 
@@ -458,36 +488,42 @@ export function DomainDashboard({
                 value: openInvoicesCount,
                 tone: openInvoicesCount > 0 ? 'text-amber-600' : 'text-slate-800',
                 icon: FileText,
+                actionId: metricActionId('open_invoices'),
             },
             {
                 label: 'Pending Orders',
                 value: remindersData.pendingOrders || 0,
                 tone: remindersData.pendingOrders > 0 ? 'text-amber-600' : 'text-slate-800',
                 icon: ShoppingCart,
+                actionId: metricActionId('pending_orders'),
             },
             {
                 label: 'Units Sold',
                 value: periodMetrics.soldUnits.toLocaleString(),
                 tone: periodMetrics.soldUnits > 0 ? 'text-slate-900' : 'text-slate-400',
                 icon: BarChart3,
+                actionId: metricActionId('units_sold'),
             },
             {
                 label: 'Paid Order Ratio',
                 value: paidOrderRateDisplay,
                 tone: paidOrderRate !== null && paidOrderRate < 60 ? 'text-rose-600' : 'text-slate-800',
                 icon: CreditCard,
+                actionId: metricActionId('paid_order_ratio'),
             },
             {
                 label: 'Coverage Days',
                 value: coverageDays > 365 ? '365+' : coverageDays,
                 tone: 'text-slate-900',
                 icon: Warehouse,
+                actionId: metricActionId('coverage_days'),
             },
             {
                 label: 'In-Stock Units',
                 value: inStockUnits.toLocaleString(),
                 tone: 'text-slate-900',
                 icon: Boxes,
+                actionId: metricActionId('in_stock_units'),
             },
             {
                 label: 'Period Expenses',
@@ -496,36 +532,42 @@ export function DomainDashboard({
                 ),
                 tone: 'text-slate-900',
                 icon: CreditCard,
+                actionId: metricActionId('period_expenses'),
             },
             {
                 label: 'Active Customers',
                 value: (dashboardMetrics?.customers?.active ?? periodMetrics.currentCustomers).toLocaleString(),
                 tone: 'text-slate-900',
                 icon: Users,
+                actionId: metricActionId('active_customers'),
             },
             {
                 label: 'Avg Order Value',
                 value: formatCurrencyCompact(avgOrderValue),
                 tone: 'text-slate-900',
                 icon: TrendingUp,
+                actionId: metricActionId('avg_order_value'),
             },
             {
                 label: 'Return Rate',
                 value: `${returnRate.toFixed(1)}%`,
                 tone: returnRate > 5 ? 'text-rose-600' : 'text-slate-800',
                 icon: RotateCcw,
+                actionId: metricActionId('return_rate'),
             },
             {
                 label: 'Outstanding A/R',
                 value: formatCurrencyCompact(outstandingAmount),
                 tone: outstandingAmount > 0 ? 'text-amber-700' : 'text-slate-800',
                 icon: BadgeDollarSign,
+                actionId: metricActionId('outstanding_ar'),
             },
             {
                 label: 'Stock Check',
                 value: stockCheckRecencyDisplay,
                 tone: stockCheckRecencyValue > 30 ? 'text-amber-600' : 'text-slate-800',
                 icon: Clock,
+                actionId: metricActionId('stock_check'),
             },
         ],
         [
@@ -557,24 +599,28 @@ export function DomainDashboard({
                 value: periodMetrics.pendingReturns,
                 tone: periodMetrics.pendingReturns > 0 ? 'text-amber-600' : 'text-slate-800',
                 icon: RotateCcw,
+                actionId: metricActionId('pending_returns'),
             },
             {
                 label: 'Warehouse Util.',
                 value: warehouseUtilizationDisplay,
                 tone: warehouseUtilizationValue >= 90 ? 'text-amber-600' : 'text-slate-800',
                 icon: Warehouse,
+                actionId: metricActionId('warehouse_util'),
             },
             {
                 label: 'Cash Flow',
                 value: formatCurrencyCompact(dashboardMetrics?.cashFlow?.current || 0),
                 tone: 'text-emerald-700',
                 icon: BadgeDollarSign,
+                actionId: metricActionId('cash_flow'),
             },
             {
                 label: 'Efficiency',
                 value: `${domainEfficiency}%`,
                 tone: domainEfficiency >= 85 ? 'text-emerald-600' : 'text-amber-600',
                 icon: TrendingUp,
+                actionId: metricActionId('efficiency'),
             },
         ],
         [
@@ -656,12 +702,8 @@ export function DomainDashboard({
     }, [activePreset]);
 
     const topStripKpis = useMemo((): MetricCardProps[] => {
-        const revenueSeries = chartData
-            .map((point) => Number(point.revenue) || 0)
-            .filter((_, index, arr) => arr.length > 0);
-        const orderSeries = chartData
-            .map((point) => Number(point.orderCount) || Number(point.sales) || 0)
-            .filter((_, index, arr) => arr.length > 0);
+        const orderSeries = resolveSparklineSeries(chartData, invoices, dateRange, 'orders');
+        const revenueSeries = resolveSparklineSeries(chartData, invoices, dateRange, 'revenue');
 
         return [
             {
@@ -671,7 +713,8 @@ export function DomainDashboard({
                 trend: Number(ordersTrend.toFixed(1)),
                 icon: ShoppingCart,
                 theme: 'cyan' as const,
-                sparkline: orderSeries.length >= 2 ? orderSeries : undefined,
+                sparkline: orderSeries,
+                actionId: metricActionId('orders'),
             },
             {
                 label: 'Revenue In Period',
@@ -680,7 +723,8 @@ export function DomainDashboard({
                 trend: Number(revenueTrendSigned.toFixed(1)),
                 icon: BadgeDollarSign,
                 theme: 'emerald' as const,
-                sparkline: revenueSeries.length >= 2 ? revenueSeries : undefined,
+                sparkline: revenueSeries,
+                actionId: metricActionId('revenue'),
             },
             {
                 label: 'Inventory Value',
@@ -689,6 +733,7 @@ export function DomainDashboard({
                 trend: undefined,
                 icon: Boxes,
                 theme: 'violet' as const,
+                actionId: metricActionId('inventory_value'),
             },
             {
                 label: 'Overdue',
@@ -700,10 +745,14 @@ export function DomainDashboard({
                     : undefined,
                 icon: Clock,
                 theme: 'rose' as const,
+                invertTrendColor: true,
+                actionId: metricActionId('overdue'),
             },
         ];
     }, [
         chartData,
+        invoices,
+        dateRange,
         periodMetrics.currentOrders,
         periodMetrics.currentRevenue,
         ordersTrend,
@@ -713,6 +762,16 @@ export function DomainDashboard({
         formatCurrencyCompact,
         periodLabel,
     ]);
+
+    const financeHeroMetrics = useMemo(
+        () =>
+            buildFinanceHeroMetrics(
+                advancedDashboardSnapshot,
+                accountingSummary,
+                formatCurrencyCompact
+            ),
+        [advancedDashboardSnapshot, accountingSummary, formatCurrencyCompact]
+    );
 
     const intelligentInsights = useMemo(() => {
         const insights = [] as Array<{ title: string; text: string; tone: string; actionTab: string }>;
@@ -1095,10 +1154,14 @@ export function DomainDashboard({
                             colorClass={item.colorClass}
                             sparkline={item.sparkline}
                             invertTrendColor={item.invertTrendColor}
+                            actionId={item.actionId}
+                            onNavigate={handleMetricNavigate}
                             className="h-full"
                         />
                     ))}
                 </div>
+
+                <FinanceHeroStrip metrics={financeHeroMetrics} onNavigate={handleMetricNavigate} />
 
                 <PeriodSnapshotCard
                     dateFrom={new Date(dateRange.from)}
@@ -1107,6 +1170,7 @@ export function DomainDashboard({
                     healthChips={dashboardHeaderHighlights}
                     metrics={periodSnapshotMetrics}
                     collapsedCount={6}
+                    onMetricClick={handleMetricNavigate}
                 />
 
                 <div className="min-h-0">

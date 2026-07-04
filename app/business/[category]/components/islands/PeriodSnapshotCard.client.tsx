@@ -11,6 +11,7 @@ interface SnapshotMetric {
     value: string | number;
     tone: string;
     icon: React.ElementType;
+    actionId?: string;
 }
 
 interface PeriodSnapshotCardProps {
@@ -21,6 +22,7 @@ interface PeriodSnapshotCardProps {
     metrics: SnapshotMetric[];
     /** How many detail metrics to show before expand. */
     collapsedCount?: number;
+    onMetricClick?: (actionId: string) => void;
 }
 
 export function PeriodSnapshotCard({
@@ -30,6 +32,7 @@ export function PeriodSnapshotCard({
     healthChips,
     metrics,
     collapsedCount = 6,
+    onMetricClick,
 }: PeriodSnapshotCardProps) {
     const [expanded, setExpanded] = useState(false);
     const visibleMetrics = expanded ? metrics : metrics.slice(0, collapsedCount);
@@ -63,10 +66,32 @@ export function PeriodSnapshotCard({
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:max-w-md">
                         {healthChips.map((item) => {
                             const Hi = item.icon;
+                            const isClickable = Boolean(item.actionId && onMetricClick);
                             return (
                                 <div
                                     key={item.label}
-                                    className="flex items-center gap-1.5 rounded-lg border border-slate-100 bg-white/80 px-2 py-1.5"
+                                    role={isClickable ? 'button' : undefined}
+                                    tabIndex={isClickable ? 0 : undefined}
+                                    onClick={
+                                        isClickable
+                                            ? () => onMetricClick!(item.actionId!)
+                                            : undefined
+                                    }
+                                    onKeyDown={
+                                        isClickable
+                                            ? (e) => {
+                                                  if (e.key === 'Enter' || e.key === ' ') {
+                                                      e.preventDefault();
+                                                      onMetricClick!(item.actionId!);
+                                                  }
+                                              }
+                                            : undefined
+                                    }
+                                    className={cn(
+                                        'flex items-center gap-1.5 rounded-lg border border-slate-100 bg-white/80 px-2 py-1.5',
+                                        isClickable &&
+                                            'cursor-pointer hover:border-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40'
+                                    )}
                                 >
                                     <Hi className="h-3 w-3 shrink-0 text-slate-400" aria-hidden />
                                     <div className="min-w-0">
@@ -90,10 +115,32 @@ export function PeriodSnapshotCard({
                 >
                     {visibleMetrics.map((item) => {
                         const Hi = item.icon;
+                        const isClickable = Boolean(item.actionId && onMetricClick);
                         return (
                             <div
                                 key={item.label}
-                                className="rounded-lg border border-slate-100 bg-slate-50/50 px-2 py-1.5 hover:bg-white transition-colors"
+                                role={isClickable ? 'button' : undefined}
+                                tabIndex={isClickable ? 0 : undefined}
+                                onClick={
+                                    isClickable
+                                        ? () => onMetricClick!(item.actionId!)
+                                        : undefined
+                                }
+                                onKeyDown={
+                                    isClickable
+                                        ? (e) => {
+                                              if (e.key === 'Enter' || e.key === ' ') {
+                                                  e.preventDefault();
+                                                  onMetricClick!(item.actionId!);
+                                              }
+                                          }
+                                        : undefined
+                                }
+                                className={cn(
+                                    'rounded-lg border border-slate-100 bg-slate-50/50 px-2 py-1.5 hover:bg-white transition-colors',
+                                    isClickable &&
+                                        'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40'
+                                )}
                                 title={item.label}
                             >
                                 <div className="flex items-center gap-1.5 mb-0.5">

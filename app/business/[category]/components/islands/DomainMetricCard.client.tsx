@@ -21,6 +21,9 @@ export interface DomainMetricCardProps {
     sparkline?: number[];
     /** For metrics where down is good (e.g. overdue). */
     invertTrendColor?: boolean;
+    /** Routes via handleQuickAction when card is clicked. */
+    actionId?: string;
+    onNavigate?: (actionId: string) => void;
 }
 
 export function DomainMetricCard({
@@ -35,16 +38,38 @@ export function DomainMetricCard({
     className,
     sparkline,
     invertTrendColor = false,
+    actionId,
+    onNavigate,
 }: DomainMetricCardProps) {
     const palette = KPI_THEMES[theme];
     const showTrend = trendHint || (trend !== undefined && trend !== 0);
     const trendPositive = invertTrendColor ? (trend ?? 0) < 0 : (trend ?? 0) > 0;
+    const isClickable = Boolean(actionId && onNavigate);
+
+    const handleActivate = () => {
+        if (actionId && onNavigate) onNavigate(actionId);
+    };
 
     return (
         <Card
+            role={isClickable ? 'button' : undefined}
+            tabIndex={isClickable ? 0 : undefined}
+            onClick={isClickable ? handleActivate : undefined}
+            onKeyDown={
+                isClickable
+                    ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleActivate();
+                          }
+                      }
+                    : undefined
+            }
             className={cn(
                 'group relative overflow-hidden border shadow-sm hover:shadow-lg transition-all duration-300 h-full',
                 palette.card,
+                isClickable &&
+                    'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40',
                 className
             )}
         >

@@ -79,6 +79,7 @@ export function DashboardTabs({
     dashboardMetrics,
     expenseBreakdown = [],
     expenses = [],
+    advancedDashboardSnapshot = null,
     dateRange,
     currency,
     colors,
@@ -280,6 +281,7 @@ export function DashboardTabs({
                             accountingSummary={accountingSummary}
                             expenseBreakdown={expenseBreakdown}
                             expenses={expenses}
+                            advancedDashboardSnapshot={advancedDashboardSnapshot}
                             domainKnowledge={domainKnowledge}
                             isLoading={isLoading}
                             user={user}

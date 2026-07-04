@@ -277,10 +277,16 @@ export function RevenueBarChart({ data = [], colors, currency = 'PKR' }) {
 /**
  * @param {Object} props
  * @param {any[]} props.data
+ * @param {any} [props.colors]
  */
-export function CategoryPieChart({ data }) {
+export function CategoryPieChart({ data, colors }) {
+  const palette =
+    Array.isArray(colors?.chartPalette) && colors.chartPalette.length > 0
+      ? colors.chartPalette
+      : null;
+
   // Enhanced color palette matching the inspiring dashboards
-  const ENHANCED_COLORS = [
+  const ENHANCED_COLORS = palette || [
     '#3b82f6', // Blue
     '#8b5cf6', // Purple
     '#10b981', // Emerald

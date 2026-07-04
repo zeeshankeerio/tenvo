@@ -441,6 +441,7 @@ function BusinessDashboardContent() {
     dashboardMetrics,
     expenseBreakdown,
     expenses,
+    advancedDashboardSnapshot,
     refreshAllData,
     fetchFinance,
     fetchAnalytics,
@@ -1661,6 +1662,7 @@ function BusinessDashboardContent() {
             dashboardMetrics={dashboardMetrics}
             expenseBreakdown={expenseBreakdown}
             expenses={expenses}
+            advancedDashboardSnapshot={advancedDashboardSnapshot}
             dateRange={dateRange}
             currency={currency}
             colors={colors}
