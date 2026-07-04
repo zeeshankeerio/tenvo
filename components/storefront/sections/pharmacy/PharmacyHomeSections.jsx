@@ -10,6 +10,7 @@ import { PharmacyCategoryIcons } from '@/components/storefront/sections/pharmacy
 import { PharmacyPrescriptionBanner } from '@/components/storefront/sections/pharmacy/PharmacyPrescriptionBanner';
 import { PharmacyTrustBadges } from '@/components/storefront/sections/pharmacy/PharmacyTrustBadges';
 import { PharmacyHealthConcerns } from '@/components/storefront/sections/pharmacy/PharmacyHealthConcerns';
+import { PharmacySymptomAssistant } from '@/components/storefront/sections/pharmacy/PharmacySymptomAssistant';
 import { cn } from '@/lib/utils';
 import { STORE_SECTION_HEADING } from '@/lib/utils/typography';
 import {
@@ -91,8 +92,11 @@ export function PharmacyHomeSections({
 
   return (
     <>
-      {/* Shop by category — premium auto-scrolling icons */}
+      {/* Shop by category — single-row auto-scroll marquee */}
       <PharmacyCategoryIcons categoryIcons={categoryIcons} accent={accent} />
+
+      {/* AI symptom assistant — routes to categories + chat */}
+      <PharmacySymptomAssistant productsUrl={productsUrl} accent={accent} />
 
       {/* Trust badges — build credibility early */}
       <PharmacyTrustBadges badges={trustPillars} accent={accent} />
@@ -112,19 +116,6 @@ export function PharmacyHomeSections({
 
       {/* Prescription upload CTA — prominent placement */}
       <PharmacyPrescriptionBanner storeBase={storeBase} accent={accent} />
-
-      {deals.length > 0 && (
-        <StoreProductRail
-          title={featuredTitle}
-          subtitle={featuredSubtitle}
-          href={`${productsUrl}?sort=popularity`}
-          linkLabel="Shop all"
-          products={topSelling}
-          catalogPool={products}
-          businessDomain={businessDomain}
-          className="bg-white"
-        />
-      )}
 
       {deals.length > 0 && (
         <StoreProductRail

@@ -150,7 +150,7 @@ export default async function StoreLayout({ children, params }) {
           <SupermarketSiteHeader business={business} settings={settings} />
         </Suspense>
       ) : restaurantStore ? (
-        <Suspense fallback={<div className="h-[120px] border-b border-neutral-800 bg-[#0a0a0a] md:h-[132px]" aria-hidden />}>
+        <Suspense fallback={<div className="h-[120px] border-b border-zinc-200 bg-white md:h-[132px]" aria-hidden />}>
           <RestaurantSiteHeader business={business} settings={settings} />
         </Suspense>
       ) : fitnessStore ? (

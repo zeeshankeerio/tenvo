@@ -21,7 +21,6 @@ import {
 import { isRestaurantElevatedStore, resolveRestaurantTheme } from '@/lib/storefront/restaurantStorefront';
 import { RestaurantMenuLayout } from '@/components/storefront/restaurant/RestaurantMenuLayout';
 import { RestaurantMenuCatalog } from '@/components/storefront/restaurant/RestaurantMenuCatalog';
-import { RestaurantMenuToolbar } from '@/components/storefront/restaurant/RestaurantMenuToolbar';
 
 export async function generateMetadata({ params, searchParams }) {
   const { businessDomain } = await params;
@@ -169,14 +168,6 @@ export default async function ProductsPage({ params, searchParams }) {
         businessDomain={businessDomain}
         accent={accent}
         title={menuTitle}
-        toolbar={
-          <RestaurantMenuToolbar
-            businessDomain={businessDomain}
-            initialQuery={filters.search}
-            currentSort={filters.sort}
-            currentView={view}
-          />
-        }
       >
         <Suspense fallback={<ProductsSkeleton count={9} density="default" />}>
           <RestaurantMenuContent

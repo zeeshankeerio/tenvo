@@ -68,7 +68,9 @@ export function RestaurantOrderModeBar({
               active
                 ? 'text-white shadow-sm'
                 : isLight
-                  ? 'border border-transparent bg-white text-zinc-600 hover:text-zinc-900'
+                  ? variant === 'compact'
+                    ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-900'
+                    : 'border border-transparent bg-white text-zinc-600 hover:text-zinc-900'
                   : variant === 'compact'
                     ? 'border border-neutral-700 bg-neutral-900 text-neutral-400 hover:text-neutral-200'
                     : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'

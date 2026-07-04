@@ -11,7 +11,7 @@ import { RESTAURANT_MENU_THEME } from '@/lib/storefront/restaurantMenu';
 import { useRestaurantChrome } from '@/components/storefront/restaurant/RestaurantChromeContext';
 
 /**
- * Dark app-style bottom nav for restaurant / kitchen storefronts (mobile only).
+ * Light app-style bottom nav for restaurant storefronts (mobile only).
  */
 export function RestaurantMobileBottomNav() {
   const pathname = usePathname();
@@ -32,6 +32,8 @@ export function RestaurantMobileBottomNav() {
     return null;
   }
 
+  const isMenuRoute = pathname.startsWith(`${root}/products`);
+
   const tabs = [
     {
       key: 'home',
@@ -45,14 +47,15 @@ export function RestaurantMobileBottomNav() {
       href: `${root}/products`,
       icon: UtensilsCrossed,
       label: 'Menu',
-      active: pathname.startsWith(`${root}/products`),
+      active: isMenuRoute,
     },
     {
       key: 'categories',
       icon: LayoutGrid,
       label: 'Categories',
       active: false,
-      onClick: () => openSidebar(),
+      href: isMenuRoute ? undefined : `${root}/products?sort=popularity`,
+      onClick: isMenuRoute ? () => openSidebar() : undefined,
     },
     {
       key: 'cart',
@@ -74,7 +77,7 @@ export function RestaurantMobileBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-800 bg-[#0a0a0a]/95 shadow-[0_-8px_32px_rgba(0,0,0,0.5)] backdrop-blur-lg pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200/90 bg-white/95 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] backdrop-blur-lg pb-[env(safe-area-inset-bottom)] lg:hidden"
       aria-label="Restaurant navigation"
     >
       <div className="grid h-14 grid-cols-5">
@@ -98,7 +101,7 @@ export function RestaurantMobileBottomNav() {
               <span
                 className={cn(
                   'text-[10px] font-semibold leading-none',
-                  active ? 'text-white' : 'text-neutral-500'
+                  active ? 'text-zinc-900' : 'text-zinc-500'
                 )}
                 style={active ? { color: accent } : undefined}
               >
@@ -126,7 +129,7 @@ export function RestaurantMobileBottomNav() {
               href={href}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 transition active:scale-95',
-                highlight && !active && 'text-red-400'
+                highlight && !active && 'text-red-600'
               )}
               aria-current={active ? 'page' : undefined}
             >

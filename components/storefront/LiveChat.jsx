@@ -5,11 +5,25 @@ import { MessageCircle, X, Send, Minimize2, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+import { isPharmacyElevatedStore } from '@/lib/storefront/pharmacyStorefront';
 import {
   STOREFRONT_FLOAT_BOTTOM,
   STOREFRONT_FLOAT_RIGHT,
   STOREFRONT_CHAT_Z,
 } from '@/lib/utils/mobileLayout';
+
+const GENERIC_QUICK_PROMPTS = ['Shipping info', 'Return policy', 'Track order', 'Payment methods'];
+
+const PHARMACY_QUICK_PROMPTS = [
+  'I have a headache',
+  'Cold and cough',
+  'Upload prescription',
+  'Set refill reminder',
+];
+
+function openStoreChatEventName() {
+  return 'tenvo:open-store-chat';
+}
 
 const SHELL_CLASS = cn(
   'fixed flex flex-col items-end',
@@ -47,6 +61,11 @@ export function LiveChat() {
   const { settings, business, businessDomain } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
   const storeName = business?.business_name || 'Support';
+  const pharmacyStore = isPharmacyElevatedStore(business?.category);
+  const quickPrompts = pharmacyStore ? PHARMACY_QUICK_PROMPTS : GENERIC_QUICK_PROMPTS;
+  const assistantSubtitle = pharmacyStore
+    ? 'AI health assistant · Not a substitute for professional care'
+    : 'Store assistant · Public help only';
 
   const fetchReply = useCallback(
     async (message, { greeting = false } = {}) => {
@@ -88,11 +107,17 @@ export function LiveChat() {
     }
   }, [fetchReply, messages.length, storeName]);
 
-  const handleOpen = () => {
+  const handleOpen = useCallback(() => {
     setIsMinimized(false);
     setIsOpen(true);
     void seedGreetingIfEmpty();
-  };
+  }, [seedGreetingIfEmpty]);
+
+  useEffect(() => {
+    const onOpenChat = () => handleOpen();
+    window.addEventListener(openStoreChatEventName(), onOpenChat);
+    return () => window.removeEventListener(openStoreChatEventName(), onOpenChat);
+  }, [handleOpen]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -182,7 +207,7 @@ export function LiveChat() {
             </div>
             <div>
               <p className="text-sm font-bold leading-none text-white">{storeName}</p>
-              <p className="mt-0.5 text-xs text-white/70">Store assistant · Public help only</p>
+              <p className="mt-0.5 text-xs text-white/70">{assistantSubtitle}</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -253,7 +278,7 @@ export function LiveChat() {
 
         {messages.length <= 1 ? (
           <div className="flex flex-wrap gap-1.5 bg-gray-50 px-4 pb-2">
-            {['Shipping info', 'Return policy', 'Track order', 'Payment methods'].map((q) => (
+            {quickPrompts.map((q) => (
               <button
                 key={q}
                 type="button"
@@ -271,7 +296,7 @@ export function LiveChat() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message…"
+            placeholder={pharmacyStore ? 'Describe symptoms or ask about medicines…' : 'Type a message…'}
             className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2"
             style={{ '--tw-ring-color': accent }}
           />

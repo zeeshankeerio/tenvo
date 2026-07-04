@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  ShieldCheck, Truck, Clock, HeartPulse, Award, Verified,
+  ShieldCheck, Truck, Clock, HeartPulse, Award, BadgeCheck, Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,7 +32,7 @@ const DEFAULT_BADGES = [
   },
   {
     id: 'verified',
-    icon: Verified,
+    icon: BadgeCheck,
     title: 'Prescription Verified',
     description: 'Every Rx order reviewed by licensed pharmacists',
   },
@@ -44,11 +44,51 @@ const DEFAULT_BADGES = [
   },
 ];
 
+const PILLAR_ICON_BY_ID = {
+  ...Object.fromEntries(DEFAULT_BADGES.map((b) => [b.id, b.icon])),
+  refill: Bell,
+};
+
+/** Map serialized settings icon names → Lucide components. */
+const TRUST_ICON_BY_NAME = {
+  ShieldCheck,
+  Truck,
+  Clock,
+  HeartPulse,
+  Award,
+  BadgeCheck,
+  Verified: BadgeCheck,
+  Bell,
+  Package: ShieldCheck,
+};
+
+function resolveTrustIcon(badge) {
+  if (typeof badge?.icon === 'function') return badge.icon;
+  if (typeof badge?.icon === 'string') {
+    return TRUST_ICON_BY_NAME[badge.icon] || PILLAR_ICON_BY_ID[badge.id] || ShieldCheck;
+  }
+  return PILLAR_ICON_BY_ID[badge?.id] || ShieldCheck;
+}
+
+function normalizeBadge(badge) {
+  if (!badge || typeof badge !== 'object') return null;
+  const Icon = resolveTrustIcon(badge);
+  return {
+    id: badge.id || badge.label || 'trust',
+    icon: typeof Icon === 'function' ? Icon : ShieldCheck,
+    title: badge.title || badge.label || 'Trusted care',
+    description: badge.description || badge.desc || '',
+  };
+}
+
 /**
  * Premium trust badges section with icon grid.
  * Builds credibility and assurance for online pharmacy shoppers.
  */
 export function PharmacyTrustBadges({ badges = DEFAULT_BADGES, accent = '#16a34a' }) {
+  const source = badges.length ? badges : DEFAULT_BADGES;
+  const rows = source.map(normalizeBadge).filter(Boolean);
+  if (!rows.length) return null;
   return (
     <section className="border-y border-emerald-100 bg-white py-10 sm:py-14">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
@@ -62,8 +102,9 @@ export function PharmacyTrustBadges({ badges = DEFAULT_BADGES, accent = '#16a34a
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {badges.map((badge) => {
+          {rows.map((badge) => {
             const IconComponent = badge.icon;
+            if (typeof IconComponent !== 'function') return null;
             return (
               <div
                 key={badge.id}

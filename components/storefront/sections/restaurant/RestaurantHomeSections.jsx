@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { StoreProductRail } from '@/components/storefront/StoreProductRail';
-import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { cn } from '@/lib/utils';
 import { STORE_SECTION_HEADING } from '@/lib/utils/typography';
 import {
@@ -24,9 +23,14 @@ import {
   resolveRestaurantCuratedTabs,
   resolveRestaurantSpotlightCards,
   resolveRestaurantTrustPillars,
+  resolveRestaurantUpperPromoTiles,
   formatRestaurantStoreName,
 } from '@/lib/storefront/restaurantStorefront';
 import { RESTAURANT_MENU_THEME } from '@/lib/storefront/restaurantMenu';
+import {
+  RestaurantMenuItemCard,
+} from '@/components/storefront/restaurant/RestaurantMenuItemCard';
+import { RestaurantCategoryMarquee } from '@/components/storefront/sections/restaurant/RestaurantCategoryMarquee';
 
 const TRUST_ICONS = {
   delivery: Bike,
@@ -36,7 +40,7 @@ const TRUST_ICONS = {
   default: Shield,
 };
 
-function SpotlightCardGrid({ cards, displayName, accent }) {
+function SpotlightCardGrid({ cards, accent }) {
   if (!cards.length) return null;
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
@@ -44,36 +48,33 @@ function SpotlightCardGrid({ cards, displayName, accent }) {
         <Link
           key={card.id}
           href={card.href}
-          className="group relative flex min-h-[140px] items-end overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 shadow-lg shadow-black/20 transition hover:border-neutral-600 hover:shadow-xl sm:min-h-[168px] lg:min-h-[180px]"
+          className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm transition hover:border-zinc-300 hover:shadow-md"
         >
-          {card.image ? (
-            <SmartProductImage
-              src={card.image}
-              alt={card.title || ''}
-              fill
-              className="object-cover transition duration-500 group-hover:scale-[1.04]"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-neutral-800" aria-hidden />
-          )}
-          <div
-            className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10"
-            aria-hidden
-          />
-          <div className="relative z-10 w-full p-3 sm:p-4">
-            <p className="text-[9px] font-semibold uppercase tracking-wider text-red-200/80 sm:text-[10px]">
-              {displayName}
-            </p>
-            <h3 className="mt-0.5 text-sm font-semibold text-white sm:text-base">{card.title}</h3>
+          <div className="relative aspect-[4/3] overflow-hidden bg-zinc-100">
+            {card.image ? (
+              <SmartProductImage
+                src={card.image}
+                alt={card.title || ''}
+                fill
+                className="object-cover transition duration-500 group-hover:scale-[1.04]"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-zinc-100">
+                <UtensilsCrossed className="h-8 w-8 text-zinc-300" aria-hidden />
+              </div>
+            )}
+          </div>
+          <div className="flex flex-1 flex-col p-3 sm:p-4">
+            <h3 className="text-sm font-semibold text-zinc-900 sm:text-base">{card.title}</h3>
             {card.subtitle ? (
-              <p className="mt-0.5 line-clamp-2 text-[10px] text-neutral-300 sm:text-xs">{card.subtitle}</p>
+              <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500 sm:text-sm">{card.subtitle}</p>
             ) : null}
             <span
-              className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold sm:text-xs"
+              className="mt-auto inline-flex items-center gap-1 pt-2 text-xs font-semibold sm:text-sm"
               style={{ color: accent }}
             >
               Order now
-              <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" aria-hidden />
+              <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" aria-hidden />
             </span>
           </div>
         </Link>
@@ -82,8 +83,38 @@ function SpotlightCardGrid({ cards, displayName, accent }) {
   );
 }
 
+function UpperPromoTiles({ tiles, accent }) {
+  if (!tiles.length) return null;
+  return (
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+      {tiles.map((tile) => (
+        <Link
+          key={tile.id}
+          href={tile.href}
+          className="group relative flex min-h-[88px] items-end overflow-hidden rounded-xl border border-zinc-200/90 bg-white shadow-sm transition hover:border-zinc-300 hover:shadow-md sm:min-h-[100px]"
+        >
+          {tile.image ? (
+            <SmartProductImage
+              src={tile.image}
+              alt=""
+              fill
+              className="object-cover transition duration-500 group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-zinc-100" aria-hidden />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" aria-hidden />
+          <p className="relative z-10 w-full px-3 py-2.5 text-xs font-semibold text-white sm:text-sm">
+            {tile.title}
+          </p>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 /**
- * Tenant-aware elevated restaurant homepage sections (dark premium layout).
+ * Tenant-aware elevated restaurant homepage — premium light layout.
  */
 export function RestaurantHomeSections({
   businessDomain,
@@ -113,6 +144,9 @@ export function RestaurantHomeSections({
     businessDomain,
     storeBase
   );
+  const upperPromoTiles = config.showUpperPromoTiles !== false
+    ? resolveRestaurantUpperPromoTiles(settings, storeBase)
+    : [];
   const trustPillars = config.showTrustStrip !== false
     ? resolveRestaurantTrustPillars(settings, businessDomain).filter((p) => p.id !== 'cashback')
     : [];
@@ -123,7 +157,6 @@ export function RestaurantHomeSections({
     config.featuredRailSubtitle || `Popular dishes from ${displayName}`;
   const businessHours =
     settings?.businessHours || settings?.contact?.businessHours || 'See contact page for hours';
-  const panelBg = RESTAURANT_MENU_THEME.panelBg;
 
   const [activeTab, setActiveTab] = useState(curatedTabs[0]?.id || 'all');
   const activeTabDef = curatedTabs.find((t) => t.id === activeTab) || curatedTabs[0];
@@ -134,27 +167,26 @@ export function RestaurantHomeSections({
   return (
     <>
       {trustPillars.length > 0 && (
-        <section className="border-b border-neutral-800 bg-[#0a0a0a] py-3 sm:py-4">
+        <section className="border-b border-zinc-200/80 bg-white py-4 sm:py-5">
           <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-3">
               {trustPillars.map((pillar) => {
                 const Icon = TRUST_ICONS[pillar.id] || TRUST_ICONS.default;
                 return (
                   <div
                     key={pillar.id}
-                    className="flex items-center gap-2 rounded-xl border border-neutral-800 px-2.5 py-2 sm:gap-2.5 sm:px-3 sm:py-2.5"
-                    style={{ backgroundColor: panelBg }}
+                    className="flex items-center gap-2.5 rounded-xl border border-zinc-200/90 bg-zinc-50/80 px-3 py-2.5 sm:gap-3 sm:px-3.5 sm:py-3"
                   >
                     <div
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 sm:h-9 sm:w-9"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-zinc-200/80 sm:h-10 sm:w-10"
                       style={{ color: accent }}
                     >
-                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+                      <Icon className="h-4 w-4" aria-hidden />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-semibold text-neutral-100 sm:text-xs">{pillar.label}</p>
+                      <p className="text-xs font-semibold text-zinc-900 sm:text-[13px]">{pillar.label}</p>
                       {pillar.desc ? (
-                        <p className="text-[9px] leading-tight text-neutral-500 sm:text-[10px]">{pillar.desc}</p>
+                        <p className="text-[10px] leading-snug text-zinc-500 sm:text-[11px]">{pillar.desc}</p>
                       ) : null}
                     </div>
                   </div>
@@ -165,56 +197,46 @@ export function RestaurantHomeSections({
         </section>
       )}
 
+      {upperPromoTiles.length > 0 && (
+        <section className="border-b border-zinc-200/80 bg-zinc-50 py-5 sm:py-6">
+          <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
+            <UpperPromoTiles tiles={upperPromoTiles.slice(0, 4)} accent={accent} />
+          </div>
+        </section>
+      )}
+
       {spotlightCards.length > 0 && (
-        <section className="bg-[#0a0a0a] py-6 sm:py-8">
+        <section className="bg-zinc-50 py-6 sm:py-8">
           <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
             <div className="mb-4 flex items-end justify-between gap-3">
-              <h2 className={cn(STORE_SECTION_HEADING, 'text-white')}>Shop by category</h2>
+              <h2 className={cn(STORE_SECTION_HEADING, 'text-zinc-900')}>Shop by category</h2>
               <Link
                 href={productsUrl}
-                className="text-xs font-semibold hover:opacity-90"
+                className="text-xs font-semibold hover:opacity-90 sm:text-sm"
                 style={{ color: accent }}
               >
                 Full menu
               </Link>
             </div>
-            <SpotlightCardGrid cards={spotlightCards} displayName={displayName} accent={accent} />
+            <SpotlightCardGrid cards={spotlightCards} accent={accent} />
           </div>
         </section>
       )}
 
       {config.showCuisineCarousel !== false && cuisineIcons.length > 0 && (
-        <section className="border-t border-neutral-800 bg-[#0a0a0a] pb-6 pt-4 sm:pb-8 sm:pt-6">
+        <section className="border-t border-zinc-200/80 bg-white pb-6 pt-5 sm:pb-8 sm:pt-6">
           <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
-            <h2 className={cn(STORE_SECTION_HEADING, 'mb-3 text-white lg:mb-4')}>Browse the menu</h2>
-            <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible md:grid-cols-6 lg:grid-cols-8">
-              {cuisineIcons.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={cat.href}
-                  className="group flex w-[76px] shrink-0 flex-col items-center gap-1.5 sm:w-auto"
-                >
-                  <div
-                    className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-neutral-800 shadow-md transition group-active:scale-[0.97] sm:h-[72px] sm:w-[72px] lg:group-hover:border-neutral-600"
-                  >
-                    {cat.image ? (
-                      <SmartProductImage src={cat.image} alt="" fill className="object-cover" />
-                    ) : (
-                      <div
-                        className="flex h-full w-full items-center justify-center text-xs font-semibold text-white"
-                        style={{ backgroundColor: `${accent}33` }}
-                      >
-                        {cat.label?.slice(0, 2)?.toUpperCase() || '•'}
-                      </div>
-                    )}
-                    <span className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" aria-hidden />
-                  </div>
-                  <span className="line-clamp-2 text-center text-[10px] font-semibold leading-tight text-neutral-400 group-hover:text-neutral-200 sm:text-[11px]">
-                    {cat.label}
-                  </span>
-                </Link>
-              ))}
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <h2 className={cn(STORE_SECTION_HEADING, 'text-zinc-900')}>Browse the menu</h2>
+              <Link
+                href={productsUrl}
+                className="text-xs font-semibold sm:text-sm"
+                style={{ color: accent }}
+              >
+                View all
+              </Link>
             </div>
+            <RestaurantCategoryMarquee categoryIcons={cuisineIcons} accent={accent} />
           </div>
         </section>
       )}
@@ -228,7 +250,8 @@ export function RestaurantHomeSections({
           products={superPicks}
           catalogPool={products}
           businessDomain={businessDomain}
-          className="border-t border-neutral-800 bg-[#0a0a0a] [&_h2]:text-white [&_p]:text-neutral-400"
+          accentColor={accent}
+          className="border-t border-zinc-200/80 bg-zinc-50"
         />
       )}
 
@@ -241,7 +264,8 @@ export function RestaurantHomeSections({
           products={combos}
           catalogPool={products}
           businessDomain={businessDomain}
-          className="border-t border-neutral-800 bg-[#0a0a0a] [&_h2]:text-white [&_p]:text-neutral-400"
+          accentColor={accent}
+          className="border-t border-zinc-200/80 bg-white"
         />
       )}
 
@@ -254,22 +278,23 @@ export function RestaurantHomeSections({
           products={deals.slice(0, 12)}
           catalogPool={products}
           businessDomain={businessDomain}
-          className="border-t border-neutral-800 bg-[#141414] [&_h2]:text-white [&_p]:text-neutral-400"
+          accentColor={accent}
+          className="border-t border-zinc-200/80 bg-zinc-50"
         />
       )}
 
       {curatedTabs.length > 0 && (
-        <section className="border-t border-neutral-800 bg-[#0a0a0a] py-8 sm:py-10">
+        <section className="border-t border-zinc-200/80 bg-white py-8 sm:py-10">
           <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className={cn(STORE_SECTION_HEADING, 'text-white')}>Explore the menu</h2>
-                <p className="mt-1 text-sm text-neutral-500">
+                <h2 className={cn(STORE_SECTION_HEADING, 'text-zinc-900')}>Explore the menu</h2>
+                <p className="mt-1 text-sm text-zinc-500">
                   {businessDescription?.slice(0, 80) || 'Curated dishes by category'}
                 </p>
               </div>
               {curatedTabs.length > 1 && (
-                <div className="flex gap-1 overflow-x-auto rounded-full border border-neutral-800 bg-neutral-900 p-1 scrollbar-hide">
+                <div className="flex gap-1 overflow-x-auto rounded-full border border-zinc-200 bg-zinc-50 p-1 scrollbar-hide">
                   {curatedTabs.map((tab) => (
                     <button
                       key={tab.id}
@@ -277,7 +302,9 @@ export function RestaurantHomeSections({
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
                         'shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4',
-                        activeTab === tab.id ? 'text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-200'
+                        activeTab === tab.id
+                          ? 'text-white shadow-sm'
+                          : 'text-zinc-600 hover:bg-white hover:text-zinc-900'
                       )}
                       style={activeTab === tab.id ? { backgroundColor: accent } : undefined}
                     >
@@ -288,9 +315,18 @@ export function RestaurantHomeSections({
               )}
             </div>
             {curatedProducts.length > 0 ? (
-              <ProductGrid products={curatedProducts} businessDomain={businessDomain} density="default" />
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:gap-3.5">
+                {curatedProducts.map((product) => (
+                  <RestaurantMenuItemCard
+                    key={product.id}
+                    product={product}
+                    businessDomain={businessDomain}
+                    accent={accent}
+                  />
+                ))}
+              </div>
             ) : (
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-zinc-500">
                 No items in this section yet.{' '}
                 <Link href={productsUrl} className="font-semibold hover:underline" style={{ color: accent }}>
                   Browse the full menu
@@ -302,7 +338,7 @@ export function RestaurantHomeSections({
       )}
 
       {config.showDeliveryInfo !== false && (
-        <section className="border-t border-neutral-800 py-8" style={{ backgroundColor: panelBg }}>
+        <section className="border-t border-zinc-200/80 bg-zinc-50 py-8 sm:py-10">
           <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-8">
             <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
               {[
@@ -312,11 +348,11 @@ export function RestaurantHomeSections({
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-4 text-center sm:p-5"
+                  className="rounded-2xl border border-zinc-200/90 bg-white p-4 text-center shadow-sm sm:p-5"
                 >
                   <item.icon className="mx-auto h-5 w-5 sm:h-6 sm:w-6" style={{ color: accent }} aria-hidden />
-                  <h3 className="mt-2 text-sm font-semibold text-white">{item.title}</h3>
-                  <p className="mt-1 text-xs text-neutral-500">{item.desc}</p>
+                  <h3 className="mt-2 text-sm font-semibold text-zinc-900">{item.title}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-zinc-500">{item.desc}</p>
                 </div>
               ))}
             </div>

@@ -71,13 +71,13 @@ export function RestaurantMenuCatalog({
   return (
     <div>
       {total > 0 ? (
-        <p className="mb-2 text-[11px] text-zinc-500">
+        <p className="mb-3 text-xs font-medium text-zinc-500">
           {total} {total === 1 ? 'item' : 'items'}
         </p>
       ) : null}
 
       {view === 'list' ? (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {products.map((product) => (
             <RestaurantMenuListItem
               key={product.id}
@@ -88,7 +88,7 @@ export function RestaurantMenuCatalog({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 lg:gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:gap-3.5">
           {products.map((product) => (
             <RestaurantMenuItemCard
               key={product.id}

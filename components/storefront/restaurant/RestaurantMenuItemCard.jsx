@@ -57,7 +57,7 @@ export function RestaurantMenuItemCard({ product, businessDomain, accent, classN
   return (
     <article
       className={cn(
-        'group relative overflow-hidden rounded-lg border border-zinc-200 bg-white',
+        'group relative overflow-hidden rounded-xl border border-zinc-200/90 bg-white',
         'shadow-sm motion-safe:transition motion-safe:duration-200',
         'motion-safe:hover:border-zinc-300 motion-safe:hover:shadow-md',
         isOutOfStock && 'opacity-55',
@@ -149,7 +149,7 @@ export function RestaurantMenuListItem({ product, businessDomain, accent }) {
   };
 
   return (
-    <div className="flex gap-2.5 rounded-lg border border-zinc-200 bg-white p-2 motion-safe:transition hover:border-zinc-300 hover:shadow-sm sm:gap-3 sm:p-2.5">
+    <div className="flex gap-3 rounded-xl border border-zinc-200/90 bg-white p-2.5 motion-safe:transition hover:border-zinc-300 hover:shadow-sm sm:gap-3.5 sm:p-3">
       <Link href={productHref} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-zinc-100 sm:h-[72px] sm:w-[72px]">
         {imageUrl ? (
           <SmartProductImage src={imageUrl} alt={product.name} fill className="object-cover" />

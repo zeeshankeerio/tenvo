@@ -28,7 +28,6 @@ import CommerceAndIntelligenceSection from '@/components/marketing/sections/Comm
 import CompetitorComparisonSection from '@/components/marketing/sections/CompetitorComparisonSection';
 import HomeHero from '@/components/marketing/sections/HomeHero';
 import HomeTrustStrip from '@/components/marketing/sections/HomeTrustStrip';
-import CustomerLogoStrip from '@/components/marketing/CustomerLogoStrip';
 import HomeProductDemoSection from '@/components/marketing/sections/HomeProductDemoSection';
 import HomeIntegrationMarquee from '@/components/marketing/sections/HomeIntegrationMarquee';
 import HomeToolkitSection from '@/components/marketing/sections/HomeToolkitSection';
@@ -260,10 +259,6 @@ export default function Home() {
 
       <ScrollReveal direction="fade" threshold={0.3}>
         <HomeTrustStrip />
-      </ScrollReveal>
-
-      <ScrollReveal direction="fade" threshold={0.3}>
-        <CustomerLogoStrip variant="default" />
       </ScrollReveal>
 
       <ScrollReveal direction="up" threshold={0.2}>

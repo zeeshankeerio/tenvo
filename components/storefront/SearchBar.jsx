@@ -44,6 +44,11 @@ export function SearchBar({ businessDomain, initialQuery = '', onClose, dark = f
 
   // Load recent searches on mount
   useEffect(() => { setRecentSearches(getRecentSearches()); }, []);
+
+  // Keep input in sync when URL search param changes (e.g. category nav, back button)
+  useEffect(() => {
+    setQuery(initialQuery || '');
+  }, [initialQuery]);
   
   // Debounced search
   useEffect(() => {

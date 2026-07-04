@@ -96,7 +96,7 @@ export async function POST(request, { params }) {
   if (wantsGreeting && !message) {
     return NextResponse.json({
       success: true,
-      reply: buildPublicBuyerChatGreeting(storeName),
+      reply: buildPublicBuyerChatGreeting(storeName, business.category),
       storeName,
     });
   }

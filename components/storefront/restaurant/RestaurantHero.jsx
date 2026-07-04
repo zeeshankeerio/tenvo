@@ -11,7 +11,7 @@ export function RestaurantHero({ preset, businessDomain, accent, accentDark, con
   const slides = preset.slides || [];
 
   return (
-    <section className="relative bg-[#0a0a0a]" data-restaurant-hero>
+    <section className="relative bg-zinc-100" data-restaurant-hero>
       <HeroCarousel
         slides={slides}
         accent={accent}

@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import {
   Pill, Thermometer, Syringe, ShieldCheck, HeartPulse,
-  Sparkles, Sun, Stethoscope, Baby, Droplet, Tag, Package,
+  Sparkles, Sun, Stethoscope, Baby, Tag, Package, Activity, Moon, Droplet,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { SmartProductImage } from '@/components/storefront/SmartProductImage';
+import { StoreMarqueeRow } from '@/components/storefront/sections/shared/StoreMarqueeRow';
+import { resolvePharmacyCategoryIconKey } from '@/lib/storefront/pharmacyStorefront';
 
 const PHARMACY_ICON_MAP = {
   pill: Pill,
@@ -17,22 +19,77 @@ const PHARMACY_ICON_MAP = {
   sun: Sun,
   stethoscope: Stethoscope,
   baby: Baby,
-  droplet: Droplet,
   tag: Tag,
   package: Package,
+  activity: Activity,
+  moon: Moon,
+  droplet: Droplet,
 };
 
+function CategoryIconVisual({ cat, accent }) {
+  const iconKey = String(cat.icon || resolvePharmacyCategoryIconKey(cat.slug, cat.label))
+    .toLowerCase()
+    .replace(/_/g, '-');
+  const IconComponent = PHARMACY_ICON_MAP[iconKey] || Package;
+
+  if (cat.image) {
+    return (
+      <SmartProductImage
+        src={cat.image}
+        alt={cat.label}
+        fill
+        className="object-cover transition duration-300 motion-safe:group-hover:scale-105"
+        sizes="80px"
+      />
+    );
+  }
+
+  return (
+    <div className="relative flex h-full w-full items-center justify-center" style={{ color: accent }}>
+      <IconComponent className="h-6 w-6 sm:h-7 sm:w-7" aria-hidden />
+    </div>
+  );
+}
+
+function CategoryTile({ cat, accent }) {
+  return (
+    <Link
+      href={cat.href}
+      className="group flex w-[5rem] shrink-0 flex-col items-center gap-2 text-center sm:w-[5.5rem]"
+    >
+      <div
+        className="relative h-[4.5rem] w-[4.5rem] overflow-hidden rounded-2xl border-2 shadow-sm transition-all duration-300 motion-safe:group-hover:scale-105 motion-safe:group-active:scale-95 sm:h-20 sm:w-20"
+        style={{
+          borderColor: '#d1fae5',
+          background: cat.image
+            ? '#ffffff'
+            : 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)',
+        }}
+      >
+        {!cat.image ? (
+          <div
+            className="absolute inset-0 opacity-0 transition-opacity duration-300 motion-safe:group-hover:opacity-100"
+            style={{
+              background: `linear-gradient(135deg, ${accent}15 0%, ${accent}08 100%)`,
+            }}
+            aria-hidden
+          />
+        ) : null}
+        <CategoryIconVisual cat={cat} accent={accent} />
+      </div>
+      <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-gray-700 sm:text-[11px]">
+        {cat.label}
+      </span>
+    </Link>
+  );
+}
+
 /**
- * Premium pharmacy category icons with auto-scrolling horizontal marquee.
- * Mirrors the fitness store's category rail pattern for consistency.
+ * Pharmacy category rail — single-row auto-scroll marquee on all breakpoints
+ * (same StoreMarqueeRow pattern as gym/fitness membership rows).
  */
 export function PharmacyCategoryIcons({ categoryIcons = [], accent = '#16a34a' }) {
   if (!categoryIcons.length) return null;
-
-  const Icon = ({ iconKey, fallbackLabel }) => {
-    const IconComponent = PHARMACY_ICON_MAP[iconKey] || Package;
-    return <IconComponent className="h-5 w-5" aria-label={fallbackLabel} />;
-  };
 
   return (
     <section className="border-b border-emerald-100 bg-white pb-6 pt-4 sm:pb-10 sm:pt-6 lg:pt-8">
@@ -46,86 +103,14 @@ export function PharmacyCategoryIcons({ categoryIcons = [], accent = '#16a34a' }
           </p>
         </div>
 
-        {/* Mobile & Tablet: auto-scrolling horizontal marquee */}
-        <div className="relative overflow-hidden lg:hidden">
-          <div className="pharmacy-category-marquee-track flex w-max gap-3">
-            {/* Duplicate for seamless loop */}
-            {[...categoryIcons, ...categoryIcons].map((cat, idx) => (
-              <Link
-                key={`${cat.id}-${idx}`}
-                href={cat.href}
-                className="group flex w-[5rem] shrink-0 flex-col items-center gap-2 text-center"
-              >
-                <div
-                  className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center overflow-hidden rounded-2xl border-2 transition-all duration-300 group-active:scale-95"
-                  style={{
-                    borderColor: '#d1fae5',
-                    background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)',
-                  }}
-                >
-                  <div
-                    className="absolute inset-0 opacity-0 transition-opacity duration-300 group-active:opacity-100"
-                    style={{
-                      background: `linear-gradient(135deg, ${accent}15 0%, ${accent}08 100%)`,
-                    }}
-                    aria-hidden
-                  />
-                  <div className="relative" style={{ color: accent }}>
-                    {cat.icon ? (
-                      <Icon iconKey={cat.icon} fallbackLabel={cat.label} />
-                    ) : (
-                      <div className="text-xs font-bold uppercase tracking-wide">
-                        {cat.label?.slice(0, 2)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-gray-700 sm:text-[11px]">
-                  {cat.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Desktop: static grid */}
-        <div className="hidden grid-cols-6 gap-4 lg:grid xl:grid-cols-8">
-          {categoryIcons.slice(0, 8).map((cat) => (
-            <Link
-              key={cat.id}
-              href={cat.href}
-              className="group flex flex-col items-center gap-2 rounded-2xl p-1 text-center transition-transform duration-200 active:scale-95 lg:hover:scale-105"
-            >
-              <div
-                className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border-2 shadow-sm transition-all duration-300"
-                style={{
-                  borderColor: '#d1fae5',
-                  background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)',
-                }}
-              >
-                <div
-                  className="absolute inset-0 opacity-0 transition-opacity duration-300 lg:group-hover:opacity-100"
-                  style={{
-                    background: `linear-gradient(135deg, ${accent}20 0%, ${accent}10 100%)`,
-                  }}
-                  aria-hidden
-                />
-                <div className="relative" style={{ color: accent }}>
-                  {cat.icon ? (
-                    <Icon iconKey={cat.icon} fallbackLabel={cat.label} />
-                  ) : (
-                    <div className="text-sm font-bold uppercase tracking-wide">
-                      {cat.label?.slice(0, 2)}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <span className="line-clamp-2 text-xs font-semibold leading-tight text-gray-700">
-                {cat.label}
-              </span>
-            </Link>
-          ))}
-        </div>
+        <StoreMarqueeRow
+          items={categoryIcons}
+          fadeFrom="white"
+          durationSec={35}
+          slideClassName="w-[5rem] sm:w-[5.5rem]"
+          gapClassName="gap-3 pr-3 sm:gap-4 sm:pr-4"
+          renderItem={(cat) => <CategoryTile cat={cat} accent={accent} />}
+        />
       </div>
     </section>
   );
