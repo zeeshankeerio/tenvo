@@ -126,7 +126,6 @@ export default function CheckoutPage({ params }) {
         (adjustments.promoDiscount || 0) + (adjustments.memberDiscount || 0)
       )
     : 0;
-  const shipSettings = getStorefrontShippingSettings(settings);
   const shippingCost = isDigitalCart
     ? 0
     : restaurantStore
