@@ -15,6 +15,12 @@ import {
 import { MobileActionRow } from '@/components/mobile/MobileHubPrimitives';
 import { useHubMobileNav } from '@/lib/hooks/useHubMobileNav';
 import { normalizeDashboardTab } from '@/lib/config/tabs';
+import {
+  MOBILE_BOTTOM_SHEET,
+  MOBILE_BOTTOM_SHEET_BODY,
+  MOBILE_BOTTOM_SHEET_HANDLE,
+  MOBILE_BOTTOM_SHEET_HEADER,
+} from '@/lib/utils/mobileLayout';
 
 /**
  * Fixed bottom navigation for mobile hub, app-like primary tabs + overflow sheet.
@@ -41,6 +47,8 @@ export function HubMobileBottomNav() {
     return key === 'dashboard' ? baseUrl : `${baseUrl}?tab=${key}`;
   };
 
+  const isOverflowActive = overflowItems.some((item) => item.key === currentTab);
+
   return (
     <>
       <nav
@@ -50,7 +58,7 @@ export function HubMobileBottomNav() {
         <ul className="mx-auto flex max-w-lg items-stretch justify-around px-1 pt-1">
           {primaryItems.map((item) => {
             const isMore = item.key === '__more__';
-            const isActive = !isMore && currentTab === item.key;
+            const isActive = isMore ? isOverflowActive : currentTab === item.key;
             const Icon = item.icon;
 
             if (isMore) {
@@ -59,9 +67,14 @@ export function HubMobileBottomNav() {
                   <button
                     type="button"
                     onClick={() => setMoreOpen(true)}
-                    className="flex w-full flex-col items-center gap-0.5 px-1 py-2 text-gray-500"
+                    className={cn(
+                      'flex w-full flex-col items-center gap-0.5 px-1 py-2 transition-colors',
+                      isActive ? 'text-brand-primary' : 'text-gray-500'
+                    )}
+                    aria-expanded={moreOpen}
+                    aria-haspopup="dialog"
                   >
-                    <MoreHorizontal className="h-5 w-5" />
+                    <MoreHorizontal className={cn('h-5 w-5', isActive && 'scale-110')} />
                     <span className="text-[10px] font-semibold">{item.label}</span>
                   </button>
                 </li>
@@ -89,25 +102,32 @@ export function HubMobileBottomNav() {
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4">
-          <SheetHeader className="text-left">
-            <SheetTitle className="text-base">More modules</SheetTitle>
-            <SheetDescription className="text-xs">Customers, purchases, settings, and more</SheetDescription>
+        <SheetContent side="bottom" className={MOBILE_BOTTOM_SHEET}>
+          <div className={MOBILE_BOTTOM_SHEET_HANDLE} aria-hidden />
+          <SheetHeader className={MOBILE_BOTTOM_SHEET_HEADER}>
+            <SheetTitle className="text-base font-bold text-gray-900">More modules</SheetTitle>
+            <SheetDescription className="text-xs text-gray-500">
+              Customers, purchases, settings, and more
+            </SheetDescription>
           </SheetHeader>
-          <div className="mt-4 space-y-2">
-            {overflowItems.map((item) => (
-              <MobileActionRow
-                key={item.key}
-                icon={item.icon}
-                label={item.label}
-                disabled={item.locked}
-                onClick={() => {
-                  if (item.locked) return;
-                  setMoreOpen(false);
-                  router.push(hrefFor(item.key, item));
-                }}
-              />
-            ))}
+          <div className={MOBILE_BOTTOM_SHEET_BODY}>
+            <div className="space-y-2">
+              {overflowItems.map((item) => (
+                <MobileActionRow
+                  key={item.key}
+                  icon={item.icon}
+                  label={item.label}
+                  sublabel={item.locked ? 'Upgrade plan to unlock' : undefined}
+                  active={currentTab === item.key}
+                  disabled={item.locked}
+                  onClick={() => {
+                    if (item.locked) return;
+                    setMoreOpen(false);
+                    router.push(hrefFor(item.key, item));
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </SheetContent>
       </Sheet>

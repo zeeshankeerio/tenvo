@@ -12,6 +12,8 @@ import type { Invoice } from '@/types';
 import { BulkImportModal } from '@/components/invoice/BulkImportModal';
 import { BulkDeleteConfirmModal } from '@/components/invoice/BulkDeleteConfirmModal';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
+import { InvoiceMobileList } from '@/components/invoice/mobile/InvoiceMobileList';
+import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z } from '@/lib/utils/mobileLayout';
 
 interface InvoiceListProps {
     invoices: Invoice[];
@@ -241,7 +243,7 @@ export function InvoiceList({
     };
 
     return (
-        <div className="space-y-4 lg:space-y-6">
+        <div className="space-y-4 touch-manipulation lg:space-y-6">
             {/* Mobile, compact header + stat strip */}
             <MobileTabHeader
                 icon={FileText}
@@ -400,9 +402,9 @@ export function InvoiceList({
                 </Card>
             </div>
 
-            {/* Aging Summary (if there are overdue invoices) */}
+            {/* Aging Summary (desktop; mobile uses stat strip) */}
             {stats.overdue > 0 && (
-                <Card className="border-red-200 bg-red-50/50">
+                <Card className="hidden border-red-200 bg-red-50/50 lg:block">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-bold text-red-700 flex items-center gap-2">
                             <AlertCircle className="w-4 h-4" />
@@ -432,137 +434,182 @@ export function InvoiceList({
                 </Card>
             )}
 
-            {/* Invoice Table */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>Invoices</CardTitle>
-                            <p className="text-sm text-muted-foreground">
-                                Manage and track your invoices
-                            </p>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <DataTable
-                        category={category}
-                        data={invoices.map(inv => ({
-                            ...inv,
-                            customer_name: (inv as any).customer_name || inv.customer?.name || 'Walk-in Customer',
-                            grand_total_formatted: formatCurrency(Number(inv.grand_total || inv.amount || 0), currency as any),
-                            balance_formatted: formatCurrency(Number((inv as any).balance || inv.grand_total || 0), currency as any)
-                        }))}
-                        onExport={handleExport}
-                        onBulkDelete={onBulkDelete ? handleBulkDelete : undefined}
-                                                columns={[
-                            {
-                                accessorKey: 'invoice_number',
-                                header: 'Invoice #',
-                                cell: ({ row }: any) => (
-                                    <div className="font-medium">{row.original.invoice_number}</div>
-                                )
-                            },
-                            {
-                                accessorKey: 'customer_name',
-                                header: 'Customer',
-                                cell: ({ row }: any) => (
-                                    <div>
-                                        <div>{row.original.customer_name}</div>
-                                        {calculateAging(row.original)}
-                                    </div>
-                                )
-                            },
-                            {
-                                accessorKey: 'date',
-                                header: 'Date',
-                                cell: ({ row }: any) => new Date(row.original.date).toLocaleDateString()
-                            },
-                            {
-                                accessorKey: 'due_date',
-                                header: 'Due Date',
-                                cell: ({ row }: any) => (
-                                    row.original.due_date 
-                                        ? new Date(row.original.due_date).toLocaleDateString()
-                                        : '-'
-                                )
-                            },
-                            {
-                                accessorKey: 'grand_total',
-                                header: 'Total',
-                                cell: ({ row }: any) => (
-                                    <div className="text-right">
-                                        <div className="font-bold" style={{ color: colors.primary }}>
-                                            {row.original.grand_total_formatted}
+            {(() => {
+                const tableRows = invoices.map((inv) => ({
+                    ...inv,
+                    customer_name: (inv as any).customer_name || inv.customer?.name || 'Walk-in Customer',
+                    grand_total_formatted: formatCurrency(Number(inv.grand_total || inv.amount || 0), currency as any),
+                    balance_formatted: formatCurrency(Number((inv as any).balance || inv.grand_total || 0), currency as any),
+                }));
+
+                const invoiceColumns = [
+                    {
+                        accessorKey: 'invoice_number',
+                        header: 'Invoice #',
+                        cell: ({ row }: any) => (
+                            <div className="font-medium">{row.original.invoice_number}</div>
+                        ),
+                    },
+                    {
+                        accessorKey: 'customer_name',
+                        header: 'Customer',
+                        cell: ({ row }: any) => (
+                            <div>
+                                <div>{row.original.customer_name}</div>
+                                {calculateAging(row.original)}
+                            </div>
+                        ),
+                    },
+                    {
+                        accessorKey: 'date',
+                        header: 'Date',
+                        cell: ({ row }: any) => new Date(row.original.date).toLocaleDateString(),
+                    },
+                    {
+                        accessorKey: 'due_date',
+                        header: 'Due Date',
+                        cell: ({ row }: any) =>
+                            row.original.due_date
+                                ? new Date(row.original.due_date).toLocaleDateString()
+                                : '-',
+                    },
+                    {
+                        accessorKey: 'grand_total',
+                        header: 'Total',
+                        cell: ({ row }: any) => (
+                            <div className="text-right">
+                                <div className="font-bold" style={{ color: colors.primary }}>
+                                    {row.original.grand_total_formatted}
+                                </div>
+                                {row.original.balance !== undefined &&
+                                    row.original.balance < row.original.grand_total && (
+                                        <div className="text-xs text-green-600">
+                                            Paid:{' '}
+                                            {formatCurrency(
+                                                Number(row.original.grand_total) - Number(row.original.balance),
+                                                currency as any
+                                            )}
                                         </div>
-                                        {row.original.balance !== undefined && row.original.balance < row.original.grand_total && (
-                                            <div className="text-xs text-green-600">
-                                                Paid: {formatCurrency(Number(row.original.grand_total) - Number(row.original.balance), currency as any)}
-                                            </div>
-                                        )}
+                                    )}
+                            </div>
+                        ),
+                    },
+                    {
+                        accessorKey: 'payment_status',
+                        header: 'Payment',
+                        cell: ({ row }: any) => getPaymentStatusBadge(row.original),
+                    },
+                    {
+                        accessorKey: 'status',
+                        header: 'Status',
+                        cell: ({ row }: any) => getStatusBadge(row.original.status),
+                    },
+                    {
+                        id: 'actions',
+                        header: 'Actions',
+                        cell: ({ row }: any) => (
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onView?.(row.original)}
+                                    className="h-8 w-8 text-gray-600 hover:text-gray-800"
+                                    title="View"
+                                >
+                                    <Eye className="w-4 h-4" />
+                                </Button>
+                                {row.original.payment_status !== 'paid' &&
+                                    row.original.status !== 'voided' && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => onRecordPayment?.(row.original)}
+                                            className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
+                                            title="Record Payment"
+                                        >
+                                            <CreditCard className="w-4 h-4" />
+                                        </Button>
+                                    )}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onEdit?.(row.original)}
+                                    className="h-8 w-8 text-brand-primary hover:text-brand-primary-dark"
+                                    title="Edit"
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onInvoiceDelete?.(row.original.id)}
+                                    className="h-8 w-8 text-red-600 hover:text-red-700"
+                                    title="Delete"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        ),
+                    },
+                ];
+
+                return (
+                    <>
+                        {/* Mobile list */}
+                        <div className="pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:hidden">
+                            <InvoiceMobileList
+                                invoices={tableRows}
+                                currency={currency}
+                                onView={onView}
+                                onEdit={onEdit}
+                                onRecordPayment={onRecordPayment}
+                                onDelete={onInvoiceDelete}
+                                onAdd={onAdd}
+                                renderPaymentBadge={getPaymentStatusBadge}
+                                renderAging={calculateAging}
+                            />
+                        </div>
+
+                        {/* Desktop table */}
+                        <Card className="hidden lg:block">
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle>Invoices</CardTitle>
+                                        <p className="text-sm text-muted-foreground">
+                                            Manage and track your invoices
+                                        </p>
                                     </div>
-                                )
-                            },
-                            {
-                                accessorKey: 'payment_status',
-                                header: 'Payment',
-                                cell: ({ row }: any) => getPaymentStatusBadge(row.original)
-                            },
-                            {
-                                accessorKey: 'status',
-                                header: 'Status',
-                                cell: ({ row }: any) => getStatusBadge(row.original.status)
-                            },
-                            {
-                                id: 'actions',
-                                header: 'Actions',
-                                cell: ({ row }: any) => (
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => onView?.(row.original)}
-                                            className="h-8 w-8 text-gray-600 hover:text-gray-800"
-                                            title="View"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                        </Button>
-                                        {(row.original.payment_status !== 'paid' && row.original.status !== 'voided') && (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => onRecordPayment?.(row.original)}
-                                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
-                                                title="Record Payment"
-                                            >
-                                                <CreditCard className="w-4 h-4" />
-                                            </Button>
-                                        )}
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => onEdit?.(row.original)}
-                                            className="h-8 w-8 text-brand-primary hover:text-brand-primary-dark"
-                                            title="Edit"
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => onInvoiceDelete?.(row.original.id)}
-                                            className="h-8 w-8 text-red-600 hover:text-red-700"
-                                            title="Delete"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                )
-                            }
-                        ]}
-                    />
-                </CardContent>
-            </Card>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <DataTable
+                                    category={category}
+                                    data={tableRows}
+                                    onExport={handleExport}
+                                    onBulkDelete={onBulkDelete ? handleBulkDelete : undefined}
+                                    columns={invoiceColumns}
+                                />
+                            </CardContent>
+                        </Card>
+                    </>
+                );
+            })()}
+
+            {onAdd && (
+                <button
+                    type="button"
+                    onClick={() => onAdd()}
+                    className={cn(
+                        'fixed right-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transition active:scale-95 lg:hidden',
+                        MOBILE_BOTTOM_NAV_CLASS,
+                        MOBILE_FLOATING_Z
+                    )}
+                    aria-label="New invoice"
+                >
+                    <Plus className="h-6 w-6" />
+                </button>
+            )}
 
             {/* Bulk Import Modal */}
             {onBulkImport && (

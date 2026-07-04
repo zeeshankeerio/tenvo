@@ -54,19 +54,29 @@ export function MobileHubTile({
   );
 }
 
-export function MobileActionRow({ icon: Icon, label, onClick, destructive, disabled }) {
+export function MobileActionRow({ icon: Icon, label, sublabel, onClick, destructive, disabled, active }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center gap-3 rounded-xl border border-gray-100 bg-white px-3 py-3 text-left active:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+      className={cn(
+        'flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/20 focus-visible:ring-offset-1',
+        active
+          ? 'border-brand-primary/20 bg-brand-50/50'
+          : 'border-gray-100 bg-white active:bg-gray-50',
+        disabled && 'cursor-not-allowed opacity-50'
+      )}
     >
-      <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', destructive ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-700')}>
+      <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', destructive ? 'bg-red-50 text-red-600' : active ? 'bg-brand-primary/10 text-brand-primary' : 'bg-gray-50 text-gray-700')}>
         <Icon className="h-5 w-5" />
       </div>
-      <span className="flex-1 text-sm font-semibold text-gray-900">{label}</span>
-      <ChevronRight className="h-4 w-4 text-gray-300" />
+      <div className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-gray-900">{label}</span>
+        {sublabel ? <span className="mt-0.5 block text-[11px] font-medium text-gray-500">{sublabel}</span> : null}
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
     </button>
   );
 }

@@ -31,6 +31,12 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { MobileHubTile, MobileActionRow } from '@/components/mobile/MobileHubPrimitives';
+import {
+  MOBILE_BOTTOM_SHEET,
+  MOBILE_BOTTOM_SHEET_BODY,
+  MOBILE_BOTTOM_SHEET_HANDLE,
+  MOBILE_BOTTOM_SHEET_HEADER,
+} from '@/lib/utils/mobileLayout';
 
 /**
  * Mobile-only inventory hub, app-style tiles for sections and actions.
@@ -161,19 +167,22 @@ export function InventoryMobileHub({
 
       {/* Bottom sheet, extended tools */}
       <Sheet open={toolsOpen} onOpenChange={setToolsOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl px-4 pb-8 pt-4">
-          <SheetHeader className="text-left">
-            <SheetTitle className="text-base">Inventory tools</SheetTitle>
-            <SheetDescription className="text-xs">Stock, data, and helper actions</SheetDescription>
+        <SheetContent side="bottom" className={MOBILE_BOTTOM_SHEET}>
+          <div className={MOBILE_BOTTOM_SHEET_HANDLE} aria-hidden />
+          <SheetHeader className={MOBILE_BOTTOM_SHEET_HEADER}>
+            <SheetTitle className="text-base font-bold text-gray-900">Inventory tools</SheetTitle>
+            <SheetDescription className="text-xs text-gray-500">Stock, data, and helper actions</SheetDescription>
           </SheetHeader>
-          <div className="mt-4 space-y-2">
-            <MobileActionRow icon={AlertTriangle} label="Adjust stock" onClick={() => runAction(onAdjustStock)} />
-            <MobileActionRow icon={Repeat} label="Transfer stock" onClick={() => runAction(onTransferStock)} />
-            {hasQuickAddTemplates && (
-              <MobileActionRow icon={Sparkles} label="Starter templates" onClick={() => runAction(onOpenTemplates)} />
-            )}
-            <MobileActionRow icon={BarChart3} label="Reports & restock" onClick={() => runAction(onGoToReports)} />
-            <MobileActionRow icon={Keyboard} label="Keyboard shortcuts" onClick={() => runAction(onShowShortcuts)} />
+          <div className={MOBILE_BOTTOM_SHEET_BODY}>
+            <div className="space-y-2">
+              <MobileActionRow icon={AlertTriangle} label="Adjust stock" onClick={() => runAction(onAdjustStock)} />
+              <MobileActionRow icon={Repeat} label="Transfer stock" onClick={() => runAction(onTransferStock)} />
+              {hasQuickAddTemplates && (
+                <MobileActionRow icon={Sparkles} label="Starter templates" onClick={() => runAction(onOpenTemplates)} />
+              )}
+              <MobileActionRow icon={BarChart3} label="Reports & restock" onClick={() => runAction(onGoToReports)} />
+              <MobileActionRow icon={Keyboard} label="Keyboard shortcuts" onClick={() => runAction(onShowShortcuts)} />
+            </div>
           </div>
         </SheetContent>
       </Sheet>
