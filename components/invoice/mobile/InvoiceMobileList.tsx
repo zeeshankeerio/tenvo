@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   Search,
   ChevronRight,
@@ -30,10 +30,29 @@ import {
   MOBILE_BOTTOM_SHEET_HEADER,
 } from '@/lib/utils/mobileLayout';
 import { formatCurrency } from '@/lib/currency';
+import type { Invoice } from '@/types';
 
 const PAGE_SIZE = 20;
 
-function formatInvoiceDate(value) {
+export type InvoiceMobileRow = Invoice & {
+  customer_name?: string;
+  grand_total_formatted?: string;
+  balance_formatted?: string;
+};
+
+export interface InvoiceMobileListProps {
+  invoices?: InvoiceMobileRow[];
+  currency?: string;
+  onView?: (invoice: InvoiceMobileRow) => void;
+  onEdit?: (invoice: InvoiceMobileRow) => void;
+  onRecordPayment?: (invoice: InvoiceMobileRow) => void;
+  onDelete?: (id: string) => void;
+  onAdd?: () => void;
+  renderPaymentBadge?: (invoice: InvoiceMobileRow) => ReactNode;
+  renderAging?: (invoice: InvoiceMobileRow) => ReactNode;
+}
+
+function formatInvoiceDate(value: Date | string | null | undefined) {
   if (!value) return '—';
   try {
     return new Date(value).toLocaleDateString(undefined, {
@@ -46,9 +65,7 @@ function formatInvoiceDate(value) {
   }
 }
 
-/**
- * App-style invoice list for mobile — tap to view, sheet for actions.
- */
+/** App-style invoice list for mobile — tap to view, sheet for actions. */
 export function InvoiceMobileList({
   invoices = [],
   currency = 'PKR',
@@ -59,19 +76,17 @@ export function InvoiceMobileList({
   onAdd,
   renderPaymentBadge,
   renderAging,
-}) {
+}: InvoiceMobileListProps) {
   const [search, setSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [actionInvoice, setActionInvoice] = useState(null);
+  const [actionInvoice, setActionInvoice] = useState<InvoiceMobileRow | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return invoices;
     return invoices.filter((inv) => {
       const num = String(inv.invoice_number || inv.id || '').toLowerCase();
-      const customer = String(
-        inv.customer_name || inv.customer?.name || ''
-      ).toLowerCase();
+      const customer = String(inv.customer_name || inv.customer?.name || '').toLowerCase();
       return num.includes(q) || customer.includes(q);
     });
   }, [invoices, search]);
@@ -85,7 +100,7 @@ export function InvoiceMobileList({
 
   const closeActions = () => setActionInvoice(null);
 
-  const runAction = (fn) => {
+  const runAction = (fn?: (invoice: InvoiceMobileRow) => void) => {
     const inv = actionInvoice;
     closeActions();
     if (inv && fn) fn(inv);
@@ -99,7 +114,7 @@ export function InvoiceMobileList({
 
   if (!invoices.length && !search) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-200 bg-gray-50/80 py-14 px-4">
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-200 bg-gray-50/80 px-4 py-14">
         <FileText className="h-10 w-10 text-gray-300" aria-hidden />
         <p className="text-center text-sm font-semibold text-gray-700">No invoices yet</p>
         <p className="text-center text-xs text-gray-500">Create your first invoice to get started</p>
@@ -150,9 +165,8 @@ export function InvoiceMobileList({
               {visible.map((inv) => {
                 const total =
                   inv.grand_total_formatted ||
-                  formatCurrency(Number(inv.grand_total || inv.amount || 0), currency);
-                const customer =
-                  inv.customer_name || inv.customer?.name || 'Walk-in Customer';
+                  formatCurrency(Number(inv.grand_total || inv.amount || 0), currency as 'PKR');
+                const customer = inv.customer_name || inv.customer?.name || 'Walk-in Customer';
 
                 return (
                   <li key={inv.id}>
@@ -174,9 +188,7 @@ export function InvoiceMobileList({
                               {total}
                             </p>
                           </div>
-                          <p className="mt-0.5 truncate text-xs font-medium text-gray-600">
-                            {customer}
-                          </p>
+                          <p className="mt-0.5 truncate text-xs font-medium text-gray-600">{customer}</p>
                           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                             <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-600">
                               {formatInvoiceDate(inv.date)}
@@ -188,9 +200,7 @@ export function InvoiceMobileList({
                             )}
                             {renderPaymentBadge?.(inv)}
                           </div>
-                          {renderAging?.(inv) ? (
-                            <div className="mt-1">{renderAging(inv)}</div>
-                          ) : null}
+                          {renderAging?.(inv) ? <div className="mt-1">{renderAging(inv)}</div> : null}
                         </div>
                       </button>
                       <button
@@ -236,11 +246,7 @@ export function InvoiceMobileList({
           </SheetHeader>
           <div className={MOBILE_BOTTOM_SHEET_BODY}>
             <div className="space-y-2">
-              <MobileActionRow
-                icon={Eye}
-                label="View invoice"
-                onClick={() => runAction(onView)}
-              />
+              <MobileActionRow icon={Eye} label="View invoice" onClick={() => runAction(onView)} />
               {canRecordPayment && onRecordPayment && (
                 <MobileActionRow
                   icon={CreditCard}
@@ -249,11 +255,7 @@ export function InvoiceMobileList({
                 />
               )}
               {onEdit && (
-                <MobileActionRow
-                  icon={Pencil}
-                  label="Edit invoice"
-                  onClick={() => runAction(onEdit)}
-                />
+                <MobileActionRow icon={Pencil} label="Edit invoice" onClick={() => runAction(onEdit)} />
               )}
               {onDelete && (
                 <MobileActionRow
