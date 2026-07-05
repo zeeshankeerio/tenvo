@@ -52,10 +52,13 @@ import { InventoryMobileHub } from './inventory/mobile/InventoryMobileHub';
 import { InventoryMobileProductList } from './inventory/mobile/InventoryMobileProductList';
 import { InventoryMobileViewToggle } from './inventory/mobile/InventoryMobileViewToggle';
 import {
-  DEFAULT_INVENTORY_MOBILE_VIEW,
   readInventoryMobileViewPreference,
   writeInventoryMobileViewPreference,
+  DEFAULT_INVENTORY_MOBILE_VIEW,
+  normalizeInventoryMobileView,
 } from '@/lib/utils/inventoryMobileView';
+import { resolveExcelMobileEssentialKeys } from '@/lib/utils/inventoryExcelMobile';
+import { useCompactViewport } from '@/lib/hooks/useCompactViewport';
 import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z, MOBILE_MODULE_FAB_RIGHT } from '@/lib/utils/mobileLayout';
 import { MOBILE_DIALOG_SHELL_WIDE } from '@/lib/utils/formMobileStyles';
 import { ProductCardGrid } from './inventory/ProductCardGrid';
@@ -521,13 +524,25 @@ export function InventoryManager({
   const [activeTab, setActiveTab] = useState('products');
   const [showAdvancedFeatures, setShowAdvancedFeatures] = useState(false);
   const [viewMode, setViewMode] = useState('visual');
+  const isCompactViewport = useCompactViewport();
   const [mobileViewMode, setMobileViewMode] = useState(() =>
     typeof window !== 'undefined' ? readInventoryMobileViewPreference() : DEFAULT_INVENTORY_MOBILE_VIEW
   );
 
+  const handleViewModeChange = useCallback((mode) => {
+    setViewMode(mode);
+    const normalized = normalizeInventoryMobileView(mode);
+    setMobileViewMode(normalized);
+    writeInventoryMobileViewPreference(normalized);
+  }, []);
+
   const handleMobileViewModeChange = useCallback((mode) => {
-    setMobileViewMode(mode);
-    writeInventoryMobileViewPreference(mode);
+    const normalized = normalizeInventoryMobileView(mode);
+    setMobileViewMode(normalized);
+    writeInventoryMobileViewPreference(normalized);
+    if (normalized === 'visual' || normalized === 'busy' || normalized === 'cards') {
+      setViewMode(normalized);
+    }
   }, []);
 
   const [showBatchManager, setShowBatchManager] = useState(false);
@@ -1818,6 +1833,16 @@ export function InventoryManager({
     ].filter(Boolean);
   }, [category, columns, standards.currencySymbol, business, gridColumnOptions]);
 
+  const mobileBusyColumns = useMemo(() => {
+    const essential = resolveExcelMobileEssentialKeys(category, gridColumnOptions);
+    return gridColumns.filter((col) => {
+      const key = col.accessorKey || col.id;
+      if (col.id === 'status_dot' || key === '__actions') return true;
+      if (!key) return false;
+      return essential.has(key);
+    });
+  }, [gridColumns, category, gridColumnOptions]);
+
 
 
   return (
@@ -1826,7 +1851,7 @@ export function InventoryManager({
         <InventoryCommandBar
           activeTab={activeTab}
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={handleViewModeChange}
           lastSyncedAt={lastSyncedAt}
           isRefreshing={loading}
           onRefresh={refreshInventory}
@@ -2032,12 +2057,14 @@ export function InventoryManager({
                 value={mobileViewMode}
                 onChange={handleMobileViewModeChange}
               />
-              {mobileViewMode === 'list' ? (
+              {mobileViewMode === 'visual' ? (
                 <InventoryMobileProductList
                   key={`${searchTerm}-${productsToDisplay.length}`}
                   products={productsToDisplay}
                   currencySymbol={standards.currencySymbol}
                   businessCategory={business?.category}
+                  category={category}
+                  business={business}
                   domainKnowledge={inventoryFeatures.knowledge}
                   countryIso={countryIso}
                   resultCount={productsToDisplay.length}
@@ -2045,6 +2072,69 @@ export function InventoryManager({
                   onQuickSave={handleInventoryCellEdit}
                   onAdd={openProductAdd}
                 />
+              ) : mobileViewMode === 'busy' ? (
+                <div
+                  style={{ height: 'min(70vh, calc(100dvh - 14rem))' }}
+                  className="flex min-h-[280px] flex-col overflow-hidden rounded-xl border border-gray-100"
+                >
+                  <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 bg-gray-50/90 px-3 py-2">
+                    <p className="text-[10px] font-medium text-gray-500">
+                      Tap cell to edit · domain columns included
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 shrink-0 rounded-lg border-gray-200 px-2 text-[10px] font-semibold uppercase"
+                      onClick={() => {
+                        const previousRow = getLastRowForDefaults(productsToDisplay);
+                        const newRow = buildNewInventoryRow(category, businessId, previousRow, { countryIso });
+                        setProducts((prev) => [...prev, newRow]);
+                      }}
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" />
+                      Row
+                    </Button>
+                  </div>
+                  <BusyGrid
+                    variant="busy"
+                    touchOptimized
+                    data={productsToDisplay}
+                    columns={mobileBusyColumns}
+                    category={category}
+                    getFieldSuggestions={getFieldSuggestions}
+                    onRowClick={openProductEdit}
+                    onAddRow={() => {
+                      const previousRow = getLastRowForDefaults(productsToDisplay);
+                      const newRow = buildNewInventoryRow(category, businessId, previousRow, { countryIso });
+                      setProducts((prev) => [...prev, newRow]);
+                    }}
+                    className="min-h-0 flex-1"
+                    onDeleteRow={(product) => setProductToDelete(product)}
+                    onAdvancedSettings={(product) => {
+                      setSelectedProduct(product);
+                      setShowAdvancedFeatures(true);
+                    }}
+                    onCellEdit={async (product, field, value) => {
+                      try {
+                        await handleInventoryCellEdit(product, field, value);
+                        const rowKey =
+                          product?.id != null && product.id !== ''
+                            ? String(product.id)
+                            : product?._tempId != null
+                              ? String(product._tempId)
+                              : '';
+                        if (typeof window !== 'undefined' && rowKey) {
+                          window.dispatchEvent(
+                            new CustomEvent('tenvo:inventory-busy-cell-saved', { detail: { rowKey, field } })
+                          );
+                        }
+                      } catch {
+                        // handleInventoryCellEdit toasts and rolls back
+                      }
+                    }}
+                  />
+                </div>
               ) : (
                 <ProductCardGrid
                   products={productsToDisplay}
@@ -2084,6 +2174,7 @@ export function InventoryManager({
                 </div>
                 <BusyGrid
                   variant="busy"
+                  touchOptimized={isCompactViewport}
                   data={productsToDisplay}
                   columns={gridColumns}
                   category={category}

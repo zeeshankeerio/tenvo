@@ -12,6 +12,9 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ProductThumbnail } from '@/components/product/ProductThumbnail';
 import { buildInventoryDomainChips } from '@/lib/utils/inventoryDomainFeatures';
+import { buildInventoryGridColumns, readGridCellValue } from '@/lib/utils/inventoryGridColumns';
+import { resolveExcelMobileEssentialKeys } from '@/lib/utils/inventoryExcelMobile';
+import { isNumericInventoryCell } from '@/lib/utils/inventoryGridCellTypes';
 import {
   Sheet,
   SheetContent,
@@ -38,8 +41,10 @@ export function InventoryMobileProductList({
   products = [],
   currencySymbol = '₹',
   businessCategory,
+  category = businessCategory,
   domainKnowledge = null,
   countryIso = '',
+  business = null,
   onEdit,
   onQuickSave,
   onAdd,
@@ -55,6 +60,25 @@ export function InventoryMobileProductList({
     [domainKnowledge, countryIso]
   );
 
+  const gridColumnOptions = useMemo(
+    () => ({
+      business,
+      domainKnowledge,
+      countryIso,
+    }),
+    [business, domainKnowledge, countryIso]
+  );
+
+  const domainEditFields = useMemo(() => {
+    const vertical = category || businessCategory || 'retail-shop';
+    const essential = resolveExcelMobileEssentialKeys(vertical, gridColumnOptions);
+    const cols = buildInventoryGridColumns(vertical, { mode: 'visual', ...gridColumnOptions });
+    return cols.filter((col) => {
+      const key = col.accessorKey || col.id;
+      return key?.startsWith('domain_data.') && essential.has(key) && !col.readOnly;
+    });
+  }, [category, businessCategory, gridColumnOptions]);
+
   const visibleProducts = useMemo(
     () => products.slice(0, visibleCount),
     [products, visibleCount]
@@ -62,11 +86,11 @@ export function InventoryMobileProductList({
 
   const hasMore = visibleCount < products.length;
 
-  const openQuickEdit = useCallback((product, field) => {
-    const raw = field === 'stock' ? product.stock : product.price;
-    setQuickEdit({ product, field });
+  const openQuickEdit = useCallback((product, field, label, inputType = 'number') => {
+    const raw = readGridCellValue(product, field, category || businessCategory || 'retail-shop');
+    setQuickEdit({ product, field, label, inputType });
     setDraftValue(String(raw ?? ''));
-  }, []);
+  }, [category, businessCategory]);
 
   const closeQuickEdit = useCallback(() => {
     if (saving) return;
@@ -86,6 +110,12 @@ export function InventoryMobileProductList({
     }
   }, [quickEdit, draftValue, onQuickSave]);
 
+  const columnHeaderLabel = (col) => {
+    const header = col.header;
+    if (typeof header === 'function') return header();
+    return header || col.accessorKey || col.id || 'Field';
+  };
+
   if (!products.length) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-200 bg-gray-50/80 py-14 px-4">
@@ -100,7 +130,8 @@ export function InventoryMobileProductList({
     );
   }
 
-  const quickFieldLabel = quickEdit?.field === 'stock' ? 'Stock quantity' : 'Sale price';
+  const quickFieldLabel = quickEdit?.label || (quickEdit?.field === 'stock' ? 'Stock quantity' : quickEdit?.field === 'price' ? 'Sale price' : 'Value');
+  const quickInputType = quickEdit?.inputType === 'text' ? 'text' : 'number';
 
   return (
     <>
@@ -118,6 +149,20 @@ export function InventoryMobileProductList({
             const stock = stockTone(p.stock, p.min_stock ?? p.minStock);
             const price = Number(p.price || 0);
             const domainChips = buildInventoryDomainChips(businessCategory, p, chipCtx);
+            const vertical = category || businessCategory || 'retail-shop';
+            const domainFieldPills = domainEditFields
+              .map((col) => {
+                const accessorKey = col.accessorKey;
+                const val = readGridCellValue(p, accessorKey, vertical);
+                if (val == null || String(val).trim() === '') return null;
+                return {
+                  key: accessorKey,
+                  label: columnHeaderLabel(col),
+                  value: String(val),
+                  inputType: isNumericInventoryCell(accessorKey) ? 'number' : 'text',
+                };
+              })
+              .filter(Boolean);
 
             return (
               <li key={p.id || p._tempId}>
@@ -165,6 +210,20 @@ export function InventoryMobileProductList({
                             {chip.value}
                           </span>
                         ))}
+                        {domainFieldPills.map((pill) => (
+                          <button
+                            key={`${p.id || p._tempId}-edit-${pill.key}`}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openQuickEdit(p, pill.key, pill.label, pill.inputType);
+                            }}
+                            className="rounded-md bg-violet-50 px-1.5 py-0.5 text-[9px] font-medium text-violet-700 ring-1 ring-inset ring-violet-100"
+                            title={`Edit ${pill.label}`}
+                          >
+                            {pill.label}: {pill.value}
+                          </button>
+                        ))}
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" aria-hidden />
@@ -173,7 +232,7 @@ export function InventoryMobileProductList({
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <button
                       type="button"
-                      onClick={() => openQuickEdit(p, 'stock')}
+                      onClick={() => openQuickEdit(p, 'stock', 'Stock quantity', 'number')}
                       className={cn(
                         'inline-flex min-w-[2.5rem] items-center justify-center rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums ring-1 ring-inset',
                         stock.className
@@ -183,7 +242,7 @@ export function InventoryMobileProductList({
                     </button>
                     <button
                       type="button"
-                      onClick={() => openQuickEdit(p, 'price')}
+                      onClick={() => openQuickEdit(p, 'price', 'Sale price', 'number')}
                       className="text-[12px] font-semibold tabular-nums text-gray-900 underline decoration-gray-300 underline-offset-2"
                     >
                       {currencySymbol}
@@ -220,8 +279,8 @@ export function InventoryMobileProductList({
           </SheetHeader>
           <div className="mt-4 space-y-3">
             <input
-              type="number"
-              inputMode="decimal"
+              type={quickInputType}
+              inputMode={quickInputType === 'number' ? 'decimal' : 'text'}
               value={draftValue}
               onChange={(e) => setDraftValue(e.target.value)}
               className="h-12 w-full rounded-xl border border-gray-200 px-4 text-lg font-semibold tabular-nums outline-none ring-brand-primary/30 focus:ring-2"

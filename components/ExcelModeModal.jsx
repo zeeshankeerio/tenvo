@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { X, Maximize2, Minimize2, Download, Save, Table2, AlertCircle, CheckCircle2, Loader2, Copy, Trash2, Eraser, Undo, Redo, Search, Sparkles, Columns, ChevronDown, Plus } from 'lucide-react';
+import { X, Maximize2, Minimize2, Download, Save, Table2, AlertCircle, CheckCircle2, Loader2, Copy, Trash2, Eraser, Undo, Redo, Search, Sparkles, Columns, ChevronDown, Plus, LayoutGrid } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { BusyGrid } from './BusyGrid';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import { useCompactViewport } from '@/lib/hooks/useCompactViewport';
 import { buildExcelMobileHiddenColumnKeys } from '@/lib/utils/inventoryExcelMobile';
 import { MOBILE_FORM_FOOTER } from '@/lib/utils/formMobileStyles';
+import { ExcelModeMobileCardView } from '@/components/inventory/mobile/ExcelModeMobileCardView';
 
 /** Max rows loaded into Excel modal working set (Busy/Zoho-style performance). */
 const EXCEL_WORKSET_SIZE = 500;
@@ -61,6 +62,7 @@ export function ExcelModeModal({
     const mobileColsAppliedRef = useRef(false);
     const [sourceTotal, setSourceTotal] = useState(0);
     const isMobileExcel = useCompactViewport();
+    const [mobileViewMode, setMobileViewMode] = useState('cards');
 
     // History Tracking (Undo/Redo)
     const [history, setHistory] = useState([]);
@@ -277,13 +279,17 @@ export function ExcelModeModal({
     useEffect(() => {
         if (!isOpen || !isMobileExcel || mobileColsAppliedRef.current) return;
         setHiddenCols((prev) => {
-            const mobileHidden = buildExcelMobileHiddenColumnKeys(enhancedColumns);
+            const mobileHidden = buildExcelMobileHiddenColumnKeys(
+                enhancedColumns,
+                category,
+                gridColumnOptions
+            );
             const next = new Set(prev);
             mobileHidden.forEach((key) => next.add(key));
             return next;
         });
         mobileColsAppliedRef.current = true;
-    }, [isOpen, isMobileExcel, enhancedColumns]);
+    }, [isOpen, isMobileExcel, enhancedColumns, category, gridColumnOptions]);
 
     const displayColumns = useMemo(() => {
         return enhancedColumns.filter((c) => {
@@ -807,6 +813,30 @@ export function ExcelModeModal({
 
                 {isMobileExcel && (
                     <div className="shrink-0 border-b border-slate-200 bg-white px-3 py-2 md:hidden">
+                        <div className="mb-2 flex rounded-xl border border-slate-200 bg-slate-100 p-0.5">
+                            <button
+                                type="button"
+                                className={cn(
+                                    'flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors',
+                                    mobileViewMode === 'cards' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
+                                )}
+                                onClick={() => setMobileViewMode('cards')}
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                                Cards
+                            </button>
+                            <button
+                                type="button"
+                                className={cn(
+                                    'flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors',
+                                    mobileViewMode === 'grid' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
+                                )}
+                                onClick={() => setMobileViewMode('grid')}
+                            >
+                                <Table2 className="h-4 w-4" />
+                                Grid
+                            </button>
+                        </div>
                         <div className="relative w-full">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <input
@@ -831,21 +861,36 @@ export function ExcelModeModal({
                     </div>
                 )}
 
-                {/* Grid Container */}
+                {/* Grid / card entry */}
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden relative bg-slate-50">
-                    <BusyGrid
-                        data={filteredData}
-                        columns={displayColumns}
-                        onCellEdit={handleLocalCellEdit}
-                        onAddRow={handleLocalAddRow}
-                        onDeleteRow={handleLocalDeleteRow}
-                        getFieldSuggestions={excelFieldSuggestions}
-                        validationErrors={validationErrors}
-                        category={category}
-                        variant="excel"
-                        touchOptimized={isMobileExcel}
-                        className="h-full min-h-0 border-0 shadow-none"
-                    />
+                    {isMobileExcel && mobileViewMode === 'cards' ? (
+                        <ExcelModeMobileCardView
+                            rows={filteredData}
+                            columns={displayColumns}
+                            hiddenCols={hiddenCols}
+                            category={category}
+                            validationErrors={validationErrors}
+                            onCellEdit={handleLocalCellEdit}
+                            onAddRow={handleLocalAddRow}
+                            onDeleteRow={handleLocalDeleteRow}
+                            getFieldSuggestions={excelFieldSuggestions}
+                            className="h-full min-h-0"
+                        />
+                    ) : (
+                        <BusyGrid
+                            data={filteredData}
+                            columns={displayColumns}
+                            onCellEdit={handleLocalCellEdit}
+                            onAddRow={handleLocalAddRow}
+                            onDeleteRow={handleLocalDeleteRow}
+                            getFieldSuggestions={excelFieldSuggestions}
+                            validationErrors={validationErrors}
+                            category={category}
+                            variant="excel"
+                            touchOptimized={isMobileExcel}
+                            className="h-full min-h-0 border-0 shadow-none"
+                        />
+                    )}
                 </div>
 
                 {isMobileExcel && (

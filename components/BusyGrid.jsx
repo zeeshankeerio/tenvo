@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { readGridCellValue } from '@/lib/utils/inventoryGridColumns';
 import { isSuggestibleInventoryColumn } from '@/lib/utils/inventoryFieldSuggestions';
 import { inventoryGridRowKey, inventoryValidationErrorKey } from '@/lib/utils/inventoryRowKey';
+import { isNumericInventoryCell } from '@/lib/utils/inventoryGridCellTypes';
 import { resolveExcelMobileColumnWidth } from '@/lib/utils/inventoryExcelMobile';
 import { MOBILE_NO_ZOOM_TEXT } from '@/lib/utils/formMobileStyles';
 
@@ -26,19 +27,6 @@ function columnWidth(col, colIndex, columnWidths, touchOptimized = false) {
     const mobileWidth = resolveExcelMobileColumnWidth(col, touchOptimized);
     if (mobileWidth != null) return mobileWidth;
     return columnWidths[colIndex] ?? col.width ?? col.size ?? 120;
-}
-
-const NUMERIC_CELL_KEYS = new Set([
-    'stock', 'price', 'cost_price', 'costPrice', 'mrp', 'min_stock', 'minStock',
-    'max_stock', 'maxStock', 'reorder_point', 'reorderPoint', 'reorder_quantity',
-    'reorderQuantity', 'tax_percent', 'taxPercent', 'unitcost', 'batch_quantity',
-    'credit_limit', 'opening_balance', 'value',
-]);
-
-function isNumericCellKey(accessorKey) {
-    if (!accessorKey) return false;
-    if (NUMERIC_CELL_KEYS.has(accessorKey)) return true;
-    return accessorKey.includes('width') || accessorKey.includes('length');
 }
 
 export function BusyGrid({
@@ -290,7 +278,7 @@ export function BusyGrid({
         const colDef = columns[selectedCell.col];
         const row = sortedData[selectedCell.row];
         if (!colDef?.accessorKey || !row) return;
-        const empty = isNumericCellKey(colDef.accessorKey) ? 0 : '';
+        const empty = isNumericInventoryCell(colDef.accessorKey) ? 0 : '';
         onCellEdit?.(row, colDef.accessorKey, empty);
     }, [selectedCell, columns, sortedData, isEditableColumn, onCellEdit]);
 
@@ -388,6 +376,15 @@ export function BusyGrid({
         input.focus();
         input.select();
     }, [editingCell]);
+
+    useEffect(() => {
+        if (!touchOptimized || !isExcel) return;
+        const target = editingCell || selectedCell;
+        const el = scrollRef.current?.querySelector(
+            `[data-busy-cell="${target.row}-${target.col}"]`
+        );
+        el?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+    }, [selectedCell, editingCell, touchOptimized, isExcel]);
 
     useEffect(() => {
         if (didAutoFocusRef.current || sortedData.length === 0) return;
@@ -795,7 +792,7 @@ export function BusyGrid({
                                                             ref={inputRef}
                                                             type="text"
                                                             inputMode={
-                                                                isNumericCellKey(col.accessorKey) ? 'decimal' : 'text'
+                                                                isNumericInventoryCell(col.accessorKey) ? 'decimal' : 'text'
                                                             }
                                                             autoComplete="off"
                                                             list={suggestListId}

@@ -176,7 +176,7 @@ export function InventoryMobileHub({
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <MobileHubTile icon={BrainCircuit} label="AI Add" sublabel="Smart entry" tone="primary" onClick={onAiSmartAdd} />
             <MobileHubTile icon={ScanBarcode} label="Scan" sublabel="Camera & QR" tone="accent" onClick={onScanBarcode} />
-            <MobileHubTile icon={Table2} label="Excel" sublabel="Bulk grid" onClick={onExcelMode} />
+            <MobileHubTile icon={Table2} label="Bulk entry" sublabel="Cards or grid" onClick={onExcelMode} />
             <MobileHubTile icon={Upload} label="Import" sublabel="From file" onClick={onImport} />
             <MobileHubTile icon={Download} label="Export" sublabel="Download" onClick={onExport} />
             <MobileHubTile icon={LayoutGrid} label="All tools" sublabel="More options" onClick={() => setToolsOpen(true)} />

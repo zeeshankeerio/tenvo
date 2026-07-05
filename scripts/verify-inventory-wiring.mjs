@@ -198,6 +198,69 @@ if (!busyGrid.includes('touchOptimized') || !busyGrid.includes('handleTouchNextF
   pass('BusyGrid mobile excel touch toolbar present');
 }
 
+if (!existsSync(join(root, 'components/inventory/mobile/ExcelModeMobileCardView.jsx'))) {
+  fail('ExcelModeMobileCardView missing');
+} else if (!excelModal.includes('ExcelModeMobileCardView')) {
+  fail('ExcelModeModal not wired to mobile card entry view');
+} else {
+  pass('ExcelModeMobileCardView wired in ExcelModeModal');
+}
+
+if (!existsSync(join(root, 'lib/utils/inventoryGridCellTypes.js'))) {
+  fail('inventoryGridCellTypes.js missing');
+} else {
+  pass('shared inventory grid cell types present');
+}
+
+// --- Visual / Busy mode domain-aware wiring ---
+if (!inventoryManager.includes('handleInventoryCellEdit')) {
+  fail('InventoryManager missing handleInventoryCellEdit');
+} else if (!inventoryManager.includes('mapProductField')) {
+  fail('InventoryManager cell edit missing mapProductField');
+} else if (!inventoryManager.includes('mapExcelRowForSave')) {
+  fail('InventoryManager cell edit missing mapExcelRowForSave save path');
+} else {
+  pass('InventoryManager cell edits use mapProductField + mapExcelRowForSave');
+}
+
+if (!inventoryManager.includes("mode: 'busy'")) {
+  fail('InventoryManager gridColumns missing busy mode buildInventoryGridColumns');
+} else if (!inventoryManager.includes("mode: 'visual'")) {
+  fail('InventoryManager columns missing visual mode buildInventoryGridColumns');
+} else {
+  pass('Visual and Busy modes use buildInventoryGridColumns');
+}
+
+if (!inventoryManager.includes('getFieldSuggestions={getFieldSuggestions}')) {
+  fail('InventoryManager BusyGrid missing getFieldSuggestions');
+} else if (!inventoryManager.includes('domain_data.')) {
+  fail('InventoryManager visual columns missing domain_data quick edit');
+} else {
+  pass('BusyGrid datalist + visual domain_data cells wired');
+}
+
+const mobileView = read('lib/utils/inventoryMobileView.js');
+if (!mobileView.includes('busy') || !mobileView.includes('normalizeInventoryMobileView')) {
+  fail('inventoryMobileView missing busy/visual mobile modes');
+} else {
+  pass('inventoryMobileView includes visual + busy mobile modes');
+}
+
+const mobileToggle = read('components/inventory/mobile/InventoryMobileViewToggle.jsx');
+if (!mobileToggle.includes('INVENTORY_MOBILE_VIEWS.busy')) {
+  fail('InventoryMobileViewToggle missing busy mode');
+} else {
+  pass('InventoryMobileViewToggle offers visual, busy, and cards');
+}
+
+if (!inventoryManager.includes('mobileViewMode === \'busy\'')) {
+  fail('InventoryManager mobile section missing busy grid');
+} else if (!inventoryManager.includes('resolveExcelMobileEssentialKeys')) {
+  fail('InventoryManager mobile busy missing domain-aware column filter');
+} else {
+  pass('InventoryManager mobile busy grid domain-filtered');
+}
+
 if (!existsSync(join(root, 'components/mobile/index.ts'))) {
   fail('components/mobile/index.ts barrel missing');
 } else {
