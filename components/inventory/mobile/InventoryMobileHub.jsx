@@ -46,6 +46,7 @@ import {
 export function InventoryMobileHub({
   activeTab,
   onTabChange,
+  onFocusStock,
   lastSyncedAt,
   isRefreshing,
   onRefresh,
@@ -81,9 +82,25 @@ export function InventoryMobileHub({
         { id: 'reports', label: 'Reports', sublabel: 'Insights', icon: BarChart3, show: true },
         { id: 'variants', label: 'Variants', sublabel: 'Matrix', icon: Layers, show: isVariantEnabled },
         { id: 'pricing', label: 'Pricing', sublabel: 'Lists & rules', icon: Tag, show: true },
+        {
+          id: 'restock',
+          label: 'Restock',
+          sublabel: 'Low & out stock',
+          icon: AlertTriangle,
+          show: true,
+          isRestock: true,
+        },
       ].filter((s) => s.show),
     [isMultiLocationEnabled, isManufacturingEnabled, isVariantEnabled]
   );
+
+  const handleSectionClick = (section) => {
+    if (section.isRestock) {
+      onFocusStock?.('low-stock');
+      return;
+    }
+    onTabChange?.(section.id);
+  };
 
   const isProductsTab = activeTab === 'products';
 
@@ -117,7 +134,12 @@ export function InventoryMobileHub({
       <MobileKpiStrip
         items={[
           { label: 'Products', value: stats.totalProducts ?? 0 },
-          { label: 'Alerts', value: stats.lowStock ?? 0, alert: (stats.lowStock ?? 0) > 0 },
+          {
+            label: 'Alerts',
+            value: stats.lowStock ?? 0,
+            alert: (stats.lowStock ?? 0) > 0,
+            onClick: (stats.lowStock ?? 0) > 0 ? () => onFocusStock?.('low-stock') : undefined,
+          },
           { label: 'Value', value: stats.inventoryValue ?? '—' },
           { label: 'Class', value: stats.efficiencyClass ?? '—' },
         ]}
@@ -133,9 +155,15 @@ export function InventoryMobileHub({
               icon={section.icon}
               label={section.label}
               sublabel={section.sublabel}
-              active={activeTab === section.id}
-              badge={section.id === 'products' ? stats.lowStock : undefined}
-              onClick={() => onTabChange?.(section.id)}
+              active={section.isRestock ? activeTab === 'products' : activeTab === section.id}
+              badge={
+                section.id === 'products'
+                  ? stats.lowStock
+                  : section.isRestock
+                    ? stats.lowStock
+                    : undefined
+              }
+              onClick={() => handleSectionClick(section)}
             />
           ))}
         </div>

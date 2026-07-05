@@ -1,7 +1,7 @@
 // This file usually uses formatCurrency, but checking for hardcoded symbols
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { X, Plus, Trash2, Download, Printer, Save, Calculator, FileText, Loader2, Scan, Keyboard, AlertCircle, ShoppingCart, WandSparkles, Send, Clock3, CheckCircle2, XCircle, ShieldCheck } from 'lucide-react';
+import { X, Plus, Trash2, Download, Printer, Save, Calculator, FileText, Loader2, Scan, Keyboard, AlertCircle, ShoppingCart, WandSparkles, Send, Clock3, CheckCircle2, XCircle, ShieldCheck, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,12 @@ import { ExpertActionPanel } from '@/components/domain/ExpertActionPanel';
 import { submitInvoiceForApprovalAction, getApprovalHistoryAction, schedulePaymentRemindersAction } from '@/lib/actions/standard/invoice-approval';
 import { MOBILE_OVERLAY, MOBILE_OVERLAY_CARD, MOBILE_FORM_FOOTER, MOBILE_GRID_FIELDS } from '@/lib/utils/formMobileStyles';
 import { InvoiceMobileLineItems } from '@/components/invoice/mobile/InvoiceMobileLineItems';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 /**
  * Enhanced Invoice Builder Component
@@ -1660,6 +1666,35 @@ export function EnhancedInvoiceBuilder({
               </div>
             )}
             <div className="flex flex-wrap gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9 rounded-md border-slate-200 px-3 text-sm font-medium text-slate-700 shadow-sm sm:hidden"
+                  >
+                    <MoreHorizontal className="mr-1.5 h-4 w-4" />
+                    More
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem onClick={() => applySmartDraft('items')}>
+                    <WandSparkles className="mr-2 h-4 w-4" />
+                    Smart items
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => applySmartDraft('full')}>
+                    <WandSparkles className="mr-2 h-4 w-4" />
+                    Smart full draft
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toast.success('Link generated for WhatsApp message')}>
+                    WhatsApp share
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF} disabled={isSaving || isExporting}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print / PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button type="button" variant="ghost" onClick={onClose} className="h-9 flex-1 rounded-md px-4 text-sm font-medium text-slate-500 hover:bg-slate-100 sm:flex-none">
                 Cancel
               </Button>

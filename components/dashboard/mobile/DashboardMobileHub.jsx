@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import { Clock, Package, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,6 +46,7 @@ import { HUB_MOBILE_ROOT } from '@/lib/utils/mobileLayout';
  *   userName?: string,
  *   businessName?: string,
  *   periodLabel?: string,
+ *   metricsPending?: boolean,
  *   presetOptions?: DashboardMobilePreset[],
  *   activePreset?: string,
  *   onDateRangePresetChange?: (preset: string) => void,
@@ -57,11 +60,12 @@ import { HUB_MOBILE_ROOT } from '@/lib/utils/mobileLayout';
  * }} props
  */
 export function DashboardMobileHub({
-  mode = 'easy',
-  greeting,
-  userName,
+  mode: _mode = 'easy',
+  greeting: _greeting,
+  userName: _userName,
   businessName,
   periodLabel,
+  metricsPending = false,
   presetOptions = [],
   activePreset,
   onDateRangePresetChange,
@@ -77,28 +81,67 @@ export function DashboardMobileHub({
     onQuickAction?.(id);
   };
 
-  /** Advanced mode uses header date picker — avoid duplicate preset row on mobile */
-  const showPresetPills = mode === 'easy' && presetOptions.length > 0;
+  /** Advanced mode uses header date picker on desktop — presets stay on mobile for both modes */
+  const showPresetPills = presetOptions.length > 0;
 
-  const displayName = (() => {
-    if (!userName) return '';
-    const base = userName.includes('@') ? userName.split('@')[0] : userName;
-    const short = base.split('.')[0] || base;
-    return short.charAt(0).toUpperCase() + short.slice(1);
-  })();
+  const liveStatusLabel = metricsPending
+    ? 'Loading live metrics…'
+    : 'Live';
+
+  const reminderRows = useMemo(
+    () =>
+      [
+        {
+          id: 'low-stock',
+          label: 'Low stock',
+          count: reminders.lowStock ?? 0,
+          icon: Package,
+          alert: true,
+        },
+        {
+          id: 'overdue',
+          label: 'Overdue invoices',
+          count: reminders.overdueInvoices ?? 0,
+          icon: Clock,
+        },
+        {
+          id: 'pending-orders',
+          label: 'Pending orders',
+          count: reminders.pendingOrders ?? 0,
+          icon: ShoppingCart,
+        },
+      ].filter((row) => row.count > 0),
+    [reminders.lowStock, reminders.overdueInvoices, reminders.pendingOrders]
+  );
 
   return (
-    <div className={cn('space-y-3 border-b border-gray-100 pb-3 lg:hidden', HUB_MOBILE_ROOT)}>
-      <div className="space-y-1.5">
-        <h1 className="truncate text-sm font-bold leading-tight tracking-tight text-gray-900">
-          {greeting}{displayName ? `, ${displayName}` : ''}
-        </h1>
-        {businessName ? (
-          <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-            {businessName}
-            {periodLabel ? ` · ${periodLabel}` : ''}
+    <div className={cn('space-y-2 border-b border-gray-100 pb-2 lg:hidden', HUB_MOBILE_ROOT)}>
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5 rounded-lg border border-gray-100 bg-white px-2 py-1 shadow-sm">
+          <span
+            className={cn(
+              'h-1.5 w-1.5 shrink-0 rounded-full',
+              metricsPending ? 'animate-pulse bg-brand-primary' : 'bg-green-500'
+            )}
+            aria-hidden
+          />
+          <p className="min-w-0 truncate text-[10px] font-semibold leading-tight text-gray-500" aria-live="polite">
+            <span className="text-gray-700">{liveStatusLabel}</span>
+            {businessName ? (
+              <>
+                <span className="text-gray-300"> · </span>
+                <span className="font-medium text-gray-600">{businessName}</span>
+              </>
+            ) : null}
+            {periodLabel ? (
+              <>
+                <span className="text-gray-300"> · </span>
+                <span>{periodLabel}</span>
+              </>
+            ) : null}
           </p>
-        ) : null}
+        </div>
+
         {showPresetPills && (
           <MobilePresetPills
             compact
@@ -111,9 +154,43 @@ export function DashboardMobileHub({
 
       {kpiStrip.length > 0 ? <MobileKpiStrip items={kpiStrip} /> : null}
 
+      {reminderRows.length > 0 && (
+        <div className="rounded-xl border border-gray-100 bg-white p-2 shadow-sm">
+          <p className="mb-1.5 px-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            Needs attention
+          </p>
+          <div className="space-y-1">
+            {reminderRows.map((row) => {
+              const Icon = row.icon;
+              return (
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => runAction(row.id)}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors active:bg-brand-50"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-primary">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-800">{row.label}</span>
+                  <span
+                    className={cn(
+                      'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums',
+                      row.alert ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-700'
+                    )}
+                  >
+                    {row.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {quickActions.length > 0 && (
         <div>
-          <p className="mb-1.5 px-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+          <p className="mb-1 px-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
             Quick actions
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

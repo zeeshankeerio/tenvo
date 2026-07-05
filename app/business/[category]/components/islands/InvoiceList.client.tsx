@@ -13,7 +13,7 @@ import { BulkImportModal } from '@/components/invoice/BulkImportModal';
 import { BulkDeleteConfirmModal } from '@/components/invoice/BulkDeleteConfirmModal';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
 import { InvoiceMobileList } from '@/components/invoice/mobile/InvoiceMobileList';
-import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z } from '@/lib/utils/mobileLayout';
+import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z, MOBILE_MODULE_FAB_RIGHT } from '@/lib/utils/mobileLayout';
 
 interface InvoiceListProps {
     invoices: Invoice[];
@@ -599,7 +599,8 @@ export function InvoiceList({
                     type="button"
                     onClick={() => onAdd()}
                     className={cn(
-                        'fixed right-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transition active:scale-95 lg:hidden',
+                        'fixed flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transition active:scale-95 lg:hidden',
+                        MOBILE_MODULE_FAB_RIGHT,
                         MOBILE_BOTTOM_NAV_CLASS,
                         MOBILE_FLOATING_Z
                     )}

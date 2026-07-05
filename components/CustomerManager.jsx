@@ -23,7 +23,7 @@ import StakeholderLedger from './StakeholderLedger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
 import { HubEntityMobileList } from '@/components/mobile/HubEntityMobileList';
-import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z } from '@/lib/utils/mobileLayout';
+import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z, MOBILE_MODULE_FAB_RIGHT } from '@/lib/utils/mobileLayout';
 import { useBusiness } from '@/lib/context/BusinessContext';
 
 export function CustomerManager({ customers = [], onAdd, onUpdate, onDelete, category = 'retail-shop', businessId }) {
@@ -233,7 +233,8 @@ export function CustomerManager({ customers = [], onAdd, onUpdate, onDelete, cat
           type="button"
           onClick={() => onAdd()}
           className={cn(
-            'fixed right-4 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition active:scale-95 lg:hidden',
+            'fixed flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition active:scale-95 lg:hidden',
+            MOBILE_MODULE_FAB_RIGHT,
             MOBILE_BOTTOM_NAV_CLASS,
             MOBILE_FLOATING_Z
           )}

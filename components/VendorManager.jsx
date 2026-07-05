@@ -25,7 +25,7 @@ import { formatPakistaniPhone, isValidPakistaniPhone, vendorSchema, validateForm
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
 import { HubEntityMobileList } from '@/components/mobile/HubEntityMobileList';
-import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z } from '@/lib/utils/mobileLayout';
+import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z, MOBILE_MODULE_FAB_RIGHT } from '@/lib/utils/mobileLayout';
 import { useBusiness } from '@/lib/context/BusinessContext';
 import { Badge } from '@/components/ui/badge';
 
@@ -261,7 +261,8 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
         type="button"
         onClick={handleOpenAdd}
         className={cn(
-          'fixed right-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transition active:scale-95 lg:hidden',
+          'fixed flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transition active:scale-95 lg:hidden',
+          MOBILE_MODULE_FAB_RIGHT,
           MOBILE_BOTTOM_NAV_CLASS,
           MOBILE_FLOATING_Z
         )}

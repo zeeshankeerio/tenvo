@@ -26,7 +26,7 @@ import { toast } from 'react-hot-toast';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
 import { HubEntityMobileList } from '@/components/mobile/HubEntityMobileList';
 import { MOBILE_DIALOG_SHELL } from '@/lib/utils/formMobileStyles';
-import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z } from '@/lib/utils/mobileLayout';
+import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z, MOBILE_MODULE_FAB_RIGHT } from '@/lib/utils/mobileLayout';
 import { cn } from '@/lib/utils';
 import { DataTable } from "@/components/DataTable";
 import { paymentAPI } from "@/lib/api/payments";
@@ -85,6 +85,12 @@ export default function PaymentManager({
             fetchPayments();
         }
     }, [businessId, fetchPayments]);
+
+    useEffect(() => {
+        const openDialog = () => setShowPaymentDialog(true);
+        window.addEventListener('hub-open-payment-dialog', openDialog);
+        return () => window.removeEventListener('hub-open-payment-dialog', openDialog);
+    }, []);
 
     const handleCreatePayment = async () => {
         if (!formData.amount || parseFloat(formData.amount) <= 0) {
@@ -599,7 +605,8 @@ export default function PaymentManager({
                 type="button"
                 onClick={() => setShowPaymentDialog(true)}
                 className={cn(
-                    'fixed right-4 flex h-14 w-14 items-center justify-center rounded-full bg-wine text-white shadow-lg shadow-wine/30 transition active:scale-95 lg:hidden',
+                    'fixed flex h-14 w-14 items-center justify-center rounded-full bg-wine text-white shadow-lg shadow-wine/30 transition active:scale-95 lg:hidden',
+                    MOBILE_MODULE_FAB_RIGHT,
                     MOBILE_BOTTOM_NAV_CLASS,
                     MOBILE_FLOATING_Z
                 )}

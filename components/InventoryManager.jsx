@@ -56,7 +56,7 @@ import {
   readInventoryMobileViewPreference,
   writeInventoryMobileViewPreference,
 } from '@/lib/utils/inventoryMobileView';
-import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z } from '@/lib/utils/mobileLayout';
+import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z, MOBILE_MODULE_FAB_RIGHT } from '@/lib/utils/mobileLayout';
 import { MOBILE_DIALOG_SHELL_WIDE } from '@/lib/utils/formMobileStyles';
 import { ProductCardGrid } from './inventory/ProductCardGrid';
 import { getTemplatesForDomain } from '@/lib/data/productTemplates';
@@ -126,6 +126,10 @@ import { ExcelImportModal } from './ExcelImportModal';
 import { SmartQuickAddModal } from './QuickAddProductModal';
 import { VisualInventoryQuickEdit } from './inventory/VisualInventoryQuickEdit';
 import { buildSparseDomainColumnVisibility, buildSparseHiddenColumnKeys } from '@/lib/utils/inventoryVisualColumnVisibility';
+import {
+  consumePendingInventoryFocus,
+  inventoryFocusModeToStockFilter,
+} from '@/lib/utils/hubNavigationIntent';
 
 /**
  * Inventory Manager Component
@@ -546,6 +550,25 @@ export function InventoryManager({
   const [showStockAdjustment, setShowStockAdjustment] = useState(false);
   const [showStockTransferForm, setShowStockTransferForm] = useState(false);
 
+  const openProductAdd = useCallback(() => {
+    if (onAdd) {
+      onAdd();
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('open-modal', { detail: { modalId: 'product' } }));
+    }
+  }, [onAdd]);
+
+  const openProductEdit = useCallback((product) => {
+    if (onEdit) {
+      onEdit(product);
+      return;
+    }
+    setEditingProduct(product);
+    setShowProductFormInternal(true);
+  }, [onEdit]);
+
   /** Per persisted product id: monotonically increasing save generation to drop stale async results. */
   const busyCellSaveGenRef = useRef(new Map());
   /** Busy inline draft rows (_tempId): create at most once per temp id after name is set. */
@@ -756,6 +779,15 @@ export function InventoryManager({
         const minStock = num(p.min_stock ?? p.minStock, 10);
         const isLow = stockVal <= minStock;
         if (!isLow) return false;
+      } else if (activeDomainFilters.stock === 'out') {
+        if (stockVal > 0) return false;
+      } else if (activeDomainFilters.stock === 'expiring') {
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+        const hasExpiry =
+          (p.expiry_date && new Date(p.expiry_date) <= thirtyDaysFromNow) ||
+          p.batches?.some((b) => b.expiry_date && new Date(b.expiry_date) <= thirtyDaysFromNow);
+        if (!hasExpiry) return false;
       } else if (activeDomainFilters.stock === 'normal') {
         const minStock = num(p.min_stock ?? p.minStock, 10);
         const isNormal = stockVal > minStock;
@@ -1033,6 +1065,25 @@ export function InventoryManager({
   }, [isMultiLocationEnabled, isManufacturingEnabled, isVariantEnabled]);
 
   // Handle global events from Header Page Controls
+  const applyInventoryStockFocus = useCallback((mode) => {
+    const stockFilter = inventoryFocusModeToStockFilter(mode || 'low-stock');
+    setActiveTab('products');
+    setActiveDomainFilters((prev) => ({ ...prev, stock: stockFilter }));
+    setSearchTerm('');
+    const label =
+      stockFilter === 'out'
+        ? 'out of stock items'
+        : stockFilter === 'expiring'
+          ? 'expiring items'
+          : 'low stock items';
+    toast.success(`Showing ${label}`, { duration: 1400 });
+  }, []);
+
+  useEffect(() => {
+    const pending = consumePendingInventoryFocus();
+    if (pending) applyInventoryStockFocus(pending);
+  }, [applyInventoryStockFocus]);
+
   useEffect(() => {
     const handleToggleFilters = () => {
       // Focus the advanced search or toggle its visibility if we add a toggle state later
@@ -1047,11 +1098,8 @@ export function InventoryManager({
     window.addEventListener('toggle-filters', handleToggleFilters);
     window.addEventListener('export-data', handleExportGlobal);
 
-    const handleInventoryFocusLowStock = () => {
-      setActiveTab('products');
-      setActiveDomainFilters(prev => ({ ...prev, stock: 'low' }));
-      setSearchTerm('');
-      toast.success('Showing low stock items', { duration: 1400 });
+    const handleInventoryFocusLowStock = (e) => {
+      applyInventoryStockFocus(e.detail?.mode || 'low-stock');
     };
 
     const handleOpenExcelMode = () => {
@@ -1068,7 +1116,7 @@ export function InventoryManager({
       window.removeEventListener('inventory-focus-low-stock', handleInventoryFocusLowStock);
       window.removeEventListener('inventory-open-excel-mode', handleOpenExcelMode);
     };
-  }, [productsToDisplay]);
+  }, [applyInventoryStockFocus, productsToDisplay]);
 
   // Demand forecasting (simple moving average)
   const forecastDemand = (product) => {
@@ -1758,6 +1806,7 @@ export function InventoryManager({
       <InventoryMobileHub
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        onFocusStock={applyInventoryStockFocus}
         lastSyncedAt={lastSyncedAt}
         isRefreshing={loading}
         onRefresh={refreshInventory}
@@ -1949,12 +1998,9 @@ export function InventoryManager({
                   currencySymbol={standards.currencySymbol}
                   businessCategory={business?.category}
                   resultCount={productsToDisplay.length}
-                  onEdit={(p) => {
-                    setEditingProduct(p);
-                    setShowProductFormInternal(true);
-                  }}
+                  onEdit={openProductEdit}
                   onQuickSave={handleInventoryCellEdit}
-                  onAdd={() => (onAdd ? onAdd() : setShowProductFormInternal(true))}
+                  onAdd={openProductAdd}
                 />
               ) : (
                 <ProductCardGrid
@@ -1962,13 +2008,10 @@ export function InventoryManager({
                   currencySymbol={standards.currencySymbol}
                   businessCategory={business?.category}
                   onView={(p) => setProductToView(p)}
-                  onEdit={(p) => {
-                    setEditingProduct(p);
-                    setShowProductFormInternal(true);
-                  }}
+                  onEdit={openProductEdit}
                   onDelete={(p) => setProductToDelete(p)}
                   onToggleActive={handleToggleActive}
-                  onAdd={() => (onAdd ? onAdd() : setShowProductFormInternal(true))}
+                  onAdd={openProductAdd}
                 />
               )}
             </div>
@@ -2109,9 +2152,10 @@ export function InventoryManager({
           {activeTab === 'products' && (
             <button
               type="button"
-              onClick={() => (onAdd ? onAdd() : setShowProductFormInternal(true))}
+              onClick={openProductAdd}
               className={cn(
-                'fixed right-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-brand-primary/30 transition active:scale-95 lg:hidden',
+                'fixed flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-brand-primary/30 transition active:scale-95 lg:hidden',
+                MOBILE_MODULE_FAB_RIGHT,
                 MOBILE_BOTTOM_NAV_CLASS,
                 MOBILE_FLOATING_Z
               )}

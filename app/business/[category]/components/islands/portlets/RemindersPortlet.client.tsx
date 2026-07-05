@@ -14,7 +14,8 @@ interface RemindersData {
 interface RemindersPortletProps {
     data?: RemindersData;
     isLoading?: boolean;
-    onItemClick?: (itemId: string) => void;
+    /** Receives reminder id: low-stock | overdue | pending-orders */
+    onItemClick?: (reminderId: string) => void;
 }
 
 export const RemindersPortlet = memo(function RemindersPortlet({
@@ -66,7 +67,7 @@ export const RemindersPortlet = memo(function RemindersPortlet({
                 {reminders.map((item) => (
                     <div
                         key={item.id}
-                        onClick={() => onItemClick?.(item.actionTab)}
+                        onClick={() => onItemClick?.(item.id)}
                         className="flex items-center justify-between p-2 rounded-lg border border-transparent hover:border-gray-100 hover:bg-gray-50/50 transition-all cursor-pointer group"
                     >
                         <div className="flex items-center gap-2.5">

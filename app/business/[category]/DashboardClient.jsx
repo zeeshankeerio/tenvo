@@ -19,6 +19,7 @@ import { workflowAPI } from '@/lib/api/workflow';
 import { bulkDeleteAction } from '@/lib/actions/premium/automation/bulk';
 import { getTablesAction, getKitchenQueueAction } from '@/lib/actions/standard/restaurant';
 import { formatInventoryActionError, isPersistedProductUuid } from '@/lib/utils/productMutationPayload';
+import { setPendingInventoryFocus } from '@/lib/utils/hubNavigationIntent';
 import { Button } from '@/components/ui/button';
 import { Tabs } from '@/components/ui/tabs';
 import { ProductForm } from '@/components/ProductForm';
@@ -224,6 +225,12 @@ function BusinessDashboardContent() {
 
     const routedTab = QUICK_VIEW_ACTION_TO_TAB[id];
     if (routedTab) {
+      if (id === 'view-low-stock') {
+        setPendingInventoryFocus('low-stock');
+        window.dispatchEvent(
+          new CustomEvent('inventory-focus-low-stock', { detail: { mode: 'low-stock' } })
+        );
+      }
       handleTabChange(routedTab);
       return;
     }
@@ -238,6 +245,24 @@ function BusinessDashboardContent() {
     }
     if (id.startsWith('create-purchase-order') || id.startsWith('receive-goods') || id.startsWith('start-cycle-count')) {
       handleTabChange('purchases');
+      return;
+    }
+
+    if (id === 'low-stock') {
+      setPendingInventoryFocus('low-stock');
+      window.dispatchEvent(
+        new CustomEvent('inventory-focus-low-stock', { detail: { mode: 'low-stock' } })
+      );
+      handleTabChange('inventory');
+      return;
+    }
+    if (id === 'overdue' || id === 'pending-orders') {
+      handleTabChange('invoices');
+      return;
+    }
+    if (id === 'record-payment') {
+      handleTabChange('payments');
+      window.dispatchEvent(new CustomEvent('hub-open-payment-dialog'));
       return;
     }
 
@@ -375,6 +400,9 @@ function BusinessDashboardContent() {
 
     const onSwitchTabEvent = (e) => {
       const tabId = e.detail?.tab;
+      if (e.detail?.inventoryFocus) {
+        setPendingInventoryFocus(e.detail.inventoryFocus);
+      }
       if (tabId) handleTabChange(tabId);
     };
 

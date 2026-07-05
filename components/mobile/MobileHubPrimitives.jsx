@@ -90,29 +90,47 @@ export function MobileActionRow({
 }
 
 /**
- * @param {{ items?: Array<{ label: string, value: string|number, alert?: boolean, tone?: string, hint?: string }>, layout?: 'grid' | 'scroll' }} props
+ * @param {{ items?: Array<{ label: string, value: string|number, alert?: boolean, tone?: string, hint?: string, onClick?: () => void }>, layout?: 'grid' | 'scroll' }} props
  */
 export function MobileKpiStrip({ items = [], layout = 'grid' }) {
   if (!items.length) return null;
+
+  const renderKpi = (kpi) => {
+    const body = (
+      <>
+        <p className="line-clamp-2 text-[10px] font-bold uppercase leading-tight tracking-wide text-gray-400">
+          {kpi.label}
+        </p>
+        <p className={cn('mt-0.5 truncate text-sm font-bold tabular-nums', kpi.alert ? 'text-red-600' : kpi.tone || 'text-gray-900')}>
+          {kpi.value}
+        </p>
+        {kpi.hint && (
+          <p className="mt-0.5 truncate text-[10px] font-medium text-gray-400">{kpi.hint}</p>
+        )}
+      </>
+    );
+
+    const className = cn(
+      'min-w-0 rounded-xl border border-gray-100 bg-white px-2.5 py-2 shadow-sm text-left',
+      kpi.onClick && 'cursor-pointer transition-colors active:bg-gray-50'
+    );
+
+    if (kpi.onClick) {
+      return (
+        <button type="button" onClick={kpi.onClick} className={className}>
+          {body}
+        </button>
+      );
+    }
+
+    return <div className={className}>{body}</div>;
+  };
 
   if (layout === 'grid') {
     return (
       <div className="grid grid-cols-2 gap-2 lg:hidden">
         {items.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="min-w-0 rounded-xl border border-gray-100 bg-white px-2.5 py-2 shadow-sm"
-          >
-            <p className="line-clamp-2 text-[10px] font-bold uppercase leading-tight tracking-wide text-gray-400">
-              {kpi.label}
-            </p>
-            <p className={cn('mt-0.5 truncate text-sm font-bold tabular-nums', kpi.alert ? 'text-red-600' : kpi.tone || 'text-gray-900')}>
-              {kpi.value}
-            </p>
-            {kpi.hint && (
-              <p className="mt-0.5 truncate text-[10px] font-medium text-gray-400">{kpi.hint}</p>
-            )}
-          </div>
+          <div key={kpi.label}>{renderKpi(kpi)}</div>
         ))}
       </div>
     );
@@ -121,17 +139,8 @@ export function MobileKpiStrip({ items = [], layout = 'grid' }) {
   return (
     <div className="flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-0.5 scrollbar-none snap-x snap-mandatory">
       {items.map((kpi) => (
-        <div
-          key={kpi.label}
-          className="min-w-[88px] shrink-0 snap-start rounded-xl border border-gray-100 bg-white px-2.5 py-2 shadow-sm"
-        >
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{kpi.label}</p>
-          <p className={cn('mt-0.5 truncate text-sm font-bold tabular-nums', kpi.alert ? 'text-red-600' : kpi.tone || 'text-gray-900')}>
-            {kpi.value}
-          </p>
-          {kpi.hint && (
-            <p className="mt-0.5 truncate text-[10px] font-medium text-gray-400">{kpi.hint}</p>
-          )}
+        <div key={kpi.label} className="min-w-[88px] shrink-0 snap-start">
+          {renderKpi(kpi)}
         </div>
       ))}
     </div>

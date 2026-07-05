@@ -16,7 +16,7 @@ import { hubDialogContentClass } from '@/lib/utils/formMobileStyles';
 import { cn } from '@/lib/utils';
 import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
 import { HubEntityMobileList } from '@/components/mobile/HubEntityMobileList';
-import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z } from '@/lib/utils/mobileLayout';
+import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z, MOBILE_MODULE_FAB_RIGHT } from '@/lib/utils/mobileLayout';
 import GRNView from './GRNView';
 import { useBusiness } from '@/lib/context/BusinessContext';
 import {
@@ -299,7 +299,8 @@ export function PurchaseOrderManager({ purchaseOrders = [], onCreate, onUpdateSt
         type="button"
         onClick={() => onCreate?.()}
         className={cn(
-          'fixed right-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transition active:scale-95 lg:hidden',
+          'fixed flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 transition active:scale-95 lg:hidden',
+          MOBILE_MODULE_FAB_RIGHT,
           MOBILE_BOTTOM_NAV_CLASS,
           MOBILE_FLOATING_Z
         )}

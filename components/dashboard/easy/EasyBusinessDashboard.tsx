@@ -585,6 +585,7 @@ export interface EasyBusinessDashboardProps {
   multiLocationEnabled: boolean;
   warehouseUtilizationDisplay: string;
   stockCheckRecencyDisplay: string;
+  metricsPending?: boolean;
 }
 
 export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
@@ -636,6 +637,7 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
     multiLocationEnabled,
     warehouseUtilizationDisplay,
     stockCheckRecencyDisplay,
+    metricsPending = false,
   } = props;
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -783,6 +785,7 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
     <div className="w-full min-w-0 space-y-3 overflow-x-hidden bg-neutral-50/80 p-0 lg:p-1">
       <DashboardMobileHub
         mode="easy"
+        metricsPending={metricsPending}
         greeting={greeting}
         userName={userName}
         businessName={business?.name}

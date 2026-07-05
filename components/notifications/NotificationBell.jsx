@@ -224,11 +224,12 @@ export function NotificationBell({ className }) {
                             <button
                               key={alert.id}
                               type="button"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleAlertClick(alert.id);
                                 setIsOpen(false);
                               }}
-                              className="flex w-full gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-brand-50"
+                              className="flex w-full gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-brand-50 active:bg-brand-50"
                             >
                               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-primary">
                                 <Icon className="h-4 w-4" />
