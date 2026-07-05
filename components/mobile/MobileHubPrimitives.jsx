@@ -89,15 +89,41 @@ export function MobileActionRow({
   );
 }
 
-export function MobileKpiStrip({ items = [] }) {
+/**
+ * @param {{ items?: Array<{ label: string, value: string|number, alert?: boolean, tone?: string, hint?: string }>, layout?: 'grid' | 'scroll' }} props
+ */
+export function MobileKpiStrip({ items = [], layout = 'grid' }) {
   if (!items.length) return null;
 
+  if (layout === 'grid') {
+    return (
+      <div className="grid grid-cols-2 gap-2 lg:hidden">
+        {items.map((kpi) => (
+          <div
+            key={kpi.label}
+            className="min-w-0 rounded-xl border border-gray-100 bg-white px-2.5 py-2 shadow-sm"
+          >
+            <p className="line-clamp-2 text-[10px] font-bold uppercase leading-tight tracking-wide text-gray-400">
+              {kpi.label}
+            </p>
+            <p className={cn('mt-0.5 truncate text-sm font-bold tabular-nums', kpi.alert ? 'text-red-600' : kpi.tone || 'text-gray-900')}>
+              {kpi.value}
+            </p>
+            {kpi.hint && (
+              <p className="mt-0.5 truncate text-[10px] font-medium text-gray-400">{kpi.hint}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 scrollbar-none">
+    <div className="flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-0.5 scrollbar-none snap-x snap-mandatory">
       {items.map((kpi) => (
         <div
           key={kpi.label}
-          className="min-w-[96px] shrink-0 rounded-xl border border-gray-100 bg-white px-3 py-2 shadow-sm"
+          className="min-w-[88px] shrink-0 snap-start rounded-xl border border-gray-100 bg-white px-2.5 py-2 shadow-sm"
         >
           <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{kpi.label}</p>
           <p className={cn('mt-0.5 truncate text-sm font-bold tabular-nums', kpi.alert ? 'text-red-600' : kpi.tone || 'text-gray-900')}>
@@ -116,7 +142,7 @@ export function MobilePresetPills({ options = [], activeId, onSelect, compact = 
   if (!options.length) return null;
 
   return (
-    <div className={cn('flex gap-1 overflow-x-auto scrollbar-none', compact ? 'pb-0' : 'pb-0.5')}>
+    <div className={cn('flex min-w-0 max-w-full flex-wrap gap-1', compact ? 'pb-0' : 'pb-0.5')}>
       {options.map((preset) => (
         <button
           key={preset.id}

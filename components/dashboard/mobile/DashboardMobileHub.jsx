@@ -7,6 +7,7 @@ import {
   MobileKpiStrip,
   MobilePresetPills,
 } from '@/components/mobile/MobileHubPrimitives';
+import { HUB_MOBILE_ROOT } from '@/lib/utils/mobileLayout';
 
 /**
  * @typedef {Object} DashboardMobilePreset
@@ -87,7 +88,7 @@ export function DashboardMobileHub({
   })();
 
   return (
-    <div className="space-y-3 border-b border-gray-100 pb-3 lg:hidden">
+    <div className={cn('space-y-3 border-b border-gray-100 pb-3 lg:hidden', HUB_MOBILE_ROOT)}>
       <div className="space-y-1.5">
         <h1 className="truncate text-sm font-bold leading-tight tracking-tight text-gray-900">
           {greeting}{displayName ? `, ${displayName}` : ''}
@@ -115,7 +116,7 @@ export function DashboardMobileHub({
           <p className="mb-1.5 px-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
             Quick actions
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {quickActions.slice(0, 6).map((action, index) => (
               <MobileHubTile
                 key={action.id}

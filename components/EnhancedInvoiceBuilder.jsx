@@ -994,8 +994,8 @@ export function EnhancedInvoiceBuilder({
   return (
     <div className={cn(MOBILE_OVERLAY, 'animate-in fade-in duration-300')}>
       <Card className={cn(MOBILE_OVERLAY_CARD, 'max-w-6xl shadow-2xl')}>
-        <CardHeader className="shrink-0 flex flex-col gap-3 border-b bg-slate-50/50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
-          <div className="min-w-0 space-y-1">
+        <CardHeader className="relative shrink-0 flex flex-col gap-2 border-b bg-slate-50/50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8 sm:py-5">
+          <div className="min-w-0 space-y-1 pr-10 sm:pr-0">
             <div className="flex flex-wrap items-center gap-2">
               <CardTitle className="text-base font-semibold tracking-tight text-slate-800 sm:text-2xl">
                 {initialData ? 'Edit Invoice' : 'New Invoice'}
@@ -1004,7 +1004,7 @@ export function EnhancedInvoiceBuilder({
                 {category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </Badge>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge className={cn('text-[10px] font-semibold uppercase tracking-wider shadow-sm border', activeApprovalStatus.className)}>
                 <activeApprovalStatus.icon className="w-3.5 h-3.5 mr-1" />
                 {activeApprovalStatus.label}
@@ -1025,7 +1025,7 @@ export function EnhancedInvoiceBuilder({
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Invoice Number</p>
               <p className="font-mono text-sm font-semibold text-slate-700 bg-white border border-slate-200 px-2.5 py-0.5 rounded shadow-sm">{invoice.invoiceNumber}</p>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-red-50 hover:text-red-600 transition-colors ml-2">
+            <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-2 top-2 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors sm:static sm:ml-2">
               <X className="w-5 h-5" />
             </Button>
           </div>
@@ -1040,7 +1040,7 @@ export function EnhancedInvoiceBuilder({
             </div>
           </div>
         )}
-        <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-white p-3 sm:space-y-6 sm:p-8">
+        <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-white p-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:space-y-6 sm:p-8 sm:pb-8">
           {/* Business Header - Your Brand */}
           {business?.name && (
             <div className="pb-2 mb-2 flex items-start justify-between">
@@ -1174,7 +1174,7 @@ export function EnhancedInvoiceBuilder({
                       ...invoice,
                       customer: { ...invoice.customer, province: e.target.value }
                     })}
-                    className="bg-transparent border-0 font-bold text-wine text-xs focus:ring-0 cursor-pointer"
+                    className="bg-transparent border border-slate-200 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-slate-300 cursor-pointer"
                   >
                     <option value="punjab">Punjab</option>
                     <option value="sindh">Sindh</option>

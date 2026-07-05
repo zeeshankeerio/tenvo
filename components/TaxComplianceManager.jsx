@@ -18,6 +18,10 @@ import {
     buildTaxPeriodSummaries,
 } from '@/lib/utils/taxPeriodFilter';
 import { getTaxConfigAction, configureTaxAction } from '@/lib/actions/standard/tax';
+import { MobileTabHeader, MobileStatStrip } from '@/components/mobile/MobileTabHeader';
+import { MOBILE_TAB_LIST } from '@/lib/utils/formMobileStyles';
+import { HUB_MOBILE_ROOT } from '@/lib/utils/mobileLayout';
+import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 /**
@@ -249,8 +253,46 @@ export function TaxComplianceManager({ invoices = [], purchaseOrders = [], busin
     }, [calcAmount, calcRate, calcType]);
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className={cn('min-w-0 space-y-4 overflow-x-hidden touch-manipulation lg:space-y-6', HUB_MOBILE_ROOT)}>
+            <MobileTabHeader
+                icon={ShieldCheck}
+                iconClassName="bg-wine/10 text-wine"
+                title={`${standards.taxLabel} & Compliance`}
+                subtitle={`Output tax, input credit · ${periodMeta.label}`}
+                actions={[
+                    { id: 'csv', label: 'CSV', icon: Download, onClick: () => handleTaxExport('Statement', 'csv') },
+                    { id: 'pdf', label: 'Summary', icon: FileText, onClick: () => handleTaxExport('Summary') },
+                ]}
+            />
+
+            <div className="lg:hidden">
+                <div className="mb-2 flex items-center gap-2">
+                    <select
+                        value={selectedPeriod}
+                        onChange={(e) => setSelectedPeriod(e.target.value)}
+                        className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2 text-xs font-semibold"
+                    >
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                        <option value="year">This Year</option>
+                        <option value="all">All Time</option>
+                    </select>
+                    <Button variant="outline" size="sm" className="h-9 shrink-0 rounded-lg text-[11px] font-bold" onClick={() => handleTaxExport('Purchases', 'pdf')}>
+                        Purchases
+                    </Button>
+                </div>
+                <MobileStatStrip
+                    layout="grid"
+                    items={[
+                        { label: 'Taxable sales', value: formatMoney(taxMetrics.totalSales) },
+                        { label: `${standards.taxLabel} output`, value: formatMoney(taxMetrics.outputTax), valueTone: 'text-wine' },
+                        { label: 'Net payable', value: formatMoney(taxMetrics.payable), valueTone: 'text-red-600', alert: taxMetrics.payable > 0 },
+                        { label: 'Input credit', value: formatMoney(taxMetrics.inputTax), valueTone: 'text-green-600' },
+                    ]}
+                />
+            </div>
+
+            <div className="hidden flex-col gap-4 md:flex-row md:items-center md:justify-between lg:flex">
                 <div>
                     <h2 className="text-xl font-bold text-gray-900">{standards.taxLabel} & Compliance</h2>
                     <p className="text-gray-500 font-medium">Output tax, input credit, and filing summaries for {periodMeta.label}</p>
@@ -282,15 +324,15 @@ export function TaxComplianceManager({ invoices = [], purchaseOrders = [], busin
             </div>
 
             <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-gray-100/50 p-1 rounded-xl">
-                    <TabsTrigger value="overview" className="rounded-lg">Financial Summary</TabsTrigger>
-                    <TabsTrigger value="returns" className="rounded-lg">{standards.taxIdLabel} Filings</TabsTrigger>
-                    <TabsTrigger value="calculator" className="rounded-lg">Tax Calculator</TabsTrigger>
-                    <TabsTrigger value="config" className="rounded-lg">Tax Settings</TabsTrigger>
+                <TabsList className={cn(MOBILE_TAB_LIST, 'rounded-xl bg-gray-100/50 lg:grid lg:grid-cols-4')}>
+                    <TabsTrigger value="overview" className="rounded-lg text-[11px] sm:text-sm">Summary</TabsTrigger>
+                    <TabsTrigger value="returns" className="rounded-lg text-[11px] sm:text-sm">Filings</TabsTrigger>
+                    <TabsTrigger value="calculator" className="rounded-lg text-[11px] sm:text-sm">Calculator</TabsTrigger>
+                    <TabsTrigger value="config" className="rounded-lg text-[11px] sm:text-sm">Settings</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6 pt-4 animate-in fade-in duration-300">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="hidden grid-cols-1 gap-4 md:grid-cols-2 lg:grid lg:grid-cols-4">
                         <Card className="border-wine/5 shadow-sm">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-[10px] font-semibold uppercase text-gray-400 tracking-widest">Taxable Sales</CardTitle>

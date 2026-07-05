@@ -128,12 +128,12 @@ export function MobileStatStrip({ items = [], layout = 'grid' }) {
   }
 
   return (
-    <div className="-mx-0.5 flex gap-2 overflow-x-auto px-0.5 pb-0.5 scrollbar-none lg:hidden">
+    <div className="-mx-0.5 flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain px-0.5 pb-0.5 scrollbar-none snap-x snap-mandatory lg:hidden">
       {items.map((item) => (
         <div
           key={item.label}
           className={cn(
-            'min-w-[88px] shrink-0 rounded-xl border bg-white px-2.5 py-2 shadow-sm',
+            'min-w-[88px] shrink-0 snap-start rounded-xl border bg-white px-2.5 py-2 shadow-sm',
             item.alert ? 'border-red-100' : 'border-gray-100'
           )}
         >

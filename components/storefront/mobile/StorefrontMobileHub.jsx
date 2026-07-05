@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { useStorefrontMobileNav } from '@/lib/hooks/useStorefrontMobileNav';
+import { HUB_MOBILE_SCROLL_RAIL, HUB_MOBILE_ROOT } from '@/lib/utils/mobileLayout';
 
 /**
  * Compact horizontal module rail, replaces sidebar STOREFRONT section on mobile.
@@ -27,9 +28,9 @@ export function StorefrontMobileHub({ activeTab, pendingOrders = 0 }) {
   return (
     <nav
       aria-label="Storefront modules"
-      className="border-b border-gray-100 pb-2 lg:hidden"
+      className={cn('border-b border-gray-100 pb-2 lg:hidden', HUB_MOBILE_ROOT)}
     >
-      <div className="-mx-0.5 flex gap-1 overflow-x-auto px-0.5 pb-0.5 scrollbar-none">
+      <div className={HUB_MOBILE_SCROLL_RAIL}>
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = item.key === activeTab;
@@ -42,7 +43,7 @@ export function StorefrontMobileHub({ activeTab, pendingOrders = 0 }) {
               disabled={item.locked}
               onClick={() => navigate(item)}
               className={cn(
-                'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide transition active:scale-[0.98] disabled:opacity-40',
+                'inline-flex shrink-0 snap-start items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide transition active:scale-[0.98] disabled:opacity-40',
                 isActive
                   ? 'bg-slate-900 text-white shadow-sm'
                   : 'border border-gray-200 bg-white text-gray-600'

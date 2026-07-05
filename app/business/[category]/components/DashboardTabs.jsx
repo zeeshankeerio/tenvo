@@ -261,6 +261,7 @@ export function DashboardTabs({
 
     const wrapTab = (content) => (
         <motion.div
+            className="min-w-0 overflow-x-hidden"
             variants={tabVariants}
             initial="initial"
             animate="animate"
@@ -703,8 +704,8 @@ export function DashboardTabs({
                 <TabsContent value="reports" className="space-y-6 outline-none">
                     {wrapTab(
                         <TabGuard tabKey="reports" role={role} planTier={planTier} featureName="Analytics & AI" onUpgrade={() => handleTabChange('settings')}>
-                            <div className="space-y-6">
-                                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="min-w-0 space-y-4 overflow-x-hidden lg:space-y-6">
+                                <div className="hidden flex-col gap-3 lg:flex lg:flex-row lg:items-center lg:justify-between">
                                     <h2 className="text-xl font-semibold uppercase tracking-tight text-gray-900">Analytics & Reports</h2>
                                     <div className="flex flex-wrap gap-1 rounded-xl bg-gray-100 p-1 lg:gap-1">
                                         {[
@@ -722,6 +723,23 @@ export function DashboardTabs({
                                             </button>
                                         ))}
                                     </div>
+                                </div>
+                                <div className="flex min-w-0 gap-1 overflow-x-auto overscroll-x-contain rounded-xl bg-gray-100 p-1 scrollbar-none snap-x snap-mandatory lg:hidden">
+                                    {[
+                                        { key: 'analytics', label: 'Analytics', short: 'Analytics' },
+                                        { key: 'forecast', label: 'Demand Forecast', short: 'Forecast' },
+                                        { key: 'ai', label: 'AI Insights', short: 'AI' },
+                                        { key: 'builder', label: 'Report Builder', short: 'Builder' },
+                                    ].map(v => (
+                                        <button
+                                            key={v.key}
+                                            type="button"
+                                            onClick={() => setReportsView(v.key)}
+                                            className={`shrink-0 snap-start rounded-lg px-3 py-2 text-[11px] font-bold transition-all ${reportsView === v.key ? 'bg-white text-gray-900 shadow' : 'text-gray-500'}`}
+                                        >
+                                            {v.short}
+                                        </button>
+                                    ))}
                                 </div>
                                 {reportsView === 'analytics' && <AdvancedAnalytics businessId={business?.id} category={category} currency={currency} dateRange={dateRange} />}
                                 {reportsView === 'forecast' && <DemandForecast businessId={business?.id} category={category} products={products} invoices={invoices} domainKnowledge={domainKnowledge} dateRange={dateRange} />}
@@ -980,10 +998,26 @@ export function DashboardTabs({
                 <TabsContent value="payroll" className="space-y-6 outline-none">
                     {wrapTab(
                         <TabGuard tabKey="payroll" role={role} planTier={planTier} requiredPlan="business" featureName="HR & Payroll" onUpgrade={() => handleTabChange('settings')}>
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-semibold text-gray-900 uppercase tracking-tight">HR & Payroll</h2>
-                                    <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+                            <div className="min-w-0 space-y-4 overflow-x-hidden lg:space-y-6">
+                                <h2 className="hidden text-xl font-semibold uppercase tracking-tight text-gray-900 lg:block">HR & Payroll</h2>
+                                <div className="flex min-w-0 gap-1 overflow-x-auto overscroll-x-contain rounded-xl bg-gray-100 p-1 scrollbar-none snap-x snap-mandatory lg:hidden">
+                                    {[
+                                        { key: 'payroll', label: 'Payroll' },
+                                        { key: 'attendance', label: 'Attendance' },
+                                        { key: 'shifts', label: 'Shifts' },
+                                    ].map(v => (
+                                        <button
+                                            key={v.key}
+                                            type="button"
+                                            onClick={() => setHrView(v.key)}
+                                            className={`shrink-0 snap-start rounded-lg px-3 py-2 text-[11px] font-bold transition-all ${hrView === v.key ? 'bg-white text-gray-900 shadow' : 'text-gray-500'}`}
+                                        >
+                                            {v.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="hidden items-center justify-end lg:flex">
+                                    <div className="flex items-center gap-1 rounded-xl bg-gray-100 p-1">
                                         {[
                                             { key: 'payroll', label: 'Payroll' },
                                             { key: 'attendance', label: 'Attendance' },

@@ -353,7 +353,7 @@ export function OrdersManager({ business, category }) {
   ];
 
   return (
-    <div className="space-y-2 lg:space-y-6">
+    <div className="min-w-0 space-y-2 overflow-x-hidden touch-manipulation lg:space-y-6">
       {!embeddedInStorefront && (
         <MobileTabHeader
           icon={Package}

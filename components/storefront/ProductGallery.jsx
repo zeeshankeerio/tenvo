@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { ZoomIn, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 export function ProductGallery({ images, productName, placeholderUrl }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -149,7 +149,11 @@ export function ProductGallery({ images, productName, placeholderUrl }) {
       
       {/* Fullscreen Dialog */}
       <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-        <DialogContent className="max-w-5xl w-full h-[90vh] p-0">
+        <DialogContent className="max-w-5xl w-full h-[90vh] p-0" hideCloseButton>
+          <DialogTitle className="sr-only">{productName} gallery</DialogTitle>
+          <DialogDescription className="sr-only">
+            Fullscreen product image viewer. Use arrow buttons to change images.
+          </DialogDescription>
           <div className="relative w-full h-full bg-black flex items-center justify-center">
             <button
               onClick={() => setIsFullscreen(false)}

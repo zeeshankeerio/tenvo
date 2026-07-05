@@ -725,11 +725,17 @@ export function SettingsManager({ category }) {
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6 overflow-x-hidden touch-manipulation animate-in fade-in duration-500">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
-        <div className="min-w-0 flex-1">
+    <div className="mx-auto max-w-[1400px] space-y-4 overflow-x-hidden touch-manipulation pb-[calc(5rem+env(safe-area-inset-bottom))] animate-in fade-in duration-500 lg:space-y-6 lg:pb-0">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+        <div className="min-w-0 flex-1 lg:hidden">
+          <h2 className="text-lg font-bold tracking-tight text-gray-900">Settings</h2>
+          <p className="mt-0.5 text-xs font-medium leading-snug text-gray-500">
+            Profile, billing, team, and preferences
+          </p>
+        </div>
+        <div className="hidden min-w-0 flex-1 lg:block">
           <h2 className="text-2xl font-bold tracking-tight text-gray-900">Enterprise Settings</h2>
-          <p className="mt-1 text-sm text-gray-500 font-medium leading-snug">
+          <p className="mt-1 text-sm font-medium leading-snug text-gray-500">
             Configure your cloud ERP, compliance, billing, and team, scoped to this business.
           </p>
         </div>

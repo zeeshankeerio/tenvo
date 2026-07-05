@@ -146,18 +146,18 @@ export function AdvancedAnalytics({ businessId, category = 'retail-shop', curren
   const hasData = salesData.some((d) => (d.revenue > 0) || (d.profit > 0) || (d.orderCount > 0)) || kpi.inventoryAsset > 0;
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-500">
+    <div className="min-w-0 space-y-5 overflow-x-hidden animate-in fade-in duration-500">
       {/* Compact Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Advanced Analytics</h2>
-          <p className="text-sm text-gray-600 mt-1">Real-time insights and business intelligence</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold tracking-tight text-gray-900 sm:text-2xl">Advanced Analytics</h2>
+          <p className="mt-0.5 text-xs text-gray-600 sm:mt-1 sm:text-sm">Real-time insights and business intelligence</p>
         </div>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={loadData}
-          className="h-9 gap-2 shadow-sm hover:shadow transition-all"
+          className="h-9 w-full gap-2 shadow-sm transition-all hover:shadow sm:w-auto"
         >
           <RefreshCcw className="w-3.5 h-3.5" />
           Refresh

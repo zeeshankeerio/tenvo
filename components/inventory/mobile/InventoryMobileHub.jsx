@@ -30,12 +30,13 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { MobileHubTile, MobileActionRow } from '@/components/mobile/MobileHubPrimitives';
+import { MobileHubTile, MobileActionRow, MobileKpiStrip } from '@/components/mobile/MobileHubPrimitives';
 import {
   MOBILE_BOTTOM_SHEET,
   MOBILE_BOTTOM_SHEET_BODY,
   MOBILE_BOTTOM_SHEET_HANDLE,
   MOBILE_BOTTOM_SHEET_HEADER,
+  HUB_MOBILE_ROOT,
 } from '@/lib/utils/mobileLayout';
 
 /**
@@ -92,7 +93,7 @@ export function InventoryMobileHub({
   };
 
   return (
-    <div className="space-y-3 border-b border-gray-100 pb-3 lg:hidden">
+    <div className={cn('space-y-3 border-b border-gray-100 pb-3 lg:hidden', HUB_MOBILE_ROOT)}>
       {/* Status strip */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2 rounded-xl border border-green-100 bg-green-50 px-2.5 py-1.5">
@@ -112,25 +113,15 @@ export function InventoryMobileHub({
         </Button>
       </div>
 
-      {/* Mini KPI scroll */}
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 scrollbar-none">
-        {[
+      {/* Mini KPI grid */}
+      <MobileKpiStrip
+        items={[
           { label: 'Products', value: stats.totalProducts ?? 0 },
           { label: 'Alerts', value: stats.lowStock ?? 0, alert: (stats.lowStock ?? 0) > 0 },
           { label: 'Value', value: stats.inventoryValue ?? '—' },
           { label: 'Class', value: stats.efficiencyClass ?? '—' },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            className="min-w-[100px] shrink-0 rounded-xl border border-gray-100 bg-white px-3 py-2 shadow-sm"
-          >
-            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{kpi.label}</p>
-            <p className={cn('mt-0.5 truncate text-sm font-bold', kpi.alert ? 'text-red-600' : 'text-gray-900')}>
-              {kpi.value}
-            </p>
-          </div>
-        ))}
-      </div>
+        ]}
+      />
 
       {/* Section tiles */}
       <div>
@@ -154,7 +145,7 @@ export function InventoryMobileHub({
       {isProductsTab && (
         <div>
           <p className="mb-2 px-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Quick actions</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <MobileHubTile icon={BrainCircuit} label="AI Add" sublabel="Smart entry" tone="primary" onClick={onAiSmartAdd} />
             <MobileHubTile icon={ScanBarcode} label="Scan" sublabel="Camera & QR" tone="accent" onClick={onScanBarcode} />
             <MobileHubTile icon={Table2} label="Excel" sublabel="Desktop bulk" onClick={onExcelMode} />

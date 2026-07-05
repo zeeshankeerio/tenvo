@@ -21,6 +21,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { HUB_MICRO_LABEL, MARKETING_STAT_VALUE } from '@/lib/utils/typography';
 import { DashboardMobileHub } from '@/components/dashboard/mobile/DashboardMobileHub';
+import { MobilePresetPills } from '@/components/mobile/MobileHubPrimitives';
 import { IndustryInsights } from '@/app/business/[category]/components/islands/IndustryInsights.client';
 import {
   deltaVisual,
@@ -652,27 +653,6 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
     [onQuickAction]
   );
 
-  const handleMobileInsightAction = useCallback(
-    (actionTab: string) => {
-      const easyTab = resolveEasyTabForAction(actionTab);
-      const tabToNav: Record<string, string> = {
-        sales: 'invoices',
-        stock: 'inventory',
-        accounts: 'invoices',
-        customers: 'customers',
-        operations: 'inventory',
-        insights: 'reports',
-        overview: 'reports',
-      };
-      if (easyTab && tabToNav[easyTab]) {
-        onQuickAction?.(tabToNav[easyTab]);
-        return;
-      }
-      onQuickAction?.(actionTab);
-    },
-    [onQuickAction]
-  );
-
   const domainProfile = useMemo(
     () => resolveEasyDomainProfile(category, domainKnowledge, business),
     [category, domainKnowledge, business]
@@ -700,11 +680,6 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
     [mergedInsights, activeTab]
   );
 
-  const mobileOverviewInsights = useMemo(
-    () => filterInsightsForTab(mergedInsights, 'overview').slice(0, 4),
-    [mergedInsights]
-  );
-
   const tabGuidance = useMemo(() => {
     if (activeTab === 'operations') return getOperationsTabGuidance(operationsProfile);
     return getDomainTabGuidance(
@@ -716,6 +691,19 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
   const tabBadges = useMemo(
     () => buildEasyTabBadges(reminders, { operations: operationsBadge }),
     [reminders, operationsBadge]
+  );
+
+  const easyMobileTabOptions = useMemo(
+    () => [
+      { id: 'overview', label: 'Overview' },
+      { id: 'sales', label: 'Sales' },
+      { id: 'accounts', label: 'Accounts' },
+      { id: 'stock', label: domainKpiLabels.stockTabTitle.split(/\s+/)[0] || 'Stock' },
+      { id: 'customers', label: 'Customers' },
+      { id: 'operations', label: 'Ops' },
+      { id: 'insights', label: 'Insights' },
+    ],
+    [domainKpiLabels.stockTabTitle]
   );
 
   const sparkBars = useMemo(() => normalizeSparklineBars(chartData, 6), [chartData]);
@@ -792,7 +780,7 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
   const efficiencyTone = domainEfficiency >= 85 ? 'success' : domainEfficiency >= 65 ? 'warning' : 'secondary';
 
   return (
-    <div className="w-full space-y-3 bg-neutral-50/80 p-0 lg:p-1">
+    <div className="w-full min-w-0 space-y-3 overflow-x-hidden bg-neutral-50/80 p-0 lg:p-1">
       <DashboardMobileHub
         mode="easy"
         greeting={greeting}
@@ -823,49 +811,8 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
         quickSetupSteps={quickSetupSteps}
       />
 
-      {/* Mobile — hub is home; show insights + recent activity (no duplicate tab chrome) */}
-      <div className="space-y-3 pb-2 lg:hidden">
-        {mobileOverviewInsights.length > 0 ? (
-          <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-neutral-400">Suggested next steps</p>
-            <EasyTabInsightStrip insights={mobileOverviewInsights} onAction={handleMobileInsightAction} />
-          </div>
-        ) : null}
-
-        {recentInvoices.length > 0 ? (
-          <Card className="border-neutral-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-3 px-4">
-              <CardTitle className="text-xs font-semibold text-neutral-700">Recent invoices</CardTitle>
-              <Button variant="ghost" size="sm" className="h-7 text-[11px] text-neutral-500" onClick={() => onQuickAction?.('invoices')}>
-                View all
-              </Button>
-            </CardHeader>
-            <CardContent className="divide-y divide-neutral-100 px-4 pb-3 pt-0">
-              {recentInvoices.slice(0, 5).map((inv) => (
-                <button
-                  key={String(inv.id || inv.invoice_number)}
-                  type="button"
-                  onClick={() => onQuickAction?.('invoices')}
-                  className="flex w-full items-center justify-between gap-2 py-2.5 text-left active:bg-neutral-50"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-semibold text-neutral-900">
-                      {String(inv.invoice_number || inv.id || 'Invoice')}
-                    </p>
-                    <p className="text-[10px] text-neutral-500">{String(inv.customer_name || inv.customer || 'Customer')}</p>
-                  </div>
-                  <span className="shrink-0 text-xs font-semibold tabular-nums text-neutral-800">
-                    {formatCurrencyCompact(Number(inv.total || inv.amount || 0))}
-                  </span>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-        ) : null}
-      </div>
-
-      <div className="hidden lg:block">
       <Card className="overflow-hidden border-neutral-200 shadow-sm">
+        <div className="hidden lg:block">
         <EasyDashboardHeader
           businessName={business?.name}
           domainVerticalLabel={domainVerticalLabel}
@@ -879,9 +826,19 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
           seasonBadge={seasonBadge}
           capabilityBadges={capabilityBadges}
         />
+        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="bg-white">
-          <div className="border-b border-neutral-100 px-4 py-2 sm:px-5">
+          <div className="border-b border-neutral-100 px-3 py-2 lg:hidden">
+            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-400">Dashboard views</p>
+            <MobilePresetPills
+              compact
+              options={easyMobileTabOptions}
+              activeId={activeTab}
+              onSelect={(id) => setActiveTab(id)}
+            />
+          </div>
+          <div className="hidden border-b border-neutral-100 px-4 py-2 sm:px-5 lg:block">
             <TabsList className="flex h-auto min-h-8 w-full flex-wrap justify-start gap-0.5 bg-neutral-100/80 p-0.5 sm:w-auto">
               <EasyTabTrigger value="overview" label="Overview" />
               <EasyTabTrigger value="sales" label="Sales" badge={tabBadges.sales} />
@@ -893,7 +850,7 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
             </TabsList>
           </div>
 
-          <div className="px-4 py-3 sm:px-5 sm:py-4">
+          <div className="px-3 py-3 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-5 sm:py-4 lg:pb-4">
             {!hasCoreData && (
               <div
                 role="alert"
@@ -1597,7 +1554,6 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
           </div>
         </Tabs>
       </Card>
-      </div>
     </div>
   );
 }

@@ -1291,7 +1291,7 @@ export function DomainDashboard({
             </div>
 
             {/* Mobile — hub covers KPIs/actions; show insights & activity only */}
-            <div className="space-y-3 pb-2 lg:hidden lg:col-span-12">
+            <div className="min-w-0 space-y-3 overflow-x-hidden pb-2 lg:hidden lg:col-span-12">
                 <AnalyticsDashboard
                     businessId={activeBusinessId}
                     category={category}

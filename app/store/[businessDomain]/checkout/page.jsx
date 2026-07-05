@@ -99,6 +99,7 @@ export default function CheckoutPage({ params }) {
   const [cryptoCheckout, setCryptoCheckout] = useState(null);
   const [stripeCheckout, setStripeCheckout] = useState(null);
   const reconciledRef = useRef(false);
+  const placeOrderLockRef = useRef(false);
 
   const isDigitalCart =
     cart.items.length > 0 && cart.items.every((i) => i.fulfillmentType === 'digital');
@@ -297,6 +298,7 @@ export default function CheckoutPage({ params }) {
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   const placeOrder = async () => {
+    if (placeOrderLockRef.current || processing) return;
     if (!businessId) { toast.error('Store not ready'); return; }
     if (!validateAllSteps()) return;
     const effectivePaymentMethod =
@@ -308,6 +310,7 @@ export default function CheckoutPage({ params }) {
       toast.error('Your cart contains items from another store. Please clear your cart.');
       return;
     }
+    placeOrderLockRef.current = true;
     setProcessing(true);
     try {
       await validateStorefrontCheckoutCart(
@@ -448,6 +451,7 @@ export default function CheckoutPage({ params }) {
       }
       toast.error(err.message || 'Failed to place order. Please try again.');
     } finally {
+      placeOrderLockRef.current = false;
       setProcessing(false);
     }
   };

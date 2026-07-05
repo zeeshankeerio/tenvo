@@ -17,7 +17,9 @@ import {
   Plug,
   Trash2,
 } from 'lucide-react';
+import { MOBILE_TAB_LIST } from '@/lib/utils/formMobileStyles';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { PromotionEngine } from '@/components/crm/PromotionEngine';
 import { CampaignIntegrationsPanel } from '@/components/crm/CampaignIntegrationsPanel';
@@ -394,7 +395,7 @@ export function CampaignsManager({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4 overflow-x-hidden touch-manipulation">
       {/* Compact header, semantic surfaces */}
       <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm backdrop-blur-sm dark:bg-card/90 sm:p-4">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
@@ -449,7 +450,7 @@ export function CampaignsManager({
       </p>
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-3">
-        <TabsList className="grid h-9 w-full max-w-2xl grid-cols-5 gap-0.5 overflow-x-auto rounded-lg border border-border bg-muted/50 p-0.5 dark:bg-muted/40 lg:max-w-2xl">
+        <TabsList className={cn(MOBILE_TAB_LIST, 'max-w-2xl lg:grid-cols-5')}>
           <TabsTrigger
             value="command"
             className="rounded-md py-1.5 text-[11px] font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"

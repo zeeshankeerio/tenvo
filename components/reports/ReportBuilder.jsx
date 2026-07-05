@@ -198,8 +198,8 @@ function WidgetPreview({ widget, onRemove, liveSnapshot, currency }) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             className={cn(
-                'group relative bg-white rounded-2xl border-2 border-gray-100 hover:border-indigo-200 transition-all p-4',
-                `col-span-${widget.col || 6}`
+                'group relative rounded-2xl border-2 border-gray-100 bg-white p-4 transition-all hover:border-indigo-200',
+                'max-lg:col-span-full'
             )}
             style={{ gridColumn: `span ${widget.col || 6}` }}
         >
@@ -476,7 +476,7 @@ export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboa
     };
 
     return (
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6 overflow-x-hidden">
             {businessId && liveSnapshot?.kpi && (
                 <Card className="border-emerald-100 bg-gradient-to-r from-emerald-50/80 to-white shadow-sm">
                     <CardHeader className="py-3 px-4">
@@ -518,29 +518,29 @@ export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboa
             )}
 
             {businessId && (
-                <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-muted/30 p-3">
-                    <Button type="button" variant="outline" size="sm" className="h-9 text-xs font-bold" onClick={handleSaveLayout}>
+                <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-muted/30 p-3">
+                    <Button type="button" variant="outline" size="sm" className="h-9 flex-1 text-xs font-bold sm:flex-none" onClick={handleSaveLayout}>
                         Save layout
                     </Button>
                     <select
-                        className="h-9 min-w-[140px] rounded-lg border border-input bg-background px-2 text-xs font-semibold"
+                        className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2 text-xs font-semibold sm:min-w-[140px] sm:flex-none"
                         defaultValue=""
                         onChange={handleLoadSaved}
                         aria-label="Load saved report layout"
                     >
-                        <option value="">Load saved�</option>
+                        <option value="">Load saved…</option>
                         {savedLayouts.map((s) => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
                     </select>
-                    <Button type="button" variant="outline" size="sm" className="h-9 text-xs font-bold" onClick={handleExportJson}>
+                    <Button type="button" variant="outline" size="sm" className="h-9 flex-1 text-xs font-bold sm:flex-none" onClick={handleExportJson}>
                         Export JSON
                     </Button>
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-9 text-xs font-bold"
+                        className="h-9 w-full text-xs font-bold sm:w-auto"
                         disabled={!liveSnapshot?.topProducts?.length}
                         onClick={handleExportTopProductsCsv}
                     >
@@ -550,17 +550,17 @@ export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboa
             )}
 
             {/* Toolbar */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-center lg:gap-3">
                 <Input
                     value={reportName}
                     onChange={(e) => setReportName(e.target.value)}
-                    className="h-10 w-64 text-sm font-bold rounded-xl border-2"
+                    className="h-10 w-full rounded-xl border-2 text-sm font-bold lg:w-64"
                 />
 
                 <select
                     value={reportWindow}
                     onChange={(e) => setReportWindow(e.target.value)}
-                    className="h-10 text-sm rounded-xl border-2 border-gray-200 px-3 font-medium"
+                    className="h-10 w-full rounded-xl border-2 border-gray-200 px-3 text-sm font-medium lg:w-auto"
                 >
                     <option value="header">Match header</option>
                     <option value="today">Today</option>
@@ -575,26 +575,26 @@ export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboa
                     <option value="custom">Custom Range</option>
                 </select>
 
-                <div className="flex-1" />
-
-                <Button variant="outline" className="h-10 text-xs font-bold rounded-xl border-2" onClick={() => setShowAddWidget(true)}>
+                <div className="flex flex-wrap gap-2 lg:ml-auto">
+                <Button variant="outline" className="h-10 flex-1 rounded-xl border-2 text-xs font-bold sm:flex-none" onClick={() => setShowAddWidget(true)}>
                     <Plus className="w-4 h-4 mr-2" /> Add Widget
                 </Button>
-                <Button variant="outline" className="h-10 text-xs font-bold rounded-xl border-2" type="button" title="PDF export coming soon" disabled>
+                <Button variant="outline" className="h-10 flex-1 rounded-xl border-2 text-xs font-bold sm:flex-none" type="button" title="PDF export coming soon" disabled>
                     <Download className="w-4 h-4 mr-2" /> Export PDF
                 </Button>
-                <Button className="h-10 font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white" type="button" onClick={handleSaveLayout}>
+                <Button className="h-10 flex-1 rounded-xl bg-emerald-600 font-bold text-white hover:bg-emerald-700 sm:flex-none" type="button" onClick={handleSaveLayout}>
                     <Save className="w-4 h-4 mr-2" /> Save report
                 </Button>
+                </div>
             </div>
 
             {/* Pre-built Templates */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-2 snap-x snap-mandatory scrollbar-none">
                 {PRESET_TEMPLATES.map(tpl => (
                     <button
                         key={tpl.id}
                         onClick={() => handleLoadTemplate(tpl)}
-                        className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-100 rounded-xl hover:border-indigo-200 hover:bg-indigo-50 transition-all text-left"
+                        className="flex w-[min(100%,18rem)] shrink-0 snap-start items-center gap-2 rounded-xl border-2 border-gray-100 bg-white px-4 py-2 text-left transition-all hover:border-indigo-200 hover:bg-indigo-50"
                     >
                         <Database className="w-4 h-4 text-indigo-500" />
                         <div>
@@ -606,7 +606,7 @@ export function ReportBuilder({ businessId, currency = 'PKR', dateRange: dashboa
             </div>
 
             {/* Report Canvas */}
-            <div className="grid grid-cols-12 gap-4 min-h-[400px]">
+            <div className="grid min-h-[400px] grid-cols-1 gap-4 lg:grid-cols-12">
                 <AnimatePresence>
                     {widgets.map((widget) => (
                         <WidgetPreview

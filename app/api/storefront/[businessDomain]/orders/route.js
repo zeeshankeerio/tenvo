@@ -756,6 +756,7 @@ export async function POST(request, { params }) {
       console.warn(
         `[Create Order] order number conflict (attempt ${attempt}/${MAX_CHECKOUT_ATTEMPTS}), retrying…`
       );
+      await new Promise((r) => setTimeout(r, 40 * attempt));
       continue;
     }
 
@@ -765,7 +766,7 @@ export async function POST(request, { params }) {
           success: false,
           error:
             'Checkout is busy right now. Please wait a moment and try again — your cart is still saved.',
-          retryable: true,
+          retryable: false,
         },
         { status: 409 }
       );
@@ -796,7 +797,7 @@ export async function POST(request, { params }) {
       success: false,
       error:
         'Checkout is busy right now. Please wait a moment and try again — your cart is still saved.',
-      retryable: true,
+      retryable: false,
     },
     { status: 409 }
   );
