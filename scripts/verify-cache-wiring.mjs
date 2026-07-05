@@ -96,6 +96,21 @@ assert(
   'rate limit must use shared Redis TTL constant'
 );
 
+assert(
+  read('lib/tenancy/resolveStorefrontBusiness.js').includes("['storefront-business', normalizedDomain]"),
+  'resolveStorefrontBusiness must use unified storefront-business cache key'
+);
+
+assert(
+  read('lib/storefront/fetchBusinessByDomain.js').includes('loadStorefrontBusinessShell'),
+  'fetchBusinessByDomain must delegate to unified resolver'
+);
+
+assert(
+  read('lib/storefront/invalidateStorefrontCatalog.js').includes('expandStorefrontDomainAliasKeys'),
+  'invalidation must expand hyphen/underscore alias keys'
+);
+
 if (failures.length) {
   console.error('verify:cache-wiring FAILED');
   for (const f of failures) console.error(' -', f);

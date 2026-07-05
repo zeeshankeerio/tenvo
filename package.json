@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "prisma generate && next build",
+    "analyze": "cross-env ANALYZE=true npm run build",
     "postinstall": "prisma generate",
     "start": "next start",
     "start:3001": "next start --port 3001",
@@ -34,7 +35,10 @@
     "verify:cache-wiring": "node scripts/verify-cache-wiring.mjs",
     "test:upstash-redis": "node --env-file=.env.local scripts/test-upstash-redis.mjs",
     "verify:storefront-checkout-intelligence": "bun scripts/verify-storefront-checkout-intelligence.mjs",
-    "verify:storefront-domains": "bun scripts/verify-storefront-domains.mjs",
+    "verify:storefront-domain-resolution": "node scripts/verify-storefront-domain-resolution.mjs",
+    "verify:audit-fixes": "npx tsx scripts/verify-audit-fixes.mjs",
+    "verify:textile-storefront": "node scripts/verify-textile-storefront.mjs",
+    "verify:storefront-security": "npm run verify:audit-fixes && npm run verify:storefront-tenancy && npm run verify:storefront-domain-resolution && npm run verify:storefront-checkout-intelligence && npm run verify:registration-flow && npm run verify:domain-packages",
     "verify:campaigns-hub": "node scripts/verify-campaigns-hub.mjs",
     "verify:domain-packages": "node scripts/verify-domain-packages.mjs",
     "verify:stripe-billing-catalog": "node scripts/verify-stripe-billing-catalog.mjs",
@@ -134,6 +138,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.1.1",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
@@ -145,6 +150,7 @@
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.0.18",
     "autoprefixer": "^10.4.19",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "fake-indexeddb": "^6.2.5",

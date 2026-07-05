@@ -114,8 +114,9 @@ async function main() {
     // 4. Check business_settings storefront config
     console.log('\n4️⃣ Checking storefront settings...');
     const settingsResult = await client.query(
-      `SELECT b.business_name, b.category, b.is_storefront_enabled,
-              bs.settings->'storefront' as storefront_config
+      `SELECT b.business_name, b.category,
+              COALESCE(bs.is_storefront_enabled, true) AS is_storefront_enabled,
+              bs.settings->'storefront' AS storefront_config
        FROM businesses b
        LEFT JOIN business_settings bs ON b.id = bs.business_id
        WHERE b.category = ANY($1)

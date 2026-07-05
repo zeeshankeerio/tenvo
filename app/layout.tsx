@@ -8,7 +8,6 @@ import { BusinessProvider } from '@/lib/context/BusinessContext'
 import { AuthProvider } from '@/lib/context/AuthContext'
 import { LanguageProvider } from '@/lib/context/LanguageContext'
 import { BusyModeProvider } from '@/lib/context/BusyModeContext'
-import { CommandPalette } from '@/components/layout/CommandPalette'
 import { DefaultJsonLd } from '@/components/marketing/DefaultJsonLd'
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { getSiteUrl } from '@/lib/marketing/site-url'
@@ -66,7 +65,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <LanguageProvider>
                 <BusyModeProvider>
                   <ToastProvider />
-                  <CommandPalette />
                   {children}
                 </BusyModeProvider>
               </LanguageProvider>

@@ -2,7 +2,11 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
-import { getProducts, getCategories } from '@/lib/actions/storefront/products';
+import {
+  buildStoreHomeCatalogPlan,
+  getStoreHomeCatalog,
+  mapStoreHomeCatalogRails,
+} from '@/lib/storefront/storeHomeCatalog';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { ProductsSkeleton } from '@/components/storefront/LoadingSkeletons';
 import { SmartProductImage } from '@/components/storefront/SmartProductImage';
@@ -49,15 +53,9 @@ import { buildTopCollections, getTopCollectionsTitle } from '@/lib/storefront/to
 import { buildTopPicksProducts } from '@/lib/storefront/topPicks';
 import { buildFashionHomeSections } from '@/lib/storefront/fashionHomeSections';
 import { getFashionEditorialConfig } from '@/lib/storefront/fashionEditorial';
-import { DealershipHomeSections } from '@/components/storefront/sections/dealership/DealershipHomeSections';
-import { MarketplaceHomeSections } from '@/components/storefront/sections/marketplace/MarketplaceHomeSections';
-import { PharmacyHomeSections } from '@/components/storefront/sections/pharmacy/PharmacyHomeSections';
-import { FurnitureHomeSections } from '@/components/storefront/sections/furniture/FurnitureHomeSections';
-import { RestaurantHomeSections } from '@/components/storefront/sections/restaurant/RestaurantHomeSections';
-import { FitnessHomeSections } from '@/components/storefront/sections/fitness/FitnessHomeSections';
+import { LazyVerticalHomeSections } from '@/components/storefront/sections/LazyVerticalHomeSections';
 import { SupermarketHomeSections } from '@/components/storefront/sections/supermarket/SupermarketHomeSections';
 import { SupermarketFeedLayout } from '@/components/storefront/supermarket/SupermarketFeedLayout';
-import { AutoPartsHomeSections } from '@/components/storefront/sections/autoparts/AutoPartsHomeSections';
 import { isAutoPartsStore } from '@/lib/storefront/autoParts';
 import { cn } from '@/lib/utils';
 import {
@@ -179,45 +177,49 @@ export default async function StoreHomePage({ params }) {
 
   const needsCatalogBackfill = !editorialHero && !dealershipHero && !marketplaceHero && !autoPartsHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && !supermarketElevatedHero;
 
-  const [featuredResult, newArrivalsResult, categoriesResult, onSaleResult, topCatalogResult, catalogSnapshotResult, dealershipCatalogResult, marketplaceCatalogResult, pharmacyCatalogResult, furnitureCatalogResult, restaurantCatalogResult, fitnessCatalogResult, supermarketCatalogResult, autoPartsCatalogResult, catalogBackfillResult] = await Promise.all([
-    getProducts(business.id, { limit: 12, sort: 'featured' }),
-    getProducts(business.id, { limit: 16, sort: 'newest' }),
-    getCategories(business.id),
-    getProducts(business.id, { limit: 12, onSale: true }),
-    editorialHero
-      ? getProducts(business.id, { limit: 40, sort: 'popularity' })
-      : Promise.resolve({ success: false, products: [] }),
-    editorialHero
-      ? getProducts(business.id, { limit: 80, sort: 'popularity' })
-      : Promise.resolve({ success: false, products: [] }),
-    dealershipHero
-      ? getProducts(business.id, { limit: 24, sort: 'featured' })
-      : Promise.resolve({ success: false, products: [] }),
-    marketplaceHero
-      ? getProducts(business.id, { limit: 40, sort: 'featured' })
-      : Promise.resolve({ success: false, products: [] }),
-    pharmacyElevatedHero
-      ? getProducts(business.id, { limit: 48, sort: 'popularity' })
-      : Promise.resolve({ success: false, products: [] }),
-    furnitureElevatedHero
-      ? getProducts(business.id, { limit: 48, sort: 'popularity' })
-      : Promise.resolve({ success: false, products: [] }),
-    restaurantElevatedHero
-      ? getProducts(business.id, { limit: isDemoStoreDomain(businessDomain) ? 500 : 48, sort: 'popularity' })
-      : Promise.resolve({ success: false, products: [] }),
-    fitnessElevatedHero
-      ? getProducts(business.id, { limit: 48, sort: 'popularity' })
-      : Promise.resolve({ success: false, products: [] }),
-    supermarketElevatedHero
-      ? getProducts(business.id, { limit: 48, sort: 'popularity' })
-      : Promise.resolve({ success: false, products: [] }),
-    autoPartsHero
-      ? getProducts(business.id, { limit: 48, sort: 'featured' })
-      : Promise.resolve({ success: false, products: [] }),
-    needsCatalogBackfill
-      ? getProducts(business.id, { limit: 12, sort: 'popularity' })
-      : Promise.resolve({ success: false, products: [] }),
-  ]);
+  const catalogPlan = buildStoreHomeCatalogPlan({
+    editorialHero,
+    dealershipHero,
+    marketplaceHero,
+    pharmacyElevatedHero,
+    furnitureElevatedHero,
+    restaurantElevatedHero,
+    fitnessElevatedHero,
+    supermarketElevatedHero,
+    autoPartsHero,
+    needsCatalogBackfill,
+    restaurantDemo: restaurantElevatedHero && isDemoStoreDomain(businessDomain),
+  });
+
+  const catalogBundle = await getStoreHomeCatalog(business.id, catalogPlan);
+  const {
+    featuredResult,
+    newArrivalsResult,
+    categoriesResult,
+    onSaleResult,
+    topCatalogResult,
+    catalogSnapshotResult,
+    dealershipCatalogResult,
+    marketplaceCatalogResult,
+    pharmacyCatalogResult,
+    furnitureCatalogResult,
+    restaurantCatalogResult,
+    fitnessCatalogResult,
+    supermarketCatalogResult,
+    autoPartsCatalogResult,
+    catalogBackfillResult,
+  } = mapStoreHomeCatalogRails(catalogBundle, catalogPlan, {
+    editorialHero,
+    dealershipHero,
+    marketplaceHero,
+    pharmacyElevatedHero,
+    furnitureElevatedHero,
+    restaurantElevatedHero,
+    fitnessElevatedHero,
+    supermarketElevatedHero,
+    autoPartsHero,
+    needsCatalogBackfill,
+  });
 
   const featuredProducts = featuredResult.success ? featuredResult.products : [];
   const newArrivalsRaw = newArrivalsResult.success ? newArrivalsResult.products : [];
@@ -658,7 +660,8 @@ export default async function StoreHomePage({ params }) {
       ) : null}
 
       {dealershipHero && dealershipCatalogResult.success && (
-        <DealershipHomeSections
+        <LazyVerticalHomeSections
+          variant="dealership"
           businessDomain={businessDomain}
           businessCategory={business.category}
           business={business}
@@ -671,7 +674,8 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {marketplaceHero && marketplaceCatalogResult.success && (
-        <MarketplaceHomeSections
+        <LazyVerticalHomeSections
+          variant="marketplace"
           businessDomain={businessDomain}
           businessCategory={business.category}
           products={marketplaceCatalogResult.products}
@@ -683,7 +687,8 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {autoPartsHero && autoPartsProducts.length > 0 && (
-        <AutoPartsHomeSections
+        <LazyVerticalHomeSections
+          variant="auto-parts"
           businessDomain={businessDomain}
           businessCategory={business.category}
           products={autoPartsProducts}
@@ -695,7 +700,8 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {pharmacyElevatedHero && (
-        <PharmacyHomeSections
+        <LazyVerticalHomeSections
+          variant="pharmacy"
           businessDomain={businessDomain}
           businessCategory={business.category}
           categories={categories}
@@ -711,7 +717,8 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {furnitureElevatedHero && (
-        <FurnitureHomeSections
+        <LazyVerticalHomeSections
+          variant="furniture"
           businessDomain={businessDomain}
           businessCategory={business.category}
           categories={categories}
@@ -726,7 +733,8 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {restaurantElevatedHero && (
-        <RestaurantHomeSections
+        <LazyVerticalHomeSections
+          variant="restaurant"
           businessDomain={businessDomain}
           businessCategory={business.category}
           categories={categories}
@@ -742,7 +750,8 @@ export default async function StoreHomePage({ params }) {
       )}
 
       {fitnessElevatedHero && (
-        <FitnessHomeSections
+        <LazyVerticalHomeSections
+          variant="fitness"
           businessDomain={businessDomain}
           businessCategory={business.category}
           business={business}

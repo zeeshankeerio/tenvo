@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/context/LanguageContext';
 import { FilterProvider } from '@/lib/context/FilterContext';
 import { DataProvider } from '@/lib/context/DataContext';
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette';
+import { LazyCommandPalette } from '@/components/layout/LazyCommandPalette';
 import { AgenticFloatingChatbot } from '@/components/layout/AgenticFloatingChatbot';
 import { SubscriptionBillingBanner } from '@/components/billing/SubscriptionBillingBanner';
 import { UpgradeNudgeBanner } from '@/components/billing/UpgradeNudgeBanner';
@@ -27,6 +28,7 @@ export default function BusinessLayout({ children }) {
         <FilterProvider>
             <DataProvider>
                 <GlobalCommandPalette />
+                <LazyCommandPalette />
                 <div className="h-screen bg-gray-50 flex overflow-hidden w-full">
                     {/* Sidebar */}
                     <Sidebar

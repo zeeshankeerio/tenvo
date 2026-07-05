@@ -1,8 +1,21 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts',
+      'date-fns',
+      '@radix-ui/react-icons',
+      'framer-motion',
+    ],
+  },
   async redirects() {
     return [
       { source: '/favicon.ico', destination: '/tenvo.svg', permanent: false },
@@ -82,4 +95,4 @@ const nextConfig = {
   poweredByHeader: false,
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

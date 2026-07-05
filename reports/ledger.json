@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "id": "storefront-domain-resolution-2026-07-05",
+      "date": "2026-07-05",
+      "title": "Storefront domain resolution and cache hardening",
+      "report": "reports/storefront-domain-resolution-2026-07-05.md",
+      "areas": [
+        "lib/tenancy/resolveStorefrontBusiness.js",
+        "lib/storefront/fetchBusinessByDomain.js",
+        "lib/storefront/invalidateStorefrontCatalog.js",
+        "lib/cache/storefrontDomainCache.js",
+        "lib/actions/storefront/admin.js",
+        "app/api/storefront/[businessDomain]/products/[productId]/stock/route.js",
+        "app/api/storefront/[businessDomain]/cart/sync/route.js",
+        "lib/context/CartContext.js"
+      ],
+      "verification": [
+        "npm run verify:storefront-domain-resolution",
+        "npm run verify:cache-wiring",
+        "npm run verify:storefront-tenancy"
+      ]
+    }
+  ]
+}

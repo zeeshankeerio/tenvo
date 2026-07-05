@@ -65,7 +65,11 @@ if (!catalog.includes('buildRegistrationFromDomainPackage')) mark('registration 
 if (!catalog.includes('getDomainPackageRegisterHref')) mark('register href helper');
 
 if (!business.includes('buildRegistrationFromDomainPackage')) mark('createBusiness imports domain packages');
-if (!business.includes('domainPackageKey')) mark('createBusiness accepts domainPackageKey');
+if (!catalog.includes('resolveDomainPackageForVertical')) mark('resolveDomainPackageForVertical export');
+if (!catalog.includes('resolveDomainKey(String(verticalKey).trim())')) {
+  mark('resolveDomainPackageForVertical must resolve domain aliases');
+}
+if (!business.includes('resolveRegistrationCategoryKey')) mark('createBusiness must canonicalize category');
 
 if (!register.includes("params.get('package')")) mark('register reads package query param');
 

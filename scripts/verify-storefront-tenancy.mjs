@@ -44,17 +44,19 @@ if (!ordersAction.includes('requireStorefrontHubAccess')) {
   mark('orders.js hub actions must use requireStorefrontHubAccess');
 }
 
-// --- Stock API tenant-scoped ---
-const stockRoute = read('app/api/storefront/products/[productId]/stock/route.js');
-if (!stockRoute.includes('businessId')) {
-  mark('stock route must require businessId');
+// --- Stock API tenant-scoped via domain path ---
+const stockRoute = read(
+  'app/api/storefront/[businessDomain]/products/[productId]/stock/route.js'
+);
+if (!stockRoute.includes('resolveStorefrontBusiness')) {
+  mark('stock route must resolve tenant via resolveStorefrontBusiness');
 }
 if (!stockRoute.includes('p.business_id = $3::uuid') && !stockRoute.includes('business_id = $2::uuid')) {
   mark('stock route product queries must filter by business_id');
 }
 
 const productsAction = read('lib/actions/storefront/products.js');
-if (!productsAction.includes('checkProductStock(productId, variantId, quantity, businessId)')) {
+if (!productsAction.includes('checkProductStock(productId, variantId, quantity, businessId')) {
   mark('checkProductStock must accept businessId');
 }
 if (!productsAction.includes('cost_price: _costPrice')) {
@@ -114,10 +116,10 @@ if (!reviewsRoute.includes('p.business_id = $2::uuid')) {
   mark('reviews queries must join/filter by business_id');
 }
 
-// --- Cart passes businessId ---
+// --- Cart uses domain-scoped stock API ---
 const cartCtx = read('lib/context/CartContext.js');
-if (!cartCtx.includes('businessId')) {
-  mark('CartContext must send businessId to stock API');
+if (!cartCtx.includes('/api/storefront/${encodeURIComponent(domainSegment)}/products/')) {
+  mark('CartContext must call domain-scoped stock API');
 }
 if (!cartCtx.includes('getCartStorageKey')) {
   mark('CartContext must export getCartStorageKey for per-store cart isolation');

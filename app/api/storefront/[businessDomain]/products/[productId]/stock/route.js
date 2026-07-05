@@ -2,28 +2,31 @@ import { NextResponse } from 'next/server';
 import { checkProductStock } from '@/lib/actions/storefront/products';
 import pool from '@/lib/db';
 import { resolveStorefrontProductId } from '@/lib/utils/storefrontProductRef';
+import { resolveStorefrontBusiness } from '@/lib/tenancy/resolveStorefrontBusiness';
 
 import { isDigitalFulfillment } from '@/lib/storefront/digitalProducts';
 
 /**
- * POST /api/storefront/products/[productId]/stock
- * Check stock availability before adding to cart (tenant-scoped).
- * Requires businessId, product must belong to that business.
+ * POST /api/storefront/[businessDomain]/products/[productId]/stock
+ * Check stock availability before adding to cart (domain-scoped).
  */
 export async function POST(request, { params }) {
   try {
-    const { productId } = await params;
+    const { businessDomain, productId } = await params;
+    const business = await resolveStorefrontBusiness(businessDomain);
+
+    if (!business?.id) {
+      return NextResponse.json({ message: 'Store not found' }, { status: 404 });
+    }
+
     const body = await request.json().catch(() => ({}));
-    const { variantId = null, quantity = 1, businessId = null } = body;
+    const { variantId = null, quantity = 1 } = body;
 
     if (!productId) {
       return NextResponse.json({ message: 'Product ID required' }, { status: 400 });
     }
-    if (!businessId) {
-      return NextResponse.json({ message: 'Business ID required' }, { status: 400 });
-    }
 
-    const stockResult = await checkProductStock(productId, variantId, quantity, businessId);
+    const stockResult = await checkProductStock(productId, variantId, quantity, business.id);
 
     if (!stockResult.success) {
       const status = stockResult.error?.code === 'VARIANT_REQUIRED' ? 400 : 404;
@@ -46,7 +49,7 @@ export async function POST(request, { params }) {
     let product = null;
 
     try {
-      const resolvedProductId = await resolveStorefrontProductId(client, productId, businessId);
+      const resolvedProductId = await resolveStorefrontProductId(client, productId, business.id);
       if (!resolvedProductId) {
         return NextResponse.json({ message: 'Product not found' }, { status: 404 });
       }
@@ -62,7 +65,7 @@ export async function POST(request, { params }) {
            JOIN product_variants pv ON pv.id = $1::uuid AND pv.product_id = p.id::uuid
            WHERE p.id = $2::uuid AND p.business_id = $3::uuid AND pv.business_id = $3::uuid
              AND COALESCE(p.is_deleted, false) = false AND p.is_active = true`,
-          [variantId, resolvedProductId, businessId]
+          [variantId, resolvedProductId, business.id]
         );
         productRow = res.rows[0];
         if (productRow) {
@@ -82,7 +85,7 @@ export async function POST(request, { params }) {
            FROM products
            WHERE id = $1::uuid AND business_id = $2::uuid
              AND COALESCE(is_deleted, false) = false AND is_active = true`,
-          [resolvedProductId, businessId]
+          [resolvedProductId, business.id]
         );
         productRow = res.rows[0];
         if (productRow) {
