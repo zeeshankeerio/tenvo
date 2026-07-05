@@ -18,6 +18,7 @@ import { ALL_DEMO_SEEDS } from '../../lib/dataLab/domains.mjs';
 import { FEATURED_DEMO_STORES } from '../../lib/marketing/demoStores.js';
 import { bootstrapDemoBusiness } from '../../lib/dataLab/bootstrapBusiness.mjs';
 import { seedOperationalData } from '../../lib/dataLab/seedOperations.mjs';
+import { patchFashionStorefrontSettingsBatch } from '../../lib/dataLab/patchFashionStorefrontSettings.mjs';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
 dotenv.config();
@@ -161,8 +162,17 @@ async function main() {
     opts.onlyFilters
   );
 
+  const fashionTargets = filterSeeds(ALL_DEMO_SEEDS, opts.onlyFilters);
+  const fashionPatchResults = opts.dryRun
+    ? await patchFashionStorefrontSettingsBatch(pool, fashionTargets, { dryRun: true })
+    : await patchFashionStorefrontSettingsBatch(pool, fashionTargets);
+  const fashionPatched = fashionPatchResults.filter((r) => r.patched);
+  if (fashionPatched.length) {
+    console.log(`\nFashion storefront settings: ${fashionPatched.map((r) => r.domain).join(', ')}`);
+  }
+
   if (!seedsToBootstrap.length) {
-    console.log('\n✅ All demo storefronts present. Nothing to bootstrap.');
+    console.log('\n✅ All demo storefronts present. Fashion settings synced.');
     await pool.end();
     return;
   }

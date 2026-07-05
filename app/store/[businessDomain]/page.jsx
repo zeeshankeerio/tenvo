@@ -42,17 +42,14 @@ import { DomainQuickActions } from '@/components/storefront/sections/DomainQuick
 import { DomainDealStrip } from '@/components/storefront/sections/DomainDealStrip';
 import { DomainEditorialSpotlight } from '@/components/storefront/sections/DomainEditorialSpotlight';
 import { StoreMarketingSections } from '@/components/storefront/sections/StoreMarketingSections';
-import { TopCollectionsCarousel } from '@/components/storefront/sections/TopCollectionsCarousel';
-import { TopPicksSection } from '@/components/storefront/sections/TopPicksSection';
-import { FashionDepartmentSections } from '@/components/storefront/sections/fashion/FashionDepartmentSections';
-import { FashionCircleShowcase } from '@/components/storefront/sections/fashion/FashionCircleShowcase';
-import { StoreReveal } from '@/components/storefront/effects/StoreReveal';
 import { trimToShowcaseRows } from '@/lib/storefront/showcaseProducts';
 import { ensureRailProducts } from '@/lib/utils/storefrontProductRail';
 import { buildTopCollections, getTopCollectionsTitle } from '@/lib/storefront/topCollections';
 import { buildTopPicksProducts } from '@/lib/storefront/topPicks';
 import { buildFashionHomeSections } from '@/lib/storefront/fashionHomeSections';
-import { getFashionEditorialConfig } from '@/lib/storefront/fashionEditorial';
+import { getFashionEditorialConfig, isFashionEditorialStore, formatFashionStoreName, getFashionMetadataCopy } from '@/lib/storefront/fashionEditorial';
+import { supportsFashionGulSections } from '@/lib/storefront/fashionGulSections';
+import { FashionGulAhmedSections } from '@/components/storefront/sections/fashion/FashionGulAhmedSections';
 import { LazyVerticalHomeSections } from '@/components/storefront/sections/LazyVerticalHomeSections';
 import { SupermarketHomeSections } from '@/components/storefront/sections/supermarket/SupermarketHomeSections';
 import { SupermarketFeedLayout } from '@/components/storefront/supermarket/SupermarketFeedLayout';
@@ -77,7 +74,9 @@ export async function generateMetadata({ params }) {
         ? formatRestaurantStoreName(business.business_name)
         : isFitnessElevatedStore(business.category)
           ? formatFitnessStoreName(business.business_name)
-          : business.business_name;
+          : isFashionEditorialStore(business.category)
+            ? formatFashionStoreName(business.business_name)
+            : business.business_name;
 
   let description = business.description;
   let keywords = `${storeName}, online store, ${business.city || 'Pakistan'}`;
@@ -103,6 +102,10 @@ export async function generateMetadata({ params }) {
   } else if (isSupermarketElevatedStore(business.category)) {
     description = description || `Shop fresh groceries and daily essentials at ${storeName}. Same-day delivery on pantry staples, produce, and household favourites.`;
     keywords = `${storeName}, online grocery, supermarket${business.city ? `, ${business.city}` : ''}`;
+  } else if (isFashionEditorialStore(business.category)) {
+    const meta = getFashionMetadataCopy(business.category, business.city, storeName);
+    description = description || meta.description;
+    keywords = `${storeName}, ${meta.keywords}`;
   } else {
     description = description || `Shop online at ${storeName}.`;
   }
@@ -269,7 +272,7 @@ export default async function StoreHomePage({ params }) {
         12
       )
     : [];
-  const fashionConfig = editorialHero ? getFashionEditorialConfig(settings) : null;
+  const fashionConfig = editorialHero ? getFashionEditorialConfig(settings, businessDomain) : null;
   const fashionDepartments = editorialHero
     ? (() => {
         const built = buildFashionHomeSections({
@@ -767,34 +770,33 @@ export default async function StoreHomePage({ params }) {
         />
       )}
 
-      {editorialHero && fashionConfig?.showTopCollections && topCollections.length > 0 && (
-        <StoreReveal enabled={fashionConfig.animations}>
-          <TopCollectionsCarousel title={topCollectionsTitle} items={topCollections} autoScroll={fashionConfig.animations !== false} />
-        </StoreReveal>
-      )}
-
-      {editorialHero && fashionConfig?.showTopPicks && topPicksProducts.length >= 2 && (
-        <StoreReveal enabled={fashionConfig.animations}>
-          <TopPicksSection
-            products={topPicksProducts}
-            businessDomain={businessDomain}
-            businessCategory={business.category}
-            autoScroll={fashionConfig.animations}
-            accent={accent}
-          />
-        </StoreReveal>
-      )}
-
-      {editorialHero && fashionDepartments && (
-        <FashionDepartmentSections
-          sections={fashionDepartments}
+      {editorialHero && (
+        <LazyVerticalHomeSections
+          variant="fashion"
           businessDomain={businessDomain}
-          editorialSpotlight={fashionConfig?.showEditorialSpotlight ? landing.spotlights?.[0] : null}
+          businessCategory={business.category}
+          products={catalogSnapshotResult.success ? catalogSnapshotResult.products : topPicksProducts}
+          settings={settings}
           accent={accent}
           accentDark={accentDark}
           canonical={landing.canonical}
-          animations={fashionConfig ? fashionConfig.animations : true}
-          renderReadyToWear={false}
+          storeName={business.business_name}
+          businessDescription={business.description || settings?.description}
+          country={business.country || settings?.contact?.country}
+          topCollections={topCollections}
+          topCollectionsTitle={topCollectionsTitle}
+          topPicksProducts={topPicksProducts}
+          fashionDepartments={fashionDepartments}
+          editorialSpotlight={landing.spotlights?.[0]}
+        />
+      )}
+
+      {supportsFashionGulSections(business.category) && !editorialHero && (
+        <FashionGulAhmedSections
+          businessDomain={businessDomain}
+          businessCategory={business.category}
+          settings={settings}
+          animations={getFashionEditorialConfig(settings, businessDomain).animations}
         />
       )}
 
@@ -1023,21 +1025,6 @@ export default async function StoreHomePage({ params }) {
         accent={accent}
         placement="before-footer"
       />
-
-      {/* ── Shop by category (Ready to Wear) — anchored just before the footer ─ */}
-      {editorialHero && fashionDepartments?.readyToWear?.show && fashionDepartments.readyToWear.circles?.length > 0 && (
-        <StoreReveal enabled={fashionConfig?.animations !== false}>
-          <FashionCircleShowcase
-            title={fashionDepartments.readyToWear.title}
-            circles={fashionDepartments.readyToWear.circles}
-            viewAllHref={fashionDepartments.readyToWear.viewAllHref}
-            showDivider
-            variant="muted"
-            animate={fashionConfig?.animations !== false}
-            accent={accent}
-          />
-        </StoreReveal>
-      )}
 
       {/* ── New Arrivals (only when catalog has more beyond featured) ───────── */}
       {showNewArrivals && !editorialHero && !dealershipHero && !marketplaceHero && !pharmacyElevatedHero && !furnitureElevatedHero && !restaurantElevatedHero && !fitnessElevatedHero && !supermarketElevatedHero && (

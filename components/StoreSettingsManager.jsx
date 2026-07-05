@@ -36,6 +36,8 @@ import { isFurnitureElevatedStore } from '@/lib/storefront/furnitureStorefront';
 import { isFitnessElevatedStore } from '@/lib/storefront/fitnessStorefront';
 import { isSupermarketElevatedStore } from '@/lib/storefront/supermarketStorefront';
 import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
+import { supportsFashionGulSections } from '@/lib/storefront/fashionGulSections';
+import { FashionGulSectionsEditor } from '@/components/storefront/admin/FashionGulSectionsEditor';
 import { HeroCarouselSlidesEditor } from '@/components/storefront/admin/HeroCarouselSlidesEditor';
 import { SupermarketCatalogEditor } from '@/components/storefront/admin/SupermarketCatalogEditor';
 import { getDefaultHeroSlidesTemplate } from '@/lib/storefront/heroPresets';
@@ -266,6 +268,15 @@ export function StoreSettingsManager({ business, category }) {
       showAccessories: true,
       showOffers: true,
       showNewArrivals: true,
+      showTrustStrip: true,
+      showBrandsRow: true,
+      showPromoBanners: true,
+      showSeoBlock: true,
+      showHomeEdit: true,
+      showSaleMosaic: true,
+      searchPlaceholder: '',
+      featuredRailTitle: '',
+      featuredRailSubtitle: '',
       unstitchedTitle: '',
       readyToWearTitle: '',
       accessoriesTitle: '',
@@ -282,7 +293,7 @@ export function StoreSettingsManager({ business, category }) {
   const furnitureStore = isFurnitureElevatedStore(category || business?.category);
   const fitnessStore = isFitnessElevatedStore(category || business?.category);
   const supermarketStore = isSupermarketElevatedStore(category || business?.category);
-  const fashionStore = isFashionEditorialStore(category || business?.category);
+  const fashionStore = supportsFashionGulSections(category || business?.category);
   const defaultHeroSlides = useMemo(() => {
     const domain = settings.storeDomain || business?.domain || 'preview';
     return getDefaultHeroSlidesTemplate(category || business?.category, domain, {});
@@ -1455,15 +1466,51 @@ export function StoreSettingsManager({ business, category }) {
                     ['showAccessories', 'Accessories row'],
                     ['showOffers', 'Offers / sale rail'],
                     ['showNewArrivals', 'New arrivals rail'],
-                  ].map(([key, label]) => (
+                    ['showTrustStrip', 'Trust pillars strip'],
+                    ['showBrandsRow', 'Trusted brands row'],
+                    ['showPromoBanners', 'Promo banner row'],
+                    ['showHomeEdit', 'The Home Edit grid'],
+                    ['showSaleMosaic', 'Sale mosaic grid'],
+                    ['showSeoBlock', 'SEO content block', true],
+                  ].map(([key, label, optIn]) => (
                     <div key={key} className="flex items-center gap-2">
                       <Switch
-                        checked={settings.fashion?.[key] !== false}
+                        checked={optIn ? settings.fashion?.[key] === true : settings.fashion?.[key] !== false}
                         onCheckedChange={(v) => setFashion(key, v)}
                       />
                       <Label className="text-sm">{label}</Label>
                     </div>
                   ))}
+                </div>
+                <Separator />
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Search & featured row
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Search placeholder</Label>
+                    <Input
+                      value={settings.fashion?.searchPlaceholder || ''}
+                      onChange={(e) => setFashion('searchPlaceholder', e.target.value)}
+                      placeholder="Search unstitched, pret, lawn, accessories…"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Top picks title</Label>
+                    <Input
+                      value={settings.fashion?.featuredRailTitle || ''}
+                      onChange={(e) => setFashion('featuredRailTitle', e.target.value)}
+                      placeholder="Top picks for you"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Top picks subtitle</Label>
+                    <Input
+                      value={settings.fashion?.featuredRailSubtitle || ''}
+                      onChange={(e) => setFashion('featuredRailSubtitle', e.target.value)}
+                      placeholder="Curated styles from your store"
+                    />
+                  </div>
                 </div>
                 <Separator />
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
@@ -1511,6 +1558,12 @@ export function StoreSettingsManager({ business, category }) {
                     />
                   </div>
                 </div>
+                <FashionGulSectionsEditor
+                  fashion={settings.fashion || {}}
+                  setFashion={setFashion}
+                  businessCategory={category || business?.category}
+                  businessId={business?.id}
+                />
                 <p className="text-xs text-gray-500">
                   Department rows use your category and product photos. Set your accent color under
                   Branding and the top announcement strip under Content.

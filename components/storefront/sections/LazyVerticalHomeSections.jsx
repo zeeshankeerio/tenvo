@@ -23,6 +23,9 @@ const RestaurantHomeSections = dynamic(() =>
 const FitnessHomeSections = dynamic(() =>
   import('./fitness/FitnessHomeSections').then((m) => ({ default: m.FitnessHomeSections }))
 );
+const FashionHomeSections = dynamic(() =>
+  import('./fashion/FashionHomeSections').then((m) => ({ default: m.FashionHomeSections }))
+);
 
 /**
  * Code-split elevated vertical homepage sections (only the active vertical chunk loads).
@@ -43,6 +46,8 @@ export function LazyVerticalHomeSections({ variant, ...props }) {
       return <RestaurantHomeSections {...props} />;
     case 'fitness':
       return <FitnessHomeSections {...props} />;
+    case 'fashion':
+      return <FashionHomeSections {...props} />;
     default:
       return null;
   }

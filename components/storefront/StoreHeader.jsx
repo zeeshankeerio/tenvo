@@ -19,7 +19,7 @@ import { MobileNav } from './MobileNav';
 import { FashionMobileNav } from './FashionMobileNav';
 import { getDomainConfig, getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { getStoreHomeCopy } from '@/lib/storefront/storeCopy';
-import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
+import { isFashionEditorialStore, resolveFashionSearchPlaceholder } from '@/lib/storefront/fashionEditorial';
 import { isAutoDealershipStore, getDealershipNavLinks, getDealershipNavGroups } from '@/lib/storefront/autoDealership';
 import { resolveStorefrontLogo } from '@/lib/storefront/resolveStorefrontLogo';
 import { isAutoMarketplaceStore, getMarketplaceNavLinks } from '@/lib/storefront/autoMarketplace';
@@ -96,6 +96,9 @@ export function StoreHeader({ business, categories, settings }) {
   const dealershipNav = isAutoDealershipStore(business?.category);
   const marketplaceNav = isAutoMarketplaceStore(business?.category);
   const pharmacyNav = isPharmacyElevatedStore(business?.category);
+  const searchPlaceholder = editorialNav
+    ? resolveFashionSearchPlaceholder(settings, business?.category, businessDomain)
+    : storeCopy.searchPlaceholder;
   const immersiveNav = editorialNav || dealershipNav;
   const editorialOnHome = editorialNav && isHome;
   const dealershipOnHome = dealershipNav && isHome;
@@ -301,10 +304,10 @@ export function StoreHeader({ business, categories, settings }) {
               type="button"
               onClick={() => setIsSearchOpen(true)}
               className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-full bg-gray-100 px-3 text-left text-xs text-gray-500"
-              aria-label={storeCopy.searchPlaceholder}
+              aria-label={searchPlaceholder}
             >
               <Search className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-              <span className="truncate">{storeCopy.searchPlaceholder}</span>
+              <span className="truncate">{searchPlaceholder}</span>
             </button>
 
             <Link
@@ -905,7 +908,7 @@ export function StoreHeader({ business, categories, settings }) {
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-4">
             <div className="flex items-center gap-3 mb-3">
               <h3 className="font-semibold text-gray-900 flex-1 text-sm sm:text-base">
-                {storeCopy.searchPlaceholder}
+                {searchPlaceholder}
               </h3>
               <button
                 onClick={() => setIsSearchOpen(false)}
