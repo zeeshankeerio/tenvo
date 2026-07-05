@@ -372,7 +372,7 @@ export function DashboardTabs({
                                     const persisted = Boolean(product?.id);
                                     const fullProduct = persisted ? products.find((p) => p.id === product.id) : null;
 
-                                    await handleSaveProduct(
+                                    const saved = await handleSaveProduct(
                                         {
                                             ...product,
                                             batches: fullProduct?.batches || product.batches || [],
@@ -386,6 +386,7 @@ export function DashboardTabs({
                                         },
                                         { skipFullWorkspaceRefresh: true, silentToast: true }
                                     );
+                                    return saved;
                                 }}
                                 onLocationAdd={handleLocationAdd}
                                 onLocationUpdate={handleLocationUpdate}

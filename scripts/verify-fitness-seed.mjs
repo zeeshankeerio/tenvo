@@ -135,8 +135,10 @@ if (previewOnly.length !== 0) {
   errors.push('empty DB showcase must not inject catalog_preview seed rows');
 }
 
+const DEMO_DB_UUID = '11111111-2222-4333-8444-555555555555';
+
 const liveSparse = buildFitnessSupplementShowcase(
-  [{ id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', name: 'Live Whey', sku: 'LW-001', category_name: 'Whey Protein', price: 5000, stock: 10 }],
+  [{ id: DEMO_DB_UUID, name: 'Live Whey', sku: 'LW-001', category_name: 'Whey Protein', price: 5000, stock: 10 }],
   'my-gym-store',
   12
 );
@@ -149,7 +151,30 @@ if (liveSparse[0]?.catalog_preview) {
 
 const demoFill = buildFitnessSupplementShowcase([], 'demo-fitness', 12);
 if (demoFill.length < 12) {
-  errors.push(`demo supplement showcase should seed-fill to 12 (got ${demoFill.length})`);
+  errors.push(`demo supplement showcase should seed-fill to 12 when DB empty (got ${demoFill.length})`);
+}
+
+const demoDbSupp = buildFitnessSupplementShowcase(
+  [
+    {
+      id: DEMO_DB_UUID,
+      name: 'Demo Whey Protein',
+      sku: 'FIT-WHEY-01',
+      category: 'Whey Protein',
+      category_name: 'Whey Protein',
+      price: 8500,
+      stock: 24,
+      domain_data: { supplementtype: 'whey' },
+    },
+  ],
+  'demo-fitness',
+  12
+);
+if (demoDbSupp.length < 1) {
+  errors.push('demo with DB supplements should return DB rows');
+}
+if (demoDbSupp.some((p) => p.catalog_preview)) {
+  errors.push('demo with DB supplements must not mix catalog_preview seed rows');
 }
 
 const liveMembership = buildFitnessMembershipCatalog([], 'my-gym-store');

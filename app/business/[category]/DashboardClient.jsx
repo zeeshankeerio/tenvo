@@ -772,10 +772,11 @@ function BusinessDashboardContent() {
       throw new Error('Business context not ready');
     }
     try {
-      const persistedProductId =
-        editingProduct?.id ??
-        (isPersistedProductUuid(normalizedInput.id) ? normalizedInput.id : null);
-      const isEditing = Boolean(editingProduct || persistedProductId);
+      const inputProductId = isPersistedProductUuid(normalizedInput.id)
+        ? normalizedInput.id
+        : null;
+      const persistedProductId = inputProductId ?? editingProduct?.id ?? null;
+      const isEditing = Boolean(persistedProductId);
       const productId = persistedProductId;
       const toNumber = (value, fallback = 0) => {
         if (value === '' || value === null || value === undefined) return fallback;
@@ -828,7 +829,7 @@ function BusinessDashboardContent() {
 
       // 🚀 ATOMIC PERSISTENCE CALL
       // This single call replaces 3+ sequential network requests with a single ACID transaction
-      await productAPI.upsertIntegrated({
+      const savedProduct = await productAPI.upsertIntegrated({
         productData: {
           ...normalizedProductData,
           business_id: business.id,
@@ -856,6 +857,7 @@ function BusinessDashboardContent() {
 
       setShowProductForm(false);
       setEditingProduct(null);
+      return savedProduct;
     } catch (error) {
       console.error('Error saving product:', error);
       toast.error('Failed to save product: ' + formatInventoryActionError(error), {

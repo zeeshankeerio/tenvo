@@ -42,6 +42,8 @@
     "verify:audit-fixes": "npx tsx scripts/verify-audit-fixes.mjs",
     "verify:textile-storefront": "node scripts/verify-textile-storefront.mjs",
     "verify:fashion-editorial": "node scripts/verify-fashion-editorial.mjs",
+    "verify:fashion-demo-seed": "npx tsx scripts/verify-fashion-demo-seed.mjs",
+    "verify:demo-storefront-sections": "npx tsx scripts/verify-demo-storefront-sections.mjs",
     "build:fashion-gul-sections": "node scripts/build-fashion-gul-sections.mjs",
     "verify:storefront-security": "npm run verify:audit-fixes && npm run verify:storefront-tenancy && npm run verify:storefront-domain-resolution && npm run verify:storefront-checkout-intelligence && npm run verify:registration-flow && npm run verify:domain-packages",
     "verify:campaigns-hub": "node scripts/verify-campaigns-hub.mjs",

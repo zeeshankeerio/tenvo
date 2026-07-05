@@ -1398,6 +1398,7 @@ export function InventoryManager({
                 ),
         });
         if (busyCellSaveGenRef.current.get(saveKey) !== gen) return;
+        await reloadProductsSilent();
       } else {
         const saveRes = await updateProductAction(updatedProduct.id, businessId, updatedProduct);
         if (busyCellSaveGenRef.current.get(saveKey) !== gen) return;
@@ -1448,7 +1449,7 @@ export function InventoryManager({
       console.error('Inventory cell update error:', error);
       throw error;
     }
-  }, [products, category, domainKnowledge, businessId, onUpdate, handleCreateProduct]);
+  }, [products, category, domainKnowledge, businessId, onUpdate, handleCreateProduct, reloadProductsSilent, isBatchEnabled, isSerialEnabled]);
 
   // Column Definitions with Optimized Widths & Alignment
   const columns = useMemo(() => {

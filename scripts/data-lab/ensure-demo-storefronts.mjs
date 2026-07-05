@@ -19,6 +19,8 @@ import { FEATURED_DEMO_STORES } from '../../lib/marketing/demoStores.js';
 import { bootstrapDemoBusiness } from '../../lib/dataLab/bootstrapBusiness.mjs';
 import { seedOperationalData } from '../../lib/dataLab/seedOperations.mjs';
 import { patchFashionStorefrontSettingsBatch } from '../../lib/dataLab/patchFashionStorefrontSettings.mjs';
+import { patchDemoPageSectionsBatch } from '../../lib/dataLab/patchDemoPageSections.mjs';
+import { resolveDemoCatalogMinProducts } from '../../lib/dataLab/demoCatalogMinimum.js';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
 dotenv.config();
@@ -131,7 +133,10 @@ async function main() {
   const needsRepair = before.filter(
     (r) =>
       r.exists &&
-      (!r.categoryOk || !r.active || !r.storefrontEnabled || (r.spec.fullSeed !== false && r.products < 1))
+      (!r.categoryOk ||
+        !r.active ||
+        !r.storefrontEnabled ||
+        r.products < resolveDemoCatalogMinProducts(r.spec))
   );
 
   console.log(`\nAudit: ${before.length} curated demos — ${missing.length} missing, ${needsRepair.length} need repair`);
@@ -171,8 +176,16 @@ async function main() {
     console.log(`\nFashion storefront settings: ${fashionPatched.map((r) => r.domain).join(', ')}`);
   }
 
+  const pageSectionPatchResults = opts.dryRun
+    ? await patchDemoPageSectionsBatch(pool, ALL_DEMO_SEEDS, { dryRun: true })
+    : await patchDemoPageSectionsBatch(pool, ALL_DEMO_SEEDS);
+  const pageSectionsPatched = pageSectionPatchResults.filter((r) => r.patched);
+  if (pageSectionsPatched.length) {
+    console.log(`Homepage banners: ${pageSectionsPatched.map((r) => r.domain).join(', ')}`);
+  }
+
   if (!seedsToBootstrap.length) {
-    console.log('\n✅ All demo storefronts present. Fashion settings synced.');
+    console.log('\n✅ All demo storefronts present. Fashion settings + homepage banners synced.');
     await pool.end();
     return;
   }
