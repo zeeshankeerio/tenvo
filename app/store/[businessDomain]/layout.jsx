@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { buildStoreJsonLd, buildStoreWebSiteJsonLd } from '@/lib/storefront/jsonLd';
 import { StoreProviders } from '@/components/storefront/StoreProviders';
 import { StoreHeader } from '@/components/storefront/StoreHeader';
@@ -34,7 +34,7 @@ import { cn } from '@/lib/utils';
 
 export async function generateMetadata({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   
   if (!result.success) {
     return {
@@ -88,7 +88,7 @@ export async function generateMetadata({ params }) {
 
 export default async function StoreLayout({ children, params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   
   if (!result.success) {
     notFound();

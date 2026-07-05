@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import pool from '@/lib/db';
 import { resolveMemberStorefrontDiscount } from '@/lib/memberships/membershipStorefrontDiscount';
 
@@ -23,7 +23,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Cart subtotal must be greater than zero' }, { status: 400 });
     }
 
-    const bizResult = await getBusinessByDomain(businessDomain);
+    const bizResult = await fetchBusinessByDomain(businessDomain);
     if (!bizResult.success) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 });
     }

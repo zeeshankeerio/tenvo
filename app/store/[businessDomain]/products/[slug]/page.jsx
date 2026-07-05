@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { getProductBySlug, getRelatedProducts } from '@/lib/actions/storefront/products';
 import { ProductGallery } from '@/components/storefront/ProductGallery';
 import { ProductInfo } from '@/components/storefront/ProductInfo';
@@ -18,7 +18,7 @@ import { DealershipProductActions } from '@/components/storefront/sections/deale
 
 export async function generateMetadata({ params }) {
   const { businessDomain, slug } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   
   if (!result.success) {
     return { title: 'Product Not Found' };
@@ -66,7 +66,7 @@ export default async function ProductDetailPage({ params }) {
   const { businessDomain, slug } = await params;
   
   // Validate business
-  const businessResult = await getBusinessByDomain(businessDomain);
+  const businessResult = await fetchBusinessByDomain(businessDomain);
   if (!businessResult.success) {
     notFound();
   }

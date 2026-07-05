@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import pool from '@/lib/db';
 
 export async function POST(request, { params }) {
@@ -13,7 +13,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
     }
 
-    const bizResult = await getBusinessByDomain(businessDomain);
+    const bizResult = await fetchBusinessByDomain(businessDomain);
     if (!bizResult.success) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 });
     }

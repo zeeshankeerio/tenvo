@@ -1,11 +1,11 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { ContactPageClient } from '@/components/storefront/ContactPageClient';
 
 export async function generateMetadata({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   if (!result.success) return { title: 'Contact' };
   return {
     title: `Contact | ${result.business.business_name}`,
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ContactPage({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   if (!result.success) notFound();
 
   return (

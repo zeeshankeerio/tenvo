@@ -3,6 +3,7 @@ import pool from '@/lib/db';
 import { generateOrderNumber, isStorefrontOrderNumberConflict } from '@/lib/utils/order';
 import { sendOrderConfirmationEmail, sendNewOrderMerchantEmail } from '@/lib/email/resend';
 import { resolveStorefrontBusiness } from '@/lib/tenancy/resolveStorefrontBusiness';
+import { invalidateStorefrontCatalog } from '@/lib/storefront/invalidateStorefrontCatalog';
 import { lookupPublicStorefrontOrders } from '@/lib/storefront/publicOrderLookup';
 import {
   parseStockNumber,
@@ -788,6 +789,8 @@ export async function POST(request, { params }) {
     }
 
     await client.query('COMMIT');
+
+    invalidateStorefrontCatalog(business.id);
 
     // Create notification for business (new online order alert)
     try {

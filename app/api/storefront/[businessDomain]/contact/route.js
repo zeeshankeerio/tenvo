@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { sendTransactionalEmail } from '@/lib/email/resend';
 import { StorefrontContactNotification } from '@/lib/email/templates/StorefrontContactNotification';
 import { resolveStoreContact } from '@/lib/storefront/businessContact';
@@ -59,7 +59,7 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: 'Message must be at least 10 characters' }, { status: 400 });
   }
 
-  const bizResult = await getBusinessByDomain(businessDomain);
+  const bizResult = await fetchBusinessByDomain(businessDomain);
   if (!bizResult.success) {
     return NextResponse.json({ error: 'Store not found' }, { status: 404 });
   }

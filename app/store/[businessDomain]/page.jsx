@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { getProducts, getCategories } from '@/lib/actions/storefront/products';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { ProductsSkeleton } from '@/components/storefront/LoadingSkeletons';
@@ -68,7 +68,7 @@ import {
 
 export async function generateMetadata({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   if (!result.success) return { title: 'Store Not Found' };
   const { business } = result;
   const storeName = isPharmacyElevatedStore(business.category)
@@ -150,7 +150,7 @@ function StoreSectionHeader({ title, subtitle, href, accent, linkLabel = 'View a
 export default async function StoreHomePage({ params }) {
   const { businessDomain } = await params;
 
-  const businessResult = await getBusinessByDomain(businessDomain);
+  const businessResult = await fetchBusinessByDomain(businessDomain);
   if (!businessResult.success) notFound();
 
   const { business, settings } = businessResult;

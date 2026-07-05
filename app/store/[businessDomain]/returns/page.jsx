@@ -1,20 +1,22 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { resolveStoreContact } from '@/lib/storefront/businessContact';
 import { RotateCcw, CheckCircle, XCircle, Package, Clock } from 'lucide-react';
 
+export const revalidate = 3600;
+
 export async function generateMetadata({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   if (!result.success) return { title: 'Returns Policy' };
   return { title: `Returns & Exchanges | ${result.business.business_name}` };
 }
 
 export default async function ReturnsPage({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   if (!result.success) notFound();
 
   const { business, settings } = result;

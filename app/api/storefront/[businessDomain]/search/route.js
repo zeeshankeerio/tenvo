@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { searchProducts } from '@/lib/actions/storefront/products';
 
 /**
@@ -17,7 +17,7 @@ export async function GET(request, { params }) {
     }
 
     // Resolve business
-    const bizResult = await getBusinessByDomain(businessDomain);
+    const bizResult = await fetchBusinessByDomain(businessDomain);
     if (!bizResult.success) {
       return NextResponse.json({ products: [] });
     }

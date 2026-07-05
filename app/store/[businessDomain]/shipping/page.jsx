@@ -1,21 +1,24 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { resolveStorefrontCurrency } from '@/lib/storefront/storefrontRegional';
 import { resolveStoreContact } from '@/lib/storefront/businessContact';
 import { Truck, Clock, MapPin, Package, AlertCircle } from 'lucide-react';
 
+/** Semi-static policy page — ISR with tenant shell cache invalidation. */
+export const revalidate = 3600;
+
 export async function generateMetadata({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   if (!result.success) return { title: 'Shipping Info' };
   return { title: `Shipping Information | ${result.business.business_name}` };
 }
 
 export default async function ShippingPage({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   if (!result.success) notFound();
 
   const { business, settings } = result;

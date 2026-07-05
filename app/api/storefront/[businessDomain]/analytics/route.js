@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { recordStorefrontVisit } from '@/lib/storefront/storefrontAnalytics';
 
 /**
@@ -10,7 +10,7 @@ import { recordStorefrontVisit } from '@/lib/storefront/storefrontAnalytics';
 export async function POST(_request, { params }) {
   const { businessDomain } = await params;
 
-  const bizResult = await getBusinessByDomain(businessDomain);
+  const bizResult = await fetchBusinessByDomain(businessDomain);
   if (!bizResult.success) {
     return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
   }

@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 import { assertUserHasBusinessAccess } from '@/lib/tenancy/businessAccess';
+import {
+  buildImageVariantBuffers,
+  buildVariantFileName,
+  PRODUCT_UPLOAD_VARIANTS,
+} from '@/lib/server/uploadImageVariants';
+import { invalidateStorefrontCatalog, invalidateStorefrontTenant } from '@/lib/storefront/invalidateStorefrontCatalog';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -101,6 +107,63 @@ export async function POST(request) {
 
     const uniqueName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const folder = isWideBanner ? 'storefront-hero' : 'images';
+    const isProductUpload = purpose === 'product';
+
+    if (isProductUpload) {
+      let variantBuffers;
+      try {
+        variantBuffers = await buildImageVariantBuffers(buffer, PRODUCT_UPLOAD_VARIANTS);
+      } catch (variantErr) {
+        console.warn('[upload/product-image] Variant generation failed, uploading original:', variantErr?.message);
+        variantBuffers = [{ suffix: '', buffer, width: null, height: null }];
+      }
+
+      /** @type {Record<string, string>} */
+      const variantUrls = {};
+      let primaryUrl = null;
+
+      for (const variant of variantBuffers) {
+        const variantName = buildVariantFileName(uniqueName, variant.suffix);
+        const filePath = `${folder}/${tenantSegment}/${variantName}`;
+
+        const { error: variantUploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, variant.buffer, {
+            contentType: 'image/webp',
+            upsert: false,
+          });
+
+        if (variantUploadError) {
+          console.error('[upload/product-image] Supabase variant upload error:', variantUploadError);
+          if (!primaryUrl && variant.suffix === '') {
+            return NextResponse.json({ error: 'Failed to upload image to storage' }, { status: 500 });
+          }
+          continue;
+        }
+
+        const { data: publicUrlData } = supabase.storage.from('products').getPublicUrl(filePath);
+        const key = variant.suffix === '' ? 'full' : variant.suffix.replace(/^-/, '');
+        variantUrls[key] = publicUrlData.publicUrl;
+        if (variant.suffix === '') {
+          primaryUrl = publicUrlData.publicUrl;
+        }
+      }
+
+      primaryUrl = primaryUrl || variantUrls.full || variantUrls.card || Object.values(variantUrls)[0];
+
+      invalidateStorefrontCatalog(businessId);
+
+      return NextResponse.json({
+        success: true,
+        url: primaryUrl,
+        variants: variantUrls,
+        originalName: file.name,
+        size: file.size,
+        type: 'image/webp',
+        storage: 'supabase',
+      });
+    }
+
     const filePath = `${folder}/${tenantSegment}/${uniqueName}`;
 
     const { error: uploadError } = await supabase.storage
@@ -127,6 +190,10 @@ export async function POST(request) {
     }
 
     const { data: publicUrlData } = supabase.storage.from('products').getPublicUrl(filePath);
+
+    if (isWideBanner) {
+      await invalidateStorefrontTenant(businessId);
+    }
 
     return NextResponse.json({
       success: true,

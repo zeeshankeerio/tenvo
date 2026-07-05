@@ -1,18 +1,20 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
+
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   if (!result.success) return { title: 'Privacy Policy' };
   return { title: `Privacy Policy | ${result.business.business_name}` };
 }
 
 export default async function PrivacyPage({ params }) {
   const { businessDomain } = await params;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
   if (!result.success) notFound();
 
   const { business, settings } = result;

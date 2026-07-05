@@ -5,7 +5,8 @@ import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { verifyBusinessAccess } from '@/lib/auth/access';
 
-const POLL_MS = 5000;
+/** Poll interval — longer cadence reduces DB load (was 5s). */
+const POLL_MS = 15000;
 
 function isMissingNotificationsTable(error) {
   const code = error?.code;
@@ -41,6 +42,8 @@ export async function GET(request) {
   let lastCheck = new Date();
   let isActive = true;
   let consecutiveErrors = 0;
+  /** @type {string | null} */
+  let lastNotificationSignature = null;
 
   function safeEnqueue(controllerRef, text) {
     try {
@@ -65,6 +68,30 @@ export async function GET(request) {
         }
 
         try {
+          const latest = await prismaBase.notifications.findFirst({
+            where: {
+              business_id: businessId,
+              is_dismissed: false,
+            },
+            orderBy: { created_at: 'desc' },
+            select: { id: true, created_at: true },
+          });
+
+          const signature = latest
+            ? `${latest.id}:${latest.created_at?.getTime?.() ?? latest.created_at}`
+            : 'none';
+
+          if (signature === lastNotificationSignature) {
+            if (!safeEnqueue(controller, 'data: {"type":"heartbeat"}\n\n')) {
+              isActive = false;
+              clearInterval(interval);
+            }
+            consecutiveErrors = 0;
+            return;
+          }
+
+          lastNotificationSignature = signature;
+
           const rows = await prismaBase.notifications.findMany({
             where: {
               business_id: businessId,

@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, Home } from 'lucide-react';
-import { getBusinessByDomain } from '@/lib/actions/storefront/business';
+import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
 import { getProducts, getCategories } from '@/lib/actions/storefront/products';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { ProductFilters } from '@/components/storefront/ProductFilters';
@@ -30,7 +30,7 @@ import { RestaurantMenuCatalog } from '@/components/storefront/restaurant/Restau
 export async function generateMetadata({ params, searchParams }) {
   const { businessDomain } = await params;
   const sp = await searchParams;
-  const result = await getBusinessByDomain(businessDomain);
+  const result = await fetchBusinessByDomain(businessDomain);
 
   if (!result.success) {
     return { title: 'Store Not Found' };
@@ -74,7 +74,7 @@ export default async function ProductsPage({ params, searchParams }) {
   const sp = await searchParams;
 
   // Validate business
-  const businessResult = await getBusinessByDomain(businessDomain);
+  const businessResult = await fetchBusinessByDomain(businessDomain);
   if (!businessResult.success) {
     notFound();
   }

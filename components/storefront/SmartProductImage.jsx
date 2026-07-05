@@ -6,10 +6,16 @@ import { cn } from '@/lib/utils';
 import { resolveBrandMonogramUrl } from '@/lib/storefront/storefrontImagePlaceholders';
 import { isDeadImageUrl } from '@/lib/storefront/deadImageHosts';
 import { normalizeStorefrontRemoteImageUrl } from '@/lib/storefront/productImageFallback';
+import {
+  inferImageVariantFromWidth,
+  resolveStorefrontImageSrc,
+  shouldUseDirectCdnImage,
+  buildSupabaseObjectPublicUrl,
+} from '@/lib/storefront/supabaseImageUrl';
 
 /**
- * Renders Next.js Image for https URLs, plain img for data: URIs and remote SVGs.
- * On load error, optionally shows fallbackSrc then a monogram placeholder.
+ * Renders storefront product imagery.
+ * Supabase URLs use CDN transforms (plain img); other HTTPS uses next/image.
  */
 export function SmartProductImage({
   src,
@@ -23,20 +29,21 @@ export function SmartProductImage({
   priority,
   fallbackSrc,
   placeholderLabel,
+  imageVariant,
 }) {
-  // Never render images from permanently-dead hosts; they only trigger failed
-  // optimizer fetches. Treat them as missing so the fallback/placeholder shows.
   const safeSrc = isDeadImageUrl(src)
     ? ''
     : normalizeStorefrontRemoteImageUrl(src || '');
   const [currentSrc, setCurrentSrc] = useState(safeSrc);
   const [failed, setFailed] = useState(false);
   const [fallbackFailed, setFallbackFailed] = useState(false);
+  const [useObjectPublicFallback, setUseObjectPublicFallback] = useState(false);
 
   useEffect(() => {
     setCurrentSrc(safeSrc);
     setFailed(false);
     setFallbackFailed(false);
+    setUseObjectPublicFallback(false);
   }, [safeSrc]);
 
   const activeSrc = failed && fallbackSrc && !fallbackFailed ? fallbackSrc : currentSrc;
@@ -46,6 +53,14 @@ export function SmartProductImage({
       : '';
 
   const handleError = () => {
+    if (
+      shouldUseDirectCdnImage(currentSrc) &&
+      !useObjectPublicFallback &&
+      !failed
+    ) {
+      setUseObjectPublicFallback(true);
+      return;
+    }
     if (fallbackSrc && !failed) {
       setFailed(true);
       return;
@@ -90,6 +105,8 @@ export function SmartProductImage({
           className={cn('absolute inset-0 h-full w-full object-cover', className)}
           style={style}
           onError={handleError}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
         />
       );
     }
@@ -103,6 +120,48 @@ export function SmartProductImage({
         className={cn('object-cover', className)}
         style={style}
         onError={handleError}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+    );
+  }
+
+  const variant =
+    imageVariant || inferImageVariantFromWidth(width || (fill ? 512 : undefined));
+  const cdnSrc = useObjectPublicFallback
+    ? buildSupabaseObjectPublicUrl(renderSrc)
+    : resolveStorefrontImageSrc(renderSrc, { variant });
+  const useDirectCdn = shouldUseDirectCdnImage(renderSrc);
+
+  if (useDirectCdn) {
+    if (fill) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={cdnSrc}
+          alt={alt || ''}
+          className={cn('absolute inset-0 h-full w-full object-cover', className)}
+          style={style}
+          onError={handleError}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchPriority={priority ? 'high' : 'auto'}
+        />
+      );
+    }
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={cdnSrc}
+        alt={alt || ''}
+        width={width || 400}
+        height={height || 400}
+        className={cn('object-cover', className)}
+        style={style}
+        onError={handleError}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchPriority={priority ? 'high' : 'auto'}
       />
     );
   }
