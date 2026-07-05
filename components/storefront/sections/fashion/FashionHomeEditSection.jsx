@@ -5,7 +5,18 @@ import { SmartProductImage } from '@/components/storefront/SmartProductImage';
 import { cn } from '@/lib/utils';
 import { STORE_SECTION_HEADING } from '@/lib/utils/typography';
 
-function HomeEditTile({ tile, className, imageClassName }) {
+const TILE_TEXT_SHADOW_STYLE = {
+  textShadow: '0 1px 2px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.35)',
+};
+
+/**
+ * @param {'hero' | 'banner' | 'half'} variant
+ */
+function HomeEditTile({ tile, variant = 'half', className }) {
+  const isHero = variant === 'hero';
+  const isBanner = variant === 'banner';
+  const isCompact = variant === 'half';
+
   return (
     <Link
       href={tile.href}
@@ -18,20 +29,53 @@ function HomeEditTile({ tile, className, imageClassName }) {
         src={tile.image}
         alt={tile.eyebrow || tile.title || ''}
         fill
-        className={cn('object-cover transition duration-500 group-hover:scale-[1.03]', imageClassName)}
+        className="object-cover transition duration-500 group-hover:scale-[1.03]"
       />
       <div
-        className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-900/25 to-stone-900/10"
+        className={cn(
+          'absolute inset-0',
+          isHero && 'bg-gradient-to-t from-stone-950/85 via-stone-900/40 to-stone-800/15',
+          isBanner && 'bg-gradient-to-t from-stone-950/80 via-stone-900/35 to-stone-900/5',
+          isCompact && 'bg-gradient-to-t from-stone-950/75 via-stone-900/30 to-transparent'
+        )}
         aria-hidden
       />
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-6 text-center text-white sm:px-6">
+      <div
+        className={cn(
+          'absolute inset-0 flex flex-col items-center justify-center text-center',
+          isHero ? 'px-6 py-8 sm:px-10' : isBanner ? 'px-5 py-6 sm:px-8' : 'px-3 py-5 sm:px-4'
+        )}
+      >
         {tile.eyebrow ? (
-          <p className="text-sm font-medium text-white/95 sm:text-lg">{tile.eyebrow}</p>
+          <p
+            style={TILE_TEXT_SHADOW_STYLE}
+            className={cn(
+              'store-heading--inverse !text-white font-medium tracking-wide',
+              isHero ? 'text-base sm:text-lg' : 'text-sm sm:text-base'
+            )}
+          >
+            {tile.eyebrow}
+          </p>
         ) : null}
-        {tile.title ? (
-          <h3 className="mt-1 max-w-md text-sm font-semibold leading-snug sm:text-2xl">{tile.title}</h3>
+        {tile.title && !isCompact ? (
+          <h3
+            style={TILE_TEXT_SHADOW_STYLE}
+            className={cn(
+              'store-heading--inverse !text-white max-w-md font-semibold leading-snug',
+              isHero ? 'mt-3 text-base sm:mt-4 sm:text-xl lg:text-2xl' : 'mt-2 text-sm sm:text-lg lg:text-xl'
+            )}
+          >
+            {tile.title}
+          </h3>
         ) : null}
-        <span className="mt-3 inline-flex min-w-[120px] items-center justify-center rounded-sm bg-stone-900 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-white transition group-hover:bg-stone-800 sm:mt-4 sm:min-w-[190px] sm:py-2.5 sm:text-base">
+        <span
+          className={cn(
+            'inline-flex items-center justify-center rounded-sm bg-stone-900 px-5 py-2 text-xs font-semibold uppercase tracking-[0.12em] !text-white transition group-hover:bg-stone-800',
+            isHero ? 'mt-5 min-w-[140px] sm:mt-6 sm:min-w-[190px] sm:py-2.5 sm:text-sm' : '',
+            isBanner ? 'mt-4 min-w-[130px] sm:min-w-[170px] sm:py-2.5 sm:text-sm' : '',
+            isCompact ? 'mt-4 min-w-[110px] sm:mt-5 sm:min-w-[140px]' : ''
+          )}
+        >
           {tile.ctaLabel || 'Explore'}
         </span>
       </div>
@@ -71,18 +115,18 @@ export function FashionHomeEditSection({ section }) {
         </div>
 
         <div className="grid gap-2.5 lg:grid-cols-2 lg:gap-2.5">
-          <HomeEditTile tile={hero} className="min-h-[320px] sm:min-h-[420px] lg:min-h-[640px]" />
+          <HomeEditTile tile={hero} variant="hero" className="min-h-[320px] sm:min-h-[420px] lg:min-h-[640px]" />
 
           <div className="flex flex-col gap-2.5">
             {banner ? (
-              <HomeEditTile tile={banner} className="min-h-[160px] sm:min-h-[200px] lg:min-h-[260px]" />
+              <HomeEditTile tile={banner} variant="banner" className="min-h-[160px] sm:min-h-[200px] lg:min-h-[260px]" />
             ) : null}
             <div className="grid grid-cols-2 gap-2.5">
               {halfLeft ? (
-                <HomeEditTile tile={halfLeft} className="min-h-[180px] sm:min-h-[220px] lg:min-h-[318px]" />
+                <HomeEditTile tile={halfLeft} variant="half" className="min-h-[180px] sm:min-h-[220px] lg:min-h-[318px]" />
               ) : null}
               {halfRight ? (
-                <HomeEditTile tile={halfRight} className="min-h-[180px] sm:min-h-[220px] lg:min-h-[318px]" />
+                <HomeEditTile tile={halfRight} variant="half" className="min-h-[180px] sm:min-h-[220px] lg:min-h-[318px]" />
               ) : null}
             </div>
           </div>

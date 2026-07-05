@@ -2,9 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { SmartProductImage } from '@/components/storefront/SmartProductImage';
-import { resolveSpotlightBannerImage } from '@/lib/storefront/storefrontImagePlaceholders';
 import { TopCollectionsCarousel } from '@/components/storefront/sections/TopCollectionsCarousel';
 import { TopPicksSection } from '@/components/storefront/sections/TopPicksSection';
 import { FashionDepartmentSections } from '@/components/storefront/sections/fashion/FashionDepartmentSections';
@@ -18,9 +15,10 @@ import {
   formatFashionStoreName,
   resolveFashionTrustPillars,
   resolveFashionBrands,
-  resolveFashionPromoBanners,
   resolveFashionSeoBlocks,
 } from '@/lib/storefront/fashionEditorial';
+import { resolveFashionPromoBanners } from '@/lib/storefront/fashionPromoBanners';
+import { FashionPromoBannersSection } from '@/components/storefront/sections/fashion/FashionPromoBannersSection';
 import { FashionGulAhmedSections } from '@/components/storefront/sections/fashion/FashionGulAhmedSections';
 
 function FashionSeoBlock({ storeName, businessCategory, businessDescription, country, settings, businessDomain }) {
@@ -131,59 +129,12 @@ export function FashionHomeSections({
 
       {promoBanners.length > 0 && (
         <StoreReveal enabled={config.animations}>
-          <section className="bg-stone-100/60 py-8 sm:py-10">
-            <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-              <div className="grid gap-4 sm:grid-cols-2">
-                {promoBanners.map((banner, bannerIndex) => {
-                  const isDark = banner.tone === 'dark' || banner.tone === 'walnut';
-                  const imageSrc = resolveSpotlightBannerImage(banner, businessCategory, bannerIndex);
-                  return (
-                    <Link
-                      key={banner.id}
-                      href={`${productsUrl}${banner.href || ''}`}
-                      className={cn(
-                        'group relative flex min-h-[148px] items-end overflow-hidden rounded-2xl border p-5 shadow-sm transition hover:shadow-md sm:min-h-[188px] sm:p-6',
-                        isDark ? 'border-stone-800/30 bg-stone-950' : 'border-stone-200 bg-white'
-                      )}
-                    >
-                      <SmartProductImage
-                        src={imageSrc}
-                        alt=""
-                        fill
-                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
-                        fallbackSrc={resolveSpotlightBannerImage(banner, businessCategory, bannerIndex + 1)}
-                      />
-                      <div
-                        className={cn(
-                          'absolute inset-0',
-                          isDark
-                            ? 'bg-gradient-to-t from-stone-950/92 via-stone-900/55 to-stone-800/18'
-                            : 'bg-gradient-to-t from-white/95 via-white/82 to-white/35'
-                        )}
-                        aria-hidden
-                      />
-                      <div className="relative z-10 max-w-[85%]">
-                        <h3 className={cn('text-lg font-semibold sm:text-xl', isDark ? 'text-white' : 'text-stone-900')}>
-                          {banner.title}
-                        </h3>
-                        <p className={cn('mt-1 text-sm leading-snug', isDark ? 'text-stone-100/90' : 'text-stone-600')}>
-                          {banner.subtitle}
-                        </p>
-                        <span
-                          className={cn(
-                            'mt-3 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide transition-[gap] group-hover:gap-2',
-                            isDark ? 'text-stone-100' : 'text-stone-800'
-                          )}
-                        >
-                          Shop now <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
+          <FashionPromoBannersSection
+            banners={promoBanners}
+            businessDomain={businessDomain}
+            businessCategory={businessCategory}
+            productsUrl={productsUrl}
+          />
         </StoreReveal>
       )}
 
@@ -209,26 +160,30 @@ export function FashionHomeSections({
 
       {config.showBrandsRow && brands.length > 0 && (
         <StoreReveal enabled={config.animations}>
-          <section className="border-y border-stone-200 bg-white py-10 sm:py-12">
+          <section className="border-y border-stone-200 bg-white py-5 sm:py-6">
             <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-              <div className="mb-6 text-center sm:mb-8 lg:text-left">
-                <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">Trusted labels</p>
-                <h2 className={cn(STORE_SECTION_HEADING, 'mt-2 text-stone-900')}>Shop by brand</h2>
-                <p className="mt-2 text-sm text-stone-600">
-                  Premium Pakistani fashion and fabric brands
-                </p>
-              </div>
-              <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
-                {brands.map((brand) => (
-                  <Link
-                    key={brand.id}
-                    href={`${productsUrl}?search=${encodeURIComponent(brand.name)}`}
-                    className="group relative overflow-hidden rounded-xl border-2 border-stone-200 bg-gradient-to-br from-stone-50 to-white px-5 py-3 text-sm font-semibold text-stone-700 shadow-sm transition-all duration-200 hover:border-stone-300 hover:shadow-md active:scale-95 sm:px-6 sm:py-3.5"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-stone-100 to-stone-50 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-                    <span className="relative">{brand.name}</span>
-                  </Link>
-                ))}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                <div className="shrink-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
+                    Trusted labels
+                  </p>
+                  <h2 className={cn(STORE_SECTION_HEADING, 'mt-1 text-base text-stone-900 sm:text-lg')}>
+                    Shop by brand
+                  </h2>
+                </div>
+                <div className="min-w-0 flex-1 overflow-x-auto scrollbar-hide">
+                  <div className="flex flex-nowrap items-center gap-2 pb-0.5 sm:justify-end">
+                    {brands.map((brand) => (
+                      <Link
+                        key={brand.id}
+                        href={`${productsUrl}?search=${encodeURIComponent(brand.name)}`}
+                        className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-stone-200 bg-stone-50/80 px-3 py-1.5 text-xs font-medium text-stone-700 transition hover:border-stone-300 hover:bg-white hover:text-stone-900 sm:px-3.5 sm:py-2 sm:text-[13px]"
+                      >
+                        {brand.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </section>

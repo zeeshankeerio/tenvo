@@ -38,6 +38,7 @@ import { isSupermarketElevatedStore } from '@/lib/storefront/supermarketStorefro
 import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
 import { supportsFashionGulSections } from '@/lib/storefront/fashionGulSections';
 import { FashionGulSectionsEditor } from '@/components/storefront/admin/FashionGulSectionsEditor';
+import { FashionPromoBannersEditor } from '@/components/storefront/admin/FashionPromoBannersEditor';
 import { HeroCarouselSlidesEditor } from '@/components/storefront/admin/HeroCarouselSlidesEditor';
 import { SupermarketCatalogEditor } from '@/components/storefront/admin/SupermarketCatalogEditor';
 import { getDefaultHeroSlidesTemplate } from '@/lib/storefront/heroPresets';
@@ -1558,6 +1559,12 @@ export function StoreSettingsManager({ business, category }) {
                     />
                   </div>
                 </div>
+                <FashionPromoBannersEditor
+                  fashion={settings.fashion || {}}
+                  setFashion={setFashion}
+                  businessCategory={category || business?.category}
+                  businessId={business?.id}
+                />
                 <FashionGulSectionsEditor
                   fashion={settings.fashion || {}}
                   setFashion={setFashion}
