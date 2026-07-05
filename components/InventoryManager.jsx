@@ -103,6 +103,7 @@ import {
   leanProductPayloadForCreate,
   leanProductPayloadForUpdate,
   formatInventoryActionError,
+  flattenCompositeProductPayload,
 } from '@/lib/utils/productMutationPayload';
 
 import {
@@ -114,7 +115,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ProductForm } from './ProductForm';
-import { isBatchTrackingEnabled, isSerialTrackingEnabled, isSizeColorMatrixEnabled } from '@/lib/utils/domainHelpers';
+import { isSizeColorMatrixEnabled } from '@/lib/utils/domainHelpers';
 import {
   filterMeaningfulBatches,
   filterMeaningfulSerials,
@@ -130,6 +131,7 @@ import {
   consumePendingInventoryFocus,
   inventoryFocusModeToStockFilter,
 } from '@/lib/utils/hubNavigationIntent';
+import { resolveInventoryDomainFeatures } from '@/lib/utils/inventoryDomainFeatures';
 
 /**
  * Inventory Manager Component
@@ -398,10 +400,7 @@ export function InventoryManager({
     if (typeof onUpdate === 'function') {
       try {
         setLoading(true);
-        const mapped = mapExcelRowForSave({ ...productData, business_id: businessId }, category);
-        const payload = prepareCompositeUpsertFromRow(mapped, category, businessId);
-
-        await onUpdate(payload);
+        await onUpdate(buildFlatOnUpdatePayload(productData));
 
         if (!silentToast) {
           toast.success('Product created successfully');
@@ -568,6 +567,30 @@ export function InventoryManager({
     setEditingProduct(product);
     setShowProductFormInternal(true);
   }, [onEdit]);
+
+  const buildFlatOnUpdatePayload = useCallback(
+    (row, { productId } = {}) => {
+      const mapped = mapExcelRowForSave({ ...row, business_id: businessId }, category);
+      const original = productId ? products.find((p) => p.id === productId) : null;
+      const batches = filterMeaningfulBatches(mapped.batches ?? original?.batches ?? []);
+      const serials = filterMeaningfulSerials(
+        mapped.serial_numbers ??
+          mapped.serialNumbers ??
+          original?.serial_numbers ??
+          original?.serialNumbers ??
+          []
+      );
+      const flat = {
+        ...leanProductPayloadForUpdate(mapped),
+        business_id: businessId,
+        batches,
+        serial_numbers: serials,
+      };
+      if (productId) flat.id = productId;
+      return flat;
+    },
+    [businessId, category, products]
+  );
 
   /** Per persisted product id: monotonically increasing save generation to drop stale async results. */
   const busyCellSaveGenRef = useRef(new Map());
@@ -887,12 +910,39 @@ export function InventoryManager({
 
 
   // Domain Feature Flags
-  const isBatchEnabled = domainKnowledge?.batchTrackingEnabled;
-  const isSerialEnabled = domainKnowledge?.serialTrackingEnabled;
-  const isExpiryEnabled = domainKnowledge?.expiryTrackingEnabled;
-  const isMultiLocationEnabled = domainKnowledge?.multiLocationEnabled;
-  const isManufacturingEnabled = domainKnowledge?.manufacturingEnabled;
-  const isVariantEnabled = isSizeColorMatrixEnabled(category) || Boolean(domainKnowledge?.sizeColorMatrixEnabled);
+  const inventoryFeatures = useMemo(
+    () =>
+      resolveInventoryDomainFeatures(category, {
+        domainKnowledge,
+        business,
+        countryIso: regionalPack?.countryIso || standards.countryCode,
+      }),
+    [category, domainKnowledge, business, regionalPack?.countryIso, standards.countryCode]
+  );
+
+  const isBatchEnabled = inventoryFeatures.batchTrackingEnabled;
+  const isSerialEnabled = inventoryFeatures.serialTrackingEnabled;
+  const isExpiryEnabled = inventoryFeatures.expiryTrackingEnabled;
+  const isMultiLocationEnabled = inventoryFeatures.multiLocationEnabled;
+  const isManufacturingEnabled = inventoryFeatures.manufacturingEnabled;
+  const isVariantEnabled =
+    inventoryFeatures.sizeColorMatrixEnabled || isSizeColorMatrixEnabled(category);
+
+  const gridColumnOptions = useMemo(
+    () => ({
+      currencySymbol: standards.currencySymbol,
+      business,
+      domainKnowledge: inventoryFeatures.knowledge,
+      countryIso: regionalPack?.countryIso || standards.countryCode,
+    }),
+    [
+      standards.currencySymbol,
+      business,
+      inventoryFeatures.knowledge,
+      regionalPack?.countryIso,
+      standards.countryCode,
+    ]
+  );
 
   const { applyScanToInventory } = useInventoryScan({
     products,
@@ -935,34 +985,8 @@ export function InventoryManager({
     const old = [...products];
     try {
       if (onUpdate) {
-        // Use composite upsert for updates (unified path)
-        const mapped = mapExcelRowForSave({ ...productData, business_id: businessId }, category);
-        const original = products.find((p) => p.id === productData.id);
-        
-        // Build composite params with relational data preservation
-        const params = prepareCompositeUpsertFromRow(
-          {
-            ...mapped,
-            id: productData.id,
-            batches: filterMeaningfulBatches(mapped.batches ?? original?.batches ?? []),
-            serial_numbers: filterMeaningfulSerials(
-              mapped.serial_numbers ??
-                mapped.serialNumbers ??
-                original?.serial_numbers ??
-                original?.serialNumbers ??
-                []
-            ),
-          },
-          category,
-          businessId
-        );
-        
-        params.productData.id = productData.id;
-        params.isUpdate = true;
-        params.productId = productData.id;
-        
-        await onUpdate(params);
-        
+        await onUpdate(buildFlatOnUpdatePayload(productData, { productId: productData.id }));
+
         if (closeForm) {
           setShowProductFormInternal(false);
           setEditingProduct(null);
@@ -1051,9 +1075,10 @@ export function InventoryManager({
           toast.success(`Tab: ${target.toUpperCase()}`, { duration: 1000, position: 'bottom-center' });
         }
       }
-      // ALT + V (Visual) or ALT + B (Busy)
-      if (e.altKey && (e.key.toLowerCase() === 'v' || e.key.toLowerCase() === 'b')) {
-        const mode = e.key.toLowerCase() === 'v' ? 'visual' : 'busy';
+      // ALT + V (Visual), ALT + B (Busy), ALT + C (Cards)
+      if (e.altKey && ['v', 'b', 'c'].includes(e.key.toLowerCase())) {
+        const key = e.key.toLowerCase();
+        const mode = key === 'v' ? 'visual' : key === 'b' ? 'busy' : 'cards';
         e.preventDefault();
         setViewMode(mode);
         toast.success(`Mode: ${mode.toUpperCase()}`, { duration: 1000, position: 'bottom-center' });
@@ -1246,11 +1271,12 @@ export function InventoryManager({
       return;
     }
 
-    let updatedProduct = mapProductField(
+    let     updatedProduct = mapProductField(
       { ...product, domain_data: parseProductDomainData(product.domain_data) },
       field,
       value,
-      domainKnowledge
+      domainKnowledge,
+      category
     );
 
     if (field === 'unitcost' || field === 'domain_data.unitcost') {
@@ -1264,10 +1290,10 @@ export function InventoryManager({
     const originalProduct = products.find((p) => rowsMatchInventoryRow(p, product));
     updatedProduct = preserveRelationalData(updatedProduct, originalProduct);
 
-    const meaningfulBatches = isBatchTrackingEnabled(category)
+    const meaningfulBatches = isBatchEnabled
       ? filterMeaningfulBatches(originalProduct?.batches || updatedProduct.batches || [])
       : [];
-    const meaningfulSerials = isSerialTrackingEnabled(category)
+    const meaningfulSerials = isSerialEnabled
       ? filterMeaningfulSerials(
           originalProduct?.serial_numbers ||
             originalProduct?.serialNumbers ||
@@ -1418,7 +1444,7 @@ export function InventoryManager({
               <DropdownMenuItem onClick={() => setProductToView(row.original)} className="text-sm">
                 <Eye className="mr-2 h-3.5 w-3.5" /> View Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { setEditingProduct(row.original); setShowProductFormInternal(true); }} className="text-sm">
+              <DropdownMenuItem onClick={() => openProductEdit(row.original)} className="text-sm">
                 <Edit className="mr-2 h-3.5 w-3.5" /> Edit Product
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -1655,8 +1681,7 @@ export function InventoryManager({
 
     const sharedCols = buildInventoryGridColumns(category, {
       mode: 'visual',
-      currencySymbol: standards.currencySymbol,
-      business,
+      ...gridColumnOptions,
     });
 
     const dataCols = sharedCols.map((col) => {
@@ -1698,16 +1723,15 @@ export function InventoryManager({
     });
 
     return [actionsCol, ...dataCols];
-  }, [domainKnowledge, isExpiryEnabled, isBatchEnabled, isManufacturingEnabled, isSerialEnabled, isVariantEnabled, category, standards.currency, standards.currencySymbol, business?.category, handleInventoryCellEdit]);
+  }, [domainKnowledge, isExpiryEnabled, isBatchEnabled, isManufacturingEnabled, isSerialEnabled, isVariantEnabled, category, standards.currency, standards.currencySymbol, business?.category, handleInventoryCellEdit, gridColumnOptions]);
 
   const visualDefaultColumnVisibility = useMemo(() => {
     const sharedCols = buildInventoryGridColumns(category, {
       mode: 'visual',
-      currencySymbol: standards.currencySymbol,
-      business,
+      ...gridColumnOptions,
     });
     return buildSparseDomainColumnVisibility(sharedCols, productsToDisplay, category);
-  }, [category, standards.currencySymbol, business, productsToDisplay]);
+  }, [category, gridColumnOptions, productsToDisplay]);
 
   // Removed standard columns.push since it's now in useMemo initialization
 
@@ -1767,15 +1791,14 @@ export function InventoryManager({
     };
     const dataCols = buildInventoryGridColumns(category, {
       mode: 'busy',
-      currencySymbol: standards.currencySymbol,
-      business,
+      ...gridColumnOptions,
     });
     return [
       statusCol,
       pinnedActions,
       ...dataCols,
     ].filter(Boolean);
-  }, [category, columns, standards.currencySymbol, business]);
+  }, [category, columns, standards.currencySymbol, business, gridColumnOptions]);
 
 
 
@@ -1997,6 +2020,8 @@ export function InventoryManager({
                   products={productsToDisplay}
                   currencySymbol={standards.currencySymbol}
                   businessCategory={business?.category}
+                  domainKnowledge={inventoryFeatures.knowledge}
+                  countryIso={countryIso}
                   resultCount={productsToDisplay.length}
                   onEdit={openProductEdit}
                   onQuickSave={handleInventoryCellEdit}
@@ -2045,10 +2070,7 @@ export function InventoryManager({
                   columns={gridColumns}
                   category={category}
                   getFieldSuggestions={getFieldSuggestions}
-                  onRowClick={(product) => {
-                    setEditingProduct(product);
-                    setShowProductFormInternal(true);
-                  }}
+                  onRowClick={openProductEdit}
                   onAddRow={() => {
                     const previousRow = getLastRowForDefaults(productsToDisplay);
                     const newRow = buildNewInventoryRow(category, businessId, previousRow, { countryIso });
@@ -2084,10 +2106,10 @@ export function InventoryManager({
                   currencySymbol={standards.currencySymbol}
                   businessCategory={business?.category}
                   onView={(p) => setProductToView(p)}
-                  onEdit={(p) => { setEditingProduct(p); setShowProductFormInternal(true); }}
+                  onEdit={openProductEdit}
                   onDelete={(p) => setProductToDelete(p)}
                   onToggleActive={handleToggleActive}
-                  onAdd={() => onAdd ? onAdd() : setShowProductFormInternal(true)}
+                  onAdd={openProductAdd}
                 />
               </div>
             ) : (
@@ -2101,10 +2123,7 @@ export function InventoryManager({
                   exportable={false}
                   initialPageSize={25}
                   initialColumnVisibility={visualDefaultColumnVisibility}
-                  onRowClick={(p) => {
-                    setEditingProduct(p);
-                    setShowProductFormInternal(true);
-                  }}
+                  onRowClick={openProductEdit}
                   onBulkDelete={handleBulkDelete}
                   onExport={async (items) => {
                     const dataToExport = items || productsToDisplay;
@@ -2968,6 +2987,8 @@ export function InventoryManager({
         getFieldSuggestions={getFieldSuggestions}
         business={business}
         currencySymbol={standards.currencySymbol}
+        domainKnowledge={inventoryFeatures.knowledge}
+        countryIso={countryIso}
         onAddRow={(previousRow) =>
           buildNewInventoryRow(
             category,
@@ -3020,6 +3041,7 @@ export function InventoryManager({
           </DialogHeader>
           <StockTransferForm
             businessId={businessId}
+            onStockTransfer={onStockTransfer}
             onClose={() => setShowStockTransferForm(false)}
             onTransferComplete={() => {
               fetchProducts();

@@ -7,7 +7,8 @@ import { BusyGrid } from './BusyGrid';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getDomainColors } from '@/lib/domainColors';
-import { isBatchTrackingEnabled, isSerialTrackingEnabled, getDomainProductFields, resolveDomainFieldKey, normalizeKey } from '@/lib/utils/domainHelpers';
+import { resolveDomainFieldKey, normalizeKey } from '@/lib/utils/domainHelpers';
+import { resolveInventoryDomainFeatures } from '@/lib/utils/inventoryDomainFeatures';
 import { buildInventoryGridColumns, readGridCellValue } from '@/lib/utils/inventoryGridColumns';
 import { buildNewInventoryRow, getLastRowForDefaults } from '@/lib/utils/inventoryRowDefaults';
 import { mapProductField } from '@/lib/utils/productFieldMapper';
@@ -40,6 +41,8 @@ export function ExcelModeModal({
     businessId,
     business = null,
     currencySymbol,
+    domainKnowledge = null,
+    countryIso = '',
 }) {
     const [isFullscreen, setIsFullscreen] = useState(true);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -59,6 +62,21 @@ export function ExcelModeModal({
     const [future, setFuture] = useState([]);
 
     const colors = getDomainColors(category);
+
+    const gridColumnOptions = useMemo(
+        () => ({
+            currencySymbol,
+            business,
+            domainKnowledge,
+            countryIso,
+        }),
+        [currencySymbol, business, domainKnowledge, countryIso]
+    );
+
+    const inventoryFeatures = useMemo(
+        () => resolveInventoryDomainFeatures(category, gridColumnOptions),
+        [category, gridColumnOptions]
+    );
 
     // Sync local data when modal opens (run only on initial open transition)
     useEffect(() => {
@@ -81,14 +99,14 @@ export function ExcelModeModal({
             setHasUnsavedChanges(false);
             setValidationErrors({});
             const sparseKeys = buildSparseHiddenColumnKeys(
-                buildInventoryGridColumns(category, { mode: 'excel', currencySymbol, business }),
+                buildInventoryGridColumns(category, { mode: 'excel', ...gridColumnOptions }),
                 initialChunk,
                 category
             );
             setHiddenCols(sparseKeys);
         }
         wasOpenRef.current = isOpen;
-    }, [isOpen, data, category, business, currencySymbol]);
+    }, [isOpen, data, category, gridColumnOptions]);
 
     // History Logic
     const pushState = useCallback((newData) => {
@@ -167,7 +185,7 @@ export function ExcelModeModal({
     const enhancedColumns = useMemo(() => {
         const isProducts = entityType === 'products' || !entityType;
         let base = isProducts
-            ? [...buildInventoryGridColumns(category, { mode: 'excel', currencySymbol, business })]
+            ? [...buildInventoryGridColumns(category, { mode: 'excel', ...gridColumnOptions })]
             : [...columns];
         const keys = new Set(base.map(c => c.accessorKey || c.id));
         const addIfMissing = (key, header, width) => {
@@ -189,13 +207,13 @@ export function ExcelModeModal({
             addIfMissing('max_stock', 'Max Stock', 90);
             addIfMissing('reorder_point', 'Reorder Point', 110);
         } else {
-            if (isBatchTrackingEnabled(category)) {
+            if (inventoryFeatures.batchTrackingEnabled) {
                 addIfMissing('batch_number', 'Batch #', 120);
                 addIfMissing('batch_quantity', 'Batch Qty', 100);
                 addIfMissing('expiry_date', 'Expiry', 120);
                 addIfMissing('manufacturing_date', 'Mfg Date', 120);
             }
-            if (isSerialTrackingEnabled(category)) {
+            if (inventoryFeatures.serialTrackingEnabled) {
                 addIfMissing('serial_number', 'Serial #', 150);
             }
         }
@@ -245,7 +263,7 @@ export function ExcelModeModal({
         }
 
         return out;
-    }, [columns, category, entityType, business, currencySymbol]);
+    }, [columns, category, entityType, gridColumnOptions, inventoryFeatures.batchTrackingEnabled, inventoryFeatures.serialTrackingEnabled]);
 
     const displayColumns = useMemo(() => {
         return enhancedColumns.filter((c) => {
@@ -384,7 +402,7 @@ export function ExcelModeModal({
     }, [hasUnsavedChanges, localData, isEmptyRow, validateAllData, onSave, onClose]);
 
     const handleLocalCellEdit = useCallback((row, key, value) => {
-        const domainKnowledge = { productFields: getDomainProductFields(category) };
+        const knowledge = inventoryFeatures.knowledge || { productFields: [] };
         setLocalData(prev => {
             const newData = [...prev];
             const idx = newData.findIndex(r => r.id === row.id || (r._tempId && r._tempId === row._tempId));
@@ -393,7 +411,8 @@ export function ExcelModeModal({
                     { ...newData[idx], domain_data: newData[idx].domain_data || {} },
                     key,
                     value,
-                    domainKnowledge
+                    knowledge,
+                    category
                 );
                 newData[idx] = updated;
                 setHasUnsavedChanges(true);
@@ -411,7 +430,7 @@ export function ExcelModeModal({
             }
             return newData;
         });
-    }, [category, pushState, validateRow]);
+    }, [category, pushState, validateRow, inventoryFeatures.knowledge]);
 
     const handleLocalAddRow = useCallback((initialData = null) => {
         // Ensure we strip ID if coming from a duplicate action
@@ -504,11 +523,12 @@ export function ExcelModeModal({
             const rowDefaults = buildNewInventoryRow(
                 category,
                 businessId,
-                getLastRowForDefaults(localData)
+                getLastRowForDefaults(localData),
+                { countryIso }
             );
 
             // Domain (vertical-specific) header aliases → domain_data keys
-            const domainFields = getDomainProductFields(category);
+            const domainFields = inventoryFeatures.knowledge?.productFields || [];
             const domainHeaderMap = new Map();
             domainFields.forEach((field) => {
                 const key = resolveDomainFieldKey(field, category);

@@ -90,8 +90,6 @@ export function StockAdjustmentManager({
         }
 
         const quantityChange = parseFloat(formData.quantity_change);
-        const adjustmentValue = Math.abs(quantityChange) * (product.cost_price || 0);
-        const requiresApproval = adjustmentValue > approvalThreshold;
 
         try {
             await createAdjustment({
@@ -100,14 +98,9 @@ export function StockAdjustmentManager({
                 quantity_change: formData.adjustment_type === 'increase' ? quantityChange : -quantityChange,
                 reason_code: formData.reason_code,
                 reason_notes: formData.reason_notes,
-                requires_approval: requiresApproval
             });
 
-            if (requiresApproval) {
-                toast.success('Adjustment submitted for approval');
-            } else {
-                toast.success('Stock adjusted successfully');
-            }
+            toast.success('Stock adjusted successfully');
 
             setFormData({
                 product_id: '',

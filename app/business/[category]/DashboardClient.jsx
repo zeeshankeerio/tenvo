@@ -18,7 +18,7 @@ import { payrollAPI } from '@/lib/api/payroll';
 import { workflowAPI } from '@/lib/api/workflow';
 import { bulkDeleteAction } from '@/lib/actions/premium/automation/bulk';
 import { getTablesAction, getKitchenQueueAction } from '@/lib/actions/standard/restaurant';
-import { formatInventoryActionError, isPersistedProductUuid } from '@/lib/utils/productMutationPayload';
+import { formatInventoryActionError, isPersistedProductUuid, flattenCompositeProductPayload } from '@/lib/utils/productMutationPayload';
 import { setPendingInventoryFocus } from '@/lib/utils/hubNavigationIntent';
 import { Button } from '@/components/ui/button';
 import { Tabs } from '@/components/ui/tabs';
@@ -766,6 +766,7 @@ function BusinessDashboardContent() {
    */
   const handleSaveProduct = async (productData, options = {}) => {
     const { skipFullWorkspaceRefresh = false, silentToast = false } = options;
+    const normalizedInput = flattenCompositeProductPayload(productData, business?.id);
     if (!business?.id) {
       toast.error('System is initializing. Please try again in 2 seconds.');
       throw new Error('Business context not ready');
@@ -773,7 +774,7 @@ function BusinessDashboardContent() {
     try {
       const persistedProductId =
         editingProduct?.id ??
-        (isPersistedProductUuid(productData.id) ? productData.id : null);
+        (isPersistedProductUuid(normalizedInput.id) ? normalizedInput.id : null);
       const isEditing = Boolean(editingProduct || persistedProductId);
       const productId = persistedProductId;
       const toNumber = (value, fallback = 0) => {
@@ -786,25 +787,25 @@ function BusinessDashboardContent() {
       // composite upsert treats any non-empty `batches` as batch-tracked and omits `stock` from UPDATE.
       const domainCat = business?.category || 'retail-shop';
       const allBatches = isBatchTrackingEnabled(domainCat)
-        ? filterMeaningfulBatches(productData.batches || [])
+        ? filterMeaningfulBatches(normalizedInput.batches || [])
         : [];
       const allSerials = isSerialTrackingEnabled(domainCat)
-        ? filterMeaningfulSerials(productData.serialNumbers || productData.serial_numbers || [])
+        ? filterMeaningfulSerials(normalizedInput.serialNumbers || normalizedInput.serial_numbers || [])
         : [];
       const normalizedProductData = {
-        ...productData,
-        price: toNumber(productData.price, 0),
-        cost_price: toNumber(productData.cost_price, 0),
-        mrp: toNumber(productData.mrp, 0),
-        stock: toNumber(productData.stock, 0),
-        tax_percent: toNumber(productData.tax_percent, 0),
-        min_stock: toNumber(productData.min_stock, 0),
-        max_stock: toNumber(productData.max_stock, 0),
-        min_stock_level: toNumber(productData.min_stock_level, 0),
-        reorder_point: toNumber(productData.reorder_point, 0),
-        reorder_quantity: toNumber(productData.reorder_quantity, 0),
-        expiry_date: productData.expiry_date || null,
-        manufacturing_date: productData.manufacturing_date || null,
+        ...normalizedInput,
+        price: toNumber(normalizedInput.price, 0),
+        cost_price: toNumber(normalizedInput.cost_price, 0),
+        mrp: toNumber(normalizedInput.mrp, 0),
+        stock: toNumber(normalizedInput.stock, 0),
+        tax_percent: toNumber(normalizedInput.tax_percent, 0),
+        min_stock: toNumber(normalizedInput.min_stock, 0),
+        max_stock: toNumber(normalizedInput.max_stock, 0),
+        min_stock_level: toNumber(normalizedInput.min_stock_level, 0),
+        reorder_point: toNumber(normalizedInput.reorder_point, 0),
+        reorder_quantity: toNumber(normalizedInput.reorder_quantity, 0),
+        expiry_date: normalizedInput.expiry_date || null,
+        manufacturing_date: normalizedInput.manufacturing_date || null,
       };
 
       let domainData = normalizedProductData.domain_data;

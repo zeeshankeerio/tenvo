@@ -1,50 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, Package, MapPin, AlertCircle, Send } from 'lucide-react';
+import { ArrowRight, Package, AlertCircle, Send } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { useMultiLocationSync } from '@/lib/hooks/useMultiLocationSync';
-import { OfflineIndicator } from './OfflineIndicator';
+import { warehouseAPI } from '@/lib/api/warehouse';
 import toast from 'react-hot-toast';
 
 /**
- * StockTransferForm Component
- * 
- * Handles stock transfers between warehouses/locations
- * Features:
- * - Source and destination warehouse selection
- * - Available stock validation
- * - Transfer quantity input
- * - Reservation at source on transfer initiation
- * - Notification to receiving location
- * 
- * @param {Object} props
- * @param {string} props.businessId - Business ID
- * @param {Array} props.products - Array of products
- * @param {Array} props.warehouses - Array of warehouses
- * @param {Function} [props.onTransferComplete] - Callback after transfer
- * @param {Function} [props.onClose] - Callback to close form
+ * Stock transfer between warehouse locations — uses Prisma product_stock_locations
+ * via transferStockAction (same path as Locations tab).
  */
 export function StockTransferForm({
     businessId,
     products = [],
     warehouses = [],
+    onStockTransfer,
     onTransferComplete,
     onClose
 }) {
-    const { 
-        transferStock, 
-        getProductLocations, 
-        loading,
-        isOnline,
-        syncing,
-        syncOfflineQueue
-    } = useMultiLocationSync(businessId);
-    
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         product_id: '',
         from_warehouse_id: '',
@@ -56,22 +34,29 @@ export function StockTransferForm({
     const [productLocations, setProductLocations] = useState([]);
     const [loadingLocations, setLoadingLocations] = useState(false);
 
-    // Load product locations when product is selected
     const handleProductChange = async (productId) => {
         setFormData({ ...formData, product_id: productId, from_warehouse_id: '', to_warehouse_id: '' });
-        
-        if (!productId) {
+
+        if (!productId || !businessId) {
             setProductLocations([]);
             return;
         }
 
         setLoadingLocations(true);
         try {
-            const locations = await getProductLocations(productId);
-            setProductLocations(locations);
+            const levels = await warehouseAPI.getLocationStock(businessId);
+            const forProduct = (levels || []).filter((row) => String(row.product_id) === String(productId));
+            setProductLocations(
+                forProduct.map((row) => ({
+                    warehouse_id: row.warehouse_id,
+                    available_quantity: Number(row.quantity ?? 0),
+                    warehouses: { name: row.warehouse_name || 'Warehouse' },
+                }))
+            );
         } catch (error) {
             console.error('Failed to load locations:', error);
             toast.error('Failed to load product locations');
+            setProductLocations([]);
         } finally {
             setLoadingLocations(false);
         }
@@ -96,18 +81,24 @@ export function StockTransferForm({
             return;
         }
 
-        try {
-            await transferStock({
-                product_id: formData.product_id,
-                from_warehouse_id: formData.from_warehouse_id,
-                to_warehouse_id: formData.to_warehouse_id,
-                quantity,
-                notes: formData.notes
-            });
+        const transferPayload = {
+            from_location_id: formData.from_warehouse_id,
+            to_location_id: formData.to_warehouse_id,
+            business_id: businessId,
+            items: [{ product_id: formData.product_id, quantity }],
+            reason: formData.notes || undefined,
+        };
 
-            toast.success('Stock transfer initiated successfully');
-            
-            // Reset form
+        setLoading(true);
+        try {
+            if (onStockTransfer) {
+                await onStockTransfer(transferPayload);
+            } else {
+                await warehouseAPI.createTransfer(transferPayload);
+            }
+
+            toast.success('Stock transferred successfully');
+
             setFormData({
                 product_id: '',
                 from_warehouse_id: '',
@@ -119,15 +110,16 @@ export function StockTransferForm({
 
             onTransferComplete?.();
         } catch (error) {
-            toast.error(error.message || 'Failed to initiate transfer');
+            toast.error(error.message || 'Failed to transfer stock');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const selectedProduct = products.find(p => p.id === formData.product_id);
-    const sourceLocation = productLocations.find(loc => loc.warehouse_id === formData.from_warehouse_id);
+    const sourceLocation = productLocations.find((loc) => loc.warehouse_id === formData.from_warehouse_id);
     const availableStock = sourceLocation?.available_quantity || 0;
-    const sourceWarehouse = warehouses.find(w => w.id === formData.from_warehouse_id);
-    const destWarehouse = warehouses.find(w => w.id === formData.to_warehouse_id);
+    const sourceWarehouse = warehouses.find((w) => w.id === formData.from_warehouse_id);
+    const destWarehouse = warehouses.find((w) => w.id === formData.to_warehouse_id);
 
     return (
         <Card>
@@ -142,16 +134,10 @@ export function StockTransferForm({
                             Transfer stock between warehouses or locations
                         </CardDescription>
                     </div>
-                    <OfflineIndicator 
-                        onSyncRequest={syncOfflineQueue}
-                        isSyncing={syncing}
-                        compact={true}
-                    />
                 </div>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Product Selection */}
                     <div className="space-y-2">
                         <Label>Product *</Label>
                         <select
@@ -162,7 +148,7 @@ export function StockTransferForm({
                             disabled={loading}
                         >
                             <option value="">Select Product</option>
-                            {products.map(product => (
+                            {products.map((product) => (
                                 <option key={product.id} value={product.id}>
                                     {product.name} {product.sku ? `(${product.sku})` : ''}
                                 </option>
@@ -170,10 +156,8 @@ export function StockTransferForm({
                         </select>
                     </div>
 
-                    {/* Transfer Direction */}
                     {formData.product_id && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                            {/* Source Warehouse */}
                             <div className="space-y-2">
                                 <Label>From Warehouse *</Label>
                                 <select
@@ -185,8 +169,8 @@ export function StockTransferForm({
                                 >
                                     <option value="">Select Source</option>
                                     {productLocations
-                                        .filter(loc => loc.available_quantity > 0)
-                                        .map(loc => (
+                                        .filter((loc) => loc.available_quantity > 0)
+                                        .map((loc) => (
                                             <option key={loc.warehouse_id} value={loc.warehouse_id}>
                                                 {loc.warehouses?.name} ({loc.available_quantity} available)
                                             </option>
@@ -194,26 +178,16 @@ export function StockTransferForm({
                                 </select>
                                 {formData.from_warehouse_id && sourceLocation && (
                                     <div className="text-xs text-gray-600">
-                                        Available: <span className="font-semibold text-green-600">
-                                            {sourceLocation.available_quantity}
-                                        </span>
-                                        {sourceLocation.reserved_quantity > 0 && (
-                                            <span className="ml-2">
-                                                Reserved: <span className="font-semibold text-orange-600">
-                                                    {sourceLocation.reserved_quantity}
-                                                </span>
-                                            </span>
-                                        )}
+                                        Available:{' '}
+                                        <span className="font-semibold text-green-600">{sourceLocation.available_quantity}</span>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Arrow */}
                             <div className="flex justify-center">
                                 <ArrowRight className="w-8 h-8 text-wine" />
                             </div>
 
-                            {/* Destination Warehouse */}
                             <div className="space-y-2">
                                 <Label>To Warehouse *</Label>
                                 <select
@@ -225,8 +199,8 @@ export function StockTransferForm({
                                 >
                                     <option value="">Select Destination</option>
                                     {warehouses
-                                        .filter(w => w.id !== formData.from_warehouse_id)
-                                        .map(warehouse => (
+                                        .filter((w) => w.id !== formData.from_warehouse_id)
+                                        .map((warehouse) => (
                                             <option key={warehouse.id} value={warehouse.id}>
                                                 {warehouse.name}
                                                 {warehouse.location && ` - ${warehouse.location}`}
@@ -237,7 +211,6 @@ export function StockTransferForm({
                         </div>
                     )}
 
-                    {/* Quantity */}
                     {formData.from_warehouse_id && formData.to_warehouse_id && (
                         <>
                             <div className="space-y-2">
@@ -252,12 +225,9 @@ export function StockTransferForm({
                                     required
                                     disabled={loading}
                                 />
-                                <p className="text-xs text-gray-600">
-                                    Maximum available: {availableStock} units
-                                </p>
+                                <p className="text-xs text-gray-600">Maximum available: {availableStock} units</p>
                             </div>
 
-                            {/* Transfer Preview */}
                             {formData.quantity && parseFloat(formData.quantity) > 0 && (
                                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                     <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
@@ -267,27 +237,20 @@ export function StockTransferForm({
                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                         <div>
                                             <p className="text-blue-700 font-medium mb-1">From: {sourceWarehouse?.name}</p>
-                                            <p className="text-blue-600">
-                                                Current: {availableStock} units
-                                            </p>
+                                            <p className="text-blue-600">Current: {availableStock} units</p>
                                             <p className="text-blue-600">
                                                 After: {availableStock - parseFloat(formData.quantity)} units
                                             </p>
                                         </div>
                                         <div>
                                             <p className="text-blue-700 font-medium mb-1">To: {destWarehouse?.name}</p>
-                                            <p className="text-blue-600">
-                                                Will receive: {formData.quantity} units
-                                            </p>
-                                            <Badge className="mt-1 bg-yellow-500 text-white text-xs">
-                                                Pending Receipt
-                                            </Badge>
+                                            <p className="text-blue-600">Will receive: {formData.quantity} units</p>
+                                            <Badge className="mt-1 bg-emerald-500 text-white text-xs">Immediate</Badge>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Validation Warning */}
                             {formData.quantity && parseFloat(formData.quantity) > availableStock && (
                                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
                                     <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -298,7 +261,6 @@ export function StockTransferForm({
                                 </div>
                             )}
 
-                            {/* Notes */}
                             <div className="space-y-2">
                                 <Label>Notes (Optional)</Label>
                                 <textarea
@@ -313,15 +275,9 @@ export function StockTransferForm({
                         </>
                     )}
 
-                    {/* Action Buttons */}
                     <div className="flex justify-end gap-2 pt-4 border-t">
                         {onClose && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={onClose}
-                                disabled={loading}
-                            >
+                            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
                                 Cancel
                             </Button>
                         )}
@@ -336,10 +292,10 @@ export function StockTransferForm({
                                 parseFloat(formData.quantity) <= 0 ||
                                 parseFloat(formData.quantity) > availableStock
                             }
-                            className=" bg-emerald-600 hover:bg-emerald-700 text-white"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                             <Send className="w-4 h-4 mr-2" />
-                            {loading ? 'Initiating Transfer...' : 'Initiate Transfer'}
+                            {loading ? 'Transferring...' : 'Transfer Stock'}
                         </Button>
                     </div>
                 </form>

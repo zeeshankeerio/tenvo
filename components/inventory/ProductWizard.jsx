@@ -16,6 +16,8 @@ import { getDomainDefaults } from '@/lib/domainKnowledge';
 import { DomainFieldRenderer } from '@/components/domain/DomainFieldRenderer';
 import { getDomainProductFields, getDomainFormLabels, isHighPrecisionDomain, sanitizeDomainData, resolveDomainFieldKey } from '@/lib/utils/domainHelpers';
 import { validateDomainData } from '@/lib/validation/domainSchemas';
+import toast from 'react-hot-toast';
+import { formatInventoryActionError } from '@/lib/utils/productMutationPayload';
 
 // --- Step Definitions --------------------------------------------------------
 
@@ -624,6 +626,8 @@ export function ProductWizard({
             await onSave?.(payload);
         } catch (err) {
             console.error('ProductWizard save error:', err);
+            toast.error(formatInventoryActionError(err));
+            throw err;
         } finally {
             setIsSaving(false);
         }

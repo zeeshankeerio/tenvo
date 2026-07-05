@@ -11,6 +11,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ProductThumbnail } from '@/components/product/ProductThumbnail';
+import { buildInventoryDomainChips } from '@/lib/utils/inventoryDomainFeatures';
 import {
   Sheet,
   SheetContent,
@@ -37,6 +38,8 @@ export function InventoryMobileProductList({
   products = [],
   currencySymbol = '₹',
   businessCategory,
+  domainKnowledge = null,
+  countryIso = '',
   onEdit,
   onQuickSave,
   onAdd,
@@ -46,6 +49,11 @@ export function InventoryMobileProductList({
   const [quickEdit, setQuickEdit] = useState(null);
   const [draftValue, setDraftValue] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const chipCtx = useMemo(
+    () => ({ domainKnowledge, countryIso, limit: 2 }),
+    [domainKnowledge, countryIso]
+  );
 
   const visibleProducts = useMemo(
     () => products.slice(0, visibleCount),
@@ -109,6 +117,7 @@ export function InventoryMobileProductList({
             const inactive = p.is_active === false;
             const stock = stockTone(p.stock, p.min_stock ?? p.minStock);
             const price = Number(p.price || 0);
+            const domainChips = buildInventoryDomainChips(businessCategory, p, chipCtx);
 
             return (
               <li key={p.id || p._tempId}>
@@ -147,6 +156,15 @@ export function InventoryMobileProductList({
                             Off
                           </span>
                         )}
+                        {domainChips.map((chip) => (
+                          <span
+                            key={`${p.id || p._tempId}-${chip.key}`}
+                            className="rounded-md bg-blue-50 px-1.5 py-0.5 text-[9px] font-medium text-blue-700"
+                            title={`${chip.label}: ${chip.value}`}
+                          >
+                            {chip.value}
+                          </span>
+                        ))}
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" aria-hidden />

@@ -27,6 +27,7 @@
     "db:repair:failed-audit": "node scripts/repair-prisma-failed-audit.mjs",
     "audit:constraints": "tsx scripts/audit_constraints.ts",
     "verify:domains": "bun scripts/verify-domain-wiring.mjs",
+    "verify:inventory-domains": "bun scripts/verify-inventory-domains.mjs",
     "fonts:sync": "node scripts/sync-open-sans-fonts.mjs",
     "verify:regional-market": "bun scripts/verify-regional-market.mjs",
     "verify:registration-flow": "npx tsx scripts/verify-registration-flow.mjs",
