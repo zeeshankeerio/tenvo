@@ -25,7 +25,23 @@ export default function AuthConfirmedPage() {
                 const businesses = await businessAPI.getByUserId(user.id);
                 setTimeout(() => {
                     if (businesses && businesses.length > 0) {
-                        router.push(`/business/${businesses[0].domain}`);
+                        const biz = businesses[0];
+                        
+                        // CRITICAL: Check approval status before redirecting to dashboard
+                        const approvalStatus = biz.approval_status;
+                        const needsApproval = 
+                            approvalStatus === 'pending_approval' || 
+                            approvalStatus === 'info_requested' ||
+                            approvalStatus === 'rejected';
+                        
+                        if (needsApproval) {
+                            router.push('/pending-approval');
+                        } else if (biz.approval_status === 'approved' || biz.approval_status === 'auto_approved') {
+                            router.push(`/business/${biz.domain}`);
+                        } else {
+                            // No approval status set (legacy data) - allow access
+                            router.push(`/business/${biz.domain}`);
+                        }
                     } else {
                         router.push('/register?step=3'); // Or setup page
                     }

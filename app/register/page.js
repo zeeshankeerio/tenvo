@@ -561,6 +561,32 @@ export default function RegisterWizard() {
             return;
         }
 
+        // Clear registration persistence data
+        clearRegistrationData();
+        
+        // CRITICAL: Check approval status BEFORE any other operations
+        if (bizResult.requiresApproval) {
+            toast.success('Registration received! Waiting for approval.', { duration: 4000 });
+            
+            // Clear any cached business shell to prevent optimistic dashboard load
+            if (typeof window !== 'undefined') {
+                try {
+                    localStorage.removeItem('businessData');
+                    localStorage.removeItem('userRole');
+                    localStorage.removeItem('lastBusinessDomain');
+                } catch (e) {
+                    console.error('Failed to clear cache:', e);
+                }
+                
+                // Use window.location.href for full page load (blocks React state updates)
+                window.location.href = '/pending-approval';
+            } else {
+                router.replace('/pending-approval');
+            }
+            return;
+        }
+        
+        // Only reach here if auto-approved (platform owners)
         toast.success('Registration successful! Welcome to Tenvo.');
 
         try {
@@ -573,26 +599,13 @@ export default function RegisterWizard() {
         } catch (updateErr) {
             console.error('Failed to mark setup complete:', updateErr);
         }
-
-        clearRegistrationData();
-        
-        // Check if approval is required (Zoho/Busy-style workflow)
-        if (bizResult.requiresApproval) {
-            // Redirect to pending approval page
-            const pendingPath = `/pending-approval`;
-            if (typeof window !== 'undefined') {
-                window.location.assign(pendingPath);
-            } else {
-                router.replace(pendingPath);
-            }
-            return;
-        }
         
         // Platform owner or auto-approved - go directly to dashboard
         const dashboardDomain = String(formData.handle || '').trim().toLowerCase();
         const dashboardPath = `/business/${encodeURIComponent(dashboardDomain)}?tab=dashboard`;
         if (typeof window !== 'undefined') {
-            window.location.assign(dashboardPath);
+            // Use window.location.href for consistent full page load
+            window.location.href = dashboardPath;
         } else {
             router.replace(dashboardPath);
         }
