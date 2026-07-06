@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,9 +13,9 @@ import toast from 'react-hot-toast';
 
 // Helper for row rendering
 const ReportRow = ({ label, amount, type = 'normal', indent = false, currency = 'PKR' }) => (
-    <div className={`flex justify-between py-2 border-b border-gray-50 ${type === 'total' ? 'font-bold bg-gray-50/50 px-2 rounded mt-1' : ''} ${indent ? 'pl-8' : ''}`}>
-        <span className={`${type === 'total' ? 'text-gray-900' : 'text-gray-600'}`}>{label}</span>
-        <span className={`${type === 'total' ? 'text-gray-900' : 'text-gray-700 font-mono'}`}>
+    <div className={`flex justify-between py-2 border-b border-gray-150 dark:border-slate-800/40 ${type === 'total' ? 'font-bold bg-gray-50/50 dark:bg-slate-900/50 px-2 rounded mt-1' : ''} ${indent ? 'pl-8' : ''}`}>
+        <span className={`${type === 'total' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'}`}>{label}</span>
+        <span className={`${type === 'total' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300 font-mono'}`}>
             {formatCurrency(amount || 0, currency)}
         </span>
     </div>
@@ -23,11 +23,11 @@ const ReportRow = ({ label, amount, type = 'normal', indent = false, currency = 
 
 // Helper for section header
 const SectionHeader = ({ title, icon: Icon, color }) => (
-    <div className="flex items-center gap-2 mt-6 mb-3 pb-2 border-b border-gray-100">
+    <div className="flex items-center gap-2 mt-6 mb-3 pb-2 border-b border-gray-100 dark:border-slate-800">
         <div className={`p-1.5 rounded-lg ${color}`}>
             <Icon className="w-4 h-4 text-white" />
         </div>
-        <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">{title}</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm uppercase tracking-wide">{title}</h3>
     </div>
 );
 
@@ -182,15 +182,15 @@ export default function FinancialReports({ businessId }) {
             <CardHeader className="px-0 pt-0 pb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-2xl font-bold text-gray-900">Financial Reports</CardTitle>
-                        <CardDescription>Comprehensive view of your business financial health.</CardDescription>
+                        <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Financial Reports</CardTitle>
+                        <CardDescription className="text-gray-500 dark:text-gray-400">Comprehensive view of your business financial health.</CardDescription>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="px-0">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 border bg-white p-1">
+                        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 border border-gray-250 dark:border-slate-800 bg-white dark:bg-slate-900 p-1">
                             <TabsTrigger value="pl" className="text-xs sm:text-sm">Profit & Loss</TabsTrigger>
                             <TabsTrigger value="bs" className="text-xs sm:text-sm">Balance Sheet</TabsTrigger>
                             <TabsTrigger value="cf" className="text-xs sm:text-sm">Cash Flow</TabsTrigger>
@@ -200,11 +200,11 @@ export default function FinancialReports({ businessId }) {
                         <div className="flex flex-wrap items-center gap-2 print:hidden">
                             {activeTab === 'pl' ? (
                                 <>
-                                    <div className="flex items-center gap-2 bg-white border rounded-md px-2 py-1">
+                                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-gray-250 dark:border-slate-800 rounded-md px-2 py-1">
                                         <Calendar className="w-4 h-4 text-gray-400" />
-                                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="text-sm outline-none w-32" />
+                                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="text-sm outline-none w-32 bg-transparent text-gray-900 dark:text-gray-100" />
                                         <span className="text-gray-400">-</span>
-                                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="text-sm outline-none w-32" />
+                                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="text-sm outline-none w-32 bg-transparent text-gray-900 dark:text-gray-100" />
                                     </div>
                                     <Button variant="outline" size="sm" onClick={fetchPL} disabled={loading}>
                                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -212,9 +212,9 @@ export default function FinancialReports({ businessId }) {
                                 </>
                             ) : activeTab === 'bs' ? (
                                 <>
-                                    <div className="flex items-center gap-2 bg-white border rounded-md px-2 py-1">
-                                        <span className="text-xs text-gray-500 font-medium">As of:</span>
-                                        <input type="date" value={asOfDate} onChange={e => setAsOfDate(e.target.value)} className="text-sm outline-none w-32" />
+                                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-gray-250 dark:border-slate-800 rounded-md px-2 py-1">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">As of:</span>
+                                        <input type="date" value={asOfDate} onChange={e => setAsOfDate(e.target.value)} className="text-sm outline-none w-32 bg-transparent text-gray-900 dark:text-gray-100" />
                                     </div>
                                     <Button variant="outline" size="sm" onClick={fetchBS} disabled={loading}>
                                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -222,11 +222,11 @@ export default function FinancialReports({ businessId }) {
                                 </>
                             ) : activeTab === 'cf' ? (
                                 <>
-                                    <div className="flex items-center gap-2 bg-white border rounded-md px-2 py-1">
+                                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-gray-250 dark:border-slate-800 rounded-md px-2 py-1">
                                         <Calendar className="w-4 h-4 text-gray-400" />
-                                        <input type="date" value={cfStartDate} onChange={e => setCfStartDate(e.target.value)} className="text-sm outline-none w-32" />
+                                        <input type="date" value={cfStartDate} onChange={e => setCfStartDate(e.target.value)} className="text-sm outline-none w-32 bg-transparent text-gray-900 dark:text-gray-100" />
                                         <span className="text-gray-400">-</span>
-                                        <input type="date" value={cfEndDate} onChange={e => setCfEndDate(e.target.value)} className="text-sm outline-none w-32" />
+                                        <input type="date" value={cfEndDate} onChange={e => setCfEndDate(e.target.value)} className="text-sm outline-none w-32 bg-transparent text-gray-900 dark:text-gray-100" />
                                     </div>
                                     <Button variant="outline" size="sm" onClick={fetchCashFlow} disabled={loading}>
                                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -244,19 +244,19 @@ export default function FinancialReports({ businessId }) {
 
                     {/* PROFIT & LOSS CONTENT */}
                     <TabsContent value="pl">
-                        <Card className="border shadow-sm print:shadow-none bg-white min-h-[500px]">
+                        <Card className="border border-gray-200 dark:border-slate-800 shadow-sm print:shadow-none bg-white dark:bg-slate-950 min-h-[500px]">
                             <CardContent className="p-3 sm:p-8">
-                                <div className="text-center mb-8 border-b pb-4">
-                                    <h2 className="text-2xl font-bold text-gray-900 uppercase">Profit & Loss Statement</h2>
+                                <div className="text-center mb-8 border-b border-gray-100 dark:border-slate-800 pb-4">
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 uppercase">Profit & Loss Statement</h2>
                                     {business?.business_name && (
-                                        <p className="text-gray-800 font-semibold text-base mt-2">{business.business_name}</p>
+                                        <p className="text-gray-800 dark:text-gray-200 font-semibold text-base mt-2">{business.business_name}</p>
                                     )}
                                     {(business?.ntn || business?.address) && (
-                                        <p className="text-gray-500 text-xs mt-1">
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                                             {[taxIdLine, business.address].filter(Boolean).join(' · ')}
                                         </p>
                                     )}
-                                    <p className="text-gray-500 text-sm mt-1">
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                                         For the period {new Date(startDate).toLocaleDateString()} to {new Date(endDate).toLocaleDateString()}
                                     </p>
                                 </div>
@@ -296,16 +296,16 @@ export default function FinancialReports({ businessId }) {
                                         </section>
 
                                         {/* GROSS PROFIT SUMMARY */}
-                                        <section className="bg-green-50/50 p-4 rounded-xl border border-green-100 flex items-center justify-between">
+                                        <section className="bg-green-50/50 dark:bg-emerald-950/20 p-4 rounded-xl border border-green-100 dark:border-emerald-900/30 flex items-center justify-between">
                                             <div>
-                                                <h3 className="font-bold text-green-800">Gross Profit</h3>
-                                                <p className="text-green-600/70 text-xs">Operating Income - COGS</p>
+                                                <h3 className="font-bold text-green-800 dark:text-emerald-300">Gross Profit</h3>
+                                                <p className="text-green-600/70 dark:text-emerald-400/60 text-xs">Operating Income - COGS</p>
                                             </div>
                                             <div className="text-right">
-                                                <div className={`text-xl font-bold ${Number(plData.grossProfit) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                                <div className={`text-xl font-bold ${Number(plData.grossProfit) >= 0 ? 'text-green-700 dark:text-emerald-400' : 'text-red-700 dark:text-rose-400'}`}>
                                                     {formatCurrency(Number(plData.grossProfit), reportCurrency)}
                                                 </div>
-                                                <div className="text-[10px] font-bold text-green-600 uppercase tracking-wider">
+                                                <div className="text-[10px] font-bold text-green-600 dark:text-emerald-500 uppercase tracking-wider">
                                                     {Number(plData.totalIncome) > 0 ? Math.round((Number(plData.grossProfit) / Number(plData.totalIncome)) * 100) : 0}% Margin
                                                 </div>
                                             </div>
@@ -320,20 +320,24 @@ export default function FinancialReports({ businessId }) {
                                                         <ReportRow currency={reportCurrency} key={acc.id} label={acc.name} amount={acc.amount} />
                                                     ))
                                                 ) : (
-                                                    <div className="text-gray-400 italic py-2 px-4">No other expenses recorded</div>
+                                                    <div className="text-gray-400 dark:text-gray-500 italic py-2 px-4">No other expenses recorded</div>
                                                 )}
                                                 <ReportRow currency={reportCurrency} label="Total Operating Expenses" amount={plData.totalExpense - plData.totalCOGS} type="total" />
                                             </div>
                                         </section>
 
                                         {/* NET INCOME SUMMARY */}
-                                        <section className="bg-gray-900 p-6 rounded-xl shadow-lg flex items-center justify-between mt-8 text-white">
+                                        <section className={`p-6 rounded-xl border flex items-center justify-between mt-8 ${
+                                            Number(plData.netIncome) >= 0 
+                                                ? 'bg-emerald-50/50 border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/30' 
+                                                : 'bg-red-50/50 border-red-100 dark:bg-red-950/20 dark:border-red-900/30'
+                                        }`}>
                                             <div>
-                                                <h3 className="text-lg font-bold">Net Income</h3>
-                                                <p className="text-gray-400 text-sm">Gross Profit - Operating Expenses</p>
+                                                <h3 className={`text-lg font-bold ${Number(plData.netIncome) >= 0 ? 'text-emerald-900 dark:text-emerald-300' : 'text-red-900 dark:text-red-300'}`}>Net Income</h3>
+                                                <p className={`${Number(plData.netIncome) >= 0 ? 'text-emerald-700/80 dark:text-emerald-400/80' : 'text-red-700/80 dark:text-red-400/80'} text-xs mt-0.5`}>Gross Profit - Operating Expenses</p>
                                             </div>
                                             <div className="text-right">
-                                                <div className={`text-2xl font-bold ${Number(plData.netIncome) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                <div className={`text-2xl font-bold ${Number(plData.netIncome) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                                     {formatCurrency(Number(plData.netIncome), reportCurrency)}
                                                 </div>
                                             </div>
@@ -348,19 +352,19 @@ export default function FinancialReports({ businessId }) {
 
                     {/* BALANCE SHEET CONTENT */}
                     <TabsContent value="bs">
-                        <Card className="border shadow-sm print:shadow-none bg-white min-h-[500px]">
+                        <Card className="border border-gray-200 dark:border-slate-800 shadow-sm print:shadow-none bg-white dark:bg-slate-950 min-h-[500px]">
                             <CardContent className="p-3 sm:p-8">
-                                <div className="text-center mb-8 border-b pb-4">
-                                    <h2 className="text-2xl font-bold text-gray-900 uppercase">Balance Sheet</h2>
+                                <div className="text-center mb-8 border-b border-gray-100 dark:border-slate-800 pb-4">
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 uppercase">Balance Sheet</h2>
                                     {business?.business_name && (
-                                        <p className="text-gray-800 font-semibold text-base mt-2">{business.business_name}</p>
+                                        <p className="text-gray-800 dark:text-gray-200 font-semibold text-base mt-2">{business.business_name}</p>
                                     )}
                                     {(business?.ntn || business?.address) && (
-                                        <p className="text-gray-500 text-xs mt-1">
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                                             {[taxIdLine, business.address].filter(Boolean).join(' · ')}
                                         </p>
                                     )}
-                                    <p className="text-gray-500 text-sm mt-1">
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                                         As of {new Date(asOfDate).toLocaleDateString()}
                                     </p>
                                 </div>
@@ -377,7 +381,7 @@ export default function FinancialReports({ businessId }) {
                                                     {bsData.assets.map(acc => (
                                                         <ReportRow currency={reportCurrency} key={acc.id} label={acc.name} amount={acc.balance} />
                                                     ))}
-                                                    <div className="mt-4 pt-2 border-t-2 border-gray-900">
+                                                    <div className="mt-4 pt-2 border-t-2 border-gray-900 dark:border-gray-100">
                                                         <ReportRow currency={reportCurrency} label="Total Assets" amount={bsData.totalAssets} type="total" />
                                                     </div>
                                                 </div>
@@ -407,13 +411,13 @@ export default function FinancialReports({ businessId }) {
                                                 </div>
                                             </section>
 
-                                            <div className="pt-4 mt-4 border-t-2 border-gray-900 bg-gray-50 p-2 rounded">
-                                                <div className="flex justify-between items-center font-bold text-gray-900">
+                                            <div className="pt-4 mt-4 border-t-2 border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-slate-900/50 p-2 rounded">
+                                                <div className="flex justify-between items-center font-bold text-gray-900 dark:text-gray-100">
                                                     <span>Total Liabilities & Equity</span>
                                                     <span>{formatCurrency(bsData.totalLiabilitiesAndEquity, reportCurrency)}</span>
                                                 </div>
                                                 {!bsData.isBalanced && (
-                                                    <div className="text-xs text-red-500 mt-1 font-medium bg-red-50 p-1 rounded">
+                                                    <div className="text-xs text-red-500 mt-1 font-medium bg-red-50 dark:bg-red-950/20 p-1 rounded">
                                                         Unbalanced: {formatCurrency(Math.abs(bsData.totalAssets - bsData.totalLiabilitiesAndEquity), reportCurrency)} difference
                                                     </div>
                                                 )}
@@ -429,19 +433,19 @@ export default function FinancialReports({ businessId }) {
 
                     {/* CASH FLOW STATEMENT */}
                     <TabsContent value="cf">
-                        <Card className="border shadow-sm print:shadow-none bg-white min-h-[500px]">
+                        <Card className="border border-gray-200 dark:border-slate-800 shadow-sm print:shadow-none bg-white dark:bg-slate-950 min-h-[500px]">
                             <CardContent className="p-3 sm:p-8">
-                                <div className="text-center mb-8 border-b pb-4">
-                                    <h2 className="text-2xl font-bold text-gray-900 uppercase">Cash Flow Statement</h2>
+                                <div className="text-center mb-8 border-b border-gray-100 dark:border-slate-800 pb-4">
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 uppercase">Cash Flow Statement</h2>
                                     {business?.business_name && (
-                                        <p className="text-gray-800 font-semibold text-base mt-2">{business.business_name}</p>
+                                        <p className="text-gray-800 dark:text-gray-200 font-semibold text-base mt-2">{business.business_name}</p>
                                     )}
                                     {(business?.ntn || business?.address) && (
-                                        <p className="text-gray-500 text-xs mt-1">
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                                             {[taxIdLine, business.address].filter(Boolean).join(' · ')}
                                         </p>
                                     )}
-                                    <p className="text-gray-500 text-sm mt-1">
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                                         For the period {new Date(cfStartDate).toLocaleDateString()} to {new Date(cfEndDate).toLocaleDateString()} (Indirect Method)
                                     </p>
                                 </div>
@@ -484,23 +488,27 @@ export default function FinancialReports({ businessId }) {
                                         </section>
 
                                         {/* Net Change */}
-                                        <section className="bg-gray-900 p-6 rounded-xl shadow-lg mt-8 text-white space-y-4">
+                                        <section className={`p-6 rounded-xl border mt-8 space-y-4 ${
+                                            cfData.netChange >= 0 
+                                                ? 'bg-emerald-50/50 border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/30' 
+                                                : 'bg-red-50/50 border-red-100 dark:bg-red-950/20 dark:border-red-900/30'
+                                        }`}>
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <h3 className="text-lg font-bold">Net Change in Cash</h3>
-                                                    <p className="text-gray-400 text-sm">Operating + Investing + Financing</p>
+                                                    <h3 className={`text-lg font-bold ${cfData.netChange >= 0 ? 'text-emerald-900 dark:text-emerald-300' : 'text-red-900 dark:text-red-300'}`}>Net Change in Cash</h3>
+                                                    <p className={`${cfData.netChange >= 0 ? 'text-emerald-700/80 dark:text-emerald-400/80' : 'text-red-700/80 dark:text-red-400/80'} text-xs mt-0.5`}>Operating + Investing + Financing</p>
                                                 </div>
-                                                <div className={`text-2xl font-bold ${cfData.netChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                <div className={`text-2xl font-bold ${cfData.netChange >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                                     {formatCurrency(cfData.netChange, reportCurrency)}
                                                 </div>
                                             </div>
-                                            <div className="border-t border-gray-700 pt-3 flex justify-between text-sm">
-                                                <span className="text-gray-400">Beginning Cash Balance</span>
-                                                <span className="font-mono text-gray-300">{formatCurrency(cfData.cashStart, reportCurrency)}</span>
+                                            <div className={`border-t pt-3 flex justify-between text-sm ${cfData.netChange >= 0 ? 'border-emerald-100/50 dark:border-emerald-900/30' : 'border-red-100/50 dark:border-red-900/30'}`}>
+                                                <span className={cfData.netChange >= 0 ? 'text-emerald-700/80 dark:text-emerald-400/80' : 'text-red-700/80 dark:text-red-400/80'}>Beginning Cash Balance</span>
+                                                <span className={`font-mono ${cfData.netChange >= 0 ? 'text-emerald-900/90 dark:text-emerald-300/90' : 'text-red-900/90 dark:text-red-300/90'}`}>{formatCurrency(cfData.cashStart, reportCurrency)}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
-                                                <span className="text-gray-400">Ending Cash Balance</span>
-                                                <span className="font-mono text-white font-bold">{formatCurrency(cfData.cashEnd, reportCurrency)}</span>
+                                                <span className={cfData.netChange >= 0 ? 'text-emerald-700/80 dark:text-emerald-400/80' : 'text-red-700/80 dark:text-red-400/80'}>Ending Cash Balance</span>
+                                                <span className={`font-mono font-bold ${cfData.netChange >= 0 ? 'text-emerald-950 dark:text-emerald-200' : 'text-red-950 dark:text-red-200'}`}>{formatCurrency(cfData.cashEnd, reportCurrency)}</span>
                                             </div>
                                         </section>
                                     </div>

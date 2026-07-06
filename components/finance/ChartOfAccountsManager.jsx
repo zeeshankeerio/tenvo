@@ -123,7 +123,7 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
     return (
         <div className="min-w-0 space-y-4 overflow-x-hidden touch-manipulation">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h3 className="text-sm font-bold text-gray-800">Chart of Accounts Management</h3>
+                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">Chart of Accounts Management</h3>
                 <div className="flex flex-wrap items-center gap-2">
                     {accounts.length === 0 && (
                         <Button
@@ -131,7 +131,7 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
                             variant="outline"
                             disabled={seeding}
                             onClick={handleInitializeStandardCoa}
-                            className="rounded-xl h-8 px-3 font-bold text-xs border-brand-200 text-brand-primary"
+                            className="rounded-xl h-8 px-3 font-bold text-xs border-brand-200 dark:border-brand-800 text-brand-primary dark:text-brand-400"
                         >
                             {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BookOpen className="w-3.5 h-3.5 mr-1" />}
                             Standard COA
@@ -144,17 +144,17 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
             </div>
 
             {accounts.length === 0 && !isEditing && (
-                <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-3 text-sm text-amber-900">
+                <div className="rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/60 dark:bg-amber-950/20 px-4 py-3 text-sm text-amber-900 dark:text-amber-300">
                     <span className="font-bold">No GL accounts yet.</span>{' '}
                     Use <strong>Standard COA</strong> to load the default chart, or add accounts manually.
                 </div>
             )}
 
             {isEditing && (
-                <Card className="border border-emerald-100 shadow-md">
-                    <CardHeader className="bg-emerald-50/50 pb-4 border-b">
+                <Card className="border border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-slate-950 shadow-md">
+                    <CardHeader className="bg-emerald-50/50 dark:bg-emerald-950/10 pb-4 border-b border-emerald-100 dark:border-emerald-900/30">
                         <div className="flex justify-between items-center">
-                            <CardTitle className="text-sm font-bold text-emerald-800">
+                            <CardTitle className="text-sm font-bold text-emerald-800 dark:text-emerald-400">
                                 {currentAccount ? 'Edit Account' : 'New GL Account'}
                             </CardTitle>
                             <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)} className="h-6 w-6">
@@ -164,21 +164,21 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
                     </CardHeader>
                     <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-xs font-bold text-gray-600">Account Code *</Label>
-                            <Input value={formData.code} onChange={e => setFormData({ ...formData, code: e.target.value })} disabled={currentAccount?.is_system} placeholder="e.g. 1010" />
-                            {currentAccount?.is_system && <p className="text-[10px] text-amber-600 font-semibold"><ShieldAlert className="inline w-3 h-3 mr-1"/>System Code</p>}
+                            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">Account Code *</Label>
+                            <Input className="bg-white dark:bg-slate-900 border-gray-250 dark:border-slate-800 text-gray-900 dark:text-gray-100" value={formData.code} onChange={e => setFormData({ ...formData, code: e.target.value })} disabled={currentAccount?.is_system} placeholder="e.g. 1010" />
+                            {currentAccount?.is_system && <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold"><ShieldAlert className="inline w-3 h-3 mr-1"/>System Code</p>}
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-xs font-bold text-gray-600">Account Name *</Label>
-                            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Bank Account" />
+                            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">Account Name *</Label>
+                            <Input className="bg-white dark:bg-slate-900 border-gray-250 dark:border-slate-800 text-gray-900 dark:text-gray-100" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Bank Account" />
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-xs font-bold text-gray-600">Primary Type *</Label>
+                            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">Primary Type *</Label>
                             <select 
                                 value={formData.type} 
                                 onChange={e => setFormData({ ...formData, type: e.target.value })} 
                                 disabled={currentAccount?.is_system}
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input dark:border-slate-800 bg-background dark:bg-slate-900 text-foreground dark:text-gray-100 px-3 py-2 text-sm ring-offset-background"
                             >
                                 <option value="asset">Asset</option>
                                 <option value="liability">Liability</option>
@@ -188,12 +188,12 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-xs font-bold text-gray-600">Sub-Type</Label>
-                            <Input value={formData.sub_type} onChange={e => setFormData({ ...formData, sub_type: e.target.value })} disabled={currentAccount?.is_system} placeholder="e.g. current_asset" />
+                            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">Sub-Type</Label>
+                            <Input className="bg-white dark:bg-slate-900 border-gray-250 dark:border-slate-800 text-gray-900 dark:text-gray-100" value={formData.sub_type} onChange={e => setFormData({ ...formData, sub_type: e.target.value })} disabled={currentAccount?.is_system} placeholder="e.g. current_asset" />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                            <Label className="text-xs font-bold text-gray-600">Description</Label>
-                            <Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Account usage details" />
+                            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">Description</Label>
+                            <Input className="bg-white dark:bg-slate-900 border-gray-250 dark:border-slate-800 text-gray-900 dark:text-gray-100" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Account usage details" />
                         </div>
                         <div className="md:col-span-2 flex justify-end gap-2 mt-2">
                             <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
@@ -211,30 +211,30 @@ export function ChartOfAccountsManager({ businessId, accounts, onRefresh }) {
                     const typeAccounts = grouped[type];
                     if (!typeAccounts || typeAccounts.length === 0) return null;
                     return (
-                        <div key={type} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
-                                <Layers className="w-4 h-4 text-gray-400" />
-                                <h4 className="text-xs font-semibold uppercase text-gray-600 tracking-wider flex-1">{type}s</h4>
-                                <span className="text-[10px] font-bold text-gray-400 bg-white px-2 py-0.5 rounded-full border">{typeAccounts.length}</span>
+                        <div key={type} className="bg-white dark:bg-slate-950 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                            <div className="bg-gray-50 dark:bg-slate-900/50 px-4 py-2 border-b border-gray-200 dark:border-slate-800 flex items-center gap-2">
+                                <Layers className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                <h4 className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 tracking-wider flex-1">{type}s</h4>
+                                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-gray-200 dark:border-slate-800">{typeAccounts.length}</span>
                             </div>
-                            <div className="divide-y divide-gray-100">
+                            <div className="divide-y divide-gray-100 dark:divide-slate-800/60">
                                 {typeAccounts.sort((a,b) => a.code.localeCompare(b.code)).map(acc => (
-                                    <div key={acc.id} className="flex items-center gap-2 p-3 transition-colors hover:bg-gray-50/50 group">
-                                        <div className="w-14 shrink-0 font-mono text-xs font-bold text-gray-500 sm:w-16">{acc.code}</div>
+                                    <div key={acc.id} className="flex items-center gap-2 p-3 transition-colors hover:bg-gray-50/50 dark:hover:bg-slate-900/10 group">
+                                        <div className="w-14 shrink-0 font-mono text-xs font-bold text-gray-500 dark:text-gray-400 sm:w-16">{acc.code}</div>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm font-semibold text-gray-800">{acc.name}</span>
-                                                {acc.is_system && <span className="text-[10px] uppercase tracking-widest font-semibold bg-brand-50 text-brand-primary px-1.5 py-0.5 rounded-sm">System</span>}
-                                                {!acc.is_active && <span className="text-[10px] uppercase tracking-widest font-semibold bg-red-50 text-red-600 px-1.5 py-0.5 rounded-sm">Inactive</span>}
+                                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{acc.name}</span>
+                                                {acc.is_system && <span className="text-[10px] uppercase tracking-widest font-semibold bg-brand-50 dark:bg-brand-950/30 text-brand-primary dark:text-brand-400 px-1.5 py-0.5 rounded-sm">System</span>}
+                                                {!acc.is_active && <span className="text-[10px] uppercase tracking-widest font-semibold bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-sm">Inactive</span>}
                                             </div>
-                                            {acc.description && <p className="text-[10px] text-gray-400 mt-0.5">{acc.description}</p>}
+                                            {acc.description && <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{acc.description}</p>}
                                         </div>
                                         <div className="flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-brand-primary" onClick={() => handleEdit(acc)}>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 dark:text-gray-500 hover:text-brand-primary dark:hover:text-brand-light" onClick={() => handleEdit(acc)}>
                                                 <Edit2 className="w-3 h-3" />
                                             </Button>
                                             {!acc.is_system && (
-                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-red-600" onClick={() => handleDelete(acc.id, acc.is_system)}>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400" onClick={() => handleDelete(acc.id, acc.is_system)}>
                                                     <Trash2 className="w-3 h-3" />
                                                 </Button>
                                             )}

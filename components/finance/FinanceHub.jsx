@@ -608,13 +608,13 @@ export default function FinanceHub({ businessId, initialTab, businessCategory = 
                 return <FinanceOverview accounts={accounts} expenses={expenses} creditNotes={creditNotes} currency={effectiveCurrency} loading={loading} />;
             case 'statements':
                 return (
-                    <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+                    <div className="rounded-xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
                         <FinancialReports businessId={effectiveBusinessId} category={businessCategory} />
                     </div>
                 );
             case 'general-ledger':
                 return (
-                    <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+                    <div className="rounded-xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
                         <GeneralLedgerReport businessId={effectiveBusinessId} />
                     </div>
                 );

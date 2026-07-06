@@ -146,15 +146,15 @@ export function GeneralLedgerReport({ businessId }) {
     };
 
     return (
-        <Card className="w-full min-w-0 overflow-x-hidden shadow-sm">
-            <CardHeader className="bg-gray-50/50 pb-4">
+        <Card className="w-full min-w-0 overflow-x-hidden border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
+            <CardHeader className="bg-gray-50/50 dark:bg-slate-900/20 border-b border-gray-100 dark:border-slate-850 pb-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0">
-                        <CardTitle className="flex items-center gap-2 text-xl font-bold text-gray-800">
+                        <CardTitle className="flex items-center gap-2 text-xl font-bold text-gray-800 dark:text-gray-100">
                             <BookOpen className="h-6 w-6 text-wine" />
                             General Ledger
                         </CardTitle>
-                        <CardDescription>Double-entry accounting records with full audit trail</CardDescription>
+                        <CardDescription className="text-gray-500 dark:text-gray-400">Double-entry accounting records with full audit trail</CardDescription>
                     </div>
                     <Button type="button" variant="outline" className="w-full gap-2 sm:w-auto" onClick={handleExportCsv} disabled={entries.length === 0}>
                         <Download className="h-4 w-4" /> Export CSV
@@ -164,10 +164,10 @@ export function GeneralLedgerReport({ businessId }) {
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                     <div className="w-full sm:w-[200px]">
                         <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-                            <SelectTrigger className="bg-white">
+                            <SelectTrigger className="bg-white dark:bg-slate-900 border-gray-250 dark:border-slate-800 text-gray-900 dark:text-gray-100">
                                 <SelectValue placeholder="All Accounts" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
                                 <SelectItem value="all">All Accounts</SelectItem>
                                 {accounts.map(acc => (
                                     <SelectItem key={acc.id} value={acc.id}>
@@ -182,14 +182,14 @@ export function GeneralLedgerReport({ businessId }) {
                             type="date"
                             value={startDate}
                             onChange={e => setStartDate(e.target.value)}
-                            className="min-w-0 flex-1 bg-white sm:w-[140px] sm:flex-none"
+                            className="min-w-0 flex-1 bg-white dark:bg-slate-900 border-gray-250 dark:border-slate-800 text-gray-900 dark:text-gray-100 sm:w-[140px] sm:flex-none"
                         />
-                        <span className="text-gray-400">to</span>
+                        <span className="text-gray-400 dark:text-gray-500">to</span>
                         <Input
                             type="date"
                             value={endDate}
                             onChange={e => setEndDate(e.target.value)}
-                            className="min-w-0 flex-1 bg-white sm:w-[140px] sm:flex-none"
+                            className="min-w-0 flex-1 bg-white dark:bg-slate-900 border-gray-250 dark:border-slate-800 text-gray-900 dark:text-gray-100 sm:w-[140px] sm:flex-none"
                         />
                     </div>
                     <Button onClick={fetchLedger} className="w-full bg-wine text-white hover:bg-wine/90 sm:w-auto">
@@ -203,33 +203,33 @@ export function GeneralLedgerReport({ businessId }) {
                 <div className="hidden lg:block">
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-gray-50 border-b border-gray-100">
-                            <TableHead className="w-[120px]">Date</TableHead>
-                            <TableHead>Account</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead className="text-right">Debit</TableHead>
-                            <TableHead className="text-right">Credit</TableHead>
-                            {isSingleAccount && <TableHead className="text-right bg-blue-50/50">Balance</TableHead>}
+                        <TableRow className="bg-gray-50 dark:bg-slate-900/30 border-b border-gray-100 dark:border-slate-850 hover:bg-transparent">
+                            <TableHead className="w-[120px] text-gray-700 dark:text-gray-300">Date</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">Account</TableHead>
+                            <TableHead className="text-gray-700 dark:text-gray-300">Description</TableHead>
+                            <TableHead className="text-right text-gray-700 dark:text-gray-300">Debit</TableHead>
+                            <TableHead className="text-right text-gray-700 dark:text-gray-300">Credit</TableHead>
+                            {isSingleAccount && <TableHead className="text-right bg-blue-50/50 dark:bg-blue-950/20 text-gray-700 dark:text-gray-300">Balance</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={isSingleAccount ? 6 : 5} className="text-center py-12 text-gray-400">Loading records...</TableCell>
+                                <TableCell colSpan={isSingleAccount ? 6 : 5} className="text-center py-12 text-gray-400 dark:text-gray-500">Loading records...</TableCell>
                             </TableRow>
                         ) : entries.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={isSingleAccount ? 6 : 5} className="text-center py-12 text-gray-400">No entries found for this period.</TableCell>
+                                <TableCell colSpan={isSingleAccount ? 6 : 5} className="text-center py-12 text-gray-400 dark:text-gray-500">No entries found for this period.</TableCell>
                             </TableRow>
                         ) : (
                             <>
                                 {/* Opening Balance Row */}
                                 {isSingleAccount && (
-                                    <TableRow className="bg-yellow-50/50 font-medium">
-                                        <TableCell colSpan={3} className="text-right pr-4 text-yellow-700">Opening Balance:</TableCell>
+                                    <TableRow className="bg-yellow-50/50 dark:bg-amber-950/20 font-medium border-b border-gray-100 dark:border-slate-800">
+                                        <TableCell colSpan={3} className="text-right pr-4 text-yellow-700 dark:text-amber-400">Opening Balance:</TableCell>
                                         <TableCell></TableCell>
                                         <TableCell></TableCell>
-                                        <TableCell className="text-right text-yellow-800 font-mono">
+                                        <TableCell className="text-right text-yellow-800 dark:text-amber-300 font-mono">
                                             {formatCurrency(openingBalance, displayCurrency)}
                                         </TableCell>
                                     </TableRow>
@@ -239,22 +239,22 @@ export function GeneralLedgerReport({ businessId }) {
                                     const link = getReferenceLink(entry.reference_type, entry.reference_id);
 
                                     return (
-                                        <TableRow key={entry.id} className="hover:bg-gray-50/50">
-                                            <TableCell className="font-mono text-xs text-gray-600">
+                                        <TableRow key={entry.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-900/20 border-b border-gray-100 dark:border-slate-800/60">
+                                            <TableCell className="font-mono text-xs text-gray-600 dark:text-gray-400">
                                                 {format(new Date(entry.transaction_date), 'dd MMM yyyy')}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="font-semibold text-sm text-gray-700">{entry.account?.name}</span>
-                                                    <span className="text-[10px] text-gray-400 font-mono">{entry.account?.code}</span>
+                                                    <span className="font-semibold text-sm text-gray-700 dark:text-gray-200">{entry.account?.name}</span>
+                                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono">{entry.account?.code}</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-sm text-gray-600">
+                                            <TableCell className="text-sm text-gray-600 dark:text-gray-300">
                                                 {entry.description}
-                                                <div className="text-[10px] text-gray-400 mt-0.5 capitalize flex items-center gap-1">
+                                                <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 capitalize flex items-center gap-1">
                                                     <span className="opacity-75">Ref: {entry.reference_type}</span>
                                                     {link ? (
-                                                        <Link href={link} className="text-blue-600 hover:underline font-medium">
+                                                        <Link href={link} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                                                             #{entry.reference_id?.slice(0, 8)}
                                                         </Link>
                                                     ) : (
@@ -262,14 +262,14 @@ export function GeneralLedgerReport({ businessId }) {
                                                     )}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-right font-mono text-gray-900 border-r border-gray-50 bg-gray-50/30">
+                                            <TableCell className="text-right font-mono text-gray-900 dark:text-gray-100 border-r border-gray-50 dark:border-slate-800 bg-gray-50/30 dark:bg-slate-900/10">
                                                 {parseFloat(entry.debit) > 0 ? formatCurrency(entry.debit, displayCurrency) : '-'}
                                             </TableCell>
-                                            <TableCell className="text-right font-mono text-gray-900">
+                                            <TableCell className="text-right font-mono text-gray-900 dark:text-gray-100">
                                                 {parseFloat(entry.credit) > 0 ? formatCurrency(entry.credit, displayCurrency) : '-'}
                                             </TableCell>
                                             {isSingleAccount && (
-                                                <TableCell className="text-right font-mono font-medium text-gray-800 bg-blue-50/10">
+                                                <TableCell className="text-right font-mono font-medium text-gray-800 dark:text-gray-200 bg-blue-50/10 dark:bg-blue-950/10">
                                                     {formatCurrency(entry.runningBalance, displayCurrency)}
                                                 </TableCell>
                                             )}
@@ -283,51 +283,51 @@ export function GeneralLedgerReport({ businessId }) {
                 </div>
 
                 {/* Mobile cards */}
-                <div className="divide-y divide-gray-100 lg:hidden">
+                <div className="divide-y divide-gray-100 dark:divide-slate-800 lg:hidden">
                     {loading ? (
-                        <div className="py-12 text-center text-gray-400">Loading records...</div>
+                        <div className="py-12 text-center text-gray-400 dark:text-gray-500">Loading records...</div>
                     ) : entries.length === 0 ? (
-                        <div className="py-12 text-center text-gray-400">No entries found for this period.</div>
+                        <div className="py-12 text-center text-gray-400 dark:text-gray-500">No entries found for this period.</div>
                     ) : (
                         <>
                             {isSingleAccount && (
-                                <div className="bg-yellow-50/50 px-3 py-2 text-xs font-medium text-yellow-700">
+                                <div className="bg-yellow-50/50 dark:bg-amber-950/10 px-3 py-2 text-xs font-medium text-yellow-700 dark:text-amber-400 border-b border-gray-100 dark:border-slate-850">
                                     Opening balance: {formatCurrency(openingBalance, displayCurrency)}
                                 </div>
                             )}
                             {entriesWithBalance.map((entry) => {
                                 const link = getReferenceLink(entry.reference_type, entry.reference_id);
                                 return (
-                                    <div key={entry.id} className="px-3 py-3">
+                                    <div key={entry.id} className="px-3 py-3 hover:bg-gray-50/30 dark:hover:bg-slate-900/10">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
-                                                <p className="text-xs font-mono text-gray-500">
+                                                <p className="text-xs font-mono text-gray-500 dark:text-gray-400">
                                                     {format(new Date(entry.transaction_date), 'dd MMM yyyy')}
                                                 </p>
-                                                <p className="mt-0.5 text-[13px] font-semibold text-gray-800">{entry.account?.name}</p>
-                                                <p className="text-[11px] text-gray-500">{entry.description}</p>
+                                                <p className="mt-0.5 text-[13px] font-semibold text-gray-800 dark:text-gray-200">{entry.account?.name}</p>
+                                                <p className="text-[11px] text-gray-500 dark:text-gray-400">{entry.description}</p>
                                             </div>
                                             {isSingleAccount && (
-                                                <p className="shrink-0 text-[12px] font-bold tabular-nums text-gray-900">
+                                                <p className="shrink-0 text-[12px] font-bold tabular-nums text-gray-900 dark:text-gray-100">
                                                     {formatCurrency(entry.runningBalance, displayCurrency)}
                                                 </p>
                                             )}
                                         </div>
                                         <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] tabular-nums">
-                                            <div className="rounded-lg bg-gray-50 px-2 py-1.5">
-                                                <p className="text-[10px] uppercase text-gray-400">Debit</p>
-                                                <p>{parseFloat(entry.debit) > 0 ? formatCurrency(entry.debit, displayCurrency) : '—'}</p>
+                                            <div className="rounded-lg bg-gray-50 dark:bg-slate-900/50 px-2 py-1.5 border border-gray-100/60 dark:border-slate-800/40">
+                                                <p className="text-[10px] uppercase text-gray-450 dark:text-gray-500">Debit</p>
+                                                <p className="text-gray-800 dark:text-gray-200">{parseFloat(entry.debit) > 0 ? formatCurrency(entry.debit, displayCurrency) : '—'}</p>
                                             </div>
-                                            <div className="rounded-lg bg-gray-50 px-2 py-1.5">
-                                                <p className="text-[10px] uppercase text-gray-400">Credit</p>
-                                                <p>{parseFloat(entry.credit) > 0 ? formatCurrency(entry.credit, displayCurrency) : '—'}</p>
+                                            <div className="rounded-lg bg-gray-50 dark:bg-slate-900/50 px-2 py-1.5 border border-gray-100/60 dark:border-slate-800/40">
+                                                <p className="text-[10px] uppercase text-gray-450 dark:text-gray-500">Credit</p>
+                                                <p className="text-gray-800 dark:text-gray-200">{parseFloat(entry.credit) > 0 ? formatCurrency(entry.credit, displayCurrency) : '—'}</p>
                                             </div>
                                         </div>
                                         {(entry.reference_type || entry.reference_id) && (
-                                            <p className="mt-1.5 text-[10px] text-gray-400">
+                                            <p className="mt-1.5 text-[10px] text-gray-400 dark:text-gray-500">
                                                 Ref: {entry.reference_type}
                                                 {link ? (
-                                                    <Link href={link} className="ml-1 font-medium text-blue-600">
+                                                    <Link href={link} className="ml-1 font-medium text-blue-600 dark:text-blue-400">
                                                         #{entry.reference_id?.slice(0, 8)}
                                                     </Link>
                                                 ) : (
