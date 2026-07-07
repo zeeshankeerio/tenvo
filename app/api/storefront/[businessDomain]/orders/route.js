@@ -281,6 +281,19 @@ export async function POST(request, { params }) {
     try {
       await client.query('BEGIN');
 
+      // GAP-8: Re-resolve cart item refs on retry attempts in case product state/refs changed
+      if (attempt > 1) {
+        const { resolvedItems, issues } = await resolveCheckoutCartItemRefs(
+          client,
+          business.id,
+          items
+        );
+        if (issues.length > 0) {
+          throw new Error(issues[0].message);
+        }
+        checkoutItems = resolvedItems;
+      }
+
     const resolvedLines = [];
 
     for (const item of checkoutItems) {
@@ -511,7 +524,7 @@ export async function POST(request, { params }) {
           customer.phone,
           effectiveShippingAddress.address,
           effectiveShippingAddress.city,
-          effectiveShippingAddress.country || 'PK',
+          effectiveShippingAddress.country || business.country || 'PK',
           effectiveShippingAddress.postalCode || effectiveShippingAddress.postal_code || null,
         ]
       );

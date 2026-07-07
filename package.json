@@ -35,6 +35,8 @@
     "verify:registration-flow": "npx tsx scripts/verify-registration-flow.mjs",
     "verify:registration-storefront-flow": "bun scripts/verify-registration-storefront-flow.mjs",
     "fix:demo-stores": "npx tsx scripts/fix-demo-stores.mjs",
+    "clear:caches": "powershell -ExecutionPolicy Bypass -File scripts/clear-all-caches.ps1",
+    "test:pool": "node scripts/test-pool-connection.mjs",
     "verify:storefront-tenancy": "node scripts/verify-storefront-tenancy.mjs",
     "verify:storefront-cache": "node scripts/verify-storefront-cache.mjs",
     "verify:cache-wiring": "node scripts/verify-cache-wiring.mjs",
