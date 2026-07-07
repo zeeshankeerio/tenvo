@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
+import { guardStorefrontBusiness } from '@/lib/storefront/guardStorefrontBusiness';
 import {
   buildStoreHomeCatalogPlan,
   getStoreHomeCatalog,
@@ -151,8 +152,8 @@ function StoreSectionHeader({ title, subtitle, href, accent, linkLabel = 'View a
 export default async function StoreHomePage({ params }) {
   const { businessDomain } = await params;
 
-  const businessResult = await fetchBusinessByDomain(businessDomain);
-  if (!businessResult.success) notFound();
+  const businessResult = guardStorefrontBusiness(await fetchBusinessByDomain(businessDomain));
+  if (!businessResult) return null;
 
   const { business, settings } = businessResult;
   const storeCurrency = resolveStorefrontCurrency(settings, business);

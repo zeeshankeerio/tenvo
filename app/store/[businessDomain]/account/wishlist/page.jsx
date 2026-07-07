@@ -16,9 +16,17 @@ export default function WishlistPage({ params }) {
   const { business, settings, currency, businessId } = useStorefront();
   const accent = getStoreAccentColor(settings, business?.category);
   const { addItem } = useCart();
-  const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
+  const { wishlist, removeFromWishlist, clearWishlist, hydrated } = useWishlist();
 
   const items = wishlist.items || [];
+
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-gray-600" />
+      </div>
+    );
+  }
 
   const moveToCart = async (item) => {
     try {

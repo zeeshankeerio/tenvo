@@ -186,7 +186,7 @@ function AcceptInvitationContent() {
   const handleSignIn = () => {
     // Redirect to sign in with return URL
     const returnUrl = `/accept-invitation?token=${token}`;
-    router.push(`/sign-in?callbackUrl=${encodeURIComponent(returnUrl)}`);
+    router.push(`/login?callbackUrl=${encodeURIComponent(returnUrl)}`);
   };
 
   if (loading || validating) {

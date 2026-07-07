@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
+import { guardStorefrontBusiness } from '@/lib/storefront/guardStorefrontBusiness';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 export async function generateMetadata({ params }) {
   const { businessDomain } = await params;
@@ -14,8 +15,8 @@ export async function generateMetadata({ params }) {
 
 export default async function PrivacyPage({ params }) {
   const { businessDomain } = await params;
-  const result = await fetchBusinessByDomain(businessDomain);
-  if (!result.success) notFound();
+  const result = guardStorefrontBusiness(await fetchBusinessByDomain(businessDomain));
+  if (!result) return null;
 
   const { business, settings } = result;
   const accent = getStoreAccentColor(settings, business.category);

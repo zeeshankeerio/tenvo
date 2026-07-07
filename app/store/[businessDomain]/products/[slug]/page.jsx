@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
+import { guardStorefrontBusiness } from '@/lib/storefront/guardStorefrontBusiness';
 import { getProductBySlug, getRelatedProducts } from '@/lib/actions/storefront/products';
 import { ProductGallery } from '@/components/storefront/ProductGallery';
 import { ProductInfo } from '@/components/storefront/ProductInfo';
@@ -66,10 +67,8 @@ export default async function ProductDetailPage({ params }) {
   const { businessDomain, slug } = await params;
   
   // Validate business
-  const businessResult = await fetchBusinessByDomain(businessDomain);
-  if (!businessResult.success) {
-    notFound();
-  }
+  const businessResult = guardStorefrontBusiness(await fetchBusinessByDomain(businessDomain));
+  if (!businessResult) return null;
   
   const { business, settings } = businessResult;
 

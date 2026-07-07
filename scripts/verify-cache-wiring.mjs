@@ -121,6 +121,26 @@ assert(
   'invalidation must expand hyphen/underscore alias keys'
 );
 
+assert(
+  read('lib/cache/storefrontDomainCache.js').includes('expandStorefrontDomainAliasKeys'),
+  'Redis domain purge must expand hyphen/underscore alias keys'
+);
+
+assert(
+  read('lib/services/POSService.js').includes('invalidateStorefrontCatalog'),
+  'POS sales must invalidate storefront catalog cache'
+);
+
+assert(
+  read('lib/services/InventoryService.js').includes('if (shouldManageTransaction) invalidateStorefrontCatalog'),
+  'InventoryService must only invalidate catalog when owning the transaction'
+);
+
+assert(
+  read('app/api/storefront/[businessDomain]/orders/route.js').includes('invalidateStorefrontCatalog(business.id)'),
+  'checkout must invalidate storefront catalog before commit'
+);
+
 if (failures.length) {
   console.error('verify:cache-wiring FAILED');
   for (const f of failures) console.error(' -', f);

@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
+import { guardStorefrontBusiness } from '@/lib/storefront/guardStorefrontBusiness';
 import { ContactPageClient } from '@/components/storefront/ContactPageClient';
 
 export async function generateMetadata({ params }) {
@@ -15,8 +16,8 @@ export async function generateMetadata({ params }) {
 
 export default async function ContactPage({ params }) {
   const { businessDomain } = await params;
-  const result = await fetchBusinessByDomain(businessDomain);
-  if (!result.success) notFound();
+  const result = guardStorefrontBusiness(await fetchBusinessByDomain(businessDomain));
+  if (!result) return null;
 
   return (
     <Suspense fallback={<div className="min-h-[40vh]" />}>

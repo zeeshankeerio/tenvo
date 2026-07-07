@@ -94,6 +94,7 @@ export function DashboardTabs({
     user,
     financeInitialTab = null,
     onFinanceInitialTabConsumed,
+    inventoryLoading = false,
 }) {
     const posRelevant = isPosRelevant(category, domainKnowledge);
     const hospitalityDomain = isHospitality(category);
@@ -393,6 +394,7 @@ export function DashboardTabs({
                                 onLocationDelete={handleLocationDelete}
                                 onStockTransfer={handleStockTransfer}
                                 onGeneratePO={handleGenerateAutoPO}
+                                isLoading={inventoryLoading}
                             />
                         </TabGuard>
                     )}

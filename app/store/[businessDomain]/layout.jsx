@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
+import { isStorefrontDisabledResult } from '@/lib/storefront/guardStorefrontBusiness';
+import { StorefrontUnavailable } from '@/components/storefront/StorefrontUnavailable';
 import { buildStoreJsonLd, buildStoreWebSiteJsonLd } from '@/lib/storefront/jsonLd';
 import { StoreProviders } from '@/components/storefront/StoreProviders';
 import { StoreHeader } from '@/components/storefront/StoreHeader';
@@ -37,6 +39,9 @@ export async function generateMetadata({ params }) {
   const result = await fetchBusinessByDomain(businessDomain);
   
   if (!result.success) {
+    if (isStorefrontDisabledResult(result)) {
+      return { title: 'Store Unavailable' };
+    }
     return {
       title: 'Store Not Found',
     };
@@ -91,6 +96,9 @@ export default async function StoreLayout({ children, params }) {
   const result = await fetchBusinessByDomain(businessDomain);
   
   if (!result.success) {
+    if (isStorefrontDisabledResult(result)) {
+      return <StorefrontUnavailable domain={businessDomain} />;
+    }
     notFound();
   }
   
@@ -154,7 +162,7 @@ export default async function StoreLayout({ children, params }) {
           <RestaurantSiteHeader business={business} settings={settings} />
         </Suspense>
       ) : fitnessStore ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="h-[120px] border-b border-zinc-200 bg-white md:h-[132px]" aria-hidden />}>
           <FitnessSiteHeader business={business} settings={settings} categories={categories} />
         </Suspense>
       ) : (

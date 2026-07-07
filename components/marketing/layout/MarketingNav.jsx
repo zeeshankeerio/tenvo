@@ -26,7 +26,7 @@ export default function MarketingNav({
   showAuthButtons = true
 }) {
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState(null);
   const [scrolled, setScrolled] = useState(false);
@@ -286,7 +286,9 @@ export default function MarketingNav({
           <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 sm:gap-3">
             {showAuthButtons ? (
               <div className="hidden items-center gap-2 border-l border-neutral-200/80 pl-3 sm:gap-2.5 sm:pl-4 xl:flex xl:gap-3 xl:pl-5">
-                {user ? (
+                {authLoading ? (
+                  <div className="h-10 w-32 animate-pulse rounded-full bg-neutral-100" aria-hidden />
+                ) : user ? (
                   <>
                     <Button
                       onClick={() => handleCTAClick('nav', 'Enter Dashboard', '/multi-business')}
@@ -423,7 +425,9 @@ export default function MarketingNav({
 
           {showAuthButtons && (
             <div className="flex flex-col gap-2 border-t border-neutral-100 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
-              {user ? (
+              {authLoading ? (
+                <div className="h-12 w-full animate-pulse rounded-xl bg-neutral-100" aria-hidden />
+              ) : user ? (
                 <>
                   <Button
                     className="w-full h-12 bg-brand-primary font-semibold text-white rounded-xl shadow-brand"

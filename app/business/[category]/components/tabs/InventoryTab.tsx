@@ -36,6 +36,7 @@ interface InventoryTabProps {
     onLocationDelete?: (id: string) => void;
     onStockTransfer?: (data: any) => void;
     onGeneratePO?: (data: any) => void;
+    isLoading?: boolean;
 }
 
 export function InventoryTab({
@@ -64,7 +65,8 @@ export function InventoryTab({
     onLocationUpdate,
     onLocationDelete,
     onStockTransfer,
-    onGeneratePO
+    onGeneratePO,
+    isLoading = false,
 }: InventoryTabProps) {
     return (
         <div className="space-y-5">
@@ -99,8 +101,7 @@ export function InventoryTab({
                         onLocationDelete={onLocationDelete}
                         onStockTransfer={onStockTransfer}
                         onGeneratePO={onGeneratePO}
-                        // @ts-ignore
-                        isLoading={false} // Will be passed from parent if available, for now assume false or update types
+                        isLoading={isLoading}
                     />
                 </Suspense>
             </ErrorBoundary>

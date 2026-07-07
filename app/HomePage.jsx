@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 import {
   Check,
   CheckCircle2,
@@ -70,6 +71,17 @@ export default function Home() {
   const [stickyCtaScrollReady, setStickyCtaScrollReady] = useState(false);
   const [stickyCtaDismissed, setStickyCtaDismissed] = useState(false);
   const STICKY_CTA_DISMISS_KEY = 'tenvo_sticky_cta_dismissed_session';
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('access') !== 'denied') return;
+
+    toast.error('You do not have permission to access that area.');
+    params.delete('access');
+    const qs = params.toString();
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+  }, []);
 
   useEffect(() => {
     try {

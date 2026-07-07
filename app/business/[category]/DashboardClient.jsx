@@ -451,7 +451,7 @@ function BusinessDashboardContent() {
 
   // Auth context
   const { user, loading: authLoading } = useAuth();
-  const { hubReady, workspaceBlocking, hasOptimisticShell, loadingModules } = useHubReady();
+  const { hubReady, workspaceBlocking, hasOptimisticShell, contentReady } = useHubReady();
 
   const {
     invoices,
@@ -486,6 +486,7 @@ function BusinessDashboardContent() {
     fetchApprovals,
     fetchExpenses,
     moduleReady,
+    loadingModules,
   } = useData();
 
   const dashboardTabLoading =
@@ -697,7 +698,7 @@ function BusinessDashboardContent() {
   useEffect(() => {
     if (authLoading || businessLoading) return;
     if (!user) {
-      router.push('/login');
+      router.replace('/login');
     }
   }, [user, authLoading, businessLoading, router]);
 
@@ -1733,7 +1734,7 @@ function BusinessDashboardContent() {
       )}
 
       <BusinessLoadingBoundary
-        isLoading={workspaceBlocking}
+        isLoading={workspaceBlocking || (hubReady && !contentReady && !hasOptimisticShell)}
         variant={business?.id || hasOptimisticShell ? 'minimal' : 'full'}
       >
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-2">
@@ -1768,6 +1769,7 @@ function BusinessDashboardContent() {
             resourceLimits={resourceLimits}
             domainKnowledge={domainKnowledge}
             isLoading={dashboardTabLoading}
+            inventoryLoading={Boolean(loadingModules.inventory) && !moduleReady.inventory}
             financeInitialTab={financeInitialTab}
             onFinanceInitialTabConsumed={() => setFinanceInitialTab(null)}
             handlers={{

@@ -4,6 +4,7 @@ import { generateOrderNumber, isStorefrontOrderNumberConflict } from '@/lib/util
 import { resolveStorefrontBusiness } from '@/lib/tenancy/resolveStorefrontBusiness';
 import { lookupPublicStorefrontOrders } from '@/lib/storefront/publicOrderLookup';
 import { scheduleStorefrontOrderPostCommit } from '@/lib/storefront/storefrontOrderPostCommit';
+import { invalidateStorefrontCatalog } from '@/lib/storefront/invalidateStorefrontCatalog';
 import {
   parseStockNumber,
   querySellableLocationQty,
@@ -694,6 +695,8 @@ export async function POST(request, { params }) {
     } catch (membershipErr) {
       console.warn('[Create Order] membership enrollment skipped:', membershipErr?.message || membershipErr);
     }
+
+    invalidateStorefrontCatalog(business.id);
 
     await client.query('COMMIT');
 

@@ -16,7 +16,7 @@ import { TenvoTextLogo } from '@/components/branding/TenvoTextLogo';
 import { getSalesMeetingUrl } from '@/lib/marketing/salesLinks';
 
 export default function PendingApprovalPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,13 +50,14 @@ export default function PendingApprovalPage() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push('/login?redirect=/pending-approval');
       return;
     }
 
     fetchBusiness();
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -83,7 +84,7 @@ export default function PendingApprovalPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-wine" />

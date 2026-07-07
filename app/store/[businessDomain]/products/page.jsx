@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, Home } from 'lucide-react';
 import { fetchBusinessByDomain } from '@/lib/storefront/fetchBusinessByDomain';
+import { guardStorefrontBusiness } from '@/lib/storefront/guardStorefrontBusiness';
 import { getProducts, getCategories } from '@/lib/actions/storefront/products';
 import { ProductGrid } from '@/components/storefront/ProductGrid';
 import { ProductFilters } from '@/components/storefront/ProductFilters';
@@ -74,10 +75,8 @@ export default async function ProductsPage({ params, searchParams }) {
   const sp = await searchParams;
 
   // Validate business
-  const businessResult = await fetchBusinessByDomain(businessDomain);
-  if (!businessResult.success) {
-    notFound();
-  }
+  const businessResult = guardStorefrontBusiness(await fetchBusinessByDomain(businessDomain));
+  if (!businessResult) return null;
 
   const { business, settings: storeSettings = {} } = businessResult;
   const fitnessStore = isFitnessElevatedStore(business.category);

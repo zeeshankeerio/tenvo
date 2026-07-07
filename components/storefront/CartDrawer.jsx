@@ -23,7 +23,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export function CartDrawer() {
   const router = useRouter();
 
-  const { cart, updateQuantity, removeItem, calculateTotals, isLoading, isOpen, setIsOpen, clearCart, syncCartFromReconcile } = useCart();
+  const { cart, updateQuantity, removeItem, calculateTotals, isLoading, isOpen, setIsOpen, clearCart, syncCartFromReconcile, hydrated } = useCart();
   const { currency, businessDomain, settings, businessId, business } = useStorefront();
   const restaurantStore = isRestaurantElevatedStore(business?.category);
   const restaurantChrome = useRestaurantChromeOptional();
@@ -90,7 +90,11 @@ export function CartDrawer() {
           </SheetTitle>
         </SheetHeader>
 
-        {cart.items.length === 0 ? (
+        {!hydrated ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-gray-600" />
+          </div>
+        ) : cart.items.length === 0 ? (
           /* ── Empty State ─────────────────────────────────────────────── */
           <div className="flex-1 flex flex-col items-center justify-center text-center px-8 py-12">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">

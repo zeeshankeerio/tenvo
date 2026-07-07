@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { resolveStorefrontBusiness } from '@/lib/tenancy/resolveStorefrontBusiness';
 import pool from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/storefront/[businessDomain]/products/[productId]/reviews
  * Fetch product reviews with pagination
