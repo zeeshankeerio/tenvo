@@ -47,7 +47,6 @@ export async function GET(request, { params }) {
           rating,
           title,
           body,
-          is_verified,
           created_at,
           updated_at
          FROM product_reviews
@@ -80,7 +79,7 @@ export async function GET(request, { params }) {
           rating: row.rating,
           title: row.title,
           body: row.body,
-          isVerified: row.is_verified,
+          isVerified: false,
           createdAt: row.created_at?.toISOString(),
           updatedAt: row.updated_at?.toISOString(),
         })),
@@ -170,9 +169,8 @@ export async function POST(request, { params }) {
           rating,
           title,
           body,
-          is_approved,
-          is_verified
-         ) VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, false, false)
+          is_approved
+         ) VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, false)
          RETURNING id, created_at`,
         [productId, business.id, reviewerName, reviewerEmail, rating, title || '', reviewBody]
       );

@@ -43,14 +43,25 @@ assert(
 );
 
 const resolveSrc = read('lib/tenancy/resolveStorefrontBusiness.js');
+const fetchSrc = read('lib/storefront/fetchBusinessByDomain.js');
 assert(resolveSrc.includes('pickStorefrontDomainRow'), 'ambiguous match guard must exist');
 assert(resolveSrc.includes('loadStorefrontBusinessShell'), 'RSC shell loader must be exported');
 assert(
-  !resolveSrc.includes("['storefront-resolve', normalizedDomain]"),
-  'unified Next cache key must be storefront-business'
+  resolveSrc.includes('STOREFRONT_BUSINESS_COMPACT_CACHE_KEY'),
+  'API resolver must use compact cache key (separate from RSC shell)'
 );
 
-const fetchSrc = read('lib/storefront/fetchBusinessByDomain.js');
+assert(
+  fetchSrc.includes('STOREFRONT_BUSINESS_SHELL_CACHE_KEY'),
+  'fetchBusinessByDomain must use shell cache key (separate from API compact)'
+);
+
+assert(
+  !fetchSrc.includes("['storefront-business', normalized]") ||
+    fetchSrc.includes('STOREFRONT_BUSINESS_SHELL_CACHE_KEY'),
+  'shell and compact resolvers must not share the same unstable_cache key'
+);
+
 assert(fetchSrc.includes('loadStorefrontBusinessShell'), 'fetchBusinessByDomain must delegate to unified resolver');
 
 const invalidateSrc = read('lib/storefront/invalidateStorefrontCatalog.js');

@@ -97,8 +97,18 @@ assert(
 );
 
 assert(
-  read('lib/tenancy/resolveStorefrontBusiness.js').includes("['storefront-business', normalizedDomain]"),
-  'resolveStorefrontBusiness must use unified storefront-business cache key'
+  read('lib/tenancy/resolveStorefrontBusiness.js').includes('STOREFRONT_BUSINESS_COMPACT_CACHE_KEY'),
+  'resolveStorefrontBusiness must use compact cache key'
+);
+
+assert(
+  read('lib/storefront/fetchBusinessByDomain.js').includes('STOREFRONT_BUSINESS_SHELL_CACHE_KEY'),
+  'fetchBusinessByDomain must use shell cache key'
+);
+
+assert(
+  read('lib/tenancy/resolveStorefrontBusiness.js').includes('StorefrontCacheBypassError'),
+  'null tenant misses must bypass unstable_cache'
 );
 
 assert(
