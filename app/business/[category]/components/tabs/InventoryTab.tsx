@@ -68,13 +68,22 @@ export function InventoryTab({
     onGeneratePO,
     isLoading = false,
 }: InventoryTabProps) {
+    if (isLoading && products.length === 0) {
+        return (
+            <div className="space-y-5">
+                <ErrorBoundary>
+                    <InventorySkeleton />
+                </ErrorBoundary>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-5">
 
             {/* Inventory Manager - Client Component */}
             <ErrorBoundary>
                 <Suspense fallback={<InventorySkeleton />}>
-                    {/* @ts-ignore - InventoryManager is JS component, TS inference for props is incomplete */}
                     <InventoryManager
                         products={products}
                         businessId={businessId}
@@ -101,7 +110,6 @@ export function InventoryTab({
                         onLocationDelete={onLocationDelete}
                         onStockTransfer={onStockTransfer}
                         onGeneratePO={onGeneratePO}
-                        isLoading={isLoading}
                     />
                 </Suspense>
             </ErrorBoundary>

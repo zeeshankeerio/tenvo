@@ -249,7 +249,7 @@ export function InventoryManager({
   onLocationDelete,
   onStockTransfer,
   onGeneratePO,
-  refreshData
+  refreshData,
 }) {
   const { regionalStandards, currency, currencySymbol, regionalPack, business } = useBusiness();
   const standards = regionalStandards || {

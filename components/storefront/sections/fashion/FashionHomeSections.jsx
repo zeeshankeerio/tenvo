@@ -75,6 +75,7 @@ export function FashionHomeSections({
   topPicksProducts = [],
   fashionDepartments = null,
   editorialSpotlight = null,
+  categories = [],
 }) {
   const config = getFashionEditorialConfig(settings, businessDomain);
   const storeBase = `/store/${businessDomain}`;
@@ -156,6 +157,8 @@ export function FashionHomeSections({
         businessCategory={businessCategory}
         settings={settings}
         animations={config.animations}
+        categories={categories}
+        products={catalogPool}
       />
 
       {config.showBrandsRow && brands.length > 0 && (

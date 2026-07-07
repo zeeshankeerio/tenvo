@@ -818,6 +818,7 @@ export default async function StoreHomePage({ params }) {
           topPicksProducts={topPicksProducts}
           fashionDepartments={fashionDepartments}
           editorialSpotlight={landing.spotlights?.[0]}
+          categories={categories}
         />
       )}
 
@@ -836,6 +837,8 @@ export default async function StoreHomePage({ params }) {
           businessCategory={business.category}
           settings={settings}
           animations={getFashionEditorialConfig(settings, businessDomain).animations}
+          categories={categories}
+          products={catalogSnapshotResult.success ? catalogSnapshotResult.products : featuredProducts}
         />
       )}
 

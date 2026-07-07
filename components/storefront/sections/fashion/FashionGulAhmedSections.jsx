@@ -17,11 +17,20 @@ export function FashionGulAhmedSections({
   businessCategory,
   settings = {},
   animations = true,
+  categories = [],
+  products = [],
 }) {
   const storeBase = `/store/${businessDomain}`;
   const config = getFashionGulSectionsConfig(settings, businessDomain);
   const homeEdit = config.showHomeEdit
-    ? resolveFashionHomeEdit(settings, businessCategory, businessDomain, storeBase)
+    ? resolveFashionHomeEdit(
+        settings,
+        businessCategory,
+        businessDomain,
+        storeBase,
+        categories,
+        products
+      )
     : null;
   const saleMosaic = config.showSaleMosaic
     ? resolveFashionSaleMosaic(settings, businessCategory, businessDomain, storeBase)

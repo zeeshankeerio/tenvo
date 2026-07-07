@@ -39,6 +39,7 @@ import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
 import { supportsFashionGulSections } from '@/lib/storefront/fashionGulSections';
 import { FashionGulSectionsEditor } from '@/components/storefront/admin/FashionGulSectionsEditor';
 import { FashionPromoBannersEditor } from '@/components/storefront/admin/FashionPromoBannersEditor';
+import { FashionCatalogEditor } from '@/components/storefront/admin/FashionCatalogEditor';
 import { HeroCarouselSlidesEditor } from '@/components/storefront/admin/HeroCarouselSlidesEditor';
 import { SupermarketCatalogEditor } from '@/components/storefront/admin/SupermarketCatalogEditor';
 import { getDefaultHeroSlidesTemplate } from '@/lib/storefront/heroPresets';
@@ -1472,11 +1473,11 @@ export function StoreSettingsManager({ business, category }) {
                     ['showPromoBanners', 'Promo banner row'],
                     ['showHomeEdit', 'The Home Edit grid'],
                     ['showSaleMosaic', 'Sale mosaic grid'],
-                    ['showSeoBlock', 'SEO content block', true],
-                  ].map(([key, label, optIn]) => (
+                    ['showSeoBlock', 'SEO content block'],
+                  ].map(([key, label]) => (
                     <div key={key} className="flex items-center gap-2">
                       <Switch
-                        checked={optIn ? settings.fashion?.[key] === true : settings.fashion?.[key] !== false}
+                        checked={settings.fashion?.[key] !== false}
                         onCheckedChange={(v) => setFashion(key, v)}
                       />
                       <Label className="text-sm">{label}</Label>
@@ -1571,6 +1572,7 @@ export function StoreSettingsManager({ business, category }) {
                   businessCategory={category || business?.category}
                   businessId={business?.id}
                 />
+                <FashionCatalogEditor fashion={settings.fashion || {}} setFashion={setFashion} />
                 <p className="text-xs text-gray-500">
                   Department rows use your category and product photos. Set your accent color under
                   Branding and the top announcement strip under Content.
