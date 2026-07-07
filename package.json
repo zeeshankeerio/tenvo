@@ -33,6 +33,7 @@
     "fonts:sync": "node scripts/sync-open-sans-fonts.mjs",
     "verify:regional-market": "bun scripts/verify-regional-market.mjs",
     "verify:registration-flow": "npx tsx scripts/verify-registration-flow.mjs",
+    "verify:registration-storefront-flow": "bun scripts/verify-registration-storefront-flow.mjs",
     "verify:storefront-tenancy": "node scripts/verify-storefront-tenancy.mjs",
     "verify:storefront-cache": "node scripts/verify-storefront-cache.mjs",
     "verify:cache-wiring": "node scripts/verify-cache-wiring.mjs",
