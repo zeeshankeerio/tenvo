@@ -6,6 +6,8 @@ import { formatCurrency } from '@/lib/currency';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { isAutoPartsFinderStore } from '@/lib/storefront/partsFinder';
 import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
+import { isPharmacyElevatedStore } from '@/lib/storefront/pharmacyStorefront';
+import { resolvePharmacyProductMeta } from '@/lib/storefront/pharmacyProducts';
 import { resolveSourcingBadge } from '@/lib/storefront/productAttributeChips';
 import { ProductAttributeList } from '@/components/storefront/ProductAttributeList';
 import { getStorefrontStockState } from '@/lib/storefront/storefrontStockUi';
@@ -21,6 +23,8 @@ export function ProductInfo({ product, businessDomain }) {
   const categoryKey = business?.category;
   const showPartsMeta = isAutoPartsFinderStore(categoryKey);
   const showFashionMeta = isFashionEditorialStore(categoryKey);
+  const pharmacyStore = isPharmacyElevatedStore(categoryKey);
+  const pharmacyMeta = pharmacyStore ? resolvePharmacyProductMeta(product) : null;
 
   const { stock: displayStock, isOutOfStock, isLowStock } = getStorefrontStockState(product);
 
@@ -57,9 +61,23 @@ export function ProductInfo({ product, businessDomain }) {
             Only {displayStock} left
           </Badge>
         ) : null}
+        {pharmacyMeta?.requiresPrescription ? (
+          <Badge className="bg-emerald-700 text-white text-xs">Prescription required</Badge>
+        ) : null}
+        {pharmacyMeta?.scheduleH ? (
+          <Badge variant="outline" className="text-xs border-emerald-300 text-emerald-800 bg-emerald-50">
+            Schedule H
+          </Badge>
+        ) : null}
       </div>
 
       <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">{product.name}</h1>
+
+      {pharmacyMeta?.genericName ? (
+        <p className="text-sm text-slate-600">
+          Generic: <span className="font-medium text-slate-800">{pharmacyMeta.genericName}</span>
+        </p>
+      ) : null}
 
       {product.rating ? (
         <div className="flex items-center gap-2">

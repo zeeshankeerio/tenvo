@@ -64,6 +64,7 @@
     "extract:autoparts-archive": "node scripts/extract-autoparts-archive-seed.mjs",
     "verify:autoparts-seed": "bun scripts/verify-autoparts-seed.mjs",
     "verify:fitness-seed": "bun scripts/verify-fitness-seed.mjs",
+    "verify:pharmacy-seed": "bun scripts/verify-pharmacy-seed.mjs",
     "verify:restaurant-seed": "bun scripts/verify-restaurant-seed.mjs",
     "verify:memberships": "bun scripts/verify-memberships.mjs",
     "data-lab:purge": "node scripts/data-lab/purge-business-data.mjs --confirm PURGE_ALL_BUSINESS_DATA",

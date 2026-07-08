@@ -20,6 +20,12 @@ import {
   isFitnessBookableCategory,
 } from '@/lib/storefront/fitnessStorefront';
 import { isRestaurantElevatedStore, resolveRestaurantTheme } from '@/lib/storefront/restaurantStorefront';
+import { isPharmacyElevatedStore } from '@/lib/storefront/pharmacyStorefront';
+import {
+  buildPharmacyShopCatalog,
+  paginatePharmacyShopCatalog,
+} from '@/lib/dataLab/pharmacySeedHelpers';
+import { PharmacyShopLayout } from '@/components/storefront/pharmacy/PharmacyShopLayout';
 import {
   buildRestaurantShopCatalog,
   paginateRestaurantShopCatalog,
@@ -81,6 +87,7 @@ export default async function ProductsPage({ params, searchParams }) {
   const { business, settings: storeSettings = {} } = businessResult;
   const fitnessStore = isFitnessElevatedStore(business.category);
   const restaurantStore = isRestaurantElevatedStore(business.category);
+  const pharmacyStore = isPharmacyElevatedStore(business.category);
 
   // Parse filters from search params
   const filters = {
@@ -106,6 +113,8 @@ export default async function ProductsPage({ params, searchParams }) {
     fabric: typeof sp?.fabric === 'string' ? sp.fabric : undefined,
     sourcing: typeof sp?.sourcing === 'string' ? sp.sourcing : undefined,
     size: typeof sp?.size === 'string' ? sp.size : undefined,
+    otcOnly: sp?.otc === 'true',
+    rxOnly: sp?.rx === 'true',
     page: parseInt(sp?.page || '1', 10) || 1,
     limit: 24,
   };
@@ -151,7 +160,9 @@ export default async function ProductsPage({ params, searchParams }) {
               ? categoryMeta.name
               : restaurantStore
                 ? 'Full menu'
-                : 'All products';
+                : pharmacyStore
+                  ? 'Shop medicines'
+                  : 'All products';
 
   if (restaurantStore) {
     const settings = storeSettings;
@@ -187,6 +198,91 @@ export default async function ProductsPage({ params, searchParams }) {
           />
         </Suspense>
       </RestaurantMenuLayout>
+    );
+  }
+
+  if (pharmacyStore) {
+    const storeBase = `/store/${businessDomain}`;
+    const accent = storeSettings?.theme?.accent || '#16a34a';
+    const pharmacySubtitle = filters.rxOnly
+      ? 'Prescription medicines — upload a valid Rx to place an order.'
+      : filters.otcOnly
+        ? 'Over-the-counter medicines, vitamins, and wellness products you can add to cart.'
+        : `Browse OTC and prescription medicines from ${business.business_name}. Rx items require upload before checkout.`;
+
+    return (
+      <PharmacyShopLayout
+        businessDomain={businessDomain}
+        settings={storeSettings}
+        accent={accent}
+        title={heroTitle}
+        subtitle={pharmacySubtitle}
+        storeBase={storeBase}
+      >
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <aside className="lg:w-64 lg:shrink-0">
+            <div className="sticky top-28 space-y-4">
+              <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Browse</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link
+                    href={`${storeBase}/products`}
+                    className="rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50"
+                  >
+                    All
+                  </Link>
+                  <Link
+                    href={`${storeBase}/products?otc=true`}
+                    className="rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50"
+                  >
+                    OTC only
+                  </Link>
+                  <Link
+                    href={`${storeBase}/products?rx=true`}
+                    className="rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50"
+                  >
+                    Prescription
+                  </Link>
+                  <Link
+                    href={`${storeBase}/products?onSale=true`}
+                    className="rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50"
+                  >
+                    Deals
+                  </Link>
+                </div>
+              </div>
+              <ProductFilters
+                filters={filters}
+                categories={categories}
+                businessDomain={businessDomain}
+              />
+            </div>
+          </aside>
+
+          <main className="min-w-0 flex-1">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex-1">
+                <SearchBar businessDomain={businessDomain} initialQuery={filters.search} />
+              </div>
+              <div className="flex items-center gap-2">
+                <SortDropdown currentSort={filters.sort} businessDomain={businessDomain} />
+                <ViewToggle currentView={view} businessDomain={businessDomain} />
+              </div>
+            </div>
+            <ActiveFilters filters={filters} businessDomain={businessDomain} />
+            <Suspense fallback={<ProductsSkeleton count={12} density="catalog" />}>
+              <ProductGridContent
+                businessId={business.id}
+                businessDomain={businessDomain}
+                filters={filters}
+                view={view}
+                pharmacyStore={pharmacyStore}
+                businessCategory={business.category}
+              />
+            </Suspense>
+          </main>
+        </div>
+      </PharmacyShopLayout>
     );
   }
 
@@ -368,6 +464,8 @@ async function ProductGridContent({
   filters,
   view = 'grid',
   fitnessStore = false,
+  pharmacyStore = false,
+  businessCategory = '',
   bookableCategoryRequested = false,
 }) {
   if (bookableCategoryRequested) {
@@ -397,6 +495,38 @@ async function ProductGridContent({
           </Link>
         </div>
       </div>
+    );
+  }
+
+  if (pharmacyStore && isDemoStoreDomain(businessDomain)) {
+    const catalogResult = await getProducts(businessId, {
+      page: 1,
+      limit: 500,
+      sort: 'popularity',
+    });
+
+    if (!catalogResult.success) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-500">Failed to load products</p>
+        </div>
+      );
+    }
+
+    const merged = buildPharmacyShopCatalog(catalogResult.products, businessDomain, businessCategory);
+    const { products, total, hasMore } = paginatePharmacyShopCatalog(merged, filters);
+
+    return (
+      <ProductGrid
+        products={products}
+        total={total}
+        hasMore={hasMore}
+        businessDomain={businessDomain}
+        currentPage={filters.page}
+        filters={filters}
+        view={view}
+        density="catalog"
+      />
     );
   }
 
@@ -446,7 +576,17 @@ async function ProductGridContent({
     );
   }
 
-  const { products, total, hasMore } = result;
+  let { products, total, hasMore } = result;
+
+  if (pharmacyStore) {
+    products = buildPharmacyShopCatalog(products, businessDomain, businessCategory);
+    if (filters.rxOnly || filters.otcOnly || filters.onSale) {
+      const paged = paginatePharmacyShopCatalog(products, filters);
+      products = paged.products;
+      total = paged.total;
+      hasMore = paged.hasMore;
+    }
+  }
 
   return (
     <ProductGrid

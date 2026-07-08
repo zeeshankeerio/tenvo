@@ -10,11 +10,14 @@ import {
   Croissant,
   Dumbbell,
   Gem,
+  Layers,
   Pill,
   Scissors,
   Shirt,
+  ShoppingBag,
   ShoppingBasket,
   Sofa,
+  Stethoscope,
   Store,
   UtensilsCrossed,
   Wrench,
@@ -29,10 +32,12 @@ import { cn } from '@/lib/utils';
 
 const ICON_MAP = {
   shirt: Shirt,
+  layers: Layers,
   gem: Gem,
   'utensils-crossed': UtensilsCrossed,
   pill: Pill,
   'shopping-basket': ShoppingBasket,
+  'shopping-bag': ShoppingBag,
   wrench: Wrench,
   croissant: Croissant,
   scissors: Scissors,
@@ -40,6 +45,7 @@ const ICON_MAP = {
   dumbbell: Dumbbell,
   car: Car,
   'car-front': CarFront,
+  stethoscope: Stethoscope,
   store: Store,
 };
 

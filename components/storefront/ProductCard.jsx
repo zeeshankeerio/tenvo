@@ -15,6 +15,9 @@ import { getEffectiveProductImageUrl, getFallbackProductImageUrl } from '@/lib/s
 import { isAutoPartsFinderStore } from '@/lib/storefront/partsFinder';
 import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
 import { isFitnessElevatedStore } from '@/lib/storefront/fitnessStorefront';
+import { isPharmacyElevatedStore } from '@/lib/storefront/pharmacyStorefront';
+import { isPrescriptionRequiredProduct, buildPharmacyPrescriptionContactHref } from '@/lib/storefront/pharmacyProducts';
+import { PharmacyPrescriptionCta } from '@/components/storefront/pharmacy/PharmacyPrescriptionCta';
 import { getStorefrontStockState } from '@/lib/storefront/storefrontStockUi';
 import { isStorefrontProductUuid } from '@/lib/utils/storefrontProductRef';
 import { resolveStorefrontProductBrowseHref } from '@/lib/storefront/storefrontPurchasability';
@@ -37,6 +40,8 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
 
   const accent = getStoreAccentColor(settings, business?.category);
   const fitnessStore = isFitnessElevatedStore(business?.category);
+  const pharmacyStore = isPharmacyElevatedStore(business?.category);
+  const requiresPrescription = pharmacyStore && isPrescriptionRequiredProduct(product);
   const displayImage = getEffectiveProductImageUrl(product, business?.category);
   const imageFallback =
     product?.image_url?.trim()
@@ -74,6 +79,11 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
+
+    if (requiresPrescription) {
+      window.location.href = buildPharmacyPrescriptionContactHref(businessDomain, product);
+      return;
+    }
 
     if (isPreviewProduct || needsVariantPage) {
       window.location.href = productHref;
@@ -186,6 +196,11 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
               Imported
             </Badge>
           ) : null}
+          {requiresPrescription ? (
+            <Badge className="border-0 bg-emerald-700 px-1.5 py-0 text-[10px] font-bold text-white">
+              Rx
+            </Badge>
+          ) : null}
           {isLowStock && !isDense && (
             <Badge className="border-0 bg-orange-500 px-1.5 py-0 text-[10px] font-bold text-white">
               <Zap className="mr-0.5 inline h-2.5 w-2.5" />
@@ -264,16 +279,25 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
               'sm:translate-y-full sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100'
             )}
           >
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              disabled={isAdding}
-              className="flex w-full items-center justify-center gap-2 rounded-lg py-2 text-xs font-bold text-white shadow-lg transition-all active:scale-95 disabled:opacity-70 sm:rounded-xl sm:py-2.5 sm:text-sm"
-              style={{ backgroundColor: accent }}
-            >
-              <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {isAdding ? 'Adding…' : needsVariantPage ? 'Select options' : 'Add to Cart'}
-            </button>
+            {requiresPrescription ? (
+              <PharmacyPrescriptionCta
+                product={product}
+                businessDomain={businessDomain}
+                accent={accent}
+                variant="card"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={isAdding}
+                className="flex w-full items-center justify-center gap-2 rounded-lg py-2 text-xs font-bold text-white shadow-lg transition-all active:scale-95 disabled:opacity-70 sm:rounded-xl sm:py-2.5 sm:text-sm"
+                style={{ backgroundColor: accent }}
+              >
+                <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                {isAdding ? 'Adding…' : needsVariantPage ? 'Select options' : 'Add to Cart'}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -350,18 +374,28 @@ export function ProductCard({ product, businessDomain, variant = 'default' }) {
         </div>
 
         {(isCompact || isDense) && !isOutOfStock && (
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={isAdding}
-            className={cn(
-              'mt-auto w-full rounded-lg font-bold text-white transition-all active:scale-[0.98] disabled:opacity-70',
-              isDense ? 'py-1.5 text-[10px] sm:text-[11px]' : 'mt-1 py-2 text-xs'
-            )}
-            style={{ backgroundColor: accent }}
-          >
-            {isAdding ? 'Adding…' : isOutOfStock ? 'Sold out' : needsVariantPage ? 'Select options' : 'Add to Cart'}
-          </button>
+          requiresPrescription ? (
+            <PharmacyPrescriptionCta
+              product={product}
+              businessDomain={businessDomain}
+              accent={accent}
+              variant="card"
+              className={cn(isDense ? 'py-1.5 text-[10px] sm:text-[11px]' : 'mt-1 py-2 text-xs')}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={isAdding}
+              className={cn(
+                'mt-auto w-full rounded-lg font-bold text-white transition-all active:scale-[0.98] disabled:opacity-70',
+                isDense ? 'py-1.5 text-[10px] sm:text-[11px]' : 'mt-1 py-2 text-xs'
+              )}
+              style={{ backgroundColor: accent }}
+            >
+              {isAdding ? 'Adding…' : isOutOfStock ? 'Sold out' : needsVariantPage ? 'Select options' : 'Add to Cart'}
+            </button>
+          )
         )}
       </div>
     </motion.article>

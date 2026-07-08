@@ -13,6 +13,10 @@ import { useWishlist } from '@/lib/hooks/storefront/useWishlist';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStorefrontStockState } from '@/lib/storefront/storefrontStockUi';
 import { resolveStorefrontVariantRequirement } from '@/lib/storefront/storefrontProductVariants';
+import { isPharmacyElevatedStore } from '@/lib/storefront/pharmacyStorefront';
+import { isPrescriptionRequiredProduct } from '@/lib/storefront/pharmacyProducts';
+import { PharmacyPrescriptionCta } from '@/components/storefront/pharmacy/PharmacyPrescriptionCta';
+import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { toast } from 'react-hot-toast';
 
 export function AddToCartSection({ product, businessDomain, selectedVariant = null }) {
@@ -20,8 +24,11 @@ export function AddToCartSection({ product, businessDomain, selectedVariant = nu
   const [isAdding, setIsAdding] = useState(false);
   const { addItem } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
-  const { currency, businessId } = useStorefront();
+  const { currency, businessId, business, settings } = useStorefront();
   const isWishlisted = isInWishlist(product.id);
+  const pharmacyStore = isPharmacyElevatedStore(business?.category);
+  const requiresPrescription = pharmacyStore && isPrescriptionRequiredProduct(product);
+  const accent = getStoreAccentColor(settings, business?.category);
   const variantRequirement = resolveStorefrontVariantRequirement(product);
   const requiresVariant = variantRequirement.required;
   const variantMissing = requiresVariant && !selectedVariant;
@@ -65,6 +72,10 @@ export function AddToCartSection({ product, businessDomain, selectedVariant = nu
   };
   
   const handleAddToCart = async () => {
+    if (requiresPrescription) {
+      window.location.href = `/store/${businessDomain}/contact?prescription=1&medicine=${encodeURIComponent(product.name || '')}`;
+      return;
+    }
     if (variantMissing) {
       toast.error('Please select all options before adding to cart');
       return;
@@ -100,6 +111,19 @@ export function AddToCartSection({ product, businessDomain, selectedVariant = nu
     }
   };
   
+  if (requiresPrescription) {
+    return (
+      <div className="space-y-4">
+        <PharmacyPrescriptionCta
+          product={product}
+          businessDomain={businessDomain}
+          accent={accent}
+          variant="panel"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Quantity Selector */}

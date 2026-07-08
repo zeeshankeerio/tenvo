@@ -19,6 +19,8 @@ import {
   Youtube,
   AlertCircle,
   Calendar,
+  FileUp,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
@@ -37,6 +39,7 @@ import {
 import { isPharmacyElevatedStore, resolvePharmacyContactIntent } from '@/lib/storefront/pharmacyStorefront';
 import { StoreBuyerPageShell } from '@/components/storefront/StoreBuyerPageShell';
 import { cn } from '@/lib/utils';
+import { resizeImageToWebP } from '@/lib/utils/optimizeImageClient';
 
 const SUBJECT_OPTIONS = [
   { value: 'general', label: 'General inquiry' },
@@ -118,8 +121,9 @@ export function ContactPageClient() {
     preferredTime: '',
     showroomLocation: '',
     vehicleInterest: intent?.vehiclePrefill || searchParams.get('vehicle') || '',
-    message: '',
+    message: intent?.messagePrefill || '',
   });
+  const isPrescriptionForm = isPharmacy && (form.subject === 'prescription' || intent?.key === 'prescription');
   const isBookingForm = isDealership && bookingSubjects.has(form.subject);
   const showPickTimeCta =
     Boolean(tenantMeetingUrl) &&
@@ -127,6 +131,9 @@ export function ContactPageClient() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [prescriptionImageUrl, setPrescriptionImageUrl] = useState('');
+  const [prescriptionUploading, setPrescriptionUploading] = useState(false);
+  const [prescriptionFileName, setPrescriptionFileName] = useState('');
 
   const vehicleParam = searchParams.get('vehicle') || '';
 
@@ -136,8 +143,9 @@ export function ContactPageClient() {
       ...f,
       subject: intent?.subject || f.subject,
       vehicleInterest: vehicle || f.vehicleInterest,
+      message: f.message || intent?.messagePrefill || '',
     }));
-  }, [intent?.subject, intent?.vehiclePrefill, vehicleParam]);
+  }, [intent?.subject, intent?.vehiclePrefill, intent?.messagePrefill, vehicleParam]);
 
   const pageTitle = intent?.title || 'Contact us';
   const pageSubtitle = intent?.subtitle
@@ -148,15 +156,48 @@ export function ContactPageClient() {
     ? encodeURIComponent(contact.fullAddress)
     : null;
 
+  const handlePrescriptionUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setError('');
+    setPrescriptionUploading(true);
+    try {
+      const optimized = await resizeImageToWebP(file, 1600, 1600, 0.82);
+      const body = new FormData();
+      body.append('file', optimized);
+      const res = await fetch(`/api/storefront/${businessDomain}/contact/upload`, {
+        method: 'POST',
+        body,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || 'Could not upload prescription photo');
+        return;
+      }
+      setPrescriptionImageUrl(data.url || '');
+      setPrescriptionFileName(file.name);
+    } catch {
+      setError('Could not process prescription photo. Try a smaller image.');
+    } finally {
+      setPrescriptionUploading(false);
+      event.target.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSubmitting(true);
     try {
+      const messageBody = prescriptionImageUrl
+        ? `${form.message}\n\nPrescription image: ${prescriptionImageUrl}`
+        : form.message;
+
       const res = await fetch(`/api/storefront/${businessDomain}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, message: messageBody }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -312,6 +353,8 @@ export function ContactPageClient() {
                   type="button"
                   onClick={() => {
                     setSubmitted(false);
+                    setPrescriptionImageUrl('');
+                    setPrescriptionFileName('');
                     setForm({
                       name: '',
                       email: '',
@@ -322,7 +365,7 @@ export function ContactPageClient() {
                       preferredTime: '',
                       showroomLocation: '',
                       vehicleInterest: intent?.vehiclePrefill || '',
-                      message: '',
+                      message: intent?.messagePrefill || '',
                     });
                   }}
                   className="mt-6 text-sm font-semibold hover:underline"
@@ -496,6 +539,46 @@ export function ContactPageClient() {
                       className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2"
                       placeholder="e.g. ORD-20240523-0042"
                     />
+                  </div>
+                ) : null}
+
+                {isPrescriptionForm ? (
+                  <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 sm:p-5">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white"
+                        style={{ backgroundColor: accent }}
+                      >
+                        <FileUp className="h-5 w-5" aria-hidden />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-900">Upload prescription photo</p>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-600 sm:text-sm">
+                          Take a clear photo of your doctor&apos;s prescription. Our pharmacists verify every Rx order
+                          before dispatch.
+                        </p>
+                        <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-800 shadow-sm transition hover:bg-emerald-50">
+                          <ImageIcon className="h-4 w-4" aria-hidden />
+                          {prescriptionUploading ? 'Uploading…' : prescriptionFileName ? 'Change photo' : 'Choose photo'}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            className="sr-only"
+                            disabled={prescriptionUploading}
+                            onChange={handlePrescriptionUpload}
+                          />
+                        </label>
+                        {prescriptionFileName ? (
+                          <p className="mt-2 text-xs text-emerald-700">
+                            Attached: <span className="font-medium">{prescriptionFileName}</span>
+                          </p>
+                        ) : (
+                          <p className="mt-2 text-xs text-slate-500">
+                            Optional now — you can also send it later via WhatsApp if the store lists a number.
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ) : null}
 
