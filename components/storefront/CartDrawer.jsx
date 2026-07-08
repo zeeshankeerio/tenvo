@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { useCart } from '@/lib/hooks/storefront/useCart';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { isRestaurantElevatedStore } from '@/lib/storefront/restaurantStorefront';
-import { RESTAURANT_MENU_THEME } from '@/lib/storefront/restaurantMenu';
+import { RESTAURANT_CART_DRAWER_UI, RESTAURANT_CHECKOUT_UI } from '@/lib/storefront/restaurantMenu';
 import { useRestaurantChromeOptional } from '@/components/storefront/restaurant/RestaurantChromeContext';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,6 +26,8 @@ export function CartDrawer() {
   const { cart, updateQuantity, removeItem, calculateTotals, isLoading, isOpen, setIsOpen, clearCart, syncCartFromReconcile, hydrated } = useCart();
   const { currency, businessDomain, settings, businessId, business } = useStorefront();
   const restaurantStore = isRestaurantElevatedStore(business?.category);
+  const restaurantDrawerUi = restaurantStore ? RESTAURANT_CART_DRAWER_UI : null;
+  const restaurantCheckoutUi = restaurantStore ? RESTAURANT_CHECKOUT_UI : null;
   const restaurantChrome = useRestaurantChromeOptional();
   const { subtotal, itemCount } = calculateTotals();
   const cartMismatch = Boolean(
@@ -76,14 +78,18 @@ export function CartDrawer() {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent className={cn(
         'w-full sm:max-w-lg flex flex-col p-0',
-        restaurantStore && 'bg-[#0a0a0a] border-neutral-800 text-white'
+        restaurantDrawerUi?.shell,
+        restaurantDrawerUi?.closeButton
       )}>
-        <SheetHeader className={cn('px-6 py-4 border-b', restaurantStore && 'border-neutral-800')}>
-          <SheetTitle className={cn('flex items-center gap-2 text-lg font-bold', restaurantStore && 'text-white')}>
+        <SheetHeader className={cn('px-6 py-4 border-b', restaurantDrawerUi && 'border-neutral-800')}>
+          <SheetTitle className={cn('flex items-center gap-2 text-lg font-bold', restaurantDrawerUi && 'text-white')}>
             <ShoppingBag className="w-5 h-5" />
             Cart
             {itemCount > 0 && (
-              <span className="ml-1 text-sm font-normal text-gray-500">
+              <span className={cn(
+                'ml-1 text-sm font-normal',
+                restaurantDrawerUi ? restaurantDrawerUi.itemMeta : 'text-gray-500'
+              )}>
                 ({itemCount} {itemCount === 1 ? 'item' : 'items'})
               </span>
             )}
@@ -92,16 +98,29 @@ export function CartDrawer() {
 
         {!hydrated ? (
           <div className="flex-1 flex items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-gray-600" />
+            <div className={cn(
+              'h-8 w-8 animate-spin rounded-full border-2',
+              restaurantDrawerUi
+                ? 'border-neutral-700 border-t-neutral-300'
+                : 'border-gray-200 border-t-gray-600'
+            )} />
           </div>
         ) : cart.items.length === 0 ? (
           /* ── Empty State ─────────────────────────────────────────────── */
           <div className="flex-1 flex flex-col items-center justify-center text-center px-8 py-12">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <ShoppingBag className="w-10 h-10 text-gray-300" />
+            <div className={cn(
+              'w-20 h-20 rounded-full flex items-center justify-center mb-4',
+              restaurantDrawerUi ? 'bg-neutral-800' : 'bg-gray-100'
+            )}>
+              <ShoppingBag className={cn('w-10 h-10', restaurantDrawerUi ? 'text-neutral-500' : 'text-gray-300')} />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cart is empty</h3>
-            <p className="text-sm text-gray-500 mb-6">
+            <h3 className={cn(
+              'text-lg font-semibold mb-2',
+              restaurantDrawerUi ? restaurantDrawerUi.itemName : 'text-gray-900'
+            )}>
+              Your cart is empty
+            </h3>
+            <p className={cn('text-sm mb-6', restaurantDrawerUi ? restaurantDrawerUi.itemMeta : 'text-gray-500')}>
               Add some products to get started.
             </p>
             <Button
@@ -147,8 +166,8 @@ export function CartDrawer() {
                     transition={{ duration: 0.18, delay: index * 0.04 }}
                     className={cn(
                       'flex gap-4 px-6 py-4 border-b transition-colors',
-                      restaurantStore
-                        ? 'border-neutral-800 hover:bg-neutral-900/50'
+                      restaurantDrawerUi
+                        ? restaurantDrawerUi.itemRow
                         : 'border-gray-50 hover:bg-gray-50/60'
                     )}
                   >
@@ -180,26 +199,39 @@ export function CartDrawer() {
                       <Link
                         href={`/store/${businessDomain}/products/${item.slug || item.productId}`}
                         onClick={() => setIsOpen(false)}
-                        className="text-sm font-semibold text-gray-900 hover:text-gray-600 line-clamp-2 leading-snug"
+                        className={cn(
+                          'line-clamp-2 leading-snug transition-colors',
+                          restaurantDrawerUi
+                            ? restaurantDrawerUi.itemName
+                            : 'text-sm font-semibold text-gray-900 hover:text-gray-600'
+                        )}
                       >
                         {item.name}
                       </Link>
 
                       {item.variantName && (
-                        <p className="text-xs text-gray-400 mt-0.5">{item.variantName}</p>
+                        <p className={cn('text-xs mt-0.5', restaurantDrawerUi ? 'text-neutral-500' : 'text-gray-400')}>
+                          {item.variantName}
+                        </p>
                       )}
 
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className={cn('text-xs mt-1', restaurantDrawerUi ? restaurantDrawerUi.itemMeta : 'text-gray-500')}>
                         {formatCurrency(item.price, currency)} each
                       </p>
 
                       {/* Qty controls */}
                       <div className="flex items-center gap-2 mt-2">
-                        <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                        <div className={cn(
+                          'flex items-center border rounded-lg overflow-hidden',
+                          restaurantDrawerUi ? restaurantDrawerUi.qtyBorder : 'border-gray-200'
+                        )}>
                           <button
                             onClick={() => handleQuantityChange(item, item.quantity - 1)}
                             disabled={isLoading}
-                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition-colors disabled:opacity-40"
+                            className={cn(
+                              'w-8 h-8 flex items-center justify-center transition-colors disabled:opacity-40',
+                              restaurantDrawerUi ? restaurantDrawerUi.qtyButton : 'hover:bg-gray-100'
+                            )}
                             aria-label="Decrease quantity"
                           >
                             <Minus className="w-3.5 h-3.5" />
@@ -210,7 +242,10 @@ export function CartDrawer() {
                           <button
                             onClick={() => handleQuantityChange(item, item.quantity + 1)}
                             disabled={isLoading || (item.maxQuantity && item.quantity >= item.maxQuantity)}
-                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition-colors disabled:opacity-40"
+                            className={cn(
+                              'w-8 h-8 flex items-center justify-center transition-colors disabled:opacity-40',
+                              restaurantDrawerUi ? restaurantDrawerUi.qtyButton : 'hover:bg-gray-100'
+                            )}
                             aria-label="Increase quantity"
                           >
                             <Plus className="w-3.5 h-3.5" />
@@ -223,7 +258,12 @@ export function CartDrawer() {
                             toast.success('Removed from cart');
                           }}
                           disabled={isLoading}
-                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          className={cn(
+                            'p-1.5 rounded-lg transition-colors',
+                            restaurantDrawerUi
+                              ? 'text-neutral-500 hover:text-red-400 hover:bg-red-500/10'
+                              : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                          )}
                           aria-label="Remove item"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -233,7 +273,7 @@ export function CartDrawer() {
 
                     {/* Line total */}
                     <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-bold text-gray-900">
+                      <p className={restaurantDrawerUi ? restaurantDrawerUi.itemPrice : 'text-sm font-bold text-gray-900'}>
                         {formatCurrency(item.price * item.quantity, currency)}
                       </p>
                     </div>
@@ -243,7 +283,7 @@ export function CartDrawer() {
             </div>
 
             {/* ── Footer ───────────────────────────────────────────────── */}
-            <div className="border-t bg-white px-6 py-5 space-y-4">
+            <div className={cn('px-6 py-5 space-y-4', restaurantDrawerUi?.footer ?? 'border-t bg-white')}>
               {/* Free shipping progress */}
               {remaining > 0 && (
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
@@ -270,12 +310,17 @@ export function CartDrawer() {
 
               {/* Subtotal */}
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Subtotal</span>
-                <span className="text-xl font-black text-gray-900">
+                <span className={cn('text-sm', restaurantCheckoutUi ? restaurantCheckoutUi.muted : 'text-gray-600')}>
+                  Subtotal
+                </span>
+                <span className={cn(
+                  'text-xl font-black',
+                  restaurantCheckoutUi ? restaurantCheckoutUi.heading : 'text-gray-900'
+                )}>
                   {formatCurrency(subtotal, currency)}
                 </span>
               </div>
-              <p className="text-xs text-gray-400">
+              <p className={cn('text-xs', restaurantCheckoutUi ? 'text-zinc-400' : 'text-gray-400')}>
                 Shipping and taxes calculated at checkout
               </p>
 
