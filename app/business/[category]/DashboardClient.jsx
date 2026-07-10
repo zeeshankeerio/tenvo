@@ -489,13 +489,12 @@ function BusinessDashboardContent() {
     loadingModules,
   } = useData();
 
+  // Only block the dashboard tab on analytics (shell-critical KPIs).
+  // Finance and sales stream in via background fetch — individual widgets
+  // show their own loading states rather than blocking the entire tab.
   const dashboardTabLoading =
     activeTab === 'dashboard' &&
-    (
-      (!dashboardMetrics && Boolean(loadingModules.analytics)) ||
-      (!moduleReady.sales && Boolean(loadingModules.sales)) ||
-      (!moduleReady.finance && Boolean(loadingModules.finance))
-    );
+    !dashboardMetrics && Boolean(loadingModules.analytics);
 
   useEffect(() => {
     const onRefreshDashboardData = async () => {
@@ -743,38 +742,6 @@ function BusinessDashboardContent() {
   // Data is now managed by DataProvider and synced via useData hook
   // Local page state only manages UI toggles and local interactions
 
-
-
-  // Calculate stats
-  const totalRevenue = useMemo(() => invoices
-    .filter(inv => {
-      const invDate = new Date(inv.date);
-      return inv.status === 'paid' && invDate >= dateRange.from && invDate <= dateRange.to;
-    })
-    .reduce((sum, inv) => sum + (Number(inv.grand_total) || Number(inv.amount) || 0), 0), [invoices, dateRange]);
-
-  const grossRevenue = useMemo(() => invoices
-    .filter(inv => {
-      const invDate = new Date(inv.date);
-      return invDate >= dateRange.from && invDate <= dateRange.to;
-    })
-    .reduce((sum, inv) => sum + (Number(inv.grand_total) || Number(inv.amount) || 0), 0), [invoices, dateRange]);
-
-  const totalOrders = invoices.filter(inv => {
-    const invDate = new Date(inv.date);
-    return invDate >= dateRange.from && invDate <= dateRange.to;
-  }).length;
-
-  const totalProducts = products.length;
-  const totalCustomers = customers.length;
-
-  const lowStockCount = products.filter(p => (p.stock || 0) <= (p.min_stock || 10)).length;
-
-  const totalTaxLiability = useMemo(() => {
-    const outputTax = invoices.reduce((sum, inv) => sum + (Number(inv.tax_total) || 0), 0);
-    const inputTax = purchaseOrders.reduce((sum, po) => sum + (Number(po.tax_total) || 0), 0);
-    return Math.max(0, outputTax - inputTax);
-  }, [invoices, purchaseOrders]);
 
   /**
    * @param {object} productData
@@ -1770,6 +1737,11 @@ function BusinessDashboardContent() {
             domainKnowledge={domainKnowledge}
             isLoading={dashboardTabLoading}
             inventoryLoading={Boolean(loadingModules.inventory) && !moduleReady.inventory}
+            isAnalyticsLoading={Boolean(loadingModules.analytics) && !moduleReady.analytics}
+            isSalesLoading={Boolean(loadingModules.sales) && !moduleReady.sales}
+            isInventoryLoading={Boolean(loadingModules.inventory) && !moduleReady.inventory}
+            isFinanceLoading={Boolean(loadingModules.finance) && !moduleReady.finance}
+            isExpensesLoading={Boolean(loadingModules.expenses) && !moduleReady.expenses}
             financeInitialTab={financeInitialTab}
             onFinanceInitialTabConsumed={() => setFinanceInitialTab(null)}
             handlers={{

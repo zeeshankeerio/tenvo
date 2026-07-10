@@ -59,6 +59,11 @@ interface DomainDashboardProps {
     domainKnowledge?: DomainKnowledgeLike;
     isLoading?: boolean;
     user?: { email?: string; user_metadata?: { full_name?: string } } | null;
+    isAnalyticsLoading?: boolean;
+    isSalesLoading?: boolean;
+    isInventoryLoading?: boolean;
+    isFinanceLoading?: boolean;
+    isExpensesLoading?: boolean;
 }
 
 interface InvoiceItemLike {
@@ -163,6 +168,7 @@ interface MetricCardProps {
     sparkline?: number[];
     invertTrendColor?: boolean;
     actionId?: string;
+    isLoading?: boolean;
 }
 
 // ===============================================================
@@ -187,7 +193,11 @@ export function DomainDashboard({
     advancedDashboardSnapshot = null,
     domainKnowledge,
     isLoading = false,
-    user
+    user,
+    isAnalyticsLoading = false,
+    isSalesLoading = false,
+    isInventoryLoading = false,
+    isFinanceLoading = false,
 }: DomainDashboardProps) {
     const { business } = useBusiness() as {
         business?: { id?: string; name?: string; country?: string; city?: string } | null;
@@ -736,6 +746,7 @@ export function DomainDashboard({
                 theme: 'cyan' as const,
                 sparkline: orderSeries,
                 actionId: metricActionId('orders'),
+                isLoading: isSalesLoading,
             },
             {
                 label: 'Revenue In Period',
@@ -746,6 +757,7 @@ export function DomainDashboard({
                 theme: 'emerald' as const,
                 sparkline: revenueSeries,
                 actionId: metricActionId('revenue'),
+                isLoading: isSalesLoading,
             },
             {
                 label: 'Inventory Value',
@@ -755,6 +767,7 @@ export function DomainDashboard({
                 icon: Boxes,
                 theme: 'violet' as const,
                 actionId: metricActionId('inventory_value'),
+                isLoading: isInventoryLoading || isFinanceLoading,
             },
             {
                 label: 'Overdue',
@@ -768,6 +781,7 @@ export function DomainDashboard({
                 theme: 'rose' as const,
                 invertTrendColor: true,
                 actionId: metricActionId('overdue'),
+                isLoading: isSalesLoading || isAnalyticsLoading,
             },
         ];
     }, [
@@ -782,6 +796,10 @@ export function DomainDashboard({
         remindersData.overdueInvoices,
         formatCurrencyCompact,
         periodLabel,
+        isAnalyticsLoading,
+        isSalesLoading,
+        isInventoryLoading,
+        isFinanceLoading,
     ]);
 
     const financeHeroMetrics = useMemo(
@@ -894,7 +912,7 @@ export function DomainDashboard({
         return insights;
     }, [remindersData, campaignEnabled, revenueTrendSigned, periodMetrics.currentExpenses, expenseTrend, domainKnowledge?.intelligence]);
 
-    const metricsPending = isLoading;
+    const metricsPending = isLoading || isAnalyticsLoading || isSalesLoading || isInventoryLoading || isFinanceLoading;
 
     // ===============================================================
     // EASY MODE DASHBOARD -- Clean, beginner-friendly view
@@ -1181,11 +1199,12 @@ export function DomainDashboard({
                             actionId={item.actionId}
                             onNavigate={handleMetricNavigate}
                             className="h-full"
+                            isLoading={item.isLoading}
                         />
                     ))}
                 </div>
 
-                <FinanceHeroStrip metrics={financeHeroMetrics} onNavigate={handleMetricNavigate} />
+                <FinanceHeroStrip metrics={financeHeroMetrics} onNavigate={handleMetricNavigate} isLoading={isFinanceLoading} />
 
                 <PeriodSnapshotCard
                     dateFrom={new Date(dateRange.from)}

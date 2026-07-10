@@ -26,6 +26,7 @@ async function recreate() {
       DROP TABLE IF EXISTS product_categories CASCADE;
       DROP TABLE IF EXISTS business_custom_domains CASCADE;
       DROP TABLE IF EXISTS business_settings CASCADE;
+      DROP TABLE IF EXISTS subscription_plans CASCADE;
     `);
     
     console.log('✅ Dropped old tables');

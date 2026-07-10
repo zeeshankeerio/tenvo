@@ -14,8 +14,7 @@
  * Usage: bun run verify:registration-storefront-flow
  */
 
-import { prismaBase } from '../lib/db.js';
-import pool from '../lib/db.js';
+import { pool, prismaBase } from '../lib/db.js';
 
 let totalChecks = 0;
 let passedChecks = 0;
@@ -66,7 +65,7 @@ async function verifyDomainResolution() {
         const result = await client.query(`
             SELECT b.id, b.domain, b.business_name
             FROM businesses b
-            WHERE b.is_deleted = false
+            WHERE COALESCE(b.is_active, true) = true
               AND b.domain IS NOT NULL
             LIMIT 1
         `);
@@ -120,13 +119,14 @@ async function verifyDomainCacheStrategy() {
     console.log('\n🔍 Testing Domain Cache Strategy...\n');
     
     try {
-        const storefrontCacheFile = await import('../lib/storefront/storefrontCache.js');
-        const storefrontCacheSource = storefrontCacheFile.toString();
+        const fs = await import('fs');
+        const storefrontCacheSource = fs.readFileSync('lib/cache/storefrontDomainCache.js', 'utf-8');
         
         // Check if TTL is set
         const hasTTL = storefrontCacheSource.includes('TTL') || 
                        storefrontCacheSource.includes('setex') ||
-                       storefrontCacheSource.includes('expire');
+                       storefrontCacheSource.includes('expire') ||
+                       storefrontCacheSource.includes('redisSetEx');
         
         logCheck(
             'Redis domain cache has TTL configured',
@@ -137,8 +137,7 @@ async function verifyDomainCacheStrategy() {
         );
         
         // Check for cache purging on domain updates
-        const resolveBusinessFile = await import('../lib/tenancy/resolveStorefrontBusiness.js');
-        const resolveBusinessSource = resolveBusinessFile.toString();
+        const resolveBusinessSource = fs.readFileSync('lib/tenancy/resolveStorefrontBusiness.js', 'utf-8');
         
         const hasExplicitPurge = resolveBusinessSource.includes('purgeCachedStorefrontDomain') ||
                                  resolveBusinessSource.includes('invalidateStorefrontBusiness');
@@ -217,7 +216,7 @@ async function verifyInventorySync() {
             SELECT b.id as business_id, COUNT(p.id) as product_count
             FROM businesses b
             LEFT JOIN products p ON p.business_id = b.id AND p.is_deleted = false
-            WHERE b.is_deleted = false
+            WHERE COALESCE(b.is_active, true) = true
             GROUP BY b.id
             HAVING COUNT(p.id) > 0
             LIMIT 1

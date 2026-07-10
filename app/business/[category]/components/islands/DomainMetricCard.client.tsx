@@ -24,6 +24,7 @@ export interface DomainMetricCardProps {
     /** Routes via handleQuickAction when card is clicked. */
     actionId?: string;
     onNavigate?: (actionId: string) => void;
+    isLoading?: boolean;
 }
 
 export function DomainMetricCard({
@@ -40,6 +41,7 @@ export function DomainMetricCard({
     invertTrendColor = false,
     actionId,
     onNavigate,
+    isLoading = false,
 }: DomainMetricCardProps) {
     const palette = KPI_THEMES[theme];
     const showTrend = trendHint || (trend !== undefined && trend !== 0);
@@ -49,6 +51,33 @@ export function DomainMetricCard({
     const handleActivate = () => {
         if (actionId && onNavigate) onNavigate(actionId);
     };
+
+    if (isLoading) {
+        return (
+            <Card
+                className={cn(
+                    'group relative overflow-hidden border shadow-sm h-full animate-pulse',
+                    palette.card,
+                    className
+                )}
+            >
+                <CardContent className="relative p-3.5">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1 space-y-2">
+                            <div className="h-3 w-16 bg-slate-200 rounded opacity-60" />
+                            <div className="h-6 w-28 bg-slate-300/80 rounded" />
+                            <div className="h-3 w-32 bg-slate-200 rounded opacity-60" />
+                        </div>
+                        <div className="p-5 bg-slate-200/80 rounded-xl shrink-0" />
+                    </div>
+                    <div className="mt-3 flex items-end justify-between gap-2 min-h-[2rem] border-t border-white/60 pt-2.5">
+                        <div className="h-3 w-20 bg-slate-200 rounded opacity-60" />
+                        <div className="h-5 w-12 bg-slate-200/50 rounded" />
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
 
     return (
         <Card

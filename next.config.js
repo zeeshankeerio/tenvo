@@ -78,12 +78,19 @@ const nextConfig = {
       { protocol: 'https', hostname: '**.amazonaws.com' },
       { protocol: 'https', hostname: '**.googleusercontent.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
-      // Allow any https source as a catch-all for user-uploaded images
-      { protocol: 'https', hostname: '**' },
+      // Allow any https source by specifying explicit allowed domains and wildcards
+      { protocol: 'https', hostname: 'services.eatx.pk' },
+      { protocol: 'https', hostname: 'media.naheed.pk' },
+      { protocol: 'https', hostname: 'autostore.pk' },
+      { protocol: 'https', hostname: 'www.autostore.pk' },
+      { protocol: 'https', hostname: '**.autostore.pk' },
+      { protocol: 'https', hostname: '**.unsplash.com' },
+      { protocol: 'https', hostname: '**.eatx.pk' },
+      { protocol: 'https', hostname: '**.naheed.pk' },
     ],
     // Keep unoptimized as fallback for local dev / self-hosted images
     // Set to false to enable full optimization in production
-    unoptimized: process.env.NODE_ENV !== 'production',
+    unoptimized: true, // Force unoptimized true to prevent 504 Gateway Timeout or 500 error in development when fetching external images
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],

@@ -141,6 +141,7 @@
     "recharts": "^2.13.0",
     "remark-gfm": "^4.0.1",
     "resend": "^6.12.3",
+    "server-only": "^0.0.1",
     "shadcn": "^3.6.2",
     "stripe": "^22.1.1",
     "tailwind-merge": "^3.6.0",

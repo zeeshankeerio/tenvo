@@ -18,7 +18,8 @@ import {
     isHighPrecisionDomain, 
     getDomainFormLabels, 
     getDomainProductFields,
-    resolveDomainFieldKey 
+    resolveDomainFieldKey,
+    sanitizeDomainData 
 } from '@/lib/utils/domainHelpers';
 import { BarcodeFieldInput } from '@/components/inventory/BarcodeFieldInput';
 import { useBusiness } from '@/lib/context/BusinessContext';
@@ -626,7 +627,7 @@ export function ProductWizard({
                 max_stock: toNumber(formData.max_stock, 0),
                 min_order_qty: toNumber(formData.min_order_qty, 1),
                 wholesale_price: toNumber(formData.wholesale_price, 0),
-                domain_data: sanitizeDomainData(formData.domain_data || {}, category)
+                domain_data: sanitizeDomainData(formData.domain_data || {})
             };
             delete payload.id;
             delete payload._tempId;
@@ -645,7 +646,7 @@ export function ProductWizard({
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && currentStep < WIZARD_STEPS.length - 1) {
+            if (e.key === 'Enter' && !e.shiftKey && currentStep < wizardSteps.length - 1) {
                 e.preventDefault();
                 handleNext();
             }
@@ -656,7 +657,14 @@ export function ProductWizard({
 
     // --- Render --------------------------------------------------------------
 
-    const StepComponent = [StepBasics, StepPricing, StepInventory, StepAttributes, StepReview][currentStep];
+    const STEP_COMPONENTS = {
+        basics: StepBasics,
+        pricing: StepPricing,
+        inventory: StepInventory,
+        attributes: StepAttributes,
+        review: StepReview,
+    };
+    const StepComponent = STEP_COMPONENTS[wizardSteps[currentStep].key];
 
     return (
         <div className="mx-auto flex max-h-[min(85vh,820px)] max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">

@@ -274,7 +274,7 @@ export async function POST(request, { params }) {
     Number.isFinite(shippingRaw) && shippingRaw >= 0 ? roundMoney(Math.min(shippingRaw, 9_999_999)) : 0;
   let shippingAmount = 0;
 
-  const MAX_CHECKOUT_ATTEMPTS = 3;
+  const MAX_CHECKOUT_ATTEMPTS = 5;
 
   for (let attempt = 1; attempt <= MAX_CHECKOUT_ATTEMPTS; attempt++) {
     const client = await pool.connect();
@@ -625,10 +625,11 @@ export async function POST(request, { params }) {
       try {
         await client.query(
           `INSERT INTO storefront_order_items (
-          order_id, product_id, product_name, product_sku, variant_id, quantity, unit_price, tax_amount, total_price, metadata
-        ) VALUES ($1, $2::uuid, $3, $4, $5::uuid, $6::numeric, $7::numeric, $8::numeric, $9::numeric, $10::jsonb)`,
+          order_id, business_id, product_id, product_name, product_sku, variant_id, quantity, unit_price, tax_amount, total_price, metadata
+        ) VALUES ($1, $2::uuid, $3::uuid, $4, $5, $6::uuid, $7::numeric, $8::numeric, $9::numeric, $10::numeric, $11::jsonb)`,
           [
             orderId,
+            business.id,
             line.productId,
             line.productName,
             line.sku || bodyItem?.sku || null,
@@ -644,10 +645,11 @@ export async function POST(request, { params }) {
         if (insErr.code === '42703') {
           await client.query(
             `INSERT INTO storefront_order_items (
-            order_id, product_id, product_name, quantity, unit_price, tax_amount, total_price, metadata
-          ) VALUES ($1, $2::uuid, $3, $4::numeric, $5::numeric, $6::numeric, $7::numeric, $8::jsonb)`,
+            order_id, business_id, product_id, product_name, quantity, unit_price, tax_amount, total_price, metadata
+          ) VALUES ($1, $2::uuid, $3::uuid, $4, $5::numeric, $6::numeric, $7::numeric, $8::numeric, $9::jsonb)`,
             [
               orderId,
+              business.id,
               line.productId,
               line.productName,
               line.quantity,
@@ -747,7 +749,9 @@ export async function POST(request, { params }) {
       console.warn(
         `[Create Order] order number conflict (attempt ${attempt}/${MAX_CHECKOUT_ATTEMPTS}), retrying…`
       );
-      await new Promise((r) => setTimeout(r, 40 * attempt));
+      const delayMs = 30 * Math.pow(2, attempt - 1);
+      const jitter = Math.random() * 0.3 * delayMs; // ±30% random jitter
+      await new Promise((r) => setTimeout(r, delayMs + jitter));
       continue;
     }
 

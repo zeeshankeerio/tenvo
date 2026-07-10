@@ -138,33 +138,25 @@ async function fixDemoStores() {
         
         for (const business of demoBusinesses) {
             // Check if custom domain exists
-            const existing = await prisma.business_custom_domains.findFirst({
-                where: {
-                    business_id: business.id,
-                    domain: business.domain
-                }
-            });
+            const existingResults = await prisma.$queryRaw`
+                SELECT id, is_active FROM business_custom_domains 
+                WHERE business_id = ${business.id}::uuid AND domain = ${business.domain}
+            `;
+            const existing = existingResults?.[0];
             
             if (!existing) {
-                await prisma.business_custom_domains.create({
-                    data: {
-                        business_id: business.id,
-                        domain: business.domain,
-                        is_active: true,
-                        is_primary: true
-                    }
-                });
+                await prisma.$executeRaw`
+                    INSERT INTO business_custom_domains (business_id, domain, is_active, is_primary)
+                    VALUES (${business.id}::uuid, ${business.domain}, true, true)
+                `;
                 console.log(`   ✅ Added custom domain for: ${business.domain}`);
                 fixedCount++;
             } else if (!existing.is_active) {
-                await prisma.business_custom_domains.update({
-                    where: { id: existing.id },
-                    data: {
-                        is_active: true,
-                        is_primary: true,
-                        updated_at: new Date()
-                    }
-                });
+                await prisma.$executeRaw`
+                    UPDATE business_custom_domains
+                    SET is_active = true, is_primary = true, updated_at = NOW()
+                    WHERE id = ${existing.id}
+                `;
                 console.log(`   ✅ Activated custom domain for: ${business.domain}`);
                 fixedCount++;
             }
@@ -181,35 +173,35 @@ async function fixDemoStores() {
         let storefrontFixedCount = 0;
         
         for (const business of demoBusinesses) {
-            const settings = await prisma.business_settings.findFirst({
-                where: { business_id: business.id }
-            });
+            const settingsResults = await prisma.$queryRaw`
+                SELECT id, storefront_settings FROM business_settings 
+                WHERE business_id = ${business.id}::uuid
+            `;
+            const settings = settingsResults?.[0];
             
             if (!settings) {
                 // Create settings if missing
-                await prisma.business_settings.create({
-                    data: {
-                        business_id: business.id,
-                        is_storefront_enabled: true,
-                        settings: {
-                            storefront: {
-                                enabled: true
-                            }
-                        }
-                    }
-                });
+                await prisma.$executeRaw`
+                    INSERT INTO business_settings (business_id, settings, storefront_settings)
+                    VALUES (${business.id}::uuid, '{}'::jsonb, '{"enabled": true}'::jsonb)
+                `;
                 console.log(`   ✅ Created settings for: ${business.domain}`);
                 storefrontFixedCount++;
-            } else if (settings.is_storefront_enabled === false) {
-                await prisma.business_settings.update({
-                    where: { id: settings.id },
-                    data: {
-                        is_storefront_enabled: true,
-                        updated_at: new Date()
-                    }
-                });
-                console.log(`   ✅ Enabled storefront for: ${business.domain}`);
-                storefrontFixedCount++;
+            } else {
+                const storefrontSettings = typeof settings.storefront_settings === 'string'
+                    ? JSON.parse(settings.storefront_settings)
+                    : settings.storefront_settings || {};
+                
+                if (storefrontSettings.enabled === false) {
+                    await prisma.$executeRaw`
+                        UPDATE business_settings
+                        SET storefront_settings = jsonb_set(COALESCE(storefront_settings, '{}'::jsonb), '{enabled}', 'true'::jsonb),
+                            updated_at = NOW()
+                        WHERE business_id = ${business.id}::uuid
+                    `;
+                    console.log(`   ✅ Enabled storefront for: ${business.domain}`);
+                    storefrontFixedCount++;
+                }
             }
         }
         
