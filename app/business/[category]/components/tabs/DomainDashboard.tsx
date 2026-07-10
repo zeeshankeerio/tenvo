@@ -202,7 +202,7 @@ export function DomainDashboard({
     const { business } = useBusiness() as {
         business?: { id?: string; name?: string; country?: string; city?: string } | null;
     };
-    const { isEasyMode } = useAppMode();
+    const { isEasyMode, modeReady } = useAppMode();
     const activeBusinessId = businessId || business?.id;
     const advancedOpsSnapshot = useDomainOperationsSnapshot({
         businessId: activeBusinessId,
@@ -913,6 +913,18 @@ export function DomainDashboard({
     }, [remindersData, campaignEnabled, revenueTrendSigned, periodMetrics.currentExpenses, expenseTrend, domainKnowledge?.intelligence]);
 
     const metricsPending = isLoading || isAnalyticsLoading || isSalesLoading || isInventoryLoading || isFinanceLoading;
+
+    // Hydration guard to prevent flash of wrong mode
+    if (!modeReady) {
+        return (
+            <div className="w-full min-h-[400px] flex items-center justify-center p-6 bg-neutral-50/50 rounded-xl border border-neutral-100 animate-pulse">
+                <div className="text-center space-y-3">
+                    <div className="h-6 w-32 bg-slate-200 rounded mx-auto animate-pulse" />
+                    <div className="h-4 w-48 bg-slate-200/60 rounded mx-auto animate-pulse" />
+                </div>
+            </div>
+        );
+    }
 
     // ===============================================================
     // EASY MODE DASHBOARD -- Clean, beginner-friendly view
