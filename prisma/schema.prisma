@@ -2185,8 +2185,8 @@ model storefront_orders {
   customer_email     String?
   customer_phone     String?
   customer_name      String?
-  shipping_address   String?
-  billing_address    String?
+  shipping_address   Json?
+  billing_address    Json?
   subtotal           Decimal?                 @default(0) @db.Decimal(12, 2)
   tax_amount         Decimal?                 @default(0) @db.Decimal(12, 2)
   shipping_amount    Decimal?                 @default(0) @db.Decimal(12, 2)

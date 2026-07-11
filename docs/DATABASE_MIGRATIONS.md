@@ -140,6 +140,10 @@ Folder: `prisma/migrations/20260711_business_settings_id_uuid/`
 
 Converts legacy `business_settings.id` SERIAL/integer PK to UUID so Prisma `business_settings.create()` on registration stops failing with **Expected a string in column `id`, got number**. Also ensures `is_storefront_enabled`, `settings`, and `business_id` unique. Manual mirror: `lib/db/migrations/046_business_settings_id_uuid.sql`. Apply with `bun run db:migrate`.
 
+### Storefront order addresses (JSONB)
+
+Live `storefront_orders.shipping_address` / `billing_address` are **JSONB** (legacy DDL). Checkout must insert valid JSON via `serializeStorefrontOrderAddress` (`lib/storefront/storefrontOrderAddress.js`) — plain comma-separated text causes Postgres **`invalid input syntax for type json`** (HTTP 500). Prisma models these columns as `Json?`. Display uses `parseStorefrontShippingAddress` (object | JSON string | legacy plain text).
+
 ---
 
 ## Product variant default flag

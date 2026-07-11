@@ -41,6 +41,7 @@ import {
 } from '@/lib/storefront/storefrontPaymentEligibility';
 import { resolveStorefrontOrderShippingAmount } from '@/lib/storefront/storefrontShipping';
 import { resolveCheckoutCartItemRefs } from '@/lib/storefront/validateCheckoutCart';
+import { serializeStorefrontOrderAddress } from '@/lib/storefront/storefrontOrderAddress';
 
 function roundMoney(n) {
   return Math.round(Number(n) * 100) / 100;
@@ -70,18 +71,6 @@ function mapCheckoutClientError(error) {
     return { status: 400, error: msg };
   }
   return null;
-}
-
-function formatAddressBlock(addr) {
-  if (!addr || typeof addr !== 'object') return '';
-  const parts = [
-    addr.address,
-    addr.city,
-    addr.state,
-    addr.postalCode || addr.postal_code,
-    addr.country,
-  ].filter(Boolean);
-  return parts.join(', ');
 }
 
 /**
@@ -532,9 +521,9 @@ export async function POST(request, { params }) {
       customerId = newCustomer.rows[0].id;
     }
 
-    const shipBlock = formatAddressBlock(effectiveShippingAddress);
+    const shipBlock = serializeStorefrontOrderAddress(effectiveShippingAddress);
     const billBlock = billingAddress
-      ? formatAddressBlock(billingAddress)
+      ? serializeStorefrontOrderAddress(billingAddress)
       : shipBlock;
 
     const currency = business.currency || 'PKR';
@@ -578,7 +567,7 @@ export async function POST(request, { params }) {
         currency, status, payment_status, fulfillment_status, notes, metadata,
         created_at, updated_at
       ) VALUES (
-        $1::uuid, $2, $3, $4, $5, $6, $7,
+        $1::uuid, $2, $3, $4, $5, $6::jsonb, $7::jsonb,
         $8::numeric, $9::numeric, $10::numeric, $11::numeric, $12::numeric,
         $13, $14, $15, $16, $17, $18::jsonb, NOW(), NOW()
       )

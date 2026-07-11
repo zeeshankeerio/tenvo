@@ -18,6 +18,7 @@ import { formatCurrency } from '@/lib/currency';
 import { useStorefront } from '@/lib/context/StorefrontContext';
 import { getStoreAccentColor } from '@/lib/config/storefrontDomains';
 import { StoreBuyerPageShell } from '@/components/storefront/StoreBuyerPageShell';
+import { parseStorefrontShippingAddress } from '@/lib/storefront/storefrontOrderAddress';
 
 async function fetchPublicOrders(businessDomain, { email, orderNumber }) {
   const params = new URLSearchParams({ email });
@@ -271,7 +272,7 @@ export default function OrderHistoryPage({ params }) {
               const pc = PAYMENT_CONFIG[order.payment_status] || PAYMENT_CONFIG.pending;
               const StatusIcon = sc.icon;
               const isExpanded = expandedId === order.id;
-              const addr = order.shipping_address;
+              const addr = parseStorefrontShippingAddress(order.shipping_address);
 
               return (
                 <Card key={order.id} className="rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -354,24 +355,10 @@ export default function OrderHistoryPage({ params }) {
                         {addr ? (
                           <div className="flex items-start gap-2 rounded-xl bg-gray-50 p-3 text-sm">
                             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                            <div className="text-gray-600">
-                              {typeof addr === 'string' ? (
-                                <p>{addr}</p>
-                              ) : (
-                                <>
-                                  {addr.name && <p className="font-medium text-gray-800">{addr.name}</p>}
-                                  {addr.street && <p>{addr.street}</p>}
-                                  {addr.city && (
-                                    <p>
-                                      {addr.city}
-                                      {addr.state ? `, ${addr.state}` : ''}
-                                      {addr.zip ? ` ${addr.zip}` : ''}
-                                    </p>
-                                  )}
-                                  {addr.country && <p>{addr.country}</p>}
-                                  {addr.phone && <p className="mt-1 text-gray-500">{addr.phone}</p>}
-                                </>
-                              )}
+                            <div className="space-y-0.5 text-gray-600">
+                              {addr.lines.map((line, i) => (
+                                <p key={i}>{line}</p>
+                              ))}
                             </div>
                           </div>
                         ) : null}
