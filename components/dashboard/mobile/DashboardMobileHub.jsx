@@ -152,7 +152,23 @@ export function DashboardMobileHub({
         )}
       </div>
 
-      {kpiStrip.length > 0 ? <MobileKpiStrip items={kpiStrip} /> : null}
+      {kpiStrip.length > 0 ? (
+        metricsPending ? (
+          <div className="grid grid-cols-2 gap-2 lg:hidden" aria-busy="true" aria-label="Loading metrics">
+            {kpiStrip.slice(0, 4).map((kpi) => (
+              <div
+                key={`kpi-skel-${kpi.label}`}
+                className="min-w-0 animate-pulse rounded-xl border border-gray-100 bg-white px-2.5 py-2 shadow-sm"
+              >
+                <div className="h-3 w-14 rounded bg-gray-100" />
+                <div className="mt-2 h-4 w-10 rounded bg-gray-200" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <MobileKpiStrip items={kpiStrip} />
+        )
+      ) : null}
 
       {reminderRows.length > 0 && (
         <div className="rounded-xl border border-gray-100 bg-white p-2 shadow-sm">
@@ -194,7 +210,7 @@ export function DashboardMobileHub({
             Quick actions
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {quickActions.slice(0, 6).map((action, index) => (
+            {quickActions.slice(0, 8).map((action, index) => (
               <MobileHubTile
                 key={action.id}
                 icon={action.icon}
@@ -215,21 +231,33 @@ export function DashboardMobileHub({
           </p>
           <div className="grid grid-cols-2 gap-2">
             {healthPanels.slice(0, 4).map((panel) => (
-              <div key={panel.label} className="rounded-xl border border-gray-100 bg-gray-50/80 px-2.5 py-2">
+              <div
+                key={panel.label}
+                className={cn(
+                  'rounded-xl border border-gray-100 bg-gray-50/80 px-2.5 py-2',
+                  metricsPending && 'animate-pulse'
+                )}
+              >
                 <p className="line-clamp-1 text-[10px] font-bold uppercase tracking-wide text-gray-400">
                   {panel.label}
                 </p>
-                <p className={cn('mt-0.5 text-sm font-semibold tabular-nums', panel.tone)}>{panel.value}</p>
-                {panel.detail ? (
-                  <p className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">{panel.detail}</p>
-                ) : null}
+                {metricsPending ? (
+                  <div className="mt-1.5 h-4 w-12 rounded bg-gray-200" />
+                ) : (
+                  <>
+                    <p className={cn('mt-0.5 text-sm font-semibold tabular-nums', panel.tone)}>{panel.value}</p>
+                    {panel.detail ? (
+                      <p className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">{panel.detail}</p>
+                    ) : null}
+                  </>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {!hasCoreData && quickSetupSteps.length > 0 && (
+      {!hasCoreData && !metricsPending && quickSetupSteps.length > 0 && (
         <div className="rounded-2xl border border-cyan-100 bg-cyan-50/60 p-3">
           <p className="text-xs font-medium text-gray-800">
             Add products, customers, or an invoice to unlock insights.

@@ -451,7 +451,7 @@ function BusinessDashboardContent() {
 
   // Auth context
   const { user, loading: authLoading } = useAuth();
-  const { hubReady, workspaceBlocking, hasOptimisticShell, contentReady } = useHubReady();
+  const { hubReady, workspaceBlocking, hasOptimisticShell } = useHubReady();
 
   const {
     invoices,
@@ -1701,7 +1701,9 @@ function BusinessDashboardContent() {
       )}
 
       <BusinessLoadingBoundary
-        isLoading={workspaceBlocking || (hubReady && !contentReady && !hasOptimisticShell)}
+        // Progressive paint: only blank when no tenant context exists.
+        // Metrics/modules stream via widget skeletons (not a full-page gate).
+        isLoading={workspaceBlocking}
         variant={business?.id || hasOptimisticShell ? 'minimal' : 'full'}
       >
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-2">

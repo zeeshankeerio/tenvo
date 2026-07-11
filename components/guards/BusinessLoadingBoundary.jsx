@@ -9,15 +9,23 @@ import { cn } from '@/lib/utils';
  * Uses a simple opacity transition instead of AnimatePresence mode="wait"
  * to avoid blank frames during tab or data transitions.
  *
+ * Prefer progressive paint once a tenant shell exists; use widget skeletons for metrics.
+ *
  * @param {'full' | 'minimal'} variant - minimal when tenant context exists (no full-page swap)
+ * @param {string} [label] - distinct status copy for supportability
  */
-export function BusinessLoadingBoundary({ isLoading, children, variant = 'full' }) {
+export function BusinessLoadingBoundary({
+    isLoading,
+    children,
+    variant = 'full',
+    label = 'Resolving workspace…',
+}) {
     if (isLoading) {
         if (variant === 'minimal') {
             return (
                 <div className="flex items-center justify-center py-16 animate-in fade-in duration-200">
                     <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
-                    <span className="ml-2 text-xs font-medium text-gray-400">Loading workspace...</span>
+                    <span className="ml-2 text-xs font-medium text-gray-400">{label}</span>
                 </div>
             );
         }
@@ -64,7 +72,7 @@ export function BusinessLoadingBoundary({ isLoading, children, variant = 'full' 
 
                 <div className="flex items-center justify-center pt-2">
                     <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
-                    <span className="ml-2 text-xs font-medium text-gray-400">Loading workspace...</span>
+                    <span className="ml-2 text-xs font-medium text-gray-400">{label}</span>
                 </div>
             </div>
         );

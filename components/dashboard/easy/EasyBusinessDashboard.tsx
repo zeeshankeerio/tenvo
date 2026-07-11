@@ -868,7 +868,7 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
           </div>
 
           <div className="px-3 py-3 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-5 sm:py-4 lg:pb-4">
-            {!hasCoreData && (
+            {!hasCoreData && !metricsPending && (
               <div
                 role="alert"
                 className="mb-3 rounded-lg border border-cyan-100 bg-cyan-50/50 px-3 py-2.5"
@@ -913,22 +913,33 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
                   <CardTitle className="text-xs font-semibold text-neutral-700">Snapshot</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-lg bg-neutral-50 px-3 py-2">
-                    <p className="text-[10px] font-semibold uppercase text-neutral-500">Net margin</p>
-                    <p className="mt-1 text-sm font-semibold tabular-nums">{netMarginPct.toFixed(1)}%</p>
-                  </div>
-                  <div className="rounded-lg bg-neutral-50 px-3 py-2">
-                    <p className="text-[10px] font-semibold uppercase text-neutral-500">Paid order ratio</p>
-                    <p className="mt-1 text-sm font-semibold tabular-nums">{paidOrderRateDisplay}</p>
-                  </div>
-                  <div className="rounded-lg bg-neutral-50 px-3 py-2">
-                    <p className="text-[10px] font-semibold uppercase text-neutral-500">Low-stock SKUs</p>
-                    <p className="mt-1 text-sm font-semibold tabular-nums">{reminders.lowStock ?? 0}</p>
-                  </div>
-                  <div className="rounded-lg bg-neutral-50 px-3 py-2">
-                    <p className="text-[10px] font-semibold uppercase text-neutral-500">Pending orders</p>
-                    <p className="mt-1 text-sm font-semibold tabular-nums">{reminders.pendingOrders ?? 0}</p>
-                  </div>
+                  {metricsPending ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <div key={`snapshot-skel-${i}`} className="rounded-lg bg-neutral-50 px-3 py-2 animate-pulse">
+                        <div className="h-3 w-20 rounded bg-neutral-200" />
+                        <div className="mt-2 h-4 w-14 rounded bg-neutral-300" />
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="rounded-lg bg-neutral-50 px-3 py-2">
+                        <p className="text-[10px] font-semibold uppercase text-neutral-500">Net margin</p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums">{netMarginPct.toFixed(1)}%</p>
+                      </div>
+                      <div className="rounded-lg bg-neutral-50 px-3 py-2">
+                        <p className="text-[10px] font-semibold uppercase text-neutral-500">Paid order ratio</p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums">{paidOrderRateDisplay}</p>
+                      </div>
+                      <div className="rounded-lg bg-neutral-50 px-3 py-2">
+                        <p className="text-[10px] font-semibold uppercase text-neutral-500">Low-stock SKUs</p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums">{reminders.lowStock ?? 0}</p>
+                      </div>
+                      <div className="rounded-lg bg-neutral-50 px-3 py-2">
+                        <p className="text-[10px] font-semibold uppercase text-neutral-500">Pending orders</p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums">{reminders.pendingOrders ?? 0}</p>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
@@ -938,15 +949,23 @@ export function EasyBusinessDashboard(props: EasyBusinessDashboardProps) {
                     <CardTitle className="text-xs font-semibold text-neutral-700">Efficiency</CardTitle>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center pb-4">
-                    <EasyRingMetric
-                      value={domainEfficiency}
-                      target={100}
-                      label="Efficiency score"
-                      sublabel={domainEfficiency >= 85 ? 'In control' : 'Review alerts below'}
-                    />
-                    <Badge variant={(efficiencyTone === 'success' ? 'success' : efficiencyTone === 'warning' ? 'warning' : 'secondary') as 'success' | 'warning' | 'secondary'} className="mt-1">
-                      {domainEfficiency >= 85 ? 'Healthy' : domainEfficiency >= 65 ? 'Watch' : 'Needs action'}
-                    </Badge>
+                    {metricsPending ? (
+                      <div className="flex h-36 w-36 items-center justify-center animate-pulse" aria-busy="true">
+                        <div className="h-28 w-28 rounded-full border-8 border-neutral-200" />
+                      </div>
+                    ) : (
+                      <>
+                        <EasyRingMetric
+                          value={domainEfficiency}
+                          target={100}
+                          label="Efficiency score"
+                          sublabel={domainEfficiency >= 85 ? 'In control' : 'Review alerts below'}
+                        />
+                        <Badge variant={(efficiencyTone === 'success' ? 'success' : efficiencyTone === 'warning' ? 'warning' : 'secondary') as 'success' | 'warning' | 'secondary'} className="mt-1">
+                          {domainEfficiency >= 85 ? 'Healthy' : domainEfficiency >= 65 ? 'Watch' : 'Needs action'}
+                        </Badge>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
 

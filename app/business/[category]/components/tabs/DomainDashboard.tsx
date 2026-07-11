@@ -6,7 +6,7 @@ import {
     CreditCard, Clock,
     Zap,
     Boxes, Warehouse, RotateCcw, BadgeDollarSign,
-    Package, FileText, BarChart3, Plus, Banknote
+    Package, FileText, BarChart3, Plus, Banknote, Table2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -913,6 +913,8 @@ export function DomainDashboard({
     }, [remindersData, campaignEnabled, revenueTrendSigned, periodMetrics.currentExpenses, expenseTrend, domainKnowledge?.intelligence]);
 
     const metricsPending = isLoading || isAnalyticsLoading || isSalesLoading || isInventoryLoading || isFinanceLoading;
+    // Avoid false empty-state while sales/inventory modules are still hydrating ([] arrays).
+    const showQuickSetup = !metricsPending && !hasCoreData;
 
     // Hydration guard to prevent flash of wrong mode
     if (!modeReady) {
@@ -974,6 +976,7 @@ export function DomainDashboard({
             { id: 'record-payment', label: 'Record Payment', desc: 'Collect receivables', icon: Banknote, color: 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' },
             { id: 'inventory', label: 'Review Inventory', desc: 'Fix stock issues', icon: Warehouse, color: 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200' },
             { id: 'reports', label: 'View Reports', desc: 'Open analytics', icon: BarChart3, color: 'bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200' },
+            { id: 'excel-mode', label: 'Excel data entry', desc: 'Bulk spreadsheet entry', icon: Table2, color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200' },
         ];
 
         const easyHealthPanels = [
@@ -1017,9 +1020,8 @@ export function DomainDashboard({
         return (
             <>
                 {metricsPending ? (
-                    <p className="mb-3 hidden items-center gap-2 text-xs font-medium text-gray-400 lg:flex" aria-live="polite">
-                        <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-brand-primary" aria-hidden />
-                        Loading live metrics…
+                    <p className="sr-only" aria-live="polite">
+                      Loading live metrics
                     </p>
                 ) : null}
             <EasyBusinessDashboard
@@ -1048,7 +1050,7 @@ export function DomainDashboard({
                 healthPanels={easyHealthPanels}
                 insights={easyOperationalInsights}
                 reminders={remindersData}
-                hasCoreData={hasCoreData}
+                hasCoreData={hasCoreData || metricsPending}
                 quickSetupSteps={quickSetupSteps}
                 quickActions={easyActions}
                 domainEfficiency={domainEfficiency}
@@ -1108,9 +1110,8 @@ export function DomainDashboard({
     return (
         <>
             {metricsPending ? (
-                <p className="mb-3 hidden items-center gap-2 text-xs font-medium text-gray-400 lg:flex" aria-live="polite">
-                    <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-brand-primary" aria-hidden />
-                    Loading live metrics…
+                <p className="sr-only" aria-live="polite">
+                    Loading live metrics
                 </p>
             ) : null}
             <DashboardMobileHub
@@ -1160,7 +1161,7 @@ export function DomainDashboard({
                     },
                 ]}
                 reminders={remindersData}
-                hasCoreData={hasCoreData}
+                hasCoreData={hasCoreData || metricsPending}
                 quickSetupSteps={[
                     { id: 'add-product', label: 'Add product' },
                     { id: 'add-customer', label: 'Add customer' },
@@ -1178,7 +1179,7 @@ export function DomainDashboard({
                     multiLocationEnabled={multiLocationEnabled}
                 />
 
-                {!hasCoreData && (
+                {!showQuickSetup ? null : (
                     <Card className="border border-brand-100 bg-brand-50/40 shadow-sm">
                         <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                             <div>

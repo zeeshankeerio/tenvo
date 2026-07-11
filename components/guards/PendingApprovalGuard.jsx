@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useBusiness } from '@/lib/context/BusinessContext';
+import { useHubReady } from '@/lib/hooks/useHubReady';
 
 const BLOCKED_APPROVAL_STATUSES = new Set([
   'pending_approval',
@@ -11,11 +12,11 @@ const BLOCKED_APPROVAL_STATUSES = new Set([
   'rejected',
 ]);
 
-function ApprovalGateLoader() {
+function ApprovalGateLoader({ label = 'Resolving workspace…' }) {
   return (
     <div className="flex min-h-[40vh] items-center justify-center animate-in fade-in duration-200">
       <Loader2 className="h-6 w-6 animate-spin text-gray-300" />
-      <span className="ml-2 text-xs font-medium text-gray-400">Loading workspace...</span>
+      <span className="ml-2 text-xs font-medium text-gray-400">{label}</span>
     </div>
   );
 }
@@ -23,18 +24,24 @@ function ApprovalGateLoader() {
 /**
  * Block hub content and redirect non-platform users to /pending-approval
  * when registration is not approved.
+ *
+ * Progressive: do not blank the main pane while a tenant shell already exists
+ * (live or optimistic). Only wait when there is no business to evaluate.
  */
 export function PendingApprovalGuard({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { business, isLoading, isPlatformOwner, isPlatformAdmin } = useBusiness();
+  const { business, isPlatformOwner, isPlatformAdmin } = useBusiness();
+  const { workspaceBlocking, hasOptimisticShell, optimisticShell } = useHubReady();
+
+  const approvalSource = business || (hasOptimisticShell ? optimisticShell?.business : null);
 
   const isBlocked =
-    !isLoading &&
+    !workspaceBlocking &&
     !isPlatformOwner &&
     !isPlatformAdmin &&
-    business?.approval_status &&
-    BLOCKED_APPROVAL_STATUSES.has(String(business.approval_status)) &&
+    approvalSource?.approval_status &&
+    BLOCKED_APPROVAL_STATUSES.has(String(approvalSource.approval_status)) &&
     !pathname?.startsWith('/pending-approval');
 
   useEffect(() => {
@@ -42,12 +49,12 @@ export function PendingApprovalGuard({ children }) {
     router.replace('/pending-approval');
   }, [isBlocked, router]);
 
-  if (isLoading) {
-    return <ApprovalGateLoader />;
+  if (workspaceBlocking) {
+    return <ApprovalGateLoader label="Resolving workspace…" />;
   }
 
   if (isBlocked) {
-    return <ApprovalGateLoader />;
+    return <ApprovalGateLoader label="Checking access…" />;
   }
 
   return children;
