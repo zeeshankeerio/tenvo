@@ -30,9 +30,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { MOBILE_DIALOG_SHELL_WIDE } from '@/lib/utils/formMobileStyles';
 import { cn } from '@/lib/utils';
+import { resolveDomainKey } from '@/lib/config/domainKeyAliases';
 
 /** Canonical fields the owner can map spreadsheet columns onto (order = display order). */
-const MAPPABLE_FIELDS = [
+const BASE_MAPPABLE_FIELDS = [
   { key: 'name', label: 'Product Name', required: true },
   { key: 'sku', label: 'SKU / Code' },
   { key: 'price', label: 'Selling Price' },
@@ -51,6 +52,26 @@ const MAPPABLE_FIELDS = [
   { key: 'serial_number', label: 'Serial #' },
 ];
 
+const TEXTILE_MAPPABLE_FIELDS = [
+  { key: 'domain_data.articleno', label: 'Article No' },
+  { key: 'domain_data.designno', label: 'Design No' },
+  { key: 'domain_data.fabrictype', label: 'Fabric Type' },
+  { key: 'domain_data.korafinished', label: 'Kora/Finished' },
+  { key: 'domain_data.widtharz', label: 'Width (Arz)' },
+  { key: 'domain_data.thaanlength', label: 'Thaan Length' },
+  { key: 'domain_data.suitcutting', label: 'Suit Cutting' },
+  { key: 'domain_data.sourcing', label: 'Sourcing' },
+  { key: 'domain_data.origin', label: 'Origin' },
+];
+
+function getMappableFields(category) {
+  const key = String(category || '').toLowerCase();
+  if (key === 'textile-wholesale' || key === 'textile') {
+    return [...BASE_MAPPABLE_FIELDS, ...TEXTILE_MAPPABLE_FIELDS];
+  }
+  return BASE_MAPPABLE_FIELDS;
+}
+
 /**
  * Excel Import Modal Component
  * 4-Step import workflow: Upload -> Parse -> Preview -> Validate -> Confirm
@@ -63,6 +84,7 @@ export function ExcelImportModal({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   hideTrigger = false,
+  category = 'retail-shop',
 }) {
   const fileInputRef = useRef(null);
   const [step, setStep] = useState(1); // 1: Upload, 2: Preview, 3: Validate, 4: Confirm
@@ -90,12 +112,17 @@ export function ExcelImportModal({
       setColumnMapping({});
       return;
     }
-    setColumnMapping(detectColumnMapping(sheetHeaders));
-  }, [sheetHeaders]);
+    setColumnMapping(detectColumnMapping(sheetHeaders, { category }));
+  }, [sheetHeaders, category]);
+
+  const mappableFields = useMemo(
+    () => getMappableFields(resolveDomainKey(category)),
+    [category]
+  );
 
   const mappedFieldCount = useMemo(
-    () => MAPPABLE_FIELDS.filter((f) => columnMapping[f.key]).length,
-    [columnMapping]
+    () => mappableFields.filter((f) => columnMapping[f.key]).length,
+    [columnMapping, mappableFields]
   );
   const nameMapped = Boolean(columnMapping.name);
 
@@ -149,7 +176,7 @@ export function ExcelImportModal({
 
     // Validate each row using the (possibly owner-adjusted) intelligent column mapping
     const results = sheetData.map((row, index) => ({
-      ...validateImportRow(row, existingMap, 'retail-shop', columnMapping),
+      ...validateImportRow(row, existingMap, category, columnMapping),
       rowNumber: index + 2 // +2 because row 1 is header
     }));
 
@@ -362,7 +389,7 @@ export function ExcelImportModal({
                   We matched your spreadsheet columns to product fields. Adjust any that look wrong before validating.
                 </p>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {MAPPABLE_FIELDS.map((field) => {
+                  {mappableFields.map((field) => {
                     const value = columnMapping[field.key] || '';
                     const missingRequired = field.required && !value;
                     return (

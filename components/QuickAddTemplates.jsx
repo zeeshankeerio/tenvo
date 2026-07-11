@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Sparkles, Package, ShoppingCart } from 'lucide-react';
-import { getTemplatesForDomain } from '@/lib/data/productTemplates';
+import { getTemplatesForDomain, normalizeProductTemplate } from '@/lib/data/productTemplates';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/currency';
 import toast from 'react-hot-toast';
@@ -36,14 +36,14 @@ export function QuickAddTemplates({
     }
 
     const handleAddTemplate = (template) => {
-        onAddProduct(template);
+        onAddProduct(normalizeProductTemplate(template, domain));
         toast.success(`Added ${template.name} to inventory`);
         setOpen(false);
     };
 
     const handleAddAll = () => {
-        templates.forEach(template => {
-            onAddProduct(template);
+        templates.forEach((template) => {
+            onAddProduct(normalizeProductTemplate(template, domain));
         });
         toast.success(`Added ${templates.length} products to inventory`);
         setOpen(false);

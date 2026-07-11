@@ -12,7 +12,7 @@ import { resolveInventoryDomainFeatures } from '@/lib/utils/inventoryDomainFeatu
 import { buildInventoryGridColumns, readGridCellValue } from '@/lib/utils/inventoryGridColumns';
 import { buildNewInventoryRow, getLastRowForDefaults } from '@/lib/utils/inventoryRowDefaults';
 import { mapProductField } from '@/lib/utils/productFieldMapper';
-import { detectColumnMapping, applyColumnMapping } from '@/lib/utils/inventoryColumnMapping';
+import { detectColumnMapping, applyColumnMapping, nestMappedDomainData } from '@/lib/utils/inventoryColumnMapping';
 import { inventoryGridRowKey, inventoryValidationErrorKey } from '@/lib/utils/inventoryRowKey';
 import { buildSparseHiddenColumnKeys } from '@/lib/utils/inventoryVisualColumnVisibility';
 import { productSchema } from '@/lib/validation/schemas';
@@ -565,7 +565,7 @@ export function ExcelModeModal({
 
             const firstLine = rows[0].map((h) => String(h ?? '').trim());
             // Intelligent header detection: reuse the same engine as file import
-            const canonicalMapping = detectColumnMapping(firstLine);
+            const canonicalMapping = detectColumnMapping(firstLine, { category });
             const firstLineHasDomain = firstLine.some((h) =>
                 domainHeaderMap.has(h.toLowerCase().replace(/\s+/g, '_'))
             );
@@ -606,7 +606,7 @@ export function ExcelModeModal({
                         const v = cells[idx];
                         if (v != null && String(v).trim() !== '') item.domain_data[domainKey] = String(v).trim();
                     });
-                    return item;
+                    return nestMappedDomainData(item);
                 });
             } else {
                 // No recognizable header row → positional name / sku / price / stock

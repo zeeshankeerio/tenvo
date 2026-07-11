@@ -163,7 +163,10 @@ function PosProductGrid({
                         placeholder={barcodeFirst
                             ? 'Scan or search SKU / name… (Enter)'
                             : 'Search SKU, name, or barcode… (Ctrl+F)'}
-                        className={cn(toolbarControlClass, 'pl-9 pr-3 w-full')}
+                        className={cn(
+                            toolbarControlClass,
+                            'pl-9 pr-3 w-full focus-visible:ring-emerald-500/25 focus-visible:border-emerald-400'
+                        )}
                         value={searchTerm}
                         onChange={(e) => onSearchChange(e.target.value)}
                         onKeyDown={handleSearchKeyDown}
@@ -267,14 +270,16 @@ function PosProductGrid({
                         );
                     })}
                     {filtered.length === 0 && (
-                        <div 
-                            className="col-span-full py-20 text-center text-gray-400"
+                        <div
+                            className="col-span-full py-20 text-center"
                             role="status"
                             aria-live="polite"
                         >
-                            <Search className="w-10 h-10 mx-auto mb-3 opacity-30" aria-hidden="true" />
-                            <p className="text-sm">No products found</p>
-                            <p className="text-xs text-gray-300 mt-1">Try adjusting your search or category</p>
+                            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-50 border border-gray-100">
+                                <Search className="w-6 h-6 text-gray-400" aria-hidden="true" />
+                            </div>
+                            <p className="text-sm font-medium text-gray-600">No products found</p>
+                            <p className="text-xs text-gray-400 mt-1">Try adjusting your search or category</p>
                         </div>
                     )}
                 </div>
@@ -313,28 +318,30 @@ function PosCart({
 
     return (
         <div
-            className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-900 text-white touch-manipulation"
+            className="flex flex-col h-full min-h-0 overflow-hidden bg-gradient-to-b from-gray-50 via-white to-white text-gray-900 touch-manipulation"
             role="complementary"
             aria-label="Shopping cart and checkout"
         >
             {/* Header, pinned */}
-            <header className={cn(POS_SHELL_HEADER, 'flex items-center justify-between gap-2 px-3 sm:px-4 max-lg:px-2.5 py-2.5 max-lg:py-2 border-b border-slate-700/80 bg-slate-900')}>
+            <header className={cn(POS_SHELL_HEADER, 'flex items-center justify-between gap-2 px-3 sm:px-4 max-lg:px-2.5 py-2.5 max-lg:py-2 border-b border-gray-100 bg-white/95 backdrop-blur-sm')}>
                 <div className="flex items-center gap-2 min-w-0">
                     {onBack ? (
                         <button
                             type="button"
                             onClick={onBack}
-                            className="p-1.5 -ml-1 rounded-lg hover:bg-slate-800 transition-colors flex-shrink-0"
+                            className="p-1.5 -ml-1 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors flex-shrink-0"
                             aria-label="Back to products"
                         >
                             <ArrowLeft className="w-4 h-4" />
                         </button>
                     ) : null}
-                    <ShoppingCart className="w-4 h-4 text-brand-primary flex-shrink-0" aria-hidden="true" />
-                    <span className="text-sm font-bold tracking-tight">Cart</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-primary/10 flex-shrink-0">
+                        <ShoppingCart className="w-3.5 h-3.5 text-brand-primary" aria-hidden="true" />
+                    </span>
+                    <span className="text-sm font-semibold tracking-tight text-gray-900">Cart</span>
                     <Badge
                         variant="secondary"
-                        className="bg-brand-primary/20 text-brand-primary text-[10px] font-semibold"
+                        className="bg-brand-primary/10 text-brand-primary border-0 text-[10px] font-semibold"
                         aria-label={`${items.length} lines, ${itemQty} units`}
                     >
                         {itemQty} {itemQty === 1 ? 'item' : 'items'}
@@ -344,7 +351,7 @@ function PosCart({
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 text-xs flex-shrink-0"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 text-xs flex-shrink-0"
                         onClick={onClearCart}
                         aria-label="Clear all items from cart"
                     >
@@ -355,7 +362,7 @@ function PosCart({
 
             {/* Line items, scrollable middle only */}
             <div
-                className={cn(POS_SCROLL_MIDDLE, 'px-2 sm:px-3 py-2 space-y-1.5')}
+                className={cn(POS_SCROLL_MIDDLE, 'px-2 sm:px-3 py-2 space-y-1.5 bg-gradient-to-b from-gray-50/80 to-transparent')}
                 role="list"
                 aria-label="Cart items"
             >
@@ -366,56 +373,56 @@ function PosCart({
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, x: -12 }}
-                            className="grid grid-cols-[auto_1fr_auto] gap-x-2 gap-y-1.5 p-2.5 rounded-xl bg-slate-800/70 border border-slate-700/50"
+                            className="grid grid-cols-[auto_1fr_auto] gap-x-2 gap-y-1.5 p-2.5 rounded-xl bg-white border border-gray-100 shadow-sm shadow-gray-900/5"
                             role="listitem"
                         >
                             <ProductThumbnail
                                 product={{ image_url: item.imageUrl, name: item.name, id: item.productId }}
                                 businessCategory={businessCategory}
                                 size="cart"
-                                className="row-span-2 border border-slate-600/80 self-start"
+                                className="row-span-2 border border-gray-100 self-start"
                             />
                             <div className="min-w-0 col-start-2">
-                                <p className="text-xs font-semibold text-gray-100 leading-snug line-clamp-2" title={item.name}>
+                                <p className="text-xs font-semibold text-gray-900 leading-snug line-clamp-2" title={item.name}>
                                     {item.name}
                                 </p>
-                                <p className="text-[10px] text-gray-400 mt-0.5">
+                                <p className="text-[10px] text-gray-500 mt-0.5">
                                     {currency}{item.unitPrice.toLocaleString()} each
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => onRemoveItem(idx)}
-                                className="col-start-3 p-1 self-start rounded-md hover:bg-red-500/20 text-gray-500 hover:text-red-400"
+                                className="col-start-3 p-1 self-start rounded-md hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
                                 aria-label={`Remove ${item.name}`}
                             >
                                 <X className="w-3.5 h-3.5" />
                             </button>
                             <div className="col-start-2 col-span-2 flex items-center justify-between gap-2 pt-0.5">
                                 <div
-                                    className="flex items-center gap-0.5 bg-slate-700/80 rounded-lg px-0.5"
+                                    className="flex items-center gap-0.5 bg-gray-100 rounded-lg px-0.5"
                                     role="group"
                                     aria-label={`Quantity for ${item.name}`}
                                 >
                                     <button
                                         type="button"
                                         onClick={() => onQuantityChange(idx, Math.max(1, item.quantity - 1))}
-                                        className="p-1.5 hover:bg-slate-600 rounded-md transition-colors"
+                                        className="p-1.5 hover:bg-white rounded-md transition-colors text-gray-600"
                                         aria-label={`Decrease ${item.name}`}
                                     >
                                         <Minus className="w-3 h-3" />
                                     </button>
-                                    <span className="w-8 text-center text-xs font-bold tabular-nums">{item.quantity}</span>
+                                    <span className="w-8 text-center text-xs font-semibold tabular-nums text-gray-900">{item.quantity}</span>
                                     <button
                                         type="button"
                                         onClick={() => onQuantityChange(idx, item.quantity + 1)}
-                                        className="p-1.5 hover:bg-slate-600 rounded-md transition-colors"
+                                        className="p-1.5 hover:bg-white rounded-md transition-colors text-gray-600"
                                         aria-label={`Increase ${item.name}`}
                                     >
                                         <Plus className="w-3 h-3" />
                                     </button>
                                 </div>
-                                <span className="text-sm font-bold text-brand-primary tabular-nums">
+                                <span className="text-sm font-semibold text-brand-primary tabular-nums">
                                     {currency}{(item.unitPrice * item.quantity).toLocaleString()}
                                 </span>
                             </div>
@@ -425,13 +432,15 @@ function PosCart({
 
                 {items.length === 0 && (
                     <div
-                        className="flex flex-col items-center justify-center py-12 px-4 text-center text-gray-500"
+                        className="flex flex-col items-center justify-center py-14 px-4 text-center"
                         role="status"
                         aria-live="polite"
                     >
-                        <ShoppingCart className="w-11 h-11 mb-3 opacity-25" aria-hidden="true" />
-                        <p className="text-sm font-medium text-gray-400">Cart is empty</p>
-                        <p className="text-[11px] text-gray-600 mt-1 max-w-[200px]">
+                        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-gray-100 shadow-sm shadow-gray-900/5">
+                            <ShoppingCart className="w-6 h-6 text-gray-400" aria-hidden="true" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-700">Cart is empty</p>
+                        <p className="text-[11px] text-gray-500 mt-1 max-w-[220px] leading-relaxed">
                             Tap products on the left or scan a barcode to add items
                         </p>
                     </div>
@@ -439,35 +448,35 @@ function PosCart({
             </div>
 
             {/* Checkout footer, pinned */}
-            <footer className={cn(POS_SHELL_FOOTER, 'border-slate-700/80 bg-slate-900 px-3 sm:px-4 max-lg:px-2.5 py-3 max-lg:py-2.5 space-y-2.5 max-lg:space-y-2')}>
+            <footer className={cn(POS_SHELL_FOOTER, 'border-gray-100 bg-white px-3 sm:px-4 max-lg:px-2.5 py-3 max-lg:py-2.5 space-y-2.5 max-lg:space-y-2')}>
                 {items.length > 0 ? (
                     <>
                         <button
                             type="button"
                             onClick={onCustomerSelect}
-                            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-slate-800/90 hover:bg-slate-800 transition-colors text-xs border border-slate-700/60"
+                            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors text-xs border border-gray-200"
                         >
                             <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                            <span className="text-gray-200 truncate flex-1 text-left">{customer?.name || 'Walk-in Customer'}</span>
-                            <ChevronDown className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                            <span className="text-gray-800 truncate flex-1 text-left font-medium">{customer?.name || 'Walk-in Customer'}</span>
+                            <ChevronDown className="w-3 h-3 text-gray-400 flex-shrink-0" />
                         </button>
 
-                        <div className="rounded-xl bg-slate-800/60 border border-slate-700/50 px-3 py-2 space-y-1 text-[11px] sm:text-xs" role="region" aria-label="Order totals">
-                            <div className="flex justify-between text-gray-400">
+                        <div className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2.5 space-y-1.5 text-[11px] sm:text-xs" role="region" aria-label="Order totals">
+                            <div className="flex justify-between text-gray-500">
                                 <span>Subtotal ({itemQty})</span>
-                                <span className="tabular-nums">{currency}{subtotal.toLocaleString()}</span>
+                                <span className="tabular-nums text-gray-700">{currency}{subtotal.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-gray-400">
+                            <div className="flex justify-between text-gray-500">
                                 <span>{taxLabel}</span>
-                                <span className="tabular-nums">{currency}{taxAmount.toLocaleString()}</span>
+                                <span className="tabular-nums text-gray-700">{currency}{taxAmount.toLocaleString()}</span>
                             </div>
-                            <div className="flex items-center justify-between text-gray-400 gap-2">
+                            <div className="flex items-center justify-between text-gray-500 gap-2">
                                 <div className="flex items-center gap-1 min-w-0">
                                     <span>Discount</span>
                                     <button
                                         type="button"
                                         onClick={() => onDiscountTypeChange?.(discountType === 'fixed' ? 'percentage' : 'fixed')}
-                                        className="p-0.5 rounded hover:bg-slate-700"
+                                        className="p-0.5 rounded hover:bg-white text-gray-500"
                                         aria-label="Toggle discount type"
                                     >
                                         {discountType === 'fixed' ? <Percent className="w-3 h-3" /> : <Calculator className="w-3 h-3" />}
@@ -477,20 +486,20 @@ function PosCart({
                                     type="number"
                                     value={discount}
                                     onChange={(e) => onDiscountChange?.(e.target.value)}
-                                    className="w-16 h-7 text-right text-xs bg-slate-900 border-slate-600 text-white rounded-md px-2"
+                                    className="w-16 h-7 text-right text-xs bg-white border-gray-200 text-gray-900 rounded-md px-2 focus-visible:ring-emerald-500/25 focus-visible:border-emerald-400"
                                     min={0}
                                     max={discountType === 'percentage' ? 100 : subtotal}
                                     aria-label="Discount"
                                 />
                             </div>
                             {discountAmount > 0 && (
-                                <div className="flex justify-between text-emerald-400 text-[10px]">
+                                <div className="flex justify-between text-emerald-600 text-[10px] font-medium">
                                     <span>Savings</span>
                                     <span>-{currency}{discountAmount.toLocaleString()}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between items-baseline pt-1.5 mt-0.5 border-t border-slate-600/80">
-                                <span className="text-sm font-bold text-white">Total</span>
+                            <div className="flex justify-between items-baseline pt-1.5 mt-0.5 border-t border-gray-200">
+                                <span className="text-sm font-semibold text-gray-900">Total</span>
                                 <span className="text-xl font-semibold text-brand-primary tabular-nums" aria-live="polite">
                                     {currency}{total.toLocaleString()}
                                 </span>
@@ -498,7 +507,7 @@ function PosCart({
                         </div>
 
                         <div
-                            className="grid grid-cols-4 gap-1"
+                            className="grid grid-cols-4 gap-1.5"
                             role="radiogroup"
                             aria-label="Payment method"
                         >
@@ -513,10 +522,10 @@ function PosCart({
                                     type="button"
                                     onClick={() => onPaymentMethodSelect?.(key)}
                                     className={cn(
-                                        'flex flex-col items-center gap-0.5 py-1.5 rounded-lg border text-[10px] font-medium transition-all',
+                                        'flex flex-col items-center gap-0.5 py-2 rounded-xl border text-[10px] font-medium transition-all',
                                         selectedPaymentMethod === key
-                                            ? 'border-brand-primary bg-brand-primary/20 text-white'
-                                            : 'border-slate-700 bg-slate-800 text-gray-400 hover:border-slate-600'
+                                            ? 'border-brand-primary/40 bg-brand-primary/10 text-brand-primary shadow-sm'
+                                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
                                     )}
                                     role="radio"
                                     aria-checked={selectedPaymentMethod === key}
@@ -534,7 +543,7 @@ function PosCart({
                                     variant="outline"
                                     onClick={() => onPrintBill({ subtotal, taxAmount, discountAmount, total })}
                                     disabled={isProcessing}
-                                    className="h-11 flex-1 rounded-xl text-xs font-semibold border-slate-600 bg-slate-800 hover:bg-slate-700 text-white"
+                                    className="h-11 flex-1 rounded-xl text-xs font-semibold border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
                                     title="Print bill"
                                 >
                                     <Printer className="w-4 h-4 mr-1" /> Print
@@ -546,7 +555,7 @@ function PosCart({
                                     variant="outline"
                                     onClick={() => onDownloadBillPdf({ subtotal, taxAmount, discountAmount, total })}
                                     disabled={isProcessing}
-                                    className="h-11 w-11 shrink-0 rounded-xl border-slate-600 bg-slate-800 hover:bg-slate-700 text-white p-0"
+                                    className="h-11 w-11 shrink-0 rounded-xl border-gray-200 bg-white hover:bg-gray-50 text-gray-700 p-0"
                                     title="Download PDF"
                                     aria-label="Download bill PDF"
                                 >
@@ -556,7 +565,7 @@ function PosCart({
                             <Button
                                 onClick={onCompleteSale}
                                 disabled={isProcessing}
-                                className="h-11 flex-[2] rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/25"
+                                className="h-11 flex-[2] rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md shadow-emerald-500/20"
                             >
                                 {isProcessing ? (
                                     <span className="flex items-center gap-2">
@@ -572,15 +581,15 @@ function PosCart({
                             </Button>
                         </div>
                         {!hideKeyboardHint && (
-                            <p className="text-[10px] text-gray-500 text-center flex items-center justify-center gap-1">
+                            <p className="text-[10px] text-gray-400 text-center flex items-center justify-center gap-1">
                                 <Keyboard className="w-3 h-3" /> Ctrl+F search · Enter checkout
                             </p>
                         )}
                     </>
                 ) : (
-                    <div className="py-2 text-center">
+                    <div className="py-2.5 text-center rounded-xl bg-gray-50 border border-gray-100">
                         <p className="text-[11px] text-gray-500">Checkout appears when you add items</p>
-                        <p className="text-lg font-semibold text-slate-600 mt-1 tabular-nums">{currency}0</p>
+                        <p className="text-lg font-semibold text-gray-800 mt-1 tabular-nums">{currency}0</p>
                     </div>
                 )}
             </footer>
@@ -1003,7 +1012,7 @@ export function PosTerminal({
                         onOpenCamera={showCamera ? () => setShowCameraScanner(true) : undefined}
                     />
                 </section>
-                <aside className="w-[min(100%,380px)] xl:w-[420px] shrink-0 flex flex-col min-h-0 bg-slate-900">
+                <aside className="w-[min(100%,380px)] xl:w-[420px] shrink-0 flex flex-col min-h-0 bg-white border-l border-gray-100">
                     <PosCart {...cartPanelProps} />
                 </aside>
             </div>

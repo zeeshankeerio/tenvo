@@ -63,6 +63,7 @@ import { MOBILE_BOTTOM_NAV_CLASS, MOBILE_FLOATING_Z, MOBILE_MODULE_FAB_RIGHT } f
 import { MOBILE_DIALOG_SHELL_WIDE } from '@/lib/utils/formMobileStyles';
 import { ProductCardGrid } from './inventory/ProductCardGrid';
 import { getTemplatesForDomain } from '@/lib/data/productTemplates';
+import { QuickAddTemplates } from '@/components/QuickAddTemplates';
 import { PosCameraScanner } from '@/components/pos/shared/PosCameraScanner';
 import { mergeScannedProductIntoList } from '@/lib/utils/productScanLookup';
 import { canUseBarcodeScan } from '@/lib/utils/barcodeAccess';
@@ -3081,6 +3082,7 @@ export function InventoryManager({
         hideTrigger
         onImport={handleExcelImport}
         existingProducts={products}
+        category={category}
       />
 
       {hasQuickAddTemplates && (

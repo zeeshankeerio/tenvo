@@ -35,7 +35,7 @@ export function PosMobileCheckoutBar({
                 'shrink-0 border-t pb-[env(safe-area-inset-bottom)]',
                 isRestaurant
                     ? 'border-indigo-100 bg-white'
-                    : 'border-slate-800 bg-slate-900',
+                    : 'border-gray-100 bg-white',
                 className
             )}
         >
@@ -46,14 +46,14 @@ export function PosMobileCheckoutBar({
             >
                 <div className="flex items-center gap-3 min-w-0">
                     <span className={cn(
-                        'relative flex items-center justify-center w-10 h-10 max-lg:w-9 max-lg:h-9 rounded-full text-white shadow-lg',
+                        'relative flex items-center justify-center w-10 h-10 max-lg:w-9 max-lg:h-9 rounded-full text-white shadow-md',
                         isRestaurant
-                            ? 'bg-indigo-600 shadow-indigo-500/30'
-                            : 'bg-emerald-500 shadow-emerald-500/30'
+                            ? 'bg-indigo-600 shadow-indigo-500/25'
+                            : 'bg-emerald-500 shadow-emerald-500/25'
                     )}>
                         <ShoppingCart className="w-5 h-5 max-lg:w-4 max-lg:h-4" />
                         <span className={cn(
-                            'absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-[10px] font-bold flex items-center justify-center',
+                            'absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-[10px] font-bold flex items-center justify-center shadow-sm',
                             isRestaurant ? 'text-indigo-700' : 'text-emerald-700'
                         )}>
                             {itemCount > 99 ? '99+' : itemCount}
@@ -61,14 +61,13 @@ export function PosMobileCheckoutBar({
                     </span>
                     <div className="text-left min-w-0">
                         <p className={cn(
-                            'text-sm max-lg:text-xs font-bold truncate',
-                            isRestaurant ? 'text-gray-900' : 'text-white'
+                            'text-sm max-lg:text-xs font-semibold truncate text-gray-900'
                         )}>
                             {checkoutLabel}
                         </p>
                         <p className={cn(
                             'text-[10px]',
-                            isRestaurant ? 'text-gray-400' : 'text-slate-400'
+                            isRestaurant ? 'text-gray-400' : 'text-gray-500'
                         )}>
                             {itemCount} items
                         </p>
@@ -76,12 +75,12 @@ export function PosMobileCheckoutBar({
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                     <span className={cn(
-                        'text-lg max-lg:text-base font-bold tabular-nums',
-                        isRestaurant ? 'text-indigo-600' : 'text-emerald-400'
+                        'text-lg max-lg:text-base font-semibold tabular-nums',
+                        isRestaurant ? 'text-indigo-600' : 'text-emerald-600'
                     )}>
                         {currency}{Number(total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </span>
-                    <ChevronRight className={cn('w-5 h-5', isRestaurant ? 'text-indigo-300' : 'text-slate-500')} />
+                    <ChevronRight className={cn('w-5 h-5', isRestaurant ? 'text-indigo-300' : 'text-gray-400')} />
                 </div>
             </button>
         </footer>

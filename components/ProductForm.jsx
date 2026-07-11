@@ -14,7 +14,6 @@ import { DomainFieldRenderer } from '@/components/domain/DomainFieldRenderer';
 import { BatchNumberInput } from '@/components/domain/BatchTracking';
 import { SerialNumberInput } from '@/components/domain/SerialTracking';
 import { BrandAutocomplete } from '@/components/BrandAutocomplete';
-import { QuickAddTemplates } from '@/components/QuickAddTemplates';
 import { FileUpload } from '@/components/FileUpload';
 import { ProductImageManager } from '@/components/ProductImageManager';
 import { PropheticInsightCard } from '@/components/domain/PropheticInsightCard';
@@ -71,6 +70,7 @@ import {
   productImagesFromUrls,
   MAX_PRODUCT_IMAGES,
 } from '@/lib/utils/productImages';
+import { resolveDomainKey } from '@/lib/config/domainKeyAliases';
 
 function slugifyProductName(name) {
     return String(name || '')
@@ -105,6 +105,8 @@ export function ProductForm({
     const currency = currencyProp || ctxCurrency;
     const standards = regionalStandards || getRegionalStandards(countryIso);
     const domainTaxOptions = { countryIso };
+    const resolvedCategory = resolveDomainKey(category);
+    const isTextileWholesale = resolvedCategory === 'textile-wholesale';
     const { isEasyMode } = useAppMode();
     const [activeTab, setActiveTab] = useState('basic');
 
@@ -338,8 +340,8 @@ export function ProductForm({
                 domainDataObj[key] = 'Hybrid';
             } else if (lowerField.includes('article')) domainDataObj[key] = `ART-${Math.floor(Math.random() * 900) + 100}`;
             else if (lowerField.includes('design')) domainDataObj[key] = `D-${Math.floor(Math.random() * 9000) + 1000}`;
-            else if (lowerField.includes('width')) domainDataObj[key] = category === 'textile-wholesale' ? '44' : 'Standard';
-            else if (lowerField.includes('length')) domainDataObj[key] = category === 'textile-wholesale' ? '40' : '100';
+            else if (lowerField.includes('width')) domainDataObj[key] = isTextileWholesale ? '44' : 'Standard';
+            else if (lowerField.includes('length')) domainDataObj[key] = isTextileWholesale ? '40' : '100';
             else if (lowerField.includes('cutting')) domainDataObj[key] = '4.5';
             else if (lowerField.includes('fabric')) domainDataObj[key] = 'Cotton Lawn';
             else if (lowerField.includes('kora') || lowerField.includes('finish')) domainDataObj[key] = 'Finished';
@@ -745,7 +747,7 @@ export function ProductForm({
                             </div>
 
                             {/* Section: Primary Domain Identifiers (Moved from Intelligence Tab) */}
-                            {['textile-wholesale', 'auto-parts', 'pharmacy', 'chemical'].includes(category) && (
+                            {['textile-wholesale', 'auto-parts', 'pharmacy', 'chemical'].includes(resolvedCategory) && (
                                 <div className="p-6 bg-wine/5 rounded-3xl border border-wine/10 space-y-4">
                                     <div className="flex items-center gap-2 mb-2">
                                         <BrainCircuit className="w-4 h-4 text-wine" />
@@ -1232,7 +1234,7 @@ export function ProductForm({
                             </div>
 
                             {/* Section: Specialist Inventory Parameters (textile thaan / suit cutting) */}
-                            {category === 'textile-wholesale' && (
+                            {isTextileWholesale && (
                                 <div className="p-6 rounded-3xl bg-blue-50/50 border border-blue-100/50 space-y-4">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Layers className="w-4 h-4 text-blue-600" />
