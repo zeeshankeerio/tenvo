@@ -128,6 +128,14 @@ Folder: `prisma/migrations/20260531_storefront_feature_columns/`
 
 Adds: `business_settings.is_storefront_enabled` (default `true`, kept in sync with `settings.storefront.enabled` via admin actions), `product_categories.image_url`, `parent_id`, `sort_order`, and `products.category_id` (FK to `product_categories`). Apply with `bun run db:migrate` so storefront SQL can select hierarchy and imagery without **42703** errors.
 
+Folder: `prisma/migrations/20260710_align_storefront_category_uuid/`
+
+Idempotent repair when `20260531` was marked applied but live DB still had legacy shapes: adds missing `business_settings.is_storefront_enabled`, converts `product_categories.id` / `parent_id` from SERIAL to UUID so `products.category_id` joins stop failing with **`uuid = integer`**, clears orphan category FKs, and re-adds constraints. Apply with `bun run db:migrate` (or `bunx prisma migrate deploy`).
+
+Folder: `prisma/migrations/20260711_product_categories_business_name_unique/`
+
+Adds Prisma `@@unique([business_id, name])` when only legacy `UNIQUE (business_id, slug)` existed, so registration/demo category upserts and `ON CONFLICT (business_id, name)` seeds work. After deploy, run `bun scripts/repair-product-category-links.mjs` to recreate empty category rows and set `products.category_id` from `products.category` labels.
+
 ---
 
 ## Product variant default flag

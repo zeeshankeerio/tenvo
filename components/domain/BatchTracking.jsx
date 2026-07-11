@@ -73,7 +73,9 @@ export function BatchNumberInput({
       batchNumRef.current?.focus();
       return;
     }
-    if (!newBatch.expiryDate && category !== 'electronics') { // Exempt non-perishable if needed
+    // Fabric rolls / non-perishable electronics do not require expiry
+    const expiryRequired = category !== 'electronics' && category !== 'textile-wholesale';
+    if (!newBatch.expiryDate && expiryRequired) {
       toast.error('Expiry date is required for this category');
       return;
     }
@@ -322,7 +324,9 @@ export function BatchNumberInput({
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-semibold uppercase text-gray-400">Expiry Date</Label>
+                <Label className="text-[10px] font-semibold uppercase text-gray-400">
+                  Expiry Date{category === 'textile-wholesale' || category === 'electronics' ? ' (optional)' : ''}
+                </Label>
                 <DatePicker
                   value={newBatch.expiryDate}
                   onChange={d => setNewBatch({ ...newBatch, expiryDate: d })}

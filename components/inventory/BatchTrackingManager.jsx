@@ -28,6 +28,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { resolveDomainKey } from '@/lib/config/domainKeyAliases';
+import { getDomainKnowledge } from '@/lib/domainKnowledge';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -79,9 +81,9 @@ export function BatchTrackingManager({
     mrp: product?.mrp || product?.price || '',
     warehouse_id: warehouseId || '',
     notes: '',
-    // Textile-specific fields (Requirements 9.1, 9.2, 9.3, 9.4)
+    // Textile-specific fields (roll / thaan tracking)
     roll_number: '',
-    length_yards: '',
+    length_meters: '',
     width_inches: '',
     weight_kg: '',
     fabric_type: '',
@@ -93,54 +95,89 @@ export function BatchTrackingManager({
     splits: [{ quantity: '', batch_number: '' }]
   });
 
-  // Check if product is textile category (Requirements 9.1)
-  const isTextileCategory = category === 'textile-wholesale' || category === 'textile' || category === 'textile-retail';
+  // Check if product is textile wholesale (alias `textile` → textile-wholesale)
+  const isTextileCategory = resolveDomainKey(category) === 'textile-wholesale';
 
-  // Calculate textile area: (length × width) / 1296 square yards (Requirement 9.4)
+  // Approximate area in square yards from meters × inches (trade reference only)
   const calculateTextileArea = () => {
-    if (!formData.length_yards || !formData.width_inches) return 0;
-    return (parseFloat(formData.length_yards) * parseFloat(formData.width_inches)) / 1296;
+    if (!formData.length_meters || !formData.width_inches) return 0;
+    const lengthYards = parseFloat(formData.length_meters) * 1.09361;
+    return (lengthYards * parseFloat(formData.width_inches)) / 1296;
   };
 
-  // Fabric type options (Requirement 9.2)
-  const fabricTypes = [
-    'Cotton Lawn',
-    'Khaddar',
-    'Silk',
-    'Chiffon',
-    'Linen'
-  ];
+  // Fabric / finish options from domain knowledge (fallback to common PK fabrics)
+  const textileFieldConfig = isTextileCategory
+    ? getDomainKnowledge('textile-wholesale')?.fieldConfig
+    : null;
+  const fabricTypes =
+    textileFieldConfig?.fabrictype?.options?.length
+      ? textileFieldConfig.fabrictype.options
+      : ['Lawn', 'Cotton', 'Wash & Wear', 'Chiffon', 'Silk', 'Khaddar', 'Linen', 'Jacquard', 'Karandi', 'Organza'];
 
-  // Finish status options (Requirement 9.3)
-  const finishStatuses = [
-    { value: 'kora', label: 'Kora (Unfinished)' },
-    { value: 'finished', label: 'Finished' },
-    { value: 'dyed', label: 'Dyed' },
-    { value: 'printed', label: 'Printed' }
-  ];
+  const finishStatuses =
+    textileFieldConfig?.korafinished?.options?.length
+      ? textileFieldConfig.korafinished.options.map((opt) =>
+          typeof opt === 'string'
+            ? { value: opt, label: opt }
+            : { value: opt.value, label: opt.label || opt.value }
+        )
+      : [
+          { value: 'Kora', label: 'Kora (Raw)' },
+          { value: 'Finished', label: 'Finished (Processed)' },
+          { value: 'Dyed', label: 'Dyed' },
+          { value: 'Printed', label: 'Printed' },
+          { value: 'Embroidered', label: 'Embroidered' },
+        ];
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const buildTextileNotesPayload = () => {
+    if (!isTextileCategory) return formData.notes || null;
+    const textileMeta = {
+      roll_number: formData.roll_number || undefined,
+      length_meters: formData.length_meters ? Number(formData.length_meters) : undefined,
+      width_inches: formData.width_inches ? Number(formData.width_inches) : undefined,
+      weight_kg: formData.weight_kg ? Number(formData.weight_kg) : undefined,
+      fabric_type: formData.fabric_type || undefined,
+      finish_status: formData.finish_status || undefined,
+    };
+    const hasMeta = Object.values(textileMeta).some((v) => v != null && v !== '');
+    if (!hasMeta && !formData.notes) return null;
+    if (!hasMeta) return formData.notes || null;
+    const base = formData.notes?.trim() ? `${formData.notes.trim()}\n` : '';
+    return `${base}[textile] ${JSON.stringify(textileMeta)}`;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      const rollAsBatch =
+        isTextileCategory && !formData.batch_number?.trim() && formData.roll_number?.trim()
+          ? formData.roll_number.trim()
+          : formData.batch_number;
+
+      if (!rollAsBatch?.trim()) {
+        toast.error(isTextileCategory ? 'Roll / bale number is required' : 'Batch number is required');
+        return;
+      }
+
       const batchData = {
-        batch_number: formData.batch_number,
+        batch_number: rollAsBatch.trim(),
         manufacturing_date: formData.manufacturing_date || null,
         expiry_date: formData.expiry_date || null,
         quantity: parseFloat(formData.quantity),
         cost_price: parseFloat(formData.cost_price),
         mrp: formData.mrp ? parseFloat(formData.mrp) : null,
         warehouse_id: formData.warehouse_id || null,
-        notes: formData.notes || null
+        notes: buildTextileNotesPayload()
       };
 
       const newBatch = await addBatch(batchData);
       
-      toast.success('Batch added successfully');
+      toast.success(isTextileCategory ? 'Roll / bale added successfully' : 'Batch added successfully');
       resetForm();
       setShowAddForm(false);
       
@@ -242,7 +279,7 @@ export function BatchTrackingManager({
       warehouse_id: warehouseId || '',
       notes: '',
       roll_number: '',
-      length_yards: '',
+      length_meters: '',
       width_inches: '',
       weight_kg: '',
       fabric_type: '',
@@ -611,14 +648,14 @@ export function BatchTrackingManager({
                   </div>
 
                   <div>
-                    <Label htmlFor="length_yards">Length (Yards)</Label>
+                    <Label htmlFor="length_meters">Length (Meters)</Label>
                     <Input
-                      id="length_yards"
+                      id="length_meters"
                       type="number"
                       step="0.01"
-                      value={formData.length_yards}
-                      onChange={(e) => handleInputChange('length_yards', e.target.value)}
-                      placeholder="e.g., 50"
+                      value={formData.length_meters}
+                      onChange={(e) => handleInputChange('length_meters', e.target.value)}
+                      placeholder="e.g., 40"
                     />
                   </div>
 
@@ -665,16 +702,16 @@ export function BatchTrackingManager({
                     </Select>
                   </div>
 
-                  {/* Display calculated area (Requirement 9.4) */}
-                  {formData.length_yards && formData.width_inches && (
+                  {/* Display calculated area */}
+                  {formData.length_meters && formData.width_inches && (
                     <div className="col-span-2">
                       <div className="p-3 bg-accent/50 rounded-lg border">
-                        <div className="text-sm font-medium">Total Area</div>
+                        <div className="text-sm font-medium">Approx. Area</div>
                         <div className="text-2xl font-bold text-primary">
                           {calculateTextileArea().toFixed(2)} sq. yards
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          Calculated as: ({formData.length_yards} × {formData.width_inches}) ÷ 1296
+                          From: ({formData.length_meters} m × {formData.width_inches}") converted to yards ÷ 1296
                         </div>
                       </div>
                     </div>

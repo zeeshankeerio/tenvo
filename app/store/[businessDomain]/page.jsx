@@ -277,7 +277,9 @@ export default async function StoreHomePage({ params }) {
         12
       )
     : [];
-  const fashionConfig = editorialHero ? getFashionEditorialConfig(settings, businessDomain) : null;
+  const fashionConfig = editorialHero
+    ? getFashionEditorialConfig(settings, businessDomain, business.category)
+    : null;
   const fashionDepartments = editorialHero
     ? (() => {
         const built = buildFashionHomeSections({
@@ -738,7 +740,7 @@ export default async function StoreHomePage({ params }) {
           businessDomain={businessDomain}
           businessCategory={business.category}
           settings={settings}
-          animations={getFashionEditorialConfig(settings, businessDomain).animations}
+          animations={getFashionEditorialConfig(settings, businessDomain, business.category).animations}
           categories={categories}
           products={catalogSnapshotResult.success ? catalogSnapshotResult.products : featuredProducts}
         />

@@ -47,6 +47,10 @@ const fetchSrc = read('lib/storefront/fetchBusinessByDomain.js');
 assert(resolveSrc.includes('pickStorefrontDomainRow'), 'ambiguous match guard must exist');
 assert(resolveSrc.includes('loadStorefrontBusinessShell'), 'RSC shell loader must be exported');
 assert(
+  resolveSrc.includes('shouldFallbackBusinessSettings'),
+  'business_settings missing-column fallback (42703) must exist'
+);
+assert(
   resolveSrc.includes('STOREFRONT_BUSINESS_COMPACT_CACHE_KEY'),
   'API resolver must use compact cache key (separate from RSC shell)'
 );

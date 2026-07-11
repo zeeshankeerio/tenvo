@@ -1655,10 +1655,13 @@ export function InventoryManager({
       batch_number: ({ row }) => {
         const batches = row.original.batches || [];
         const singleBatch = row.original.batch_number;
+        const isTextile = category === 'textile-wholesale' || category === 'textile';
+        const singular = isTextile ? 'Roll' : 'Batch';
+        const plural = isTextile ? 'Rolls' : 'Batches';
         if (batches.length > 0) {
           return (
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-mono text-[10px]">
-              {batches.length} {batches.length === 1 ? 'Batch' : 'Batches'}
+              {batches.length} {batches.length === 1 ? singular : plural}
             </Badge>
           );
         }

@@ -1231,8 +1231,8 @@ export function ProductForm({
                                 </div>
                             </div>
 
-                            {/* Section: Specialist Inventory Parameters (e.g. Textile Thaan/Cutting) */}
-                            {['textile-wholesale', 'garments'].includes(category) && (
+                            {/* Section: Specialist Inventory Parameters (textile thaan / suit cutting) */}
+                            {category === 'textile-wholesale' && (
                                 <div className="p-6 rounded-3xl bg-blue-50/50 border border-blue-100/50 space-y-4">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Layers className="w-4 h-4 text-blue-600" />

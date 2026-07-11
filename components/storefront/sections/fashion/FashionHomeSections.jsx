@@ -22,7 +22,7 @@ import { FashionPromoBannersSection } from '@/components/storefront/sections/fas
 import { FashionGulAhmedSections } from '@/components/storefront/sections/fashion/FashionGulAhmedSections';
 
 function FashionSeoBlock({ storeName, businessCategory, businessDescription, country, settings, businessDomain }) {
-  const config = getFashionEditorialConfig(settings, businessDomain);
+  const config = getFashionEditorialConfig(settings, businessDomain, businessCategory);
   if (!config.showSeoBlock) return null;
   const blocks = resolveFashionSeoBlocks(storeName, businessCategory, businessDescription, country);
   const [expanded, setExpanded] = useState(false);
@@ -77,7 +77,7 @@ export function FashionHomeSections({
   editorialSpotlight = null,
   categories = [],
 }) {
-  const config = getFashionEditorialConfig(settings, businessDomain);
+  const config = getFashionEditorialConfig(settings, businessDomain, businessCategory);
   const storeBase = `/store/${businessDomain}`;
   const productsUrl = `${storeBase}/products`;
   const catalogPool = products.length
@@ -87,10 +87,13 @@ export function FashionHomeSections({
       || topPicksProducts;
   const displayName = formatFashionStoreName(storeName);
   const featuredTitle = config.featuredRailTitle || 'Top picks for you';
-  const featuredSubtitle = config.featuredRailSubtitle || `Curated styles from ${displayName}`;
-  const trustPillars = config.showTrustStrip ? resolveFashionTrustPillars(settings, businessDomain) : [];
+  const featuredSubtitle =
+    config.featuredRailSubtitle || `Curated styles from ${displayName}`;
+  const trustPillars = config.showTrustStrip
+    ? resolveFashionTrustPillars(settings, businessDomain, businessCategory)
+    : [];
   const brands = config.showBrandsRow
-    ? resolveFashionBrands(settings, catalogPool, businessDomain)
+    ? resolveFashionBrands(settings, catalogPool, businessDomain, categories, businessCategory)
     : [];
   const promoBanners = config.showPromoBanners
     ? resolveFashionPromoBanners(settings, catalogPool, businessCategory, businessDomain)

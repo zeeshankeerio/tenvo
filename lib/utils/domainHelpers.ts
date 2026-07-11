@@ -255,7 +255,8 @@ export function getDomainDefaults(category: string, product: any = null): any {
         product?.[key] ??
         product?.[normalizeKey(field)];
 
-      defaults[key] = val || (knowledge?.fieldConfig?.[key]?.default ?? '');
+      const configDefault = knowledge?.fieldConfig?.[key]?.default;
+      defaults[key] = val ?? (configDefault != null && configDefault !== '' ? configDefault : '');
     }
   });
 
@@ -299,9 +300,12 @@ export function validateDomainProduct(
     // Some fields might be optional (legacy check)
     const optionalFields = ['HSN Code', 'SAC Code', 'Description'];
     if (!optionalFields.includes(field)) {
-      // Use normalized key for lookup
+      // Use normalized key for lookup (top-level or domain_data)
       const fieldKey = resolveDomainFieldKey(field, category);
-      const value = product[fieldKey as keyof Product] || product[normalizeKey(field) as keyof Product];
+      const value =
+        product[fieldKey as keyof Product] ||
+        product[normalizeKey(field) as keyof Product] ||
+        readDomainFieldValue((product as any).domain_data, field, category);
 
       if ((value === undefined || value === '' || value === null) && fieldKey !== 'hsncode') {
         errors[fieldKey] = `${field} is required for ${category} products`;
@@ -407,7 +411,7 @@ export function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-/** Legacy / label aliases → canonical domain_data keys (vehicle verticals). */
+/** Legacy / label aliases → canonical domain_data keys. */
 const DOMAIN_FIELD_KEY_ALIASES: Record<string, Record<string, string>> = {
   'auto-marketplace': {
     make: 'vehiclemake',
@@ -417,6 +421,27 @@ const DOMAIN_FIELD_KEY_ALIASES: Record<string, Record<string, string>> = {
   'vehicle-dealership': {
     make: 'vehiclemake',
     model: 'vehiclemodel',
+  },
+  'textile-wholesale': {
+    articleno: 'articleno',
+    articlenumber: 'articleno',
+    article_no: 'articleno',
+    designno: 'designno',
+    designnumber: 'designno',
+    design_no: 'designno',
+    fabrictype: 'fabrictype',
+    fabric_type: 'fabrictype',
+    fabric: 'fabrictype',
+    korafinished: 'korafinished',
+    kora: 'korafinished',
+    widtharz: 'widtharz',
+    width: 'widtharz',
+    arz: 'widtharz',
+    thaanlength: 'thaanlength',
+    thaan_length: 'thaanlength',
+    thaan: 'thaanlength',
+    suitcutting: 'suitcutting',
+    suit_cutting: 'suitcutting',
   },
 };
 
@@ -786,8 +811,8 @@ export function getIntelligentDefaults(category: string, fieldName: string): any
 export function getDomainUnitPreview(field: string, category: string): string | null {
   const n = normalizeKey(field);
 
-  if (category === 'textile-wholesale' || category === 'garments') {
-    if (n.includes('length') || n.includes('cutting')) return 'Meters / Yards';
+  if (category === 'textile-wholesale') {
+    if (n.includes('length') || n.includes('cutting') || n.includes('thaan')) return 'Meters';
     if (n.includes('width') || n.includes('arz')) return 'Inches';
     if (n.includes('weight') || n.includes('gsm')) return 'GSM / Grams';
   }
@@ -919,7 +944,11 @@ export function getDomainInvoiceColumns(category: string): any[] {
 
   // 1. Traceability columns
   if (isBatchTrackingEnabled(category)) {
-    columns.push({ field: 'batch_number', header: 'Batch', width: 'w-24' });
+    columns.push({
+      field: 'batch_number',
+      header: category === 'textile-wholesale' ? 'Roll / Bale' : 'Batch',
+      width: 'w-24',
+    });
   }
 
   if (isExpiryTrackingEnabled(category)) {
@@ -934,6 +963,9 @@ export function getDomainInvoiceColumns(category: string): any[] {
   const fields = knowledge?.productFields || [];
   const identifiers = fields.filter((f: string) => {
     const l = f.toLowerCase();
+    if (category === 'textile-wholesale') {
+      return l.includes('article') || l.includes('design') || l.includes('thaan');
+    }
     return l.includes('article') || l.includes('design') || l.includes('part') ||
       l.includes('model') || l.includes('oem') || l.includes('isbn') ||
       l.includes('fabric') || l.includes('registration') || l.includes('roll') ||
