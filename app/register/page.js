@@ -12,6 +12,7 @@ import { getBrandPlaceholderExamples } from '@/lib/regionalMarket/index.js';
 import { PLAN_TIERS, PLAN_ORDER, resolvePlanTier } from '@/lib/config/plans';
 import { getDomainPackage } from '@/lib/config/domainPackages';
 import { suggestPlanTier } from '@/lib/config/domains';
+import { resolveDomainKey } from '@/lib/config/domainKeyAliases';
 import {
     getRegionalStandards,
     coerceRegistrationCountryValue,
@@ -318,11 +319,14 @@ export default function RegisterWizard() {
         setFormData((prev) => {
             let next = { ...prev };
             const domainParam = params.get('domain');
-            if (domainParam && domainKnowledge[domainParam]) {
-                const recommendedPlan = recommendedPlanForDomain(domainParam);
+            const resolvedDomainKey = domainParam
+                ? (resolveDomainKey(domainParam) || domainParam)
+                : null;
+            if (resolvedDomainKey && domainKnowledge[resolvedDomainKey]) {
+                const recommendedPlan = recommendedPlanForDomain(resolvedDomainKey);
                 next = {
                     ...next,
-                    category: domainParam,
+                    category: resolvedDomainKey,
                     planTier:
                         PLAN_ORDER[next.planTier] >= PLAN_ORDER[recommendedPlan]
                             ? next.planTier
@@ -341,7 +345,7 @@ export default function RegisterWizard() {
                 const pkg = getDomainPackage(packageParam);
                 if (pkg) {
                     next = { ...next, domainPackageKey: packageParam };
-                    if (!domainParam && pkg.defaultVertical && domainKnowledge[pkg.defaultVertical]) {
+                    if (!resolvedDomainKey && pkg.defaultVertical && domainKnowledge[pkg.defaultVertical]) {
                         const recommendedPlan = recommendedPlanForDomain(pkg.defaultVertical);
                         next = {
                             ...next,

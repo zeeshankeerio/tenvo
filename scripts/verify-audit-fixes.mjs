@@ -9,6 +9,7 @@ import { resolveDomainKey } from '../lib/config/domainKeyAliases.js';
 import {
   resolveDomainPackageForVertical,
   buildRegistrationFromDomainPackage,
+  getDomainPackage,
 } from '../lib/config/domainPackages.js';
 import {
   shouldSeedRichCatalogOnRegistration,
@@ -109,6 +110,10 @@ assert(
   'clothing-commerce package seeds garments outside PK'
 );
 assert(
+  shouldSeedRichCatalogOnRegistration('textile-wholesale', 'US', { domainPackageKey: 'clothing-commerce' }),
+  'clothing-commerce package seeds textile-wholesale outside PK'
+);
+assert(
   !shouldSeedRichCatalogOnRegistration('garments', 'US', {}),
   'garments without PK or package must not rich-seed'
 );
@@ -130,6 +135,38 @@ const regFromTextileAlias = buildRegistrationFromDomainPackage('clothing-commerc
 assert(
   regFromTextileAlias.category === 'textile-wholesale',
   'registration package resolves textile alias to textile-wholesale vertical'
+);
+assert(
+  regFromTextileAlias.settingsPatch?.packaging?.feature_overrides?.manufacturing === false,
+  'clothing-commerce + textile-wholesale packaging must disable manufacturing'
+);
+assert(
+  regFromTextileAlias.settingsPatch?.packaging?.feature_overrides?.batch_tracking === true,
+  'clothing-commerce + textile-wholesale packaging must enable batch_tracking'
+);
+
+const clothingPkg = getDomainPackage('clothing-commerce');
+assert(
+  clothingPkg?.demoStoreDomain === 'demo-textile',
+  'clothing-commerce demo store should point at demo-textile'
+);
+
+const wholesaleStorefront = resolveRegistrationStorefrontDefaults({
+  domainKey: 'textile-wholesale',
+  businessName: 'Jama Cloth Traders',
+  regional: { countryName: 'Pakistan', countryCode: 'PK', currency: 'PKR', locale: 'en-PK' },
+  domainPackageKey: null,
+});
+assert(
+  wholesaleStorefront.storefrontExtras?.storefront?.fashion?.showReadyToWear === false,
+  'PK textile-wholesale registration fashion seed hides RTW'
+);
+assert(
+  wholesaleStorefront.storefrontExtras?.storefront?.fashion?.saleMosaic?.title === 'Trade offers' ||
+    wholesaleStorefront.storefrontExtras?.storefront?.fashion?.saleMosaic?.columns?.some(
+      (c) => c.tiles?.some((t) => /lawn|khaddar|imported|bridal/i.test(t.label || ''))
+    ),
+  'textile-wholesale sale mosaic should be fabric trade tiles'
 );
 
 // Editorial seed only when rich catalog gate passes

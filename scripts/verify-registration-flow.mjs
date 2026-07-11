@@ -85,6 +85,46 @@ assert(
   pkTextile.items.some((i) => i.category === 'Imported Fabric' || i.category === 'Lunda Bazaar'),
   'PK textile-wholesale seed should include imported / Lunda categories'
 );
+assert(
+  pkTextile.categories.includes('Lawn') && pkTextile.categories.includes('Silk'),
+  'PK textile-wholesale categories should include Lawn and Silk'
+);
+assert(
+  pkTextile.items.every(
+    (i) => !i.domain_data?.sourcing || ['local', 'imported'].includes(String(i.domain_data.sourcing).toLowerCase())
+  ),
+  'textile-wholesale seed sourcing values should be local or imported when set'
+);
+assert(
+  pkTextile.items.filter((i) => i.domain_data?.sourcing === 'local').length >= 1,
+  'textile-wholesale seed should stamp local sourcing on mill/local lots'
+);
+
+const textileProfile = buildRegistrationDomainProfile({
+  domainKey: 'textile-wholesale',
+  countryIso: 'PK',
+});
+assert(textileProfile.automation.batchTrackingEnabled === true, 'textile-wholesale batch automation');
+assert(textileProfile.automation.multiLocationEnabled === true, 'textile-wholesale multi-location automation');
+assert(textileProfile.automation.manufacturingEnabled === false, 'textile-wholesale manufacturing off');
+
+const usTextileNoPkg = buildRegistrationSeedPayload({
+  businessId: bizId,
+  domainKey: 'textile-wholesale',
+  countryIso: 'US',
+});
+assert(usTextileNoPkg.items.length === 0, 'Non-PK textile-wholesale without package must not seed products');
+
+const usTextilePkg = buildRegistrationSeedPayload({
+  businessId: bizId,
+  domainKey: 'textile-wholesale',
+  countryIso: 'US',
+  domainPackageKey: 'clothing-commerce',
+});
+assert(
+  usTextilePkg.items.length >= 10,
+  'US textile-wholesale with clothing-commerce package should seed rich catalog'
+);
 
 const usGarments = buildRegistrationSeedPayload({
   businessId: bizId,
