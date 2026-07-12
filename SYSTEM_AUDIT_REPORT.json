@@ -1,0 +1,661 @@
+{
+  "critical": [],
+  "errors": [
+    {
+      "severity": "ERROR",
+      "category": "NULL in Required Field",
+      "description": "products.name has 4 NULL values",
+      "details": {
+        "table": "products",
+        "field": "name",
+        "count": 4
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:53.876Z"
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "WARNING",
+      "category": "Duplicate Constraints",
+      "description": "Found duplicate constraint definitions",
+      "details": [
+        {
+          "table_name": "product_categories",
+          "constraint1": "product_categories_business_id_name_key",
+          "constraint2": "product_categories_business_id_slug_key",
+          "columns": "business_id, name"
+        }
+      ],
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:52.852Z"
+    },
+    {
+      "severity": "WARNING",
+      "category": "Missing Error Handling",
+      "description": "API route missing try-catch: \\app\\api\\billing\\crypto\\config\\route.js",
+      "details": {
+        "file": "\\app\\api\\billing\\crypto\\config\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.831Z"
+    }
+  ],
+  "typos": [],
+  "naming": [
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.accessToken uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "accessToken",
+        "type": "text"
+      },
+      "fix": "Consider: accesstoken",
+      "timestamp": "2026-07-12T15:12:52.449Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.accessTokenExpiresAt uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "accessTokenExpiresAt",
+        "type": "timestamp without time zone"
+      },
+      "fix": "Consider: accesstokenexpiresat",
+      "timestamp": "2026-07-12T15:12:52.450Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.accountId uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "accountId",
+        "type": "text"
+      },
+      "fix": "Consider: account_id",
+      "timestamp": "2026-07-12T15:12:52.450Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.createdAt uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "createdAt",
+        "type": "timestamp without time zone"
+      },
+      "fix": "Consider: createdat",
+      "timestamp": "2026-07-12T15:12:52.450Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.idToken uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "idToken",
+        "type": "text"
+      },
+      "fix": "Consider: idtoken",
+      "timestamp": "2026-07-12T15:12:52.450Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.providerId uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "providerId",
+        "type": "text"
+      },
+      "fix": "Consider: provider_id",
+      "timestamp": "2026-07-12T15:12:52.450Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.refreshToken uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "refreshToken",
+        "type": "text"
+      },
+      "fix": "Consider: refreshtoken",
+      "timestamp": "2026-07-12T15:12:52.451Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.refreshTokenExpiresAt uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "refreshTokenExpiresAt",
+        "type": "timestamp without time zone"
+      },
+      "fix": "Consider: refreshtokenexpiresat",
+      "timestamp": "2026-07-12T15:12:52.451Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.updatedAt uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "updatedAt",
+        "type": "timestamp without time zone"
+      },
+      "fix": "Consider: updatedat",
+      "timestamp": "2026-07-12T15:12:52.451Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Inconsistent Column Name",
+      "description": "account.userId uses inconsistent case/abbreviation",
+      "details": {
+        "table": "account",
+        "column": "userId",
+        "type": "text"
+      },
+      "fix": "Consider: user_id",
+      "timestamp": "2026-07-12T15:12:52.451Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Hardcoded Currency",
+      "description": "Component has hardcoded \"PKR\": \\components\\admin\\PlatformAdminPanel.jsx",
+      "details": {
+        "file": "\\components\\admin\\PlatformAdminPanel.jsx"
+      },
+      "fix": "Use currency from business context or config",
+      "timestamp": "2026-07-12T15:12:54.892Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Hardcoded Currency",
+      "description": "Component has hardcoded \"PKR\": \\components\\admin\\PlatformSubscriptionsPanel.jsx",
+      "details": {
+        "file": "\\components\\admin\\PlatformSubscriptionsPanel.jsx"
+      },
+      "fix": "Use currency from business context or config",
+      "timestamp": "2026-07-12T15:12:54.894Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Hardcoded Currency",
+      "description": "Component has hardcoded \"PKR\": \\components\\admin\\RegistrationApprovalsPanel.jsx",
+      "details": {
+        "file": "\\components\\admin\\RegistrationApprovalsPanel.jsx"
+      },
+      "fix": "Use currency from business context or config",
+      "timestamp": "2026-07-12T15:12:54.895Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Hardcoded Currency",
+      "description": "Component has hardcoded \"PKR\": \\components\\AdvancedAnalytics.jsx",
+      "details": {
+        "file": "\\components\\AdvancedAnalytics.jsx"
+      },
+      "fix": "Use currency from business context or config",
+      "timestamp": "2026-07-12T15:12:54.898Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Hardcoded Currency",
+      "description": "Component has hardcoded \"PKR\": \\components\\AdvancedCharts.jsx",
+      "details": {
+        "file": "\\components\\AdvancedCharts.jsx"
+      },
+      "fix": "Use currency from business context or config",
+      "timestamp": "2026-07-12T15:12:54.898Z"
+    },
+    {
+      "severity": "NAMING",
+      "category": "Hardcoded Currency",
+      "description": "Component has hardcoded \"PKR\": \\components\\billing\\ManualPaymentRequestPanel.jsx",
+      "details": {
+        "file": "\\components\\billing\\ManualPaymentRequestPanel.jsx"
+      },
+      "fix": "Use currency from business context or config",
+      "timestamp": "2026-07-12T15:12:54.904Z"
+    }
+  ],
+  "performance": [
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key bom_materials.business_id lacks index",
+      "details": {
+        "table": "bom_materials",
+        "column": "business_id"
+      },
+      "fix": "CREATE INDEX idx_bom_materials_business_id ON bom_materials(business_id);",
+      "timestamp": "2026-07-12T15:12:51.578Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key bom_materials.material_id lacks index",
+      "details": {
+        "table": "bom_materials",
+        "column": "material_id"
+      },
+      "fix": "CREATE INDEX idx_bom_materials_material_id ON bom_materials(material_id);",
+      "timestamp": "2026-07-12T15:12:51.581Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key boms.business_id lacks index",
+      "details": {
+        "table": "boms",
+        "column": "business_id"
+      },
+      "fix": "CREATE INDEX idx_boms_business_id ON boms(business_id);",
+      "timestamp": "2026-07-12T15:12:51.581Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key boms.product_id lacks index",
+      "details": {
+        "table": "boms",
+        "column": "product_id"
+      },
+      "fix": "CREATE INDEX idx_boms_product_id ON boms(product_id);",
+      "timestamp": "2026-07-12T15:12:51.581Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key businesses.user_id lacks index",
+      "details": {
+        "table": "businesses",
+        "column": "user_id"
+      },
+      "fix": "CREATE INDEX idx_businesses_user_id ON businesses(user_id);",
+      "timestamp": "2026-07-12T15:12:51.581Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key campaigns.segment_id lacks index",
+      "details": {
+        "table": "campaigns",
+        "column": "segment_id"
+      },
+      "fix": "CREATE INDEX idx_campaigns_segment_id ON campaigns(segment_id);",
+      "timestamp": "2026-07-12T15:12:51.581Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key customer_memberships.initial_invoice_id lacks index",
+      "details": {
+        "table": "customer_memberships",
+        "column": "initial_invoice_id"
+      },
+      "fix": "CREATE INDEX idx_customer_memberships_initial_invoice_id ON customer_memberships(initial_invoice_id);",
+      "timestamp": "2026-07-12T15:12:51.581Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key customer_memberships.recurring_invoice_id lacks index",
+      "details": {
+        "table": "customer_memberships",
+        "column": "recurring_invoice_id"
+      },
+      "fix": "CREATE INDEX idx_customer_memberships_recurring_invoice_id ON customer_memberships(recurring_invoice_id);",
+      "timestamp": "2026-07-12T15:12:51.581Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key expenses.account_id lacks index",
+      "details": {
+        "table": "expenses",
+        "column": "account_id"
+      },
+      "fix": "CREATE INDEX idx_expenses_account_id ON expenses(account_id);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key expenses.vendor_id lacks index",
+      "details": {
+        "table": "expenses",
+        "column": "vendor_id"
+      },
+      "fix": "CREATE INDEX idx_expenses_vendor_id ON expenses(vendor_id);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key gl_accounts.parent_id lacks index",
+      "details": {
+        "table": "gl_accounts",
+        "column": "parent_id"
+      },
+      "fix": "CREATE INDEX idx_gl_accounts_parent_id ON gl_accounts(parent_id);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key invoice_templates.created_by lacks index",
+      "details": {
+        "table": "invoice_templates",
+        "column": "created_by"
+      },
+      "fix": "CREATE INDEX idx_invoice_templates_created_by ON invoice_templates(created_by);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key invoices.created_by lacks index",
+      "details": {
+        "table": "invoices",
+        "column": "created_by"
+      },
+      "fix": "CREATE INDEX idx_invoices_created_by ON invoices(created_by);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key invoices.recurring_parent_id lacks index",
+      "details": {
+        "table": "invoices",
+        "column": "recurring_parent_id"
+      },
+      "fix": "CREATE INDEX idx_invoices_recurring_parent_id ON invoices(recurring_parent_id);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key journal_entries.reversed_by lacks index",
+      "details": {
+        "table": "journal_entries",
+        "column": "reversed_by"
+      },
+      "fix": "CREATE INDEX idx_journal_entries_reversed_by ON journal_entries(reversed_by);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key pos_sessions.user_id lacks index",
+      "details": {
+        "table": "pos_sessions",
+        "column": "user_id"
+      },
+      "fix": "CREATE INDEX idx_pos_sessions_user_id ON pos_sessions(user_id);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key pos_terminals.warehouse_id lacks index",
+      "details": {
+        "table": "pos_terminals",
+        "column": "warehouse_id"
+      },
+      "fix": "CREATE INDEX idx_pos_terminals_warehouse_id ON pos_terminals(warehouse_id);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key pos_transactions.customer_id lacks index",
+      "details": {
+        "table": "pos_transactions",
+        "column": "customer_id"
+      },
+      "fix": "CREATE INDEX idx_pos_transactions_customer_id ON pos_transactions(customer_id);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key product_batches.warehouse_id lacks index",
+      "details": {
+        "table": "product_batches",
+        "column": "warehouse_id"
+      },
+      "fix": "CREATE INDEX idx_product_batches_warehouse_id ON product_batches(warehouse_id);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    },
+    {
+      "severity": "PERFORMANCE",
+      "category": "Missing Index",
+      "description": "Foreign key product_serials.batch_id lacks index",
+      "details": {
+        "table": "product_serials",
+        "column": "batch_id"
+      },
+      "fix": "CREATE INDEX idx_product_serials_batch_id ON product_serials(batch_id);",
+      "timestamp": "2026-07-12T15:12:51.582Z"
+    }
+  ],
+  "security": [
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\admin\\dashboard\\route.js",
+      "details": {
+        "file": "\\app\\api\\admin\\dashboard\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.824Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\admin\\feature-flags\\route.js",
+      "details": {
+        "file": "\\app\\api\\admin\\feature-flags\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.827Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\admin\\feature-flags\\[id]\\route.js",
+      "details": {
+        "file": "\\app\\api\\admin\\feature-flags\\[id]\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.828Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\auth\\[...better-auth]\\route.js",
+      "details": {
+        "file": "\\app\\api\\auth\\[...better-auth]\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.828Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\billing\\cancel\\route.js",
+      "details": {
+        "file": "\\app\\api\\billing\\cancel\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.829Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\billing\\create-checkout\\route.js",
+      "details": {
+        "file": "\\app\\api\\billing\\create-checkout\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.830Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\billing\\crypto\\config\\route.js",
+      "details": {
+        "file": "\\app\\api\\billing\\crypto\\config\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.831Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\billing\\crypto\\create\\route.js",
+      "details": {
+        "file": "\\app\\api\\billing\\crypto\\create\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.831Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\billing\\crypto\\status\\route.js",
+      "details": {
+        "file": "\\app\\api\\billing\\crypto\\status\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.832Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\billing\\portal\\route.js",
+      "details": {
+        "file": "\\app\\api\\billing\\portal\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.833Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\billing\\subscription\\route.js",
+      "details": {
+        "file": "\\app\\api\\billing\\subscription\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.834Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\billing\\update\\route.js",
+      "details": {
+        "file": "\\app\\api\\billing\\update\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.834Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\health\\route.js",
+      "details": {
+        "file": "\\app\\api\\health\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.835Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Potential SQL Injection",
+      "description": "API route using string interpolation in SQL: \\app\\api\\health\\route.js",
+      "details": {
+        "file": "\\app\\api\\health\\route.js"
+      },
+      "fix": "Use parameterized queries with $1, $2, etc.",
+      "timestamp": "2026-07-12T15:12:54.835Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\internal\\campaigns\\dispatch-scheduled\\route.js",
+      "details": {
+        "file": "\\app\\api\\internal\\campaigns\\dispatch-scheduled\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.836Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\internal\\memberships\\process-renewals\\route.js",
+      "details": {
+        "file": "\\app\\api\\internal\\memberships\\process-renewals\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.836Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\marketing\\assistant\\route.js",
+      "details": {
+        "file": "\\app\\api\\marketing\\assistant\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.837Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\marketing\\contact\\route.js",
+      "details": {
+        "file": "\\app\\api\\marketing\\contact\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.837Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\marketing\\demo-request\\route.js",
+      "details": {
+        "file": "\\app\\api\\marketing\\demo-request\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.838Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\marketing\\newsletter\\route.js",
+      "details": {
+        "file": "\\app\\api\\marketing\\newsletter\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.838Z"
+    },
+    {
+      "severity": "SECURITY",
+      "category": "Missing Authentication",
+      "description": "API route might be missing auth: \\app\\api\\migrate\\route.js",
+      "details": {
+        "file": "\\app\\api\\migrate\\route.js"
+      },
+      "fix": null,
+      "timestamp": "2026-07-12T15:12:54.839Z"
+    }
+  ]
+}

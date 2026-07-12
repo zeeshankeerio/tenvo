@@ -333,7 +333,7 @@ export function DomainDashboard({
             previousReturnInvoices,
             pendingReturns
         };
-    }, [dateRange, invoices, expenses]);
+    }, [dateRange, invoices, expenses, dashboardMetrics]);
 
     // Track expense context
     const totalExpenses = useMemo(() =>
