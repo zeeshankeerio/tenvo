@@ -58,7 +58,7 @@ interface DomainDashboardProps {
     expenses?: ExpenseLike[];
     advancedDashboardSnapshot?: AdvancedDashboardSnapshotLike | null;
     domainKnowledge?: DomainKnowledgeLike;
-    isLoading?: boolean;
+    // isLoading?: boolean;  // Unused - specific loading states used instead
     user?: { email?: string; user_metadata?: { full_name?: string } } | null;
     isAnalyticsLoading?: boolean;
     isSalesLoading?: boolean;
@@ -196,7 +196,7 @@ export function DomainDashboard({
     expenses = [],
     advancedDashboardSnapshot = null,
     domainKnowledge,
-    isLoading = false,
+    // isLoading = false,  // Unused - specific loading states used instead
     user,
     isAnalyticsLoading = false,
     isSalesLoading = false,
