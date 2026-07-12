@@ -814,6 +814,10 @@ model products {
   product_reviews         product_reviews[]
   membership_plans        membership_plans[]
 
+  /// Soft-delete-aware partial unique indexes (migration 20260713)
+  /// - products_business_sku_active_key: WHERE is_deleted = false AND sku IS NOT NULL
+  /// - products_business_barcode_active_key: WHERE is_deleted = false AND barcode IS NOT NULL  
+  /// - products_business_name_active_key: WHERE is_deleted = false AND name IS NOT NULL
   @@index([business_id, sku])
   @@index([business_id, category])
   @@index([business_id, brand])

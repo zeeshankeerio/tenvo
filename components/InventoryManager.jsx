@@ -607,6 +607,48 @@ export function InventoryManager({
   /** Busy inline draft rows (_tempId): create at most once per temp id after name is set. */
   const busyDraftCreateRef = useRef(new Set());
 
+  // Helper: Extract batches from Excel row (including flat Excel columns)
+  const extractBatchesFromExcelRow = (row) => {
+    // Start with existing batches array from the row
+    const existingBatches = Array.isArray(row.batches) ? row.batches : [];
+    
+    // If Excel batch columns were filled, merge into batches array
+    if (row.batch_number && String(row.batch_number).trim()) {
+      const batchQty = row.batch_quantity || row.batch_qty || row.stock || 0;
+      
+      // Check if this batch already exists in array (by batch_number)
+      const existingBatch = existingBatches.find(
+        b => b.batch_number === row.batch_number || b.batchNumber === row.batch_number
+      );
+      
+      if (existingBatch) {
+        // Update existing batch
+        existingBatch.quantity = Number(batchQty);
+        existingBatch.expiry_date = row.expiry_date || existingBatch.expiry_date || null;
+        existingBatch.manufacturing_date = row.manufacturing_date || existingBatch.manufacturing_date || null;
+        existingBatch.cost_price = Number(row.cost_price || row.costPrice || existingBatch.cost_price || 0);
+      } else {
+        // Add new batch from Excel columns
+        existingBatches.push({
+          batch_number: row.batch_number,
+          batchNumber: row.batch_number, // Support both snake_case and camelCase
+          quantity: Number(batchQty),
+          expiry_date: row.expiry_date || null,
+          expiryDate: row.expiry_date || null,
+          manufacturing_date: row.manufacturing_date || null,
+          manufacturingDate: row.manufacturing_date || null,
+          cost_price: Number(row.cost_price || row.costPrice || 0),
+          costPrice: Number(row.cost_price || row.costPrice || 0),
+          warehouse_id: row.warehouse_id || null,
+          warehouseId: row.warehouse_id || null,
+        });
+      }
+    }
+    
+    // Filter out empty batches using helper (meaningful batch validation)
+    return filterMeaningfulBatches(existingBatches);
+  };
+
   const handleExcelSave = async (updatedData) => {
     setLoading(true);
     const results = { updated: 0, created: 0, failed: 0 };
@@ -642,11 +684,17 @@ export function InventoryManager({
           const mapped = mapExcelRowForSave(item, category);
           const isNew = Boolean(mapped._tempId && !mapped.id);
           const original = !isNew ? products.find((p) => rowsMatchInventoryRow(p, mapped)) : null;
+          
+          // Extract batches from Excel columns + existing batches array
+          const extractedBatches = extractBatchesFromExcelRow(mapped);
+          
           const rowForComposite = isNew
-            ? mapped
+            ? { ...mapped, batches: extractedBatches }
             : {
                 ...mapped,
-                batches: filterMeaningfulBatches(original?.batches ?? mapped.batches ?? []),
+                batches: extractedBatches.length > 0 
+                  ? extractedBatches 
+                  : filterMeaningfulBatches(original?.batches ?? mapped.batches ?? []),
                 serial_numbers: filterMeaningfulSerials(
                   original?.serial_numbers ??
                     original?.serialNumbers ??
