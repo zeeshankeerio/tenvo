@@ -190,9 +190,29 @@ export function EnhancedInvoiceBuilder({
       // Find customer details if ID exists
       const customerDetail = customers.find(c => c.id === (initialData.customer_id || initialData.customer?.id)) || {};
 
+      // Normalize DB dates (ISO timestamps) to YYYY-MM-DD for HTML date inputs
+      const normalizeDate = (val) => {
+        if (!val) return '';
+        // Already YYYY-MM-DD (10 chars)
+        if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+        // ISO timestamp: take first 10 chars
+        if (typeof val === 'string') return val.slice(0, 10);
+        if (val instanceof Date) {
+          const y = val.getFullYear();
+          const m = String(val.getMonth() + 1).padStart(2, '0');
+          const d = String(val.getDate()).padStart(2, '0');
+          return `${y}-${m}-${d}`;
+        }
+        return '';
+      };
+
       return {
         ...baseInvoice,
         ...initialData, // Spread original for ID and other metadata
+        // Override date fields with normalized YYYY-MM-DD strings for <input type="date">
+        date: normalizeDate(initialData.date) || baseInvoice.date,
+        dueDate: normalizeDate(initialData.due_date || initialData.dueDate) || '',
+        invoiceNumber: initialData.invoice_number || initialData.invoiceNumber || '',
         customer: {
           ...baseInvoice.customer,
           id: initialData.customer_id || customerDetail.id || '',
@@ -206,7 +226,7 @@ export function EnhancedInvoiceBuilder({
         },
         items: mappedItems,
         discount: initialData.discount_total || initialData.discount || 0,
-        notes: initialData.notes || `Derived from document: ${initialData.invoice_number || initialData.challan_number || initialData.order_number || 'Source'}`,
+        notes: initialData.notes || '',
       };
     }
 
