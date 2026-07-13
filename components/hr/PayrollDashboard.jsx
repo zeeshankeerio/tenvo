@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { EmployeeFormDialog } from '@/components/hr/EmployeeFormDialog';
 import { cn } from '@/lib/utils';
 
 export function PayrollDashboard({
@@ -23,6 +24,7 @@ export function PayrollDashboard({
     currency = 'Rs.'
 }) {
     const [showRunDialog, setShowRunDialog] = useState(false);
+    const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [isProcessing, setIsProcessing] = useState(false);
@@ -113,7 +115,7 @@ export function PayrollDashboard({
                 >
                     <Play className="w-4 h-4 mr-1" /> Run Payroll
                 </Button>
-                <Button variant="outline" onClick={onAddEmployee} className="rounded-xl text-xs font-bold">
+                <Button variant="outline" onClick={() => setShowEmployeeDialog(true)} className="rounded-xl text-xs font-bold">
                     <UserCog className="w-4 h-4 mr-1" /> Add Employee
                 </Button>
             </div>
@@ -237,6 +239,14 @@ export function PayrollDashboard({
                     </div>
                 </DialogContent>
             </Dialog>
+            
+            {/* Employee Form Dialog */}
+            <EmployeeFormDialog
+                open={showEmployeeDialog}
+                onOpenChange={setShowEmployeeDialog}
+                onSubmit={onAddEmployee}
+                businessId={businessId}
+            />
         </div>
     );
 }
