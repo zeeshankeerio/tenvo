@@ -355,29 +355,39 @@ export function VendorForm({
                 )}
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className={cn(MOBILE_TAB_LIST, isEasyMode ? 'sm:grid-cols-1' : 'sm:grid-cols-4')}>
-                        <TabsTrigger value="identity" className="relative rounded-md text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                            Identity
+                    <TabsList className={cn(MOBILE_TAB_LIST, 'grid-cols-2', !isEasyMode && 'sm:grid-cols-4')}>
+                        <TabsTrigger value="identity" className="relative rounded-md text-[11px] sm:text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                            <span className="hidden sm:inline">Identity</span>
+                            <span className="sm:hidden">Info</span>
                             {IDENTITY_ERROR_KEYS.some((k) => errors[k]) && (
                                 <span className="absolute right-1 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500" />
                             )}
                         </TabsTrigger>
                         {!isEasyMode && (
                             <>
-                                <TabsTrigger value="tax" className="relative rounded-md text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                                    Tax & Finance
+                                <TabsTrigger value="tax" className="relative rounded-md text-[11px] sm:text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                    <span className="hidden sm:inline">Tax & Finance</span>
+                                    <span className="sm:hidden">Finance</span>
                                     {TAX_ERROR_KEYS.some((k) => errors[k]) && (
                                         <span className="absolute right-1 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500" />
                                     )}
                                 </TabsTrigger>
-                                <TabsTrigger value="attachments" className="rounded-md text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">Attachments</TabsTrigger>
-                                <TabsTrigger value="domain" className="rounded-md text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">Expert</TabsTrigger>
+                                <TabsTrigger value="attachments" className="rounded-md text-[11px] sm:text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                    <span className="hidden sm:inline">Attachments</span>
+                                    <span className="sm:hidden">Files</span>
+                                </TabsTrigger>
+                                {domainFields.length > 0 && (
+                                    <TabsTrigger value="domain" className="rounded-md text-[11px] sm:text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                        <span className="hidden sm:inline">Domain Fields</span>
+                                        <span className="sm:hidden">Extra</span>
+                                    </TabsTrigger>
+                                )}
                             </>
                         )}
                     </TabsList>
 
-                    <TabsContent value="identity" className="mt-0 space-y-4">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <TabsContent value="identity" className="mt-0 space-y-3 sm:space-y-4">
+                        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
                             <div className="space-y-1.5 md:col-span-2">
                                 <Label className={labelClass}>Legal Business Name *</Label>
                                 <Input
@@ -408,7 +418,7 @@ export function VendorForm({
                                 />
                                 {errors?.phone && <FormError message={errors.phone} />}
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5 md:col-span-2">
                                 <Label className={labelClass}>Business Email</Label>
                                 <Input
                                     value={formData.email || ''}
@@ -436,15 +446,15 @@ export function VendorForm({
                         </div>
                         {isEasyMode && (
                             <>
-                                <div className="rounded-xl border border-gray-100 bg-gray-50/40 p-4">
-                                    <h4 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
-                                        <ShieldCheck className="h-4 w-4" /> Tax Profile
+                                <div className="rounded-xl border border-gray-100 bg-gray-50/40 p-3 sm:p-4">
+                                    <h4 className="mb-2 sm:mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                        <ShieldCheck className="h-4 w-4 shrink-0" /> Tax Profile
                                     </h4>
                                     {taxIdentityFields}
                                 </div>
-                                <div className="rounded-xl border border-wine/10 bg-wine/[0.03] p-4">
-                                    <h4 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-wine">
-                                        <Wallet className="h-4 w-4" /> Trade Credit
+                                <div className="rounded-xl border border-wine/10 bg-wine/[0.03] p-3 sm:p-4">
+                                    <h4 className="mb-2 sm:mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-wine">
+                                        <Wallet className="h-4 w-4 shrink-0" /> Trade Credit
                                     </h4>
                                     {financeFields}
                                 </div>

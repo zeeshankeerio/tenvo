@@ -185,18 +185,19 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
         ]}
       />
 
-      <div className="hidden flex-col gap-4 md:flex-row md:items-center md:justify-between lg:flex">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">Vendor Network</h2>
-          <p className="font-medium text-gray-500">Manage your supply chain and trade credit</p>
+      <div className="hidden flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between lg:flex">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">Vendor Network</h2>
+          <p className="text-sm font-medium text-gray-500 truncate">Manage your supply chain and trade credit</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 shrink-0">
           <Button
             onClick={handleOpenAdd}
-            className="h-10 rounded-xl bg-emerald-600 px-5 font-semibold text-white shadow-sm hover:bg-emerald-700"
+            className="h-9 sm:h-10 rounded-xl bg-emerald-600 px-4 sm:px-5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Vendor
+            <Plus className="mr-1.5 sm:mr-2 h-4 w-4" />
+            <span className="hidden sm:inline">Add Vendor</span>
+            <span className="sm:hidden">Add</span>
           </Button>
           <ExportButton
             data={filteredVendors}
@@ -207,17 +208,17 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
         </div>
       </div>
 
-      <div className="hidden grid-cols-1 gap-4 md:grid-cols-4 lg:grid">
+      <div className="hidden grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 md:grid lg:grid-cols-4">
         <Card className="border-none bg-white shadow-md">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Active Vendors</p>
-            <p className="text-2xl font-semibold text-gray-900">{vendors.length}</p>
+            <p className="text-xl sm:text-2xl font-semibold text-gray-900">{vendors.length}</p>
           </CardContent>
         </Card>
         <Card className="border-none bg-white shadow-md">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Total Payables</p>
-            <p className="text-2xl font-semibold text-red-600">
+            <p className="text-xl sm:text-2xl font-semibold text-red-600">
               {formatCurrency(totalPayables, currency)}
             </p>
           </CardContent>
@@ -289,60 +290,106 @@ export function VendorManager({ vendors = [], onAdd, onUpdate, onDelete, categor
 
       <Dialog open={!!vendorToView} onOpenChange={(open) => !open && setVendorToView(null)}>
         <DialogContent className={cn(hubDialogContentClass({ wide: true, maxWidth: 'lg:max-w-3xl' }), 'flex flex-col overflow-hidden p-0 lg:gap-0 lg:p-0')}>
-          <DialogHeader className="px-6 pt-6">
-            <DialogTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-gray-400" />
-              {vendorToView?.name}
+          <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
+            <DialogTitle className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2 min-w-0">
+                <Building2 className="h-5 w-5 text-gray-400 shrink-0" />
+                <span className="truncate">{vendorToView?.name}</span>
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0 h-8 text-xs"
+                onClick={() => {
+                  setVendorToView(null);
+                  onUpdate?.(vendorToView);
+                }}
+              >
+                <Edit className="h-3.5 w-3.5 mr-1.5" />
+                Edit
+              </Button>
             </DialogTitle>
-            <DialogDescription>Supplier Details & History</DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">Supplier Details & Transaction History</DialogDescription>
           </DialogHeader>
-          <div className="flex-grow overflow-y-auto px-6 pb-6">
+          <div className="flex-grow overflow-y-auto overscroll-contain px-4 pb-4 sm:px-6 sm:pb-6">
             <Tabs defaultValue="profile" className="w-full">
-              <TabsList className="mb-4 grid w-full grid-cols-2 rounded-xl bg-gray-100/50 p-1">
-                <TabsTrigger value="profile" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Profile Details</TabsTrigger>
-                <TabsTrigger value="ledger" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Ledger / History</TabsTrigger>
+              <TabsList className="mb-3 sm:mb-4 grid w-full grid-cols-2 rounded-xl bg-gray-100/50 p-1">
+                <TabsTrigger value="profile" className="rounded-lg text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">Profile</TabsTrigger>
+                <TabsTrigger value="ledger" className="rounded-lg text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">Ledger</TabsTrigger>
               </TabsList>
 
               <TabsContent value="profile" className="mt-0 space-y-4 py-2">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400">Contact Person</label>
-                    <p className="font-medium">{vendorToView?.contact_person || vendorToView?.domain_data?.contact_person || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400">City</label>
-                    <p className="font-medium">{vendorToView?.city || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400">Phone</label>
-                    <p className="font-medium">{vendorToView?.phone || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400">Email</label>
-                    <p className="font-medium">{vendorToView?.email || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400">NTN</label>
-                    <p className="font-medium">{vendorToView?.ntn || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400">Payment Terms</label>
-                    <p className="font-medium">{vendorToView?.payment_terms || 'Standard'}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-gray-400">Address</label>
-                    <p className="font-medium">{vendorToView?.address || 'N/A'}</p>
-                  </div>
+                <div className="grid grid-cols-1 gap-x-4 gap-y-3 text-sm sm:grid-cols-2">
+                  {vendorToView?.contact_person || vendorToView?.domain_data?.contact_person ? (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400">Contact Person</label>
+                      <p className="font-medium truncate">{vendorToView?.contact_person || vendorToView?.domain_data?.contact_person}</p>
+                    </div>
+                  ) : null}
+                  {vendorToView?.city && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400">City</label>
+                      <p className="font-medium truncate">{vendorToView.city}</p>
+                    </div>
+                  )}
+                  {vendorToView?.phone && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400">Phone</label>
+                      <p className="font-medium truncate">{vendorToView.phone}</p>
+                    </div>
+                  )}
+                  {vendorToView?.email && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400">Email</label>
+                      <p className="font-medium truncate break-all">{vendorToView.email}</p>
+                    </div>
+                  )}
+                  {vendorToView?.ntn && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400">NTN</label>
+                      <p className="font-medium font-mono">{vendorToView.ntn}</p>
+                    </div>
+                  )}
+                  {vendorToView?.payment_terms && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400">Payment Terms</label>
+                      <p className="font-medium">{vendorToView.payment_terms}</p>
+                    </div>
+                  )}
+                  {vendorToView?.credit_limit && Number(vendorToView.credit_limit) > 0 && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400">Credit Limit</label>
+                      <p className="font-medium">{formatCurrency(vendorToView.credit_limit, currency)}</p>
+                    </div>
+                  )}
+                  {vendorToView?.outstanding_balance !== undefined && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-400">Outstanding Balance</label>
+                      <p className={cn("font-semibold", Number(vendorToView.outstanding_balance) > 0 ? "text-red-600" : "text-green-600")}>
+                        {formatCurrency(vendorToView.outstanding_balance, currency)}
+                      </p>
+                    </div>
+                  )}
+                  {vendorToView?.address && (
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-gray-400">Address</label>
+                      <p className="font-medium">{vendorToView.address}</p>
+                    </div>
+                  )}
                 </div>
 
                 {vendorToView?.domain_data && Object.keys(vendorToView.domain_data).length > 0 && (
-                  <div className="mt-2 rounded-lg bg-gray-50 p-3">
-                    <h4 className="mb-2 text-xs font-semibold text-gray-500">Domain Data</h4>
-                    <div className="space-y-1 text-xs">
-                      {Object.entries(vendorToView.domain_data).map(([k, v]) => (
-                        <div key={k} className="flex justify-between gap-2">
-                          <span className="capitalize text-gray-500">{k.replace(/_/g, ' ')}:</span>
-                          <span className="text-right font-medium">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                  <div className="mt-3 rounded-lg bg-gray-50 p-3">
+                    <h4 className="mb-2 text-xs font-semibold text-gray-500">Additional Information</h4>
+                    <div className="space-y-1.5 text-xs">
+                      {Object.entries(vendorToView.domain_data)
+                        .filter(([k, v]) => v !== null && v !== '' && v !== undefined)
+                        .map(([k, v]) => (
+                        <div key={k} className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2">
+                          <span className="capitalize text-gray-500 font-medium">{k.replace(/_/g, ' ')}:</span>
+                          <span className="text-right font-medium text-gray-700 break-words">
+                            {typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}
+                          </span>
                         </div>
                       ))}
                     </div>

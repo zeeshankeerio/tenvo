@@ -135,26 +135,28 @@ export function QuickVendorForm({ onSave, onCancel }) {
     const fieldClass = (field) => cn(MOBILE_INPUT_CLASS, errors[field] ? 'border-red-500' : '');
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="mb-2 flex items-start justify-between gap-2">
-                <div className="min-w-0">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="mb-2 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div className="min-w-0 flex-1">
                     <h3 className="flex items-center gap-2 text-sm font-semibold sm:text-base">
-                        <Building2 className="h-4 w-4 text-blue-600" />
-                        New Vendor
+                        <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
+                        <span className="truncate">New Vendor</span>
                     </h3>
                     <p className="text-[11px] text-gray-500">Quick supplier entry for purchase orders</p>
                 </div>
-                <Button type="button" variant="ghost" size="sm" onClick={handleFillDemo} className="h-8 shrink-0 text-[10px]">
-                    <Sparkles className="mr-1 h-3 w-3" /> Fill
+                <Button type="button" variant="ghost" size="sm" onClick={handleFillDemo} className="h-7 sm:h-8 shrink-0 text-[10px] sm:text-xs self-start">
+                    <Sparkles className="mr-1 h-3 w-3" /> 
+                    <span className="hidden xs:inline">Magic Fill</span>
+                    <span className="xs:hidden">Fill</span>
                 </Button>
             </div>
 
             {Object.keys(errors).length > 0 && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
-                    <p className="font-semibold">Please fix the following:</p>
-                    <ul className="mt-1 list-inside list-disc text-xs">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-2.5 sm:p-3 text-sm text-red-700" role="alert">
+                    <p className="font-semibold text-xs sm:text-sm">Please fix the following:</p>
+                    <ul className="mt-1 list-inside list-disc text-[10px] sm:text-xs space-y-0.5">
                         {Object.entries(errors).map(([field, msg]) => (
-                            <li key={field}>{msg}</li>
+                            <li key={field} className="truncate">{msg}</li>
                         ))}
                     </ul>
                 </div>
@@ -254,10 +256,17 @@ export function QuickVendorForm({ onSave, onCancel }) {
                 </div>
             </div>
 
-            <div className={cn(MOBILE_FORM_FOOTER, 'mt-2 flex justify-end gap-2')}>
-                <Button type="button" variant="outline" onClick={onCancel} className="h-9 rounded-xl text-xs">Cancel</Button>
-                <Button type="submit" disabled={isLoading} className="h-9 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white hover:bg-emerald-700">
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create Vendor'}
+            <div className={cn(MOBILE_FORM_FOOTER, 'mt-3 sm:mt-4 flex flex-col-reverse sm:flex-row justify-end gap-2')}>
+                <Button type="button" variant="outline" onClick={onCancel} className="h-9 rounded-xl text-xs sm:text-sm w-full sm:w-auto">Cancel</Button>
+                <Button type="submit" disabled={isLoading} className="h-9 rounded-xl bg-emerald-600 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white hover:bg-emerald-700 w-full sm:w-auto">
+                    {isLoading ? (
+                        <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Creating...</>
+                    ) : (
+                        <>
+                            <span className="hidden sm:inline">Create Vendor</span>
+                            <span className="sm:hidden">Create</span>
+                        </>
+                    )}
                 </Button>
             </div>
         </form>
