@@ -28,6 +28,7 @@ import { MobileTabHeader } from '@/components/mobile/MobileTabHeader';
 import { useStorefrontEmbedded } from '@/lib/context/StorefrontMobileContext';
 import { getRegionalStandards } from '@/lib/utils/regionalHelpers';
 import { MarketingSectionsEditor } from '@/components/storefront/admin/MarketingSectionsEditor';
+import { CustomDomainManager } from '@/components/storefront/CustomDomainManager';
 import { isAutoMarketplaceStore } from '@/lib/storefront/autoMarketplace';
 import { isAutoDealershipStore } from '@/lib/storefront/autoDealership';
 import { isAutoPartsStore } from '@/lib/storefront/autoParts';
@@ -38,6 +39,7 @@ import { isFitnessElevatedStore } from '@/lib/storefront/fitnessStorefront';
 import { isSupermarketElevatedStore } from '@/lib/storefront/supermarketStorefront';
 import { isFashionEditorialStore } from '@/lib/storefront/fashionEditorial';
 import { supportsFashionGulSections } from '@/lib/storefront/fashionGulSections';
+
 import { FashionGulSectionsEditor } from '@/components/storefront/admin/FashionGulSectionsEditor';
 import { FashionPromoBannersEditor } from '@/components/storefront/admin/FashionPromoBannersEditor';
 import { FashionCatalogEditor } from '@/components/storefront/admin/FashionCatalogEditor';
@@ -1745,6 +1747,8 @@ export function StoreSettingsManager({ business, category }) {
               </div>
             </CardContent>
           </Card>
+
+          <CustomDomainManager businessId={business.id} businessDomain={business.domain} />
 
           <Card>
             <CardHeader className="pb-4">
