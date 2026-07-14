@@ -1,7 +1,7 @@
 import 'server-only';
 
 import pool from '@/lib/db';
-import { getRedisClient } from './redis';
+import { redisGet, redisSetEx, redisDel } from './redis';
 
 const CUSTOM_DOMAIN_CACHE_TTL = 300; // 5 minutes
 const CUSTOM_DOMAIN_CACHE_PREFIX = 'custom-domain:';
@@ -16,10 +16,8 @@ export async function lookupCustomDomainFromCache(customDomain: string): Promise
   const cacheKey = `${CUSTOM_DOMAIN_CACHE_PREFIX}${normalizedDomain}`;
 
   try {
-    const redis = await getRedisClient();
-
     // Try Redis L1
-    const cached = await redis.get(cacheKey);
+    const cached = await redisGet(cacheKey);
     if (cached) {
       return cached === '__null__' ? null : cached;
     }
@@ -40,10 +38,10 @@ export async function lookupCustomDomainFromCache(customDomain: string): Promise
     const businessDomain = result.rows[0]?.business_domain || null;
 
     // Cache the result (including null lookups to avoid repeated DB hits)
-    await redis.setex(
+    await redisSetEx(
       cacheKey,
-      CUSTOM_DOMAIN_CACHE_TTL,
-      businessDomain || '__null__'
+      businessDomain || '__null__',
+      CUSTOM_DOMAIN_CACHE_TTL
     );
 
     return businessDomain;
@@ -78,8 +76,7 @@ export async function purgeCustomDomainCache(customDomain: string): Promise<void
   const cacheKey = `${CUSTOM_DOMAIN_CACHE_PREFIX}${normalizedDomain}`;
 
   try {
-    const redis = await getRedisClient();
-    await redis.del(cacheKey);
+    await redisDel(cacheKey);
   } catch (error) {
     console.error('[purgeCustomDomainCache] Error:', error);
   }
